@@ -19,8 +19,8 @@
 |---:|---|---|---|---|---|
 | 1 | DE180522  | Dinh Gia Huy | zawy2004  | Leader |  |
 | 2 | DE180526 | Nguyen Duy Luong | gwould | Member |  |
-| 3 | DE190580 | Park Jea Minh | jacky | Member |  |
-| 4 |  |  |  | Member |  |
+| 3 | DE190580 | Park Jea Minh | PJMinh2812  | Member |  |
+| 4 | DE190123 | Vo Nguyen Bao Chau | MouGlanzuddli | Member |  |
 | 5 |  |  |  | Member |  |
 
 ---
