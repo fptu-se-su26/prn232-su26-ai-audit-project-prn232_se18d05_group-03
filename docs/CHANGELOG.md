@@ -51,46 +51,47 @@ Nguyên tắc ghi changelog:
 ## Ngày thực hiện
 
 ```text
-DD/MM/YYYY
+17/05/2026
 ```
 
 ## Đã hoàn thành
 
 - [ ] Tạo repository
-- [ ] Tạo cấu trúc thư mục project
+- [x] Tạo cấu trúc thư mục project
 - [ ] Tạo file README.md
 - [ ] Tạo thư mục `docs/`
 - [ ] Tạo file `AI_AUDIT_LOG.md`
 - [ ] Tạo file `PROMPTS.md`
 - [ ] Tạo file `REFLECTION.md`
 - [ ] Tạo file `CHANGELOG.md`
-- [ ] Khởi tạo source code ban đầu
-- [ ] Cài đặt thư viện/công cụ cần thiết
-- [ ] Cấu hình môi trường chạy project
+- [x] Khởi tạo source code ban đầu
+- [x] Cài đặt thư viện/công cụ cần thiết
+- [x] Cấu hình môi trường chạy project
 
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
 |---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| 1 | Ghi nhận prompt ve phan chia thanh vien, nhac quy trinh audit, va dinh huong models |  | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |  |
+| 2 | Ghi nhan yeu cau thiet ke models code-first cho .NET SQL Server |  | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |  |
+| 3 | Tao project .NET Web API mediconnect va them cau hinh code-first co ban |  | src/mediconnect |  |
+| 4 | Tao file solution cho du an mediconnect |  | mediconnect.sln |  |
 
 ## AI có hỗ trợ không?
 
-- [ ] Có
+- [x] Có
 - [ ] Không
 
 Nếu có, mô tả AI đã hỗ trợ phần nào:
 
 ```text
-Viết tại đây...
+AI ho tro tom tat prompt, dinh huong log va ghi nhan thay doi tai lieu.
 ```
 
 ## Commit/Screenshot minh chứng
 
 ```text
-Dán link commit, screenshot hoặc mô tả minh chứng tại đây...
+Cap nhat tai lieu: docs/PROMPTS.md, docs/AI_AUDIT_LOG.md, docs/CHANGELOG.md
 ```
 
 ## Ghi chú
@@ -106,7 +107,7 @@ Viết tại đây...
 ## Ngày thực hiện
 
 ```text
-DD/MM/YYYY
+17/05/2026
 ```
 
 ## Đã hoàn thành
@@ -219,8 +220,8 @@ DD/MM/YYYY
 
 ## Đã hoàn thành
 
-- [ ] Tạo project structure
-- [ ] Cài đặt database connection
+- [x] Tạo project structure
+- [x] Cài đặt database connection
 - [ ] Xây dựng backend
 - [ ] Xây dựng frontend
 - [ ] Xây dựng authentication/authorization
@@ -236,27 +237,27 @@ DD/MM/YYYY
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
 |---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| 1 | Tao DbContext va bo Models cho HIS & Telemedicine |  | src/mediconnect/Models; src/mediconnect/Data |  |
+| 2 | Them EF Core packages va connection string SQL Server |  | src/mediconnect/mediconnect.csproj; src/mediconnect/appsettings.json; src/mediconnect/Program.cs |  |
+| 3 | Cap nhat README huong dan chay project |  | README.md |  |
 | 4 |  |  |  |  |
 | 5 |  |  |  |  |
 
 ## AI có hỗ trợ không?
 
-- [ ] Có
+- [x] Có
 - [ ] Không
 
 Nếu có, mô tả AI đã hỗ trợ phần nào:
 
 ```text
-Viết tại đây...
+AI ho tro scaffold du an, bo models, DbContext va cau hinh EF Core.
 ```
 
 ## Commit/Screenshot minh chứng
 
 ```text
-Dán link commit, screenshot hoặc mô tả minh chứng tại đây...
+Cap nhat ma nguon: src/mediconnect
 ```
 
 ## Ghi chú
