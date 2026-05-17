@@ -52,10 +52,10 @@ Sinh viên/nhóm cần ghi lại:
 
 | STT | Ngày | Công cụ AI | Mục đích | Prompt tóm tắt | Kết quả chính | Có sử dụng vào bài không? | Minh chứng |
 |---:|---|---|---|---|---|---|---|
-| 1 |  |  |  |  |  | Có / Không |  |
-| 2 |  |  |  |  |  | Có / Không |  |
-| 3 |  |  |  |  |  | Có / Không |  |
-| 4 |  |  |  |  |  | Có / Không |  |
+| 1 | 17/05/2026 | GitHub Copilot | Phân chia thành viên và tính năng; hướng dẫn cập nhật log | Chia 4 thành viên theo module HIS & Telemedicine; nhắc thứ tự cập nhật file audit; yêu cầu định hướng models | Xác nhận đã đọc file md và cần bổ sung thông tin để thiết kế models | Có | docs/PROMPTS.md, docs/AI_AUDIT_LOG.md |
+| 2 | 17/05/2026 | GitHub Copilot | Thiết kế models code-first cho .NET API | Xác nhận stack .NET + SQL Server; yêu cầu hỗ trợ models cho HIS | Sẽ tạo models theo domain; cần xác định nơi đặt project và cấu trúc solution | Có | docs/PROMPTS.md, docs/AI_AUDIT_LOG.md |
+| 3 | 17/05/2026 | GitHub Copilot | Tao project .NET Web API va them DbContext + Models | Tao project mediconnect, them EF Core, DbContext, Models cho HIS | Da scaffold du an va them models, DbContext, connection string | Có | src/mediconnect; docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
+| 4 | 17/05/2026 | GitHub Copilot | Tao file solution cho du an .NET Web API | Yeu cau co file .sln cho project | Da tao mediconnect.sln va add project | Có | mediconnect.sln; docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
 | 5 |  |  |  |  |  | Có / Không |  |
 | 6 |  |  |  |  |  | Có / Không |  |
 | 7 |  |  |  |  |  | Có / Không |  |
@@ -75,16 +75,17 @@ Sinh viên/nhóm cần ghi lại:
 
 | Nội dung | Thông tin |
 |---|---|
-| Ngày sử dụng |  |
-| Công cụ AI | ChatGPT / Gemini / Claude / GitHub Copilot / Cursor / Antigravity / Khác |
-| Mục đích |  |
-| Phần việc liên quan | Requirement / Design / Database / Coding / Testing / Debug / Report / Presentation / Other |
-| Mức độ sử dụng | Hỏi ý tưởng / Hỏi giải thích / Hỏi review / Hỏi debug / Hỏi sinh code / Hỏi tối ưu |
+| Ngày sử dụng | 17/05/2026 |
+| Công cụ AI | GitHub Copilot |
+| Mục đích | Phân chia thành viên và tính năng; nhắc quy trình cập nhật log; định hướng models |
+| Phần việc liên quan | Requirement / Design |
+| Mức độ sử dụng | Hỏi ý tưởng |
 
 #### 5.1. Prompt nguyên văn
 
 ```text
-Dán nguyên văn prompt đã hỏi AI tại đây.
+ cách cập nhật file md mỗi khi làm rồi đọc hệ thống các chức năng để có thể làm Models cho hệ thống
+
 ```
 
 #### 5.2. Bối cảnh khi viết prompt
@@ -92,7 +93,7 @@ Dán nguyên văn prompt đã hỏi AI tại đây.
 Mô tả ngắn gọn vì sao sinh viên/nhóm cần dùng prompt này.
 
 ```text
-Viết tại đây...
+Cần phân chia 4 thành viên theo module, nhắc quy trình cập nhật audit, và định hướng tạo models cho hệ thống HIS & Telemedicine.
 ```
 
 #### 5.3. Kết quả AI trả về
@@ -100,7 +101,7 @@ Viết tại đây...
 Tóm tắt nội dung AI đã trả lời hoặc gợi ý.
 
 ```text
-Viết tại đây...
+Tóm tắt phân chia module theo 4 thành viên, nhắc trình tự cập nhật các file audit, và cần làm rõ thông tin để thiết kế models.
 ```
 
 #### 5.4. Kết quả đã áp dụng vào bài
@@ -108,7 +109,7 @@ Viết tại đây...
 Mô tả phần nào từ kết quả AI đã được sử dụng vào bài tập/project.
 
 ```text
-Viết tại đây...
+Dự kiến áp dụng vào phần requirement/design; cần xác nhận thêm stack và đầu ra models để triển khai.
 ```
 
 #### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
@@ -116,7 +117,7 @@ Viết tại đây...
 Mô tả sinh viên/nhóm đã thay đổi, kiểm tra, sửa lỗi hoặc cải tiến gì so với kết quả AI trả về.
 
 ```text
-Viết tại đây...
+Chưa có chỉnh sửa; cần bổ sung thông tin thành viên, stack, và đầu ra model mong muốn.
 ```
 
 #### 5.6. Đánh giá chất lượng prompt
@@ -155,40 +156,41 @@ Viết tại đây...
 
 | Nội dung | Thông tin |
 |---|---|
-| Ngày sử dụng |  |
-| Công cụ AI | ChatGPT / Gemini / Claude / GitHub Copilot / Cursor / Antigravity / Khác |
-| Mục đích |  |
-| Phần việc liên quan | Requirement / Design / Database / Coding / Testing / Debug / Report / Presentation / Other |
-| Mức độ sử dụng | Hỏi ý tưởng / Hỏi giải thích / Hỏi review / Hỏi debug / Hỏi sinh code / Hỏi tối ưu |
+| Ngày sử dụng | 17/05/2026 |
+| Công cụ AI | GitHub Copilot |
+| Mục đích | Thiết kế models theo code-first cho .NET API | 
+| Phần việc liên quan | Design / Database / Coding |
+| Mức độ sử dụng | Hỏi sinh code |
 
 #### 5.1. Prompt nguyên văn
 
 ```text
-Dán nguyên văn prompt đã hỏi AI tại đây.
+1. code first cho  database 
+2. .NET SQL Server
 ```
 
 #### 5.2. Bối cảnh khi viết prompt
 
 ```text
-Viết tại đây...
+Can tao models code-first cho .NET API dung SQL Server va ghi nhan audit log truoc khi thuc hien.
 ```
 
 #### 5.3. Kết quả AI trả về
 
 ```text
-Viết tại đây...
+Xac nhan stack .NET + SQL Server, tiep theo se thiet ke models theo domain HIS & Telemedicine.
 ```
 
 #### 5.4. Kết quả đã áp dụng vào bài
 
 ```text
-Viết tại đây...
+Ap dung vao thiet ke models va cau truc entity cho code-first.
 ```
 
 #### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
 
 ```text
-Viết tại đây...
+Chua co; can xac nhan vi tri project/solution de them models.
 ```
 
 #### 5.6. Đánh giá chất lượng prompt
@@ -221,75 +223,6 @@ Viết tại đây...
 
 ---
 
-### Prompt số 3
-
-| Nội dung | Thông tin |
-|---|---|
-| Ngày sử dụng |  |
-| Công cụ AI | ChatGPT / Gemini / Claude / GitHub Copilot / Cursor / Antigravity / Khác |
-| Mục đích |  |
-| Phần việc liên quan | Requirement / Design / Database / Coding / Testing / Debug / Report / Presentation / Other |
-| Mức độ sử dụng | Hỏi ý tưởng / Hỏi giải thích / Hỏi review / Hỏi debug / Hỏi sinh code / Hỏi tối ưu |
-
-#### 5.1. Prompt nguyên văn
-
-```text
-Dán nguyên văn prompt đã hỏi AI tại đây.
-```
-
-#### 5.2. Bối cảnh khi viết prompt
-
-```text
-Viết tại đây...
-```
-
-#### 5.3. Kết quả AI trả về
-
-```text
-Viết tại đây...
-```
-
-#### 5.4. Kết quả đã áp dụng vào bài
-
-```text
-Viết tại đây...
-```
-
-#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
-
-```text
-Viết tại đây...
-```
-
-#### 5.6. Đánh giá chất lượng prompt
-
-- [ ] Prompt rõ ràng
-- [ ] Prompt có đủ bối cảnh
-- [ ] Prompt còn thiếu thông tin
-- [ ] Prompt tạo ra kết quả tốt
-- [ ] Prompt tạo ra kết quả chưa phù hợp
-- [ ] Cần hỏi lại AI nhiều lần
-- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
-- [ ] Kết quả AI có lỗi hoặc chưa chính xác
-
-#### 5.7. Minh chứng liên quan
-
-| Loại minh chứng | Nội dung |
-|---|---|
-| Link commit |  |
-| File liên quan |  |
-| Screenshot |  |
-| Kết quả chạy/test |  |
-| Link tài liệu/báo cáo |  |
-| Ghi chú khác |  |
-
-#### 5.8. Ghi chú thêm
-
-```text
-Viết tại đây...
-```
-
----
 
 ## 6. Prompt quan trọng nhất
 

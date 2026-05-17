@@ -68,16 +68,17 @@ Viết tại đây...
 
 | Nội dung | Thông tin |
 |---|---|
-| Ngày sử dụng |  |
-| Công cụ AI | ChatGPT / Gemini / Claude / GitHub Copilot / Cursor / Antigravity / Khác |
-| Mục đích sử dụng |  |
-| Phần việc liên quan | Requirement / Design / Database / Frontend / Backend / Testing / Debug / Report / Presentation / Other |
-| Mức độ sử dụng | Hỗ trợ ý tưởng / Hỗ trợ một phần / Hỗ trợ nhiều / Sinh chính nội dung |
+| Ngày sử dụng | 17/05/2026 |
+| Công cụ AI | GitHub Copilot |
+| Mục đích sử dụng | Phân chia thành viên và tính năng; nhắc quy trình cập nhật log; định hướng models |
+| Phần việc liên quan | Requirement / Design |
+| Mức độ sử dụng | Hỗ trợ ý tưởng |
 
 #### 4.1. Prompt đã sử dụng
 
 ```text
-Dán nguyên văn prompt đã hỏi AI tại đây.
+ cách cập nhật file md mỗi khi làm rồi đọc hệ thống các chức năng để có thể làm Models cho hệ thống
+
 ```
 
 #### 4.2. Kết quả AI gợi ý
@@ -85,7 +86,7 @@ Dán nguyên văn prompt đã hỏi AI tại đây.
 Tóm tắt nội dung AI đã trả lời hoặc gợi ý.
 
 ```text
-Viết tại đây...
+Đã đọc các file md để hiểu quy trình audit, ghi nhận phân chia module cho 4 thành viên và xác định cần thêm thông tin để thiết kế models.
 ```
 
 #### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
@@ -93,7 +94,7 @@ Viết tại đây...
 Mô tả rõ phần nào được sử dụng lại từ gợi ý của AI.
 
 ```text
-Viết tại đây...
+Áp dụng vào việc ghi log (PROMPTS, AI_AUDIT_LOG) và chuẩn bị bước thiết kế models.
 ```
 
 #### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
@@ -101,7 +102,7 @@ Viết tại đây...
 Mô tả sinh viên/nhóm đã thay đổi, kiểm tra, sửa lỗi hoặc cải tiến gì so với gợi ý ban đầu của AI.
 
 ```text
-Viết tại đây...
+Cần bổ sung thông tin về stack, tên thành viên/MSSV, và đầu ra models mong muốn.
 ```
 
 #### 4.5. Minh chứng
@@ -109,7 +110,7 @@ Viết tại đây...
 | Loại minh chứng | Nội dung |
 |---|---|
 | Link commit |  |
-| File liên quan |  |
+| File liên quan | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
 | Screenshot |  |
 | Kết quả chạy/test |  |
 | Link video demo |  |
@@ -120,7 +121,7 @@ Viết tại đây...
 Sinh viên/nhóm học được gì sau lần sử dụng AI này?
 
 ```text
-Viết tại đây...
+Log giúp rõ quy trình audit và xác định thiếu thông tin dau vao cho thiet ke models.
 ```
 
 ---
@@ -129,34 +130,35 @@ Viết tại đây...
 
 | Nội dung | Thông tin |
 |---|---|
-| Ngày sử dụng |  |
-| Công cụ AI | ChatGPT / Gemini / Claude / GitHub Copilot / Cursor / Antigravity / Khác |
-| Mục đích sử dụng |  |
-| Phần việc liên quan | Requirement / Design / Database / Frontend / Backend / Testing / Debug / Report / Presentation / Other |
-| Mức độ sử dụng | Hỗ trợ ý tưởng / Hỗ trợ một phần / Hỗ trợ nhiều / Sinh chính nội dung |
+| Ngày sử dụng | 17/05/2026 |
+| Công cụ AI | GitHub Copilot |
+| Mục đích sử dụng | Thiet ke models code-first cho .NET API va ghi nhan audit log |
+| Phần việc liên quan | Design / Database / Backend |
+| Mức độ sử dụng | Hỗ trợ một phần |
 
 #### 4.1. Prompt đã sử dụng
 
 ```text
-Dán nguyên văn prompt đã hỏi AI tại đây.
+1. code first cho  database 
+2. .NET SQL Server
 ```
 
 #### 4.2. Kết quả AI gợi ý
 
 ```text
-Viết tại đây...
+Xac nhan stack .NET + SQL Server, tiep theo se tao models theo domain HIS & Telemedicine, can xac nhan vi tri project/solution.
 ```
 
 #### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
 
 ```text
-Viết tại đây...
+Cap nhat PROMPTS va AI_AUDIT_LOG cho yeu cau thiet ke models.
 ```
 
 #### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
 
 ```text
-Viết tại đây...
+Can bo sung cau truc project .NET de dat models vao dung vi tri.
 ```
 
 #### 4.5. Minh chứng
@@ -164,7 +166,7 @@ Viết tại đây...
 | Loại minh chứng | Nội dung |
 |---|---|
 | Link commit |  |
-| File liên quan |  |
+| File liên quan | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
 | Screenshot |  |
 | Kết quả chạy/test |  |
 | Link video demo |  |
@@ -173,61 +175,12 @@ Viết tại đây...
 #### 4.6. Nhận xét cá nhân/nhóm
 
 ```text
-Viết tại đây...
+Da ghi log truoc khi thuc hien thiet ke models.
 ```
 
 ---
 
-### Lần sử dụng AI số 3
 
-| Nội dung | Thông tin |
-|---|---|
-| Ngày sử dụng |  |
-| Công cụ AI | ChatGPT / Gemini / Claude / GitHub Copilot / Cursor / Antigravity / Khác |
-| Mục đích sử dụng |  |
-| Phần việc liên quan | Requirement / Design / Database / Frontend / Backend / Testing / Debug / Report / Presentation / Other |
-| Mức độ sử dụng | Hỗ trợ ý tưởng / Hỗ trợ một phần / Hỗ trợ nhiều / Sinh chính nội dung |
-
-#### 4.1. Prompt đã sử dụng
-
-```text
-Dán nguyên văn prompt đã hỏi AI tại đây.
-```
-
-#### 4.2. Kết quả AI gợi ý
-
-```text
-Viết tại đây...
-```
-
-#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
-
-```text
-Viết tại đây...
-```
-
-#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
-
-```text
-Viết tại đây...
-```
-
-#### 4.5. Minh chứng
-
-| Loại minh chứng | Nội dung |
-|---|---|
-| Link commit |  |
-| File liên quan |  |
-| Screenshot |  |
-| Kết quả chạy/test |  |
-| Link video demo |  |
-| Ghi chú khác |  |
-
-#### 4.6. Nhận xét cá nhân/nhóm
-
-```text
-Viết tại đây...
-```
 
 ---
 
