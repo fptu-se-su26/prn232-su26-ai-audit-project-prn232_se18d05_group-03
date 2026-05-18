@@ -18,7 +18,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+var httpsPort = builder.Configuration["ASPNETCORE_HTTPS_PORT"];
+if (!string.IsNullOrWhiteSpace(httpsPort))
+{
+    app.UseHttpsRedirection();
+}
 
 var summaries = new[]
 {
@@ -38,6 +42,16 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+
+app.MapGet("/", () =>
+{
+    if (app.Environment.IsDevelopment())
+    {
+        return Results.Redirect("/swagger");
+    }
+
+    return Results.Ok("Mediconnect API is running.");
+});
 
 app.Run();
 
