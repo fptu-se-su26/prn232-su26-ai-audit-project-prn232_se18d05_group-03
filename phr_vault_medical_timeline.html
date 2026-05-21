@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MediCare PHR - Vault</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #E2E8F0;
+            z-index: 0;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary": "#005325",
+                      "on-primary": "#ffffff",
+                      "on-primary-container": "#c8daff",
+                      "on-secondary-fixed": "#002020",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#005225",
+                      "surface-variant": "#e0e3e5",
+                      "primary-fixed-dim": "#a9c7ff",
+                      "primary-container": "#005eb8",
+                      "background": "#f7f9fb",
+                      "on-secondary-fixed-variant": "#004f4f",
+                      "on-secondary-container": "#007070",
+                      "tertiary-fixed": "#78fc9c",
+                      "surface": "#f7f9fb",
+                      "on-secondary": "#ffffff",
+                      "outline-variant": "#c2c6d4",
+                      "error-container": "#ffdad6",
+                      "primary-fixed": "#d6e3ff",
+                      "on-surface-variant": "#424752",
+                      "tertiary-container": "#006e33",
+                      "secondary-container": "#8cf3f3",
+                      "inverse-primary": "#a9c7ff",
+                      "on-background": "#191c1e",
+                      "secondary-fixed-dim": "#6fd7d6",
+                      "on-primary-fixed": "#001b3d",
+                      "on-primary-fixed-variant": "#00468c",
+                      "tertiary-fixed-dim": "#5adf82",
+                      "inverse-on-surface": "#eff1f3",
+                      "surface-container-high": "#e6e8ea",
+                      "surface-container": "#eceef0",
+                      "primary": "#00478d",
+                      "secondary": "#006a6a",
+                      "on-tertiary-container": "#6ff394",
+                      "surface-container-highest": "#e0e3e5",
+                      "on-error-container": "#93000a",
+                      "secondary-fixed": "#8cf3f3",
+                      "surface-container-low": "#f2f4f6",
+                      "on-error": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-surface": "#191c1e",
+                      "inverse-surface": "#2d3133",
+                      "surface-tint": "#005db6",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-bright": "#f7f9fb",
+                      "surface-dim": "#d8dadc",
+                      "outline": "#727783",
+                      "on-tertiary-fixed": "#00210b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "xxl": "64px",
+                      "margin": "32px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "gutter": "24px",
+                      "xl": "40px",
+                      "sm": "8px",
+                      "base": "4px",
+                      "md": "16px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "label-md": ["Inter"],
+                      "label-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="bg-surface-container-lowest dark:bg-surface-container-low shadow-sm dark:shadow-none docked full-width top-0 sticky z-50 border-b border-outline-variant dark:border-outline">
+<div class="flex justify-between items-center w-full px-margin py-4">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">MediCare Patient Portal</span>
+<div class="hidden md:flex ml-lg gap-md font-body-md text-body-md">
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors cursor-pointer active:scale-95 duration-200" href="patient_dashboard.html">Dashboard</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors cursor-pointer active:scale-95 duration-200" href="appointment_booking_wizard.html">Appointments</a>
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim font-bold pb-1 cursor-pointer active:scale-95 duration-200" href="phr_vault_medical_timeline.html">Medical Records</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors cursor-pointer active:scale-95 duration-200" href="billing_insurance_integration.html">Billing</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container rounded-lg border-none focus:ring-2 focus:ring-primary text-body-sm w-64" placeholder="Search PHR Vault..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant cursor-pointer active:scale-95 duration-200">notifications</button>
+<a class="material-symbols-outlined text-on-surface-variant cursor-pointer active:scale-95 duration-200" href="settings.html">settings</a>
+<img alt="Patient Profile Avatar" class="w-10 h-10 rounded-full border border-outline-variant cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmKRf05iNM7HOATU_s1smU4IU2dOeJQezHgCuV0s08xhsxhU_ytSoFTBpcJASI_uuJMZD0Rg8PhQgjJ2xiaVUqM0vMtJsoIXTmoJ-brbIe8iAxrufqmgW8Q5KVZgiEanxaTowQc_YdluHNMHDV-Usd6p7nEQWvPkmgoR0-FMvE-ABFF2RGPRML3N5gDzpcsGRrkHaTNtd2kSlhjqnxdXsV4vlMSzG5Ho-A6tUBSMLZffxDbDKINIFHIfLECxAjWt-Z7KOPxv_WhU_s"/>
+</div>
+</div>
+</header>
+<div class="flex min-h-screen">
+<!-- SideNavBar (Hidden on Mobile) -->
+<aside class="hidden lg:flex flex-col h-[calc(100vh-72px)] w-64 sticky top-[72px] bg-surface dark:bg-on-background border-r border-outline-variant dark:border-outline py-xl px-md gap-sm">
+<div class="mb-lg px-md">
+<h2 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">MediCare PHR</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">Patient Access</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-md px-md py-sm cursor-pointer text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-lg transition-all font-label-md text-label-md" href="patient_dashboard.html">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm cursor-pointer text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-lg transition-all font-label-md text-label-md" href="appointment_booking_wizard.html">
+<span class="material-symbols-outlined">calendar_month</span>
+<span>Appointments</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm cursor-pointer bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary rounded-lg font-bold font-label-md text-label-md" href="phr_vault_medical_timeline.html">
+<span class="material-symbols-outlined">history_edu</span>
+<span>Medical Records</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm cursor-pointer text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-lg transition-all font-label-md text-label-md" href="billing_insurance_integration.html">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span>Billing</span>
+</a>
+</nav>
+<a class="mt-xl bg-primary text-on-primary px-md py-sm rounded-lg font-label-md text-label-md flex items-center justify-center gap-sm active:scale-95 duration-200" href="appointment_booking_wizard.html">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                Book Appointment
+            </a>
+<div class="mt-auto border-t border-outline-variant pt-lg space-y-1">
+<a class="flex items-center gap-md px-md py-sm cursor-pointer text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md" href="support.html">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm cursor-pointer text-error hover:bg-error-container transition-all font-label-md text-label-md" href="sign_out.html">
+<span class="material-symbols-outlined">logout</span>
+<span>Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 p-margin">
+<div class="max-w-6xl mx-auto flex flex-col xl:flex-row gap-xl">
+<!-- Vertical Timeline Section -->
+<div class="flex-1">
+<header class="mb-lg">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-xs">PHR Vault</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Your complete medical history timeline.</p>
+</header>
+<section class="mb-xl bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+    <div class="flex items-center justify-between mb-sm">
+        <h2 class="font-headline-md text-headline-md text-on-surface">Demo Appointments</h2>
+        <span class="text-[11px] text-on-surface-variant">Mock data</span>
+    </div>
+    <div class="divide-y divide-outline-variant" data-mock="appointments"></div>
+</section>
+<div class="relative timeline-line space-y-xl">
+<!-- Timeline Node 1 -->
+<div class="relative pl-xl flex gap-lg group">
+<div class="absolute left-0 top-0 mt-1 w-12 h-12 rounded-full bg-surface-container-highest border-4 border-background flex items-center justify-center z-10 text-primary shadow-sm">
+<span class="material-symbols-outlined">stethoscope</span>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant flex-1 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Oct 12, 2023</span>
+<span class="bg-surface-container-high px-sm py-xs rounded text-label-sm font-medium">Routine Checkup</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs">Visit Date: 2023-10-12</h3>
+<p class="font-body-md text-body-md text-on-surface mb-sm">Doctor Name: <span class="font-semibold">Dr. Sarah Jenkins</span></p>
+<div class="bg-surface-container p-sm rounded border-l-4 border-primary">
+<p class="font-body-sm text-body-sm italic">Diagnosis: Hypertension, controlled via Lisinopril 10mg. Recommended low-sodium diet.</p>
+</div>
+</div>
+</div>
+<!-- Timeline Node 2 -->
+<div class="relative pl-xl flex gap-lg group">
+<div class="absolute left-0 top-0 mt-1 w-12 h-12 rounded-full bg-secondary-container border-4 border-background flex items-center justify-center z-10 text-on-secondary-container shadow-sm">
+<span class="material-symbols-outlined">radiology</span>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant flex-1 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Aug 24, 2023</span>
+<span class="bg-secondary-container text-on-secondary-container px-sm py-xs rounded text-label-sm font-medium">Radiology</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs">Visit Date: 2023-08-24</h3>
+<p class="font-body-md text-body-md text-on-surface mb-sm">Doctor Name: <span class="font-semibold">Dr. Michael Chen</span></p>
+<div class="bg-surface-container p-sm rounded border-l-4 border-secondary">
+<p class="font-body-sm text-body-sm italic">Diagnosis: Chronic persistent cough. X-Ray Chest PA ordered for clearance.</p>
+</div>
+</div>
+</div>
+<!-- Timeline Node 3 -->
+<div class="relative pl-xl flex gap-lg group">
+<div class="absolute left-0 top-0 mt-1 w-12 h-12 rounded-full bg-tertiary-container border-4 border-background flex items-center justify-center z-10 text-on-tertiary-container shadow-sm">
+<span class="material-symbols-outlined">lab_research</span>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant flex-1 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider">May 05, 2023</span>
+<span class="bg-tertiary-container text-on-tertiary-container px-sm py-xs rounded text-label-sm font-medium">Laboratory</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs">Visit Date: 2023-05-05</h3>
+<p class="font-body-md text-body-md text-on-surface mb-sm">Doctor Name: <span class="font-semibold">Dr. Emily Watson</span></p>
+<div class="bg-surface-container p-sm rounded border-l-4 border-tertiary">
+<p class="font-body-sm text-body-sm italic">Diagnosis: Annual Wellness Screening. CBC and Lipid Profile requested.</p>
+</div>
+<a class="mt-sm inline-flex items-center gap-xs text-primary font-label-sm text-label-sm hover:underline" href="phr_lab_result_detailed_view.html">
+                                View Lab Details
+                                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                            </a>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Panel: Medical Documents -->
+<aside class="w-full xl:w-80 flex flex-col gap-lg">
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant shadow-sm sticky top-[104px]">
+<h2 class="font-headline-md text-headline-md text-primary mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined">folder_open</span>
+                            Medical Documents
+                        </h2>
+<div class="space-y-md">
+<!-- Document 1 -->
+<div class="flex items-center gap-md group cursor-pointer p-sm hover:bg-surface-container-low rounded-lg transition-colors border border-transparent hover:border-outline-variant">
+<div class="relative w-16 h-20 bg-surface-container-highest rounded border border-outline-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist thumbnail of a medical laboratory report document on a white background. The document has blue headers and structured data tables, symbolizing professional medical lab results. The overall aesthetic is clinical and high-fidelity, matching a modern corporate healthcare portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzSuCPa40XpZ_M-RBgLX4pRbeRtSvlmnyy1vrXxDFmhNIJwc2ANk2jkYwq21fl2ZwPZZtBnZViMVEtBlWUVNn9r83DStwZLFWbSb6mR8xex1Z8Hr4F-zvXRz9Urr5Ntwsaclq0hepAjf7y3CiKTw-y5VxQ1LGSCfU5SD96T1dVBjL2MeSm2HWLN2kvOOcFnc-2h5f1XXLFDeAuQZOyzYF7JKKlOuv46UagYJdmcOn6yVlqRx1_dzuMc9xM_ZE1zU88-dn6vHTXVM7P"/>
+<div class="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
+</div>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">Lab Results - CBC (PDF)</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Oct 14, 2023 • 1.2 MB</p>
+<button class="mt-xs text-primary font-label-sm text-label-sm flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]">download</span>
+                                        Download
+                                    </button>
+</div>
+</div>
+<!-- Document 2 -->
+<div class="flex items-center gap-md group cursor-pointer p-sm hover:bg-surface-container-low rounded-lg transition-colors border border-transparent hover:border-outline-variant">
+<div class="relative w-16 h-20 bg-surface-container-highest rounded border border-outline-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A high-contrast monochrome thumbnail showing a stylized chest X-ray image within a digital medical viewer. The visual represents professional radiology results, with subtle blue-toned medical overlays. The lighting is focused and clean, embodying precision and clinical reliability for a health information system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGGIJ3mj64a8pH4O_LXLUZSdT5j5EL2a0j1HAAGWpAm0W1gnv7GGdKUMjU8r_ULx4fG0XJ8RBcFxfEUuGNXy-OgEGk2zMCwQydgyVzPhuzzadmtKqqHVfmAb0pISsOqPSA0S7eHyUU3UjRn0cZ5_cDoD_4653DsHhoW4NzDMGhw4CCNUdQseMfVbGQZpa6vxHXa65WFjvgxWigeKV7Zh1Iheovk_ywXmht5ffv71EaaRZyfSxP9LHnJ0vT1arc7RhknNva7Z9QjIl9"/>
+<div class="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
+</div>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">X-Ray Chest PA (PDF)</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Aug 25, 2023 • 4.5 MB</p>
+<button class="mt-xs text-primary font-label-sm text-label-sm flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]">download</span>
+                                        Download
+                                    </button>
+</div>
+</div>
+<!-- Document 3 -->
+<div class="flex items-center gap-md group cursor-pointer p-sm hover:bg-surface-container-low rounded-lg transition-colors border border-transparent hover:border-outline-variant">
+<div class="relative w-16 h-20 bg-surface-container-highest rounded border border-outline-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A digital prescription document thumbnail featuring a clean layout with medical icons and medication instructions. The design uses a sophisticated palette of clinical blue and white, conveying trust and clarity. High-fidelity details suggest a secure and modern electronic health record system interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpJVFZS1lPvJSoI0SOjNTetfLZorfTJAemRdbIjxemDOxas8KqHOEEsubCcFJ6vDcfUO_0a3_jKXX6TFW4dlRTDMoEqxBXyiitHsd3eRNlQI15wA40KMro9UHrhXbx5GwCnwNCCpbnbHJXaA4GoN27P3W1JEx7kJHCzR2C_AI2fAmFKZjIht5F5PABOoCio-8gJMVKyL6TdfbE5ixOd71muL8FjAo5VgcX5H_Sg82_ASm3qrqV4w2cV2Gdd0lSYnTZGX8P9s31gzVu"/>
+<div class="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
+</div>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">Prescription - BP (PDF)</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">May 05, 2023 • 0.8 MB</p>
+<button class="mt-xs text-primary font-label-sm text-label-sm flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]">download</span>
+                                        Download
+                                    </button>
+</div>
+</div>
+</div>
+<button class="w-full mt-lg border border-primary text-primary py-sm rounded-lg font-label-md text-label-md hover:bg-primary-container/10 transition-colors active:scale-[0.98] duration-200">
+                            View All Documents
+                        </button>
+</div>
+<!-- Helpful Tip Card -->
+<div class="bg-tertiary-container text-on-tertiary-container p-md rounded-xl shadow-sm">
+<div class="flex gap-sm items-start">
+<span class="material-symbols-outlined">info</span>
+<div>
+<p class="font-label-md text-label-md font-bold mb-xs">Did you know?</p>
+<p class="font-body-sm text-body-sm">You can securely share your vault with specialists for up to 48 hours using the "Quick Share" feature.</p>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</div>
+<!-- Floating Action Button (Only on Mobile Viewport Context) -->
+<button class="md:hidden fixed bottom-margin right-margin w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-50 active:scale-90 duration-200">
+<span class="material-symbols-outlined">add</span>
+</button>
+<script>
+        // Micro-interaction for search bar
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput?.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-2', 'ring-primary/50');
+        });
+        searchInput?.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-2', 'ring-primary/50');
+        });
+
+        // Simple filtering simulation logic for the vertical timeline nodes
+        searchInput?.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const nodes = document.querySelectorAll('.timeline-line > div');
+            
+            nodes.forEach(node => {
+                const text = node.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    node.style.display = 'flex';
+                } else {
+                    node.style.display = 'none';
+                }
+            });
+        });
+    </script>
+    <script src="assets/js/mock-data.js"></script>
+    <script src="assets/js/app.js"></script>
+</body></html>

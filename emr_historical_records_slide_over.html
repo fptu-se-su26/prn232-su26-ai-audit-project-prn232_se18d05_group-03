@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SmartCare HIS - Outpatient EMR</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-container": "#6ff394",
+                        "primary": "#00478d",
+                        "on-secondary-fixed-variant": "#004f4f",
+                        "tertiary-container": "#006e33",
+                        "primary-container": "#005eb8",
+                        "primary-fixed": "#d6e3ff",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#005325",
+                        "on-primary-container": "#c8daff",
+                        "surface": "#f7f9fb",
+                        "inverse-surface": "#2d3133",
+                        "surface-tint": "#005db6",
+                        "surface-container-high": "#e6e8ea",
+                        "on-primary-fixed-variant": "#00468c",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#424752",
+                        "outline": "#727783",
+                        "on-background": "#191c1e",
+                        "inverse-primary": "#a9c7ff",
+                        "on-tertiary-fixed-variant": "#005225",
+                        "tertiary-fixed-dim": "#5adf82",
+                        "on-surface": "#191c1e",
+                        "tertiary-fixed": "#78fc9c",
+                        "on-primary-fixed": "#001b3d",
+                        "surface-container-low": "#f2f4f6",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#6fd7d6",
+                        "on-secondary-fixed": "#002020",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#00210b",
+                        "background": "#f7f9fb",
+                        "secondary-container": "#8cf3f3",
+                        "secondary-fixed": "#8cf3f3",
+                        "surface-container-highest": "#e0e3e5",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "surface-variant": "#e0e3e5",
+                        "on-secondary-container": "#007070",
+                        "surface-bright": "#f7f9fb",
+                        "outline-variant": "#c2c6d4",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#eceef0",
+                        "secondary": "#006a6a",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin": "32px",
+                        "gutter": "24px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "xxl": "64px",
+                        "xl": "40px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "code": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "code": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface dark:bg-surface-dim border-r border-outline-variant dark:border-outline flex flex-col h-full overflow-y-auto z-40">
+<div class="px-6 py-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">SmartCare HIS</h1>
+<p class="text-on-surface-variant font-label-sm">Medical System</p>
+</div>
+<nav class="flex-grow">
+<a class="text-on-surface-variant dark:text-on-surface-variant flex items-center px-6 py-4 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="clinic_dashboard_queue_management.html">
+<span class="material-symbols-outlined mr-3" data-icon="group">group</span>
+<span class="font-body-sm text-body-sm">Queue</span>
+</a>
+<a class="text-primary font-bold border-r-4 border-primary bg-primary-container/10 flex items-center px-6 py-4 transition-colors" href="outpatient_emr_screen.html">
+<span class="material-symbols-outlined mr-3" data-icon="assignment">assignment</span>
+<span class="font-body-sm text-body-sm">Outpatient Records</span>
+</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant flex items-center px-6 py-4 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="e_prescription_interface.html">
+<span class="material-symbols-outlined mr-3" data-icon="prescriptions">prescriptions</span>
+<span class="font-body-sm text-body-sm">E-Prescription</span>
+</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant flex items-center px-6 py-4 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="telemedicine_consultation.html">
+<span class="material-symbols-outlined mr-3" data-icon="videocam">videocam</span>
+<span class="font-body-sm text-body-sm">Telemedicine</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant">
+<a class="text-on-surface-variant dark:text-on-surface-variant flex items-center px-6 py-4 hover:bg-surface-container-high transition-colors" href="settings.html">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+<span class="font-body-sm text-body-sm">Settings</span>
+</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant flex items-center px-6 py-4 hover:bg-surface-container-high transition-colors" href="support.html">
+<span class="material-symbols-outlined mr-3" data-icon="help">help</span>
+<span class="font-body-sm text-body-sm">Support</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline flex items-center justify-between px-gutter w-full ml-64 z-30">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg w-80 text-body-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="Search patient ID or name..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="flex items-center gap-3 border-l border-outline-variant pl-6">
+<div class="text-right">
+<p class="font-label-md text-on-surface leading-none">Dr. Elena Rodriguez</p>
+<p class="text-label-sm text-on-surface-variant">Cardiologist</p>
+</div>
+<img alt="Doctor Profile" class="w-10 h-10 rounded-full border border-outline-variant object-cover" data-alt="A professional headshot of a female doctor in her late 30s with dark hair tied back, wearing a white clinical lab coat and a stethoscope. She is smiling confidently in a brightly lit, modern hospital setting with soft blue and white tones. The lighting is crisp and high-key, conveying professional authority and warmth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE8FasMIiotkEmjE5NMKiH3xPu0w33Q-WI0QJhpAbJQ-C9Q01Fg0_xDHOImQ4RD92uOpUmBO9zNVFAQMlwHJmyFvHaO7ioYbEvwjZ3zEZSZJEa_P95u6KOmlbzfJG49FtVkU0GWQO8vajNnC3fWt3qiaRGzQHQncUv3-_BlmwaXP-6aID7MIcfGw2NXPF0-mzZHjgEdVpadZcHVE9bqfpZSRx1NI00gZN7cyBfRUjeNePgbIMEvpeBt8ojMNu1VaMCYHMcGJohoI8X"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 mt-16 p-margin h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar">
+<!-- Consultation Header -->
+<div class="flex justify-between items-start mb-8">
+<div>
+<nav class="flex items-center gap-2 text-label-sm text-on-surface-variant mb-2">
+<span>Patient Records</span>
+<span class="material-symbols-outlined text-[12px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-primary font-semibold">Active Consultation</span>
+</nav>
+<div class="flex items-center gap-4">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">James T. Harrison</h2>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full font-label-sm">In Progress</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-1">Patient ID: #SC-99201 • Age: 54 • Blood: A+</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-high text-on-surface border border-outline-variant rounded hover:bg-surface-container-highest transition-all" onclick="toggleArchive()">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md">View Archives</span>
+</button>
+<button class="flex items-center gap-2 px-6 py-2 bg-primary text-on-primary rounded hover:opacity-90 transition-all shadow-sm">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+<span class="font-label-md">Finish Session</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Vitals Bento Grid -->
+<div class="col-span-12 grid grid-cols-4 gap-4 mb-4">
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm text-on-surface-variant">Heart Rate</span>
+<span class="material-symbols-outlined text-error" data-icon="favorite">favorite</span>
+</div>
+<p class="font-headline-md text-headline-md">72 <span class="text-body-sm font-normal text-on-surface-variant">BPM</span></p>
+<p class="text-[10px] text-tertiary mt-2">Stable</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm text-on-surface-variant">Blood Pressure</span>
+<span class="material-symbols-outlined text-primary" data-icon="compress">compress</span>
+</div>
+<p class="font-headline-md text-headline-md">124/82 <span class="text-body-sm font-normal text-on-surface-variant">mmHg</span></p>
+<p class="text-[10px] text-tertiary mt-2">Normal Range</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm text-on-surface-variant">Body Temp</span>
+<span class="material-symbols-outlined text-orange-500" data-icon="thermostat">thermostat</span>
+</div>
+<p class="font-headline-md text-headline-md">36.8 <span class="text-body-sm font-normal text-on-surface-variant">°C</span></p>
+<p class="text-[10px] text-tertiary mt-2">Normal</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm text-on-surface-variant">SpO2</span>
+<span class="material-symbols-outlined text-secondary" data-icon="air">air</span>
+</div>
+<p class="font-headline-md text-headline-md">98 <span class="text-body-sm font-normal text-on-surface-variant">%</span></p>
+<p class="text-[10px] text-tertiary mt-2">Optimal</p>
+</div>
+</div>
+<section class="mb-lg bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+    <div class="flex items-center justify-between mb-sm">
+        <h3 class="font-headline-md text-headline-md text-on-surface">Demo Patients</h3>
+        <span class="text-[11px] text-on-surface-variant">Mock data</span>
+    </div>
+    <div class="divide-y divide-outline-variant" data-mock="patients"></div>
+</section>
+<!-- Consultation Notes -->
+<div class="col-span-8 space-y-gutter">
+<div class="bg-surface-container-lowest p-gutter rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline-md text-on-surface">Chief Complaint &amp; Subjective</h3>
+<span class="text-label-sm text-outline">Editing...</span>
+</div>
+<textarea class="w-full min-h-[160px] p-4 bg-surface rounded border border-outline-variant focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-body-md" placeholder="Enter patient's description of symptoms..."></textarea>
+<div class="mt-6">
+<h4 class="font-label-md text-on-surface-variant mb-3">Clinical Impressions</h4>
+<div class="grid grid-cols-2 gap-4">
+<label class="block">
+<span class="text-label-sm text-outline ml-1">Diagnosis Code (ICD-10)</span>
+<input class="w-full mt-1 px-4 py-2 border border-outline-variant rounded focus:ring-primary outline-none" type="text" value="I10"/>
+</label>
+<label class="block">
+<span class="text-label-sm text-outline ml-1">Follow-up Period</span>
+<select class="w-full mt-1 px-4 py-2 border border-outline-variant rounded focus:ring-primary outline-none">
+<option>2 Weeks</option>
+<option>1 Month</option>
+<option>3 Months</option>
+</select>
+</label>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-gutter rounded-xl border border-outline-variant shadow-sm">
+<h3 class="font-headline-md text-on-surface mb-6">Active Medications</h3>
+<table class="w-full border-collapse">
+<thead>
+<tr class="border-b border-outline-variant">
+<th class="text-left font-label-md text-on-surface-variant py-3 px-4">Medication</th>
+<th class="text-left font-label-md text-on-surface-variant py-3 px-4">Dosage</th>
+<th class="text-left font-label-md text-on-surface-variant py-3 px-4">Frequency</th>
+<th class="text-right font-label-md text-on-surface-variant py-3 px-4">Action</th>
+</tr>
+</thead>
+<tbody class="text-body-sm">
+<tr class="border-b border-surface-container">
+<td class="py-4 px-4 font-semibold">Lisinopril 10mg</td>
+<td class="py-4 px-4 text-on-surface-variant">1 Tablet</td>
+<td class="py-4 px-4 text-on-surface-variant">Daily (Morning)</td>
+<td class="py-4 px-4 text-right">
+<button class="text-error hover:underline">Discontinue</button>
+</td>
+</tr>
+<tr class="border-b border-surface-container">
+<td class="py-4 px-4 font-semibold">Atorvastatin 20mg</td>
+<td class="py-4 px-4 text-on-surface-variant">1 Tablet</td>
+<td class="py-4 px-4 text-on-surface-variant">Daily (Night)</td>
+<td class="py-4 px-4 text-right">
+<button class="text-error hover:underline">Discontinue</button>
+</td>
+</tr>
+</tbody>
+</table>
+<button class="mt-4 flex items-center gap-2 text-primary font-label-md hover:underline">
+<span class="material-symbols-outlined" data-icon="add">add</span> Add New Medication
+                    </button>
+</div>
+</div>
+<!-- Clinical Support -->
+<div class="col-span-4 space-y-gutter">
+<div class="bg-primary-container/5 border border-primary-container/20 p-6 rounded-xl">
+<h4 class="font-label-md text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="verified">verified</span>
+                        AI Clinical Assistant
+                    </h4>
+<p class="text-body-sm text-on-surface mb-4">Patient's BP is slightly elevated from last month (118/76). Consider reviewing sodium intake in diet.</p>
+<div class="flex gap-2">
+<span class="px-2 py-1 bg-primary text-on-primary text-[10px] rounded uppercase font-bold">Suggested</span>
+<span class="px-2 py-1 bg-surface-container text-on-surface-variant text-[10px] rounded uppercase font-bold">Hypertension</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl">
+<h4 class="font-label-md text-on-surface mb-4">Upcoming Appointments</h4>
+<div class="space-y-4">
+<div class="flex gap-3 items-center">
+<div class="w-10 h-10 bg-surface-container flex flex-col items-center justify-center rounded">
+<span class="text-[10px] font-bold text-on-surface-variant">OCT</span>
+<span class="text-label-md font-bold text-on-surface leading-none">24</span>
+</div>
+<div>
+<p class="text-body-sm font-semibold">Echocardiogram</p>
+<p class="text-label-sm text-on-surface-variant">Lab Room 3B</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Overlay backdrop -->
+<div class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300" id="overlay" onclick="toggleArchive()"></div>
+<!-- Slide-over: Historical Medical Records Archive -->
+<aside class="fixed top-0 right-0 h-screen w-[480px] bg-surface-container-lowest shadow-2xl z-50 transform translate-x-full transition-transform duration-500 ease-in-out border-l border-outline-variant flex flex-col" id="archivePanel">
+<div class="p-6 border-b border-outline-variant flex items-center justify-between bg-surface">
+<div>
+<h2 class="font-headline-md text-on-surface">Historical Records</h2>
+<p class="text-label-sm text-on-surface-variant">Archive (3 Years History)</p>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors" onclick="toggleArchive()">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<!-- Filter / Search in Archive -->
+<div class="p-4 bg-surface-container-low border-b border-outline-variant flex gap-2">
+<input class="flex-grow px-3 py-2 bg-surface rounded border border-outline-variant text-body-sm focus:ring-1 focus:ring-primary outline-none" placeholder="Filter history..." type="text"/>
+<button class="px-3 py-2 bg-surface border border-outline-variant rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+<div class="flex-grow overflow-y-auto custom-scrollbar p-6 space-y-4">
+<!-- Accordion Year: 2024 -->
+<div class="accordion-item">
+<div class="flex items-center gap-2 mb-4">
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+<span class="text-label-sm font-bold text-outline">2024</span>
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+</div>
+<div class="space-y-3">
+<!-- Visit Entry 1 -->
+<div class="border border-outline-variant rounded-lg overflow-hidden">
+<button class="w-full flex items-center justify-between p-4 bg-surface hover:bg-surface-container transition-colors text-left" onclick="toggleAccordion(this)">
+<div>
+<span class="text-label-sm text-primary font-bold">12 AUG 2024</span>
+<h4 class="font-body-md font-semibold">Routine Cardiology Follow-up</h4>
+</div>
+<span class="material-symbols-outlined transition-transform" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content hidden p-4 border-t border-outline-variant bg-white space-y-4">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-label-sm text-outline uppercase font-bold">Physician</p>
+<p class="text-body-sm">Dr. Sarah Miller</p>
+</div>
+<div>
+<p class="text-label-sm text-outline uppercase font-bold">Status</p>
+<p class="text-body-sm text-tertiary font-bold">Completed</p>
+</div>
+</div>
+<div>
+<p class="text-label-sm text-outline uppercase font-bold mb-1">Notes</p>
+<p class="text-body-sm text-on-surface-variant italic">"Patient reports mild fatigue. Stress test results were within normal parameters. Adjustment to dosage recommended next cycle."</p>
+</div>
+<button class="w-full py-2 bg-surface-container border border-outline-variant rounded font-label-md hover:bg-surface-container-high">View Lab Reports (2)</button>
+</div>
+</div>
+<!-- Visit Entry 2 -->
+<div class="border border-outline-variant rounded-lg overflow-hidden">
+<button class="w-full flex items-center justify-between p-4 bg-surface hover:bg-surface-container transition-colors text-left" onclick="toggleAccordion(this)">
+<div>
+<span class="text-label-sm text-primary font-bold">15 MAY 2024</span>
+<h4 class="font-body-md font-semibold">Annual Physical Examination</h4>
+</div>
+<span class="material-symbols-outlined transition-transform" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content hidden p-4 border-t border-outline-variant bg-white">
+<p class="text-body-sm">Comprehensive blood panel and physical check. All systems functional.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Accordion Year: 2023 -->
+<div class="accordion-item pt-4">
+<div class="flex items-center gap-2 mb-4">
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+<span class="text-label-sm font-bold text-outline">2023</span>
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+</div>
+<div class="space-y-3">
+<div class="border border-outline-variant rounded-lg overflow-hidden">
+<button class="w-full flex items-center justify-between p-4 bg-surface hover:bg-surface-container transition-colors text-left" onclick="toggleAccordion(this)">
+<div>
+<span class="text-label-sm text-primary font-bold">20 OCT 2023</span>
+<h4 class="font-body-md font-semibold">Emergency Dept: Chest Pain</h4>
+</div>
+<span class="material-symbols-outlined transition-transform" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content hidden p-4 border-t border-outline-variant bg-white">
+<p class="text-body-sm text-error font-bold mb-2">Urgent Case</p>
+<p class="text-body-sm">Patient admitted with acute discomfort. Ruled out MI. Diagnosed with acid reflux. Prescribed Antacids.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Accordion Year: 2022 -->
+<div class="accordion-item pt-4">
+<div class="flex items-center gap-2 mb-4">
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+<span class="text-label-sm font-bold text-outline">2022</span>
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+</div>
+<div class="p-6 text-center text-outline-variant">
+<span class="material-symbols-outlined text-[48px]" data-icon="inventory_2">inventory_2</span>
+<p class="text-label-sm mt-2">Archived offline records available upon request.</p>
+</div>
+</div>
+</div>
+<div class="p-6 border-t border-outline-variant bg-surface">
+<button class="w-full py-3 bg-secondary text-on-secondary rounded flex items-center justify-center gap-2 hover:opacity-90">
+<span class="material-symbols-outlined" data-icon="print">print</span>
+                Full History Report
+            </button>
+</div>
+</aside>
+<script>
+        function toggleArchive() {
+            const panel = document.getElementById('archivePanel');
+            const overlay = document.getElementById('overlay');
+            const isVisible = !panel.classList.contains('translate-x-full');
+
+            if (isVisible) {
+                panel.classList.add('translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            } else {
+                panel.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            }
+        }
+
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('.material-symbols-outlined');
+            
+            // Toggle visibility
+            content.classList.toggle('hidden');
+            
+            // Rotate icon
+            if (content.classList.contains('hidden')) {
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // Initialize view with archive visible for demonstration
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(toggleArchive, 500);
+        });
+    </script>
+    <script src="assets/js/mock-data.js"></script>
+    <script src="assets/js/app.js"></script>
+</body></html>

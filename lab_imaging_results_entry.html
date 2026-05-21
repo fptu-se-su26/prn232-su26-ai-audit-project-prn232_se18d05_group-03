@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SmartCare HIS | Lab &amp; Imaging Results Entry</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed-dim": "#a9c7ff",
+                      "surface-container": "#eceef0",
+                      "inverse-primary": "#a9c7ff",
+                      "on-tertiary-container": "#6ff394",
+                      "surface": "#f7f9fb",
+                      "surface-dim": "#d8dadc",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "secondary-container": "#8cf3f3",
+                      "surface-tint": "#005db6",
+                      "on-primary-container": "#c8daff",
+                      "tertiary-fixed": "#78fc9c",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-low": "#f2f4f6",
+                      "on-surface": "#191c1e",
+                      "on-surface-variant": "#424752",
+                      "secondary": "#006a6a",
+                      "on-primary-fixed-variant": "#00468c",
+                      "on-tertiary-fixed": "#00210b",
+                      "background": "#f7f9fb",
+                      "on-primary": "#ffffff",
+                      "tertiary": "#005325",
+                      "inverse-surface": "#2d3133",
+                      "on-tertiary-fixed-variant": "#005225",
+                      "surface-container-high": "#e6e8ea",
+                      "on-background": "#191c1e",
+                      "on-secondary-fixed": "#002020",
+                      "outline-variant": "#c2c6d4",
+                      "surface-container-highest": "#e0e3e5",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed-dim": "#5adf82",
+                      "on-secondary-container": "#007070",
+                      "primary": "#00478d",
+                      "surface-bright": "#f7f9fb",
+                      "outline": "#727783",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed-variant": "#004f4f",
+                      "secondary-fixed-dim": "#6fd7d6",
+                      "on-primary-fixed": "#001b3d",
+                      "secondary-fixed": "#8cf3f3",
+                      "primary-fixed": "#d6e3ff",
+                      "inverse-on-surface": "#eff1f3",
+                      "primary-container": "#005eb8",
+                      "tertiary-container": "#006e33",
+                      "error-container": "#ffdad6",
+                      "error": "#ba1a1a",
+                      "surface-variant": "#e0e3e5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "md": "16px",
+                      "xs": "4px",
+                      "lg": "24px",
+                      "margin": "32px",
+                      "gutter": "24px",
+                      "xxl": "64px",
+                      "base": "4px",
+                      "xl": "40px"
+              },
+              "fontFamily": {
+                      "label-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "code": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "code": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen overflow-hidden">
+<!-- SideNavBar (Shared Component) -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-lg px-md gap-xs bg-surface border-r border-outline-variant w-64 z-50">
+<div class="flex flex-col mb-xl px-sm">
+<span class="font-headline-lg text-headline-lg font-bold text-primary">SmartCare HIS</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Clinical Operations</span>
+</div>
+<nav class="flex-1 flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all" href="clinic_dashboard_queue_management.html">
+<span class="material-symbols-outlined">clinical_notes</span>
+<span class="font-label-md text-label-md">Queue</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all" href="outpatient_emr_screen.html">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-label-md text-label-md">Outpatient</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all" href="e_prescription_interface.html">
+<span class="material-symbols-outlined">prescriptions</span>
+<span class="font-label-md text-label-md">E-Prescription</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all" href="telemedicine_consultation.html">
+<span class="material-symbols-outlined">videocam</span>
+<span class="font-label-md text-label-md">Telemedicine</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all" href="inpatient_ward_visual_map.html">
+<span class="material-symbols-outlined">bed</span>
+<span class="font-label-md text-label-md">Inpatient</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-primary font-bold bg-primary-container rounded-lg transition-all" href="lab_imaging_results_entry.html">
+<span class="material-symbols-outlined">biotech</span>
+<span class="font-label-md text-label-md">Lab/Imaging</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-xs border-t border-outline-variant pt-lg">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all" href="support.html">
+<span class="material-symbols-outlined">support_agent</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all" href="sign_out.html">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex flex-col w-full h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="flex justify-between items-center w-full px-margin h-16 sticky top-0 z-40 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-xl">
+<div class="relative">
+<span class="absolute inset-y-0 left-3 flex items-center text-outline">
+<span class="material-symbols-outlined">search</span>
+</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg font-body-sm text-body-sm w-80 focus:outline-none focus:border-primary" placeholder="Search orders, patients..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-full">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-full">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary-fixed-dim overflow-hidden ml-sm border border-outline-variant">
+<img alt="Medical Practitioner Profile" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a healthcare practitioner in a clean, clinical setting. The lighting is bright and neutral, emphasizing a professional and trustworthy persona. The background is a soft-focus medical office with subtle blue and white tones that match the corporate health aesthetic. The image is crisp and high-definition, showing clinical competence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4kRmKaoglfsQHswejs0HMnctOT9oxlI7C7QHcyewPPzf79ThmAGApsFq5Q09BvObp7YlXWlplqZmPub40UFljgZU3fIm-zwfxZiXn8D_2Uln8FQ--T8h1yggWbs13Ekze02-sJ7NvxsNael1GWgIW-ljLdXxsy8r1ScUeJd4G32uBpjDUreMkYOyUseEo-rKLzUHzXzGbtqZIsW1VHdxDG9xZ6SXeHm_dclNL3pgfjMkoOBbi7q400AWUW0tzJiJDR1Fs-ztSyn6d"/>
+</div>
+</div>
+</header>
+<!-- Dynamic Lab Interface Content -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Orders Inbox (Left Panel) -->
+<section class="w-[380px] flex flex-col border-r border-outline-variant bg-surface-container-lowest">
+<div class="p-md border-b border-outline-variant flex justify-between items-center">
+<h2 class="font-headline-md text-headline-md text-primary">Orders Inbox</h2>
+<span class="px-sm py-xs bg-primary text-white font-label-sm text-label-sm rounded-full">24 New</span>
+</div>
+<div class="flex-1 overflow-y-auto" data-mock="lab-orders">
+<!-- Inbox Item STAT -->
+<div class="p-md border-b border-outline-variant bg-primary-container/10 border-l-4 border-l-error cursor-pointer hover:bg-primary-container/20 transition-all">
+<div class="flex justify-between items-start mb-xs">
+<span class="font-label-md text-label-md text-on-surface">Robert Williams</span>
+<span class="px-2 py-0.5 bg-error text-on-error font-label-sm text-label-sm rounded-lg">STAT</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mb-sm">Order #ORD-8821 • Comprehensive Metabolic Panel</div>
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 12 mins ago
+                            </span>
+<span class="font-label-sm text-label-sm text-primary">Dr. Sarah Chen</span>
+</div>
+</div>
+<!-- Inbox Item Routine -->
+<div class="p-md border-b border-outline-variant cursor-pointer hover:bg-surface-container-low transition-all">
+<div class="flex justify-between items-start mb-xs">
+<span class="font-label-md text-label-md text-on-surface">Elena Rodriguez</span>
+<span class="px-2 py-0.5 bg-surface-dim text-on-surface-variant font-label-sm text-label-sm rounded-lg">Routine</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mb-sm">Order #ORD-8790 • Lipid Profile</div>
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 1h 45m ago
+                            </span>
+<span class="font-label-sm text-label-sm text-primary">Dr. Mark Walton</span>
+</div>
+</div>
+<!-- Inbox Item Routine -->
+<div class="p-md border-b border-outline-variant cursor-pointer hover:bg-surface-container-low transition-all">
+<div class="flex justify-between items-start mb-xs">
+<span class="font-label-md text-label-md text-on-surface">Thomas Jenkins</span>
+<span class="px-2 py-0.5 bg-surface-dim text-on-surface-variant font-label-sm text-label-sm rounded-lg">Routine</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mb-sm">Order #ORD-8755 • Chest X-Ray (AP/Lat)</div>
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 2h 10m ago
+                            </span>
+<span class="font-label-sm text-label-sm text-primary">Dr. Linda Blair</span>
+</div>
+</div>
+<!-- Inbox Item STAT -->
+<div class="p-md border-b border-outline-variant cursor-pointer hover:bg-surface-container-low transition-all">
+<div class="flex justify-between items-start mb-xs">
+<span class="font-label-md text-label-md text-on-surface">Alice Cooper</span>
+<span class="px-2 py-0.5 bg-error text-on-error font-label-sm text-label-sm rounded-lg">STAT</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mb-sm">Order #ORD-8732 • CT Scan Head</div>
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 3h ago
+                            </span>
+<span class="font-label-sm text-label-sm text-primary">Dr. James Miller</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Result Entry Form (Main Panel) -->
+<section class="flex-1 flex flex-col bg-surface overflow-y-auto">
+<!-- Patient Context Banner -->
+<div class="p-margin bg-white border-b border-outline-variant shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-lg">
+<div class="w-16 h-16 rounded-xl bg-surface-container overflow-hidden border border-outline-variant">
+<img alt="Patient Robert Williams" class="w-full h-full object-cover" data-alt="A clean, minimalist medical portrait of an elderly male patient named Robert Williams. He is looking into the camera with a calm expression. The image uses a soft, clinical light-mode palette with subtle cool blue undertones. High-fidelity medical photography style, professional and respectful, set against a pristine, neutral clinic background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPR1tOMTKb0JR0ai87kwmAzDCCHOs4uNBw7XdaOwIId1fd1CIGwF934bIE-MfyxxwuEH-nRcklqOazkM4pg-o_PDm1MwQ4TBNSTM0oBUQ8n0Sa336ANJSo5Cn3ccXVLuo9z02qoeNxbSLhztiiE9hMPVH1zKMqfGObAtCpEwdlXJ6lhbmo7TdboNZf3oU-Kv_WHPsVDJbe82aG3jMK82rj5Mea-q69jj9gmKPpemSufwnpzqAJLo7WSd8kI_PJhh7z3pWvQfk6iDXK"/>
+</div>
+<div>
+<div class="flex items-center gap-md mb-xs">
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Robert Williams</h1>
+<span class="font-label-md text-label-md px-md py-0.5 border border-outline text-outline rounded-full">ID: 100984-RW</span>
+</div>
+<div class="flex gap-xl font-body-sm text-body-sm text-on-surface-variant">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[18px]">person</span> 68 Years, Male</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[18px]">bloodtype</span> A+ Positive</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[18px]">emergency_home</span> No Allergies Listed</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="px-md py-sm border border-outline-variant text-primary font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors">
+                            View History
+                        </button>
+<button class="px-md py-sm bg-primary text-white font-label-md text-label-md rounded-lg hover:opacity-90 transition-opacity">
+                            Approve &amp; Sign
+                        </button>
+</div>
+</div>
+<!-- Form Area -->
+<div class="p-margin flex-1">
+<div class="max-w-4xl mx-auto space-y-lg">
+<!-- Panel: Lab Results -->
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="px-lg py-md bg-surface-container-low border-b border-outline-variant flex items-center justify-between">
+<span class="font-label-md text-label-md text-primary uppercase tracking-wider">Metabolic Panel Entry</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Specimen ID: LAB-22904</span>
+</div>
+<div class="p-lg grid grid-cols-2 gap-xl">
+<!-- Field 1 -->
+<div class="space-y-xs">
+<label class="block font-label-md text-label-md text-on-surface-variant">Glucose (mg/dL)</label>
+<div class="relative">
+<input class="w-full px-md py-3 bg-white border-2 border-error/30 rounded-lg font-body-md text-body-md focus:border-error focus:outline-none" type="text" value="110"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-error text-white font-label-sm text-label-sm rounded uppercase">High</span>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Reference Range: 70 - 99 mg/dL</p>
+</div>
+<!-- Field 2 -->
+<div class="space-y-xs">
+<label class="block font-label-md text-label-md text-on-surface-variant">Creatinine (mg/dL)</label>
+<div class="relative">
+<input class="w-full px-md py-3 bg-white border border-outline-variant rounded-lg font-body-md text-body-md focus:border-primary focus:outline-none" type="text" value="0.9"/>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Reference Range: 0.7 - 1.3 mg/dL</p>
+</div>
+<!-- Field 3 -->
+<div class="space-y-xs">
+<label class="block font-label-md text-label-md text-on-surface-variant">Potassium (mmol/L)</label>
+<div class="relative">
+<input class="w-full px-md py-3 bg-white border-2 border-secondary/30 rounded-lg font-body-md text-body-md focus:border-secondary focus:outline-none" type="text" value="3.2"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-secondary text-white font-label-sm text-label-sm rounded uppercase">Low</span>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Reference Range: 3.5 - 5.1 mmol/L</p>
+</div>
+<!-- Field 4 -->
+<div class="space-y-xs">
+<label class="block font-label-md text-label-md text-on-surface-variant">Sodium (mmol/L)</label>
+<div class="relative">
+<input class="w-full px-md py-3 bg-white border border-outline-variant rounded-lg font-body-md text-body-md focus:border-primary focus:outline-none" type="text" value="138"/>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Reference Range: 136 - 145 mmol/L</p>
+</div>
+</div>
+</div>
+<!-- Panel: Imaging Reports & Uploads -->
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="px-lg py-md bg-surface-container-low border-b border-outline-variant">
+<span class="font-label-md text-label-md text-primary uppercase tracking-wider">Imaging File Upload</span>
+</div>
+<div class="p-lg">
+<div class="border-2 border-dashed border-outline-variant rounded-xl p-xxl flex flex-col items-center justify-center bg-surface-container-low/30 hover:bg-surface-container-low transition-all cursor-pointer" id="drop-zone">
+<span class="material-symbols-outlined text-primary text-[48px] mb-md">upload_file</span>
+<p class="font-headline-md text-headline-md text-on-surface mb-xs">Drag and drop DICOM or PDF</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-lg text-center">Support for MRI, CT scans, and laboratory certificates. <br/>Maximum file size: 500MB.</p>
+<button class="px-xl py-sm bg-primary text-white font-label-md text-label-md rounded-lg shadow-md hover:bg-primary-container transition-all">
+                                        Browse Files
+                                    </button>
+</div>
+<!-- File Preview (Hidden initially in real app, showing one for visual demo) -->
+<div class="mt-lg p-md bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-secondary">description</span>
+<div>
+<p class="font-label-md text-label-md text-on-surface">rwilliams_chest_xray_2023.dicom</p>
+<p class="font-label-sm text-label-sm text-outline">45.2 MB • Uploading 88%...</p>
+</div>
+</div>
+<div class="w-48 h-2 bg-surface-dim rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[88%]"></div>
+</div>
+<button class="text-error hover:bg-error-container/20 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">cancel</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Notes Area -->
+<div class="space-y-xs">
+<label class="block font-label-md text-label-md text-on-surface-variant px-xs">Clinical Technician Notes</label>
+<textarea class="w-full px-md py-md bg-white border border-outline-variant rounded-xl font-body-md text-body-md focus:border-primary focus:outline-none resize-none shadow-sm" placeholder="Enter findings, anomalies, or technical notes..." rows="4"></textarea>
+</div>
+</div>
+</div>
+<!-- Status Footer -->
+<footer class="p-md bg-primary-container/5 border-t border-outline-variant flex items-center justify-between px-margin">
+<div class="flex items-center gap-md text-secondary">
+<span class="material-symbols-outlined font-variation-settings-fill">sync</span>
+<span class="font-label-md text-label-md font-bold">Results Automatically Synced to Doctor's EMR</span>
+</div>
+<div class="flex items-center gap-lg">
+<span class="font-label-sm text-label-sm text-outline">Last Saved: 2 mins ago</span>
+<div class="flex gap-md">
+<button class="px-lg py-sm border border-outline text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container transition-colors">
+                                Save Draft
+                            </button>
+<button class="px-lg py-sm bg-primary text-white font-label-md text-label-md rounded-lg hover:opacity-90 shadow-lg shadow-primary/20">
+                                Complete Order
+                            </button>
+</div>
+</div>
+</footer>
+</section>
+</div>
+</main>
+<script>
+        // Micro-interaction for drop zone
+        const dropZone = document.getElementById('drop-zone');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+
+        dropZone.addEventListener('dragenter', () => {
+            dropZone.classList.add('border-primary', 'bg-primary-container/10');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-primary', 'bg-primary-container/10');
+        });
+
+        dropZone.addEventListener('drop', () => {
+            dropZone.classList.remove('border-primary', 'bg-primary-container/10');
+            alert('File drop detected. Processing medical imaging data...');
+        });
+
+        // Inbox Selection Simulation
+        const inboxItems = document.querySelectorAll('.Orders-Inbox-item');
+        inboxItems.forEach(item => {
+            item.addEventListener('click', () => {
+                inboxItems.forEach(i => i.classList.remove('bg-primary-container/10', 'border-l-4', 'border-l-error'));
+                item.classList.add('bg-primary-container/10', 'border-l-4', 'border-l-error');
+            });
+        });
+    </script>
+    <script src="assets/js/mock-data.js"></script>
+    <script src="assets/js/app.js"></script>
+</body></html>

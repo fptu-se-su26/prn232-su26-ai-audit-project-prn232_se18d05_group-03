@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#005325",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#c8daff",
+                        "on-secondary-fixed": "#002020",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#005225",
+                        "surface-variant": "#e0e3e5",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "primary-container": "#005eb8",
+                        "background": "#f7f9fb",
+                        "on-secondary-fixed-variant": "#004f4f",
+                        "on-secondary-container": "#007070",
+                        "tertiary-fixed": "#78fc9c",
+                        "surface": "#f7f9fb",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#c2c6d4",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#d6e3ff",
+                        "on-surface-variant": "#424752",
+                        "tertiary-container": "#006e33",
+                        "secondary-container": "#8cf3f3",
+                        "inverse-primary": "#a9c7ff",
+                        "on-background": "#191c1e",
+                        "secondary-fixed-dim": "#6fd7d6",
+                        "on-primary-fixed": "#001b3d",
+                        "on-primary-fixed-variant": "#00468c",
+                        "tertiary-fixed-dim": "#5adf82",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-container": "#eceef0",
+                        "primary": "#00478d",
+                        "secondary": "#006a6a",
+                        "on-tertiary-container": "#6ff394",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed": "#8cf3f3",
+                        "surface-container-low": "#f2f4f6",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-surface": "#191c1e",
+                        "inverse-surface": "#2d3133",
+                        "surface-tint": "#005db6",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f7f9fb",
+                        "surface-dim": "#d8dadc",
+                        "outline": "#727783",
+                        "on-tertiary-fixed": "#00210b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xxl": "64px",
+                        "margin": "32px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "gutter": "24px",
+                        "xl": "40px",
+                        "sm": "8px",
+                        "base": "4px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .step-transition { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; }
+        .wizard-container { max-width: 900px; margin: 0 auto; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .active-step-line { transition: width 0.5s ease-in-out; }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-background min-h-screen">
+<!-- TopNavBar -->
+<nav class="bg-surface-container-lowest sticky top-0 z-50 shadow-sm border-b border-outline-variant flex justify-between items-center w-full px-margin py-4">
+<div class="font-headline-md text-headline-md font-bold text-primary">MediCare Patient Portal</div>
+<div class="hidden md:flex items-center gap-xl">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="patient_dashboard.html">Dashboard</a>
+<a class="text-primary border-b-2 border-primary font-bold pb-1 font-body-md" href="appointment_booking_wizard.html">Appointments</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="phr_vault_medical_timeline.html">Medical Records</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="billing_insurance_integration.html">Billing</a>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer active:scale-95 duration-200">notifications</span>
+<a class="material-symbols-outlined text-on-surface-variant cursor-pointer active:scale-95 duration-200" href="settings.html">settings</a>
+<img alt="Patient Profile Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary-fixed" data-alt="A professional headshot of a friendly middle-aged man with short hair and a clean-shaven face, smiling warmly. The background is a soft, out-of-focus medical office setting with blue and white tones. High-fidelity photography style with soft natural lighting and clear facial details, conveying trust and well-being." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnV4AOW-38d85DnyB_rPrXbtItGm0aeThSjXffTnbmsMZNXqP4EV3ymlx-_z15xv2hgd_7hsdqaa84QoNlTjpIo4Q4kC4LpohPJ5OrNmmmPPLDuwv1fHdBciiE2uYu2nh3y5L9953dE0A24ZMgohrRBhw4Zz3DtANbDi25FoEnPekOQ_awSAopfWS5zz8qvBCoSXACbyCJPML4TxWVBnNGY7zhcfPjvLU0_wKsBLbGaapfgMAVWkGX_UOEL6aO9P1URizRF1WY13Kj"/>
+</div>
+</nav>
+<main class="wizard-container px-margin py-xl">
+<!-- Progress Header -->
+<div class="mb-xxl">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-sm">Book an Appointment</h1>
+<p class="text-on-surface-variant font-body-md mb-lg">Complete the three steps below to secure your consultation.</p>
+<div class="relative pt-4">
+<div class="flex justify-between mb-2">
+<span class="font-label-md text-label-md text-primary" id="step-label-1">1. Specialty</span>
+<span class="font-label-md text-label-md text-outline" id="step-label-2">2. Doctor</span>
+<span class="font-label-md text-label-md text-outline" id="step-label-3">3. Time Slot</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="active-step-line h-full bg-primary" id="progress-bar" style="width: 33.33%;"></div>
+</div>
+</div>
+</div>
+<section class="mb-xl bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="px-md py-sm border-b border-outline-variant flex items-center justify-between">
+        <h2 class="font-headline-md text-headline-md text-on-surface">Demo Appointments</h2>
+        <span class="text-[11px] text-on-surface-variant">Mock data</span>
+    </div>
+    <div class="divide-y divide-outline-variant" data-mock="appointments"></div>
+</section>
+<!-- Step Canvas -->
+<div class="relative overflow-hidden min-h-[500px]" id="wizard-canvas">
+<!-- Step 1: Specialty Selection -->
+<div class="step-transition w-full" id="step-1">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Specialty Cards -->
+<div class="specialty-card group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all hover:shadow-md" onclick="selectSpecialty('Cardiology')">
+<div class="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center mb-md group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">favorite</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs">Cardiology</h3>
+<p class="text-on-surface-variant font-body-sm">Heart health and cardiovascular system treatment.</p>
+</div>
+<div class="specialty-card group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all hover:shadow-md" onclick="selectSpecialty('Dermatology')">
+<div class="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center mb-md group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">science</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs">Dermatology</h3>
+<p class="text-on-surface-variant font-body-sm">Expert care for skin, hair, and nail conditions.</p>
+</div>
+<div class="specialty-card group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all hover:shadow-md" onclick="selectSpecialty('General Medicine')">
+<div class="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center mb-md group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">medical_services</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs">General Medicine</h3>
+<p class="text-on-surface-variant font-body-sm">Primary care and comprehensive health checkups.</p>
+</div>
+<div class="specialty-card group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all hover:shadow-md" onclick="selectSpecialty('Neurology')">
+<div class="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center mb-md group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">psychology</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs">Neurology</h3>
+<p class="text-on-surface-variant font-body-sm">Specialized care for the brain and nervous system.</p>
+</div>
+<div class="specialty-card group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all hover:shadow-md" onclick="selectSpecialty('Orthopedics')">
+<div class="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center mb-md group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">skeleton</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs">Orthopedics</h3>
+<p class="text-on-surface-variant font-body-sm">Treatment for bone, joint, and muscle health.</p>
+</div>
+<div class="specialty-card group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all hover:shadow-md" onclick="selectSpecialty('Pediatrics')">
+<div class="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center mb-md group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">child_care</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs">Pediatrics</h3>
+<p class="text-on-surface-variant font-body-sm">Dedicated healthcare for infants, children, and teens.</p>
+</div>
+</div>
+</div>
+<!-- Step 2: Doctor Selection (Hidden initially) -->
+<div class="step-transition hidden w-full" id="step-2">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Doctor Cards -->
+<div class="doctor-card group bg-surface-container-lowest flex items-start p-lg rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all hover:shadow-md gap-md" onclick="selectDoctor('Dr. Sarah Jenkins')">
+<img alt="Doctor Avatar" class="w-24 h-24 rounded-lg object-cover bg-surface-container-high" data-alt="Close-up professional portrait of Dr. Sarah Jenkins, a female physician with a kind and confident expression, wearing a white clinical coat and a stethoscope. The background is a softly lit, modern clinic with glass and blue accents. Clinical photography style, clean, professional, and trustworthy lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjLcZk67OXqDSjNlqJvP0prvpA5wDyva5KyANtSse7bkI45NGaXHYuCXJwxGqxuAxVq4qbapkcrOZeVuWPqZInArC4WZCb69LjI4N4L38zhhnUqkM1t2sA_zbzNlcBe3C2u6FLUcwlWMT4FvTJa3ryJwlwJf0aad2RVV2HYYTDwtLUZ7EKuQanEj2GJU4XKfUI6KAusD_Drcb5IsTdQaTeYXJ-3tdGlI5ROTrSx-pv0fNaTUKx9VMJtmXb1zIYTplSiZTQ-3fH1QAZ"/>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline-md text-headline-md text-on-surface">Dr. Sarah Jenkins</h4>
+<div class="flex items-center text-tertiary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md ml-1">4.9</span>
+</div>
+</div>
+<p class="text-primary font-label-md mb-2">Senior Cardiologist</p>
+<div class="flex items-center gap-md text-on-surface-variant font-body-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-base">work_history</span> 15 years exp</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-base">location_on</span> Main Wing</span>
+</div>
+</div>
+</div>
+<div class="doctor-card group bg-surface-container-lowest flex items-start p-lg rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all hover:shadow-md gap-md" onclick="selectDoctor('Dr. Michael Chen')">
+<img alt="Doctor Avatar" class="w-24 h-24 rounded-lg object-cover bg-surface-container-high" data-alt="A professional medical headshot of Dr. Michael Chen, an Asian male doctor in his 40s. He is wearing a lab coat and smiling slightly, looking directly at the camera with a calm and reassuring gaze. The lighting is bright and even, characteristic of a high-end private medical facility. Modern corporate healthcare aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuADYnURBHQFwPtouEAqVsm9YwBO69jqJWeFjNxAt37FNrd42hAWX_kusVNvLQGMSu4G6XAzN1-cebB45JXpzkfcV_iVzdDfnsT1M2zPj39hlEtrkBd96fo3njtEsXqpyvlBc4rmYdLEof-lceoRyzFqDNF26qdgNdJqUTk2Xqx1sRfqMJTtaHQoM8wXjGHsLUe0S8KKaQnPuR2eikgj3k7-YHMYsaxL8pBZ49Bm1ChzJtzKrikSl5D3O_LyMl3CMM_EpcaMqXcV2oJW"/>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline-md text-headline-md text-on-surface">Dr. Michael Chen</h4>
+<div class="flex items-center text-tertiary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md ml-1">4.8</span>
+</div>
+</div>
+<p class="text-primary font-label-md mb-2">Associate Specialist</p>
+<div class="flex items-center gap-md text-on-surface-variant font-body-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-base">work_history</span> 8 years exp</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-base">location_on</span> North Wing</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Step 3: Date & Time Selection (Hidden initially) -->
+<div class="step-transition hidden w-full" id="step-3">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-xxl">
+<!-- Calendar View Simulation -->
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant">
+<div class="flex justify-between items-center mb-lg">
+<h4 class="font-headline-md text-headline-md">October 2023</h4>
+<div class="flex gap-sm">
+<button class="p-2 hover:bg-surface-container-high rounded-full"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="p-2 hover:bg-surface-container-high rounded-full"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+<div class="grid grid-cols-7 gap-2 text-center">
+<span class="text-outline font-label-md pb-2">Mo</span>
+<span class="text-outline font-label-md pb-2">Tu</span>
+<span class="text-outline font-label-md pb-2">We</span>
+<span class="text-outline font-label-md pb-2">Th</span>
+<span class="text-outline font-label-md pb-2">Fr</span>
+<span class="text-outline font-label-md pb-2">Sa</span>
+<span class="text-outline font-label-md pb-2">Su</span>
+<!-- Calendar Days -->
+<button class="py-3 text-outline-variant font-body-sm">25</button>
+<button class="py-3 text-outline-variant font-body-sm">26</button>
+<button class="py-3 text-outline-variant font-body-sm">27</button>
+<button class="py-3 text-outline-variant font-body-sm">28</button>
+<button class="py-3 text-outline-variant font-body-sm">29</button>
+<button class="py-3 text-outline-variant font-body-sm">30</button>
+<button class="py-3 font-body-sm hover:bg-surface-container-high rounded-lg">1</button>
+<button class="py-3 font-body-sm hover:bg-surface-container-high rounded-lg">2</button>
+<button class="py-3 font-body-sm hover:bg-surface-container-high rounded-lg">3</button>
+<button class="py-3 font-body-sm bg-primary text-on-primary rounded-lg">4</button>
+<button class="py-3 font-body-sm hover:bg-surface-container-high rounded-lg">5</button>
+<button class="py-3 font-body-sm hover:bg-surface-container-high rounded-lg">6</button>
+<button class="py-3 font-body-sm hover:bg-surface-container-high rounded-lg">7</button>
+<button class="py-3 font-body-sm hover:bg-surface-container-high rounded-lg">8</button>
+</div>
+</div>
+<!-- Time Slot Grid -->
+<div>
+<h4 class="font-headline-md text-headline-md mb-md">Available Slots</h4>
+<div class="grid grid-cols-2 gap-sm">
+<button class="time-slot-btn py-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-primary-fixed font-body-md transition-all" onclick="selectTime('09:00 AM')">09:00 AM</button>
+<button class="time-slot-btn py-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-primary-fixed font-body-md transition-all" onclick="selectTime('10:30 AM')">10:30 AM</button>
+<button class="time-slot-btn py-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-primary-fixed font-body-md transition-all" onclick="selectTime('01:15 PM')">01:15 PM</button>
+<button class="time-slot-btn py-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-primary-fixed font-body-md transition-all" onclick="selectTime('02:45 PM')">02:45 PM</button>
+<button class="time-slot-btn py-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-primary-fixed font-body-md transition-all" onclick="selectTime('04:00 PM')">04:00 PM</button>
+<button class="py-4 border border-outline-variant rounded-lg font-body-md opacity-40 cursor-not-allowed bg-surface-container">05:30 PM</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Success Screen (Hidden) -->
+<div class="step-transition hidden w-full text-center py-xxl" id="step-success">
+<div class="w-20 h-20 bg-tertiary-fixed text-on-tertiary-fixed rounded-full flex items-center justify-center mx-auto mb-lg">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h2 class="font-display-lg text-display-lg text-on-surface mb-md">Booking Confirmed!</h2>
+<p class="text-on-surface-variant font-body-lg max-w-md mx-auto mb-xl">Your appointment with <span class="font-bold text-primary" id="conf-doctor">Dr. Sarah Jenkins</span> has been scheduled for <span class="font-bold" id="conf-time">October 4th at 10:30 AM</span>.</p>
+<div class="flex justify-center gap-md">
+<button class="px-xl py-3 bg-primary text-on-primary rounded-lg font-label-md active:scale-95 transition-all">Add to Calendar</button>
+<button class="px-xl py-3 border border-outline text-primary rounded-lg font-label-md hover:bg-surface-container-high transition-all" onclick="location.reload()">Home Dashboard</button>
+</div>
+</div>
+</div>
+<!-- Navigation Controls -->
+<div class="mt-xxl pt-lg border-t border-outline-variant flex justify-between items-center" id="wizard-nav">
+<button class="px-xl py-3 border border-outline text-on-surface-variant rounded-lg font-label-md opacity-50 cursor-not-allowed transition-all flex items-center gap-2" id="prev-btn" onclick="goBack()">
+<span class="material-symbols-outlined">arrow_back</span> Back
+            </button>
+<button class="px-xl py-4 bg-primary text-on-primary rounded-lg font-label-md active:scale-95 transition-all shadow-md flex items-center gap-2" id="next-btn" onclick="goNext()">
+                Next <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</main>
+<script>
+        let currentStep = 1;
+        const totalSteps = 3;
+        
+        const selectionData = {
+            specialty: '',
+            doctor: '',
+            time: ''
+        };
+
+        function updateProgress() {
+            const bar = document.getElementById('progress-bar');
+            const percentage = (currentStep / totalSteps) * 100;
+            bar.style.width = percentage + '%';
+
+            // Labels
+            for (let i = 1; i <= 3; i++) {
+                const label = document.getElementById(`step-label-${i}`);
+                if (i <= currentStep) {
+                    label.classList.remove('text-outline');
+                    label.classList.add('text-primary');
+                } else {
+                    label.classList.add('text-outline');
+                    label.classList.remove('text-primary');
+                }
+            }
+
+            // Buttons visibility
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+
+            if (currentStep === 1) {
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                prevBtn.disabled = true;
+            } else {
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                prevBtn.disabled = false;
+            }
+
+            if (currentStep === 3) {
+                nextBtn.innerHTML = 'Complete Booking <span class="material-symbols-outlined">done_all</span>';
+                nextBtn.classList.remove('bg-primary');
+                nextBtn.classList.add('bg-tertiary');
+            } else {
+                nextBtn.innerHTML = 'Next <span class="material-symbols-outlined">arrow_forward</span>';
+                nextBtn.classList.add('bg-primary');
+                nextBtn.classList.remove('bg-tertiary');
+            }
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.step-transition').forEach(el => el.classList.add('hidden'));
+            const currentEl = document.getElementById(`step-${step}`);
+            if (currentEl) {
+                currentEl.classList.remove('hidden');
+                // Micro-animation
+                currentEl.style.opacity = '0';
+                currentEl.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    currentEl.style.opacity = '1';
+                    currentEl.style.transform = 'translateY(0)';
+                }, 50);
+            }
+        }
+
+        function goNext() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                showStep(currentStep);
+                updateProgress();
+            } else {
+                // Submit logic
+                completeBooking();
+            }
+        }
+
+        function goBack() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+                updateProgress();
+            }
+        }
+
+        function selectSpecialty(val) {
+            selectionData.specialty = val;
+            document.querySelectorAll('.specialty-card').forEach(c => c.classList.remove('border-primary', 'ring-2', 'ring-primary/20'));
+            event.currentTarget.classList.add('border-primary', 'ring-2', 'ring-primary/20');
+            setTimeout(goNext, 300);
+        }
+
+        function selectDoctor(val) {
+            selectionData.doctor = val;
+            document.querySelectorAll('.doctor-card').forEach(c => c.classList.remove('border-primary', 'ring-2', 'ring-primary/20'));
+            event.currentTarget.classList.add('border-primary', 'ring-2', 'ring-primary/20');
+            setTimeout(goNext, 300);
+        }
+
+        function selectTime(val) {
+            selectionData.time = val;
+            document.querySelectorAll('.time-slot-btn').forEach(c => {
+                c.classList.remove('bg-primary', 'text-on-primary', 'border-primary');
+                c.classList.add('border-outline-variant');
+            });
+            event.currentTarget.classList.add('bg-primary', 'text-on-primary', 'border-primary');
+            event.currentTarget.classList.remove('border-outline-variant');
+        }
+
+        function completeBooking() {
+            if (!selectionData.time) {
+                alert("Please select a time slot to continue.");
+                return;
+            }
+            
+            document.getElementById('conf-doctor').innerText = selectionData.doctor || "Dr. Sarah Jenkins";
+            document.getElementById('conf-time').innerText = `October 4th at ${selectionData.time}`;
+            
+            document.getElementById('wizard-nav').classList.add('hidden');
+            document.getElementById('progress-bar').style.width = '100%';
+            showStep('success');
+        }
+
+        // Initialize UI state
+        updateProgress();
+    </script>
+    <script src="assets/js/mock-data.js"></script>
+    <script src="assets/js/app.js"></script>
+</body></html>

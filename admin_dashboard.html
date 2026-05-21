@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartCare HIS - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#00478d',
+              secondary: '#006a6a',
+              tertiary: '#005325',
+              background: '#f7f9fb',
+              surface: '#ffffff',
+              'surface-container-low': '#f2f4f6',
+              'surface-container-lowest': '#ffffff',
+              'surface-container-high': '#e6e8ea',
+              'outline-variant': '#c2c6d4',
+              'on-surface': '#191c1e',
+              'on-surface-variant': '#424752',
+              'on-primary': '#ffffff',
+              'on-primary-fixed': '#001b3d',
+              'on-secondary-container': '#007070',
+              'primary-container': '#005eb8',
+              'secondary-container': '#8cf3f3',
+            },
+            spacing: { margin: '32px', lg: '24px', md: '16px', sm: '8px', xl: '40px', xxl: '64px', gutter: '24px' },
+            borderRadius: { DEFAULT: '0.125rem', lg: '0.25rem', xl: '0.5rem', full: '9999px' },
+            fontFamily: { body: ['Inter'], headline: ['Inter'], label: ['Inter'] },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+  </head>
+  <body class="bg-background text-on-surface font-body min-h-screen">
+    <div class="flex min-h-screen">
+      <aside class="hidden lg:flex w-72 flex-col bg-surface border-r border-outline-variant sticky top-0 h-screen">
+        <div class="p-xl border-b border-outline-variant">
+          <div class="flex items-center gap-sm">
+            <span class="material-symbols-outlined text-primary text-3xl">shield</span>
+            <div>
+              <div class="font-bold text-primary text-xl">SmartCare HIS</div>
+              <div class="text-sm text-on-surface-variant">Admin Dashboard</div>
+            </div>
+          </div>
+        </div>
+        <nav class="p-md space-y-1">
+          <a class="flex items-center gap-sm px-md py-sm rounded-lg bg-primary-container/10 text-primary font-semibold" href="hospital_analytics_reports.html"><span class="material-symbols-outlined">monitoring</span>Analytics</a>
+          <a class="flex items-center gap-sm px-md py-sm rounded-lg hover:bg-surface-container-low text-on-surface-variant" href="security_access_control_rbac.html"><span class="material-symbols-outlined">security</span>RBAC</a>
+          <a class="flex items-center gap-sm px-md py-sm rounded-lg hover:bg-surface-container-low text-on-surface-variant" href="engine_settings.html"><span class="material-symbols-outlined">tune</span>Engine Settings</a>
+          <a class="flex items-center gap-sm px-md py-sm rounded-lg hover:bg-surface-container-low text-on-surface-variant" href="hr_shift_scheduling_matrix.html"><span class="material-symbols-outlined">calendar_month</span>Lịch trực</a>
+          <a class="flex items-center gap-sm px-md py-sm rounded-lg hover:bg-surface-container-low text-on-surface-variant" href="support.html"><span class="material-symbols-outlined">support_agent</span>Support</a>
+        </nav>
+        <div class="mt-auto p-md border-t border-outline-variant space-y-1">
+          <a class="flex items-center gap-sm px-md py-sm rounded-lg hover:bg-surface-container-low text-on-surface-variant" href="settings.html"><span class="material-symbols-outlined">settings</span>Cài đặt</a>
+          <a class="flex items-center gap-sm px-md py-sm rounded-lg hover:bg-surface-container-low text-on-surface-variant" href="sign_in.html"><span class="material-symbols-outlined">logout</span>Đăng xuất</a>
+        </div>
+      </aside>
+
+      <main class="flex-1 min-w-0">
+        <header class="sticky top-0 z-20 bg-surface/90 backdrop-blur border-b border-outline-variant">
+          <div class="flex items-center justify-between px-margin py-md">
+            <div>
+              <div class="text-xs uppercase tracking-[0.2em] text-tertiary font-semibold">Role: Admin</div>
+              <h1 class="text-2xl font-bold text-primary">Bảng điều khiển quản trị</h1>
+            </div>
+            <div class="flex items-center gap-sm">
+              <a class="px-md py-sm rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low" href="sign_in.html?role=admin">Đổi tài khoản</a>
+              <a class="px-md py-sm rounded-lg bg-primary text-on-primary" href="sign_in.html">Đăng xuất</a>
+            </div>
+          </div>
+        </header>
+
+        <section class="px-margin py-xl space-y-xl">
+          <div class="grid grid-cols-1 xl:grid-cols-4 gap-lg">
+            <div class="xl:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-xl shadow-sm">
+              <div class="flex items-start justify-between gap-lg">
+                <div>
+                  <p class="text-sm text-on-surface-variant">Chế độ vận hành</p>
+                  <h2 class="text-3xl font-bold text-on-surface mt-1">Toàn hệ thống đang ổn định</h2>
+                  <p class="text-on-surface-variant mt-sm max-w-2xl">Theo dõi KPI, phân quyền, cấu hình engine và các cảnh báo an ninh từ một màn hình duy nhất.</p>
+                </div>
+                <div class="rounded-xl bg-secondary-container text-on-secondary-container px-md py-sm font-semibold">Ops Center</div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-md mt-xl">
+                <div class="p-md rounded-xl bg-surface-container-low"><div class="text-sm text-on-surface-variant">Bệnh nhân hôm nay</div><div class="text-3xl font-bold text-primary">1,248</div></div>
+                <div class="p-md rounded-xl bg-surface-container-low"><div class="text-sm text-on-surface-variant">Cảnh báo an ninh</div><div class="text-3xl font-bold text-tertiary">03</div></div>
+                <div class="p-md rounded-xl bg-surface-container-low"><div class="text-sm text-on-surface-variant">Phòng ban online</div><div class="text-3xl font-bold text-secondary">18</div></div>
+              </div>
+            </div>
+            <div class="bg-primary text-on-primary rounded-xl p-xl shadow-lg">
+              <div class="text-sm uppercase tracking-[0.2em] text-on-primary/70">Quick Admin</div>
+              <div class="space-y-sm mt-md">
+                <a class="block bg-on-primary text-primary rounded-lg px-md py-sm font-semibold" href="hospital_analytics_reports.html">Mở báo cáo</a>
+                <a class="block bg-white/10 rounded-lg px-md py-sm font-semibold" href="security_access_control_rbac.html">Quản lý quyền</a>
+                <a class="block bg-white/10 rounded-lg px-md py-sm font-semibold" href="engine_settings.html">Cấu hình hệ thống</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-lg">
+            <div class="xl:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+              <div class="p-lg border-b border-outline-variant flex items-center justify-between">
+                <h2 class="text-xl font-bold">Trạng thái hệ thống</h2>
+                <span class="text-sm text-on-surface-variant">Cập nhật 2 phút trước</span>
+              </div>
+              <div class="divide-y divide-outline-variant/30">
+                <div class="p-lg flex items-center justify-between"><div><div class="font-semibold">EMR Core</div><div class="text-sm text-on-surface-variant">Latency 120ms · Healthy</div></div><span class="px-2 py-1 rounded bg-tertiary text-white text-xs">OK</span></div>
+                <div class="p-lg flex items-center justify-between"><div><div class="font-semibold">Billing Gateway</div><div class="text-sm text-on-surface-variant">Payment sync ổn định</div></div><span class="px-2 py-1 rounded bg-tertiary text-white text-xs">OK</span></div>
+                <div class="p-lg flex items-center justify-between"><div><div class="font-semibold">RBAC Policy</div><div class="text-sm text-on-surface-variant">2 thay đổi pending review</div></div><span class="px-2 py-1 rounded bg-error text-white text-xs">Review</span></div>
+              </div>
+            </div>
+            <div class="space-y-lg">
+              <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+                <h3 class="font-bold text-lg">Phân quyền nhanh</h3>
+                <ul class="mt-md space-y-sm text-sm text-on-surface-variant">
+                  <li>Admin: quản lý người dùng và cấu hình</li>
+                  <li>Doctor: xử lý hàng đợi và EMR</li>
+                  <li>Patient: tự phục vụ lịch hẹn và hồ sơ</li>
+                </ul>
+              </div>
+              <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+                <h3 class="font-bold text-lg">Cảnh báo</h3>
+                <p class="mt-sm text-sm text-on-surface-variant">Kiểm tra lại 1 rule bảo mật và 1 ca trực thiếu người ở khối nội trú.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

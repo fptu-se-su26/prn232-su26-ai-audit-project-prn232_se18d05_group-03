@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SmartCare | Emergency Override</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .glass-blur { backdrop-filter: blur(8px); }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-container": "#6ff394",
+                        "primary": "#00478d",
+                        "on-secondary-fixed-variant": "#004f4f",
+                        "tertiary-container": "#006e33",
+                        "primary-container": "#005eb8",
+                        "primary-fixed": "#d6e3ff",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#005325",
+                        "on-primary-container": "#c8daff",
+                        "surface": "#f7f9fb",
+                        "inverse-surface": "#2d3133",
+                        "surface-tint": "#005db6",
+                        "surface-container-high": "#e6e8ea",
+                        "on-primary-fixed-variant": "#00468c",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#424752",
+                        "outline": "#727783",
+                        "on-background": "#191c1e",
+                        "inverse-primary": "#a9c7ff",
+                        "on-tertiary-fixed-variant": "#005225",
+                        "tertiary-fixed-dim": "#5adf82",
+                        "on-surface": "#191c1e",
+                        "tertiary-fixed": "#78fc9c",
+                        "on-primary-fixed": "#001b3d",
+                        "surface-container-low": "#f2f4f6",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#6fd7d6",
+                        "on-secondary-fixed": "#002020",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#00210b",
+                        "background": "#f7f9fb",
+                        "secondary-container": "#8cf3f3",
+                        "secondary-fixed": "#8cf3f3",
+                        "surface-container-highest": "#e0e3e5",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "surface-variant": "#e0e3e5",
+                        "on-secondary-container": "#007070",
+                        "surface-bright": "#f7f9fb",
+                        "outline-variant": "#c2c6d4",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#eceef0",
+                        "secondary": "#006a6a",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin": "32px",
+                        "gutter": "24px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "xxl": "64px",
+                        "xl": "40px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex overflow-hidden">
+<!-- Sidebar Navigation (From JSON SideNavBar) -->
+<aside class="flex flex-col h-screen py-gutter sticky top-0 bg-surface-container-low border-r border-outline-variant w-64 shrink-0 z-40">
+<div class="px-gutter mb-xl">
+<h1 class="font-headline-md text-headline-md text-primary font-bold">SmartCare</h1>
+<div class="mt-sm">
+<p class="text-label-md font-label-md text-primary">Clinical Portal</p>
+<p class="text-body-sm text-on-surface-variant">City General Hospital</p>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto">
+<ul class="space-y-xs">
+<li>
+<a class="flex items-center p-md text-on-surface-variant hover:bg-surface-container-high transition-all duration-150" href="cdss_ai_medical_alerts.html">
+<span class="material-symbols-outlined mr-md" data-icon="clinical_notes">clinical_notes</span>
+<span class="font-label-md text-label-md">Clinical</span>
+</a>
+</li>
+<li>
+<a class="bg-primary-container text-on-primary-container font-bold border-r-4 border-primary flex items-center p-md" href="clinic_dashboard_emergency_override.html">
+<span class="material-symbols-outlined mr-md" data-icon="groups">groups</span>
+<span class="font-label-md text-label-md">Patients</span>
+</a>
+</li>
+<li>
+<a class="flex items-center p-md text-on-surface-variant hover:bg-surface-container-high transition-all duration-150" href="hr_shift_scheduling_matrix.html">
+<span class="material-symbols-outlined mr-md" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">Schedule</span>
+</a>
+</li>
+<li>
+<a class="flex items-center p-md text-on-surface-variant hover:bg-surface-container-high transition-all duration-150" href="e_prescription_interface.html">
+<span class="material-symbols-outlined mr-md" data-icon="medication">medication</span>
+<span class="font-label-md text-label-md">Pharmacy</span>
+</a>
+</li>
+<li>
+<a class="flex items-center p-md text-on-surface-variant hover:bg-surface-container-high transition-all duration-150" href="billing_insurance_integration.html">
+<span class="material-symbols-outlined mr-md" data-icon="payments">payments</span>
+<span class="font-label-md text-label-md">Billing</span>
+</a>
+</li>
+<li>
+<a class="flex items-center p-md text-on-surface-variant hover:bg-surface-container-high transition-all duration-150" href="hospital_analytics_reports.html">
+<span class="material-symbols-outlined mr-md" data-icon="monitoring">monitoring</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="px-gutter pt-gutter border-t border-outline-variant space-y-sm">
+<button class="w-full bg-primary text-on-primary py-sm rounded-lg font-label-md flex justify-center items-center active:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-[18px] mr-xs" data-icon="add">add</span>
+                New Record
+            </button>
+<a class="flex items-center p-sm text-on-surface-variant hover:text-on-surface transition-colors" href="support.html">
+<span class="material-symbols-outlined mr-md" data-icon="contact_support">contact_support</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center p-sm text-error transition-colors" href="sign_out.html">
+<span class="material-symbols-outlined mr-md" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-surface">
+<!-- Top App Bar (From JSON TopAppBar) -->
+<header class="flex justify-between items-center w-full px-gutter py-sm h-16 bg-surface border-b border-outline-variant sticky top-0 z-30">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Search patients, vitals, or clinical records..." type="text"/>
+</div>
+</div>
+<div class="flex items-center space-x-md ml-gutter">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors active:scale-95" data-icon="notifications">notifications</button>
+<a class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors active:scale-95" data-icon="settings" href="settings.html">settings</a>
+<a class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors active:scale-95" data-icon="help_outline" href="support.html">help_outline</a>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User Profile" data-alt="A professional close-up portrait of a medical doctor in a crisp white lab coat, set against a clean, softly lit medical office background. The lighting is bright and modern, emphasizing trust and professionalism with a cool blue and clinical white color palette typical of a high-end healthcare environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPq7BMo19binWPvyF93nUMdyFeFhTm71B1gw3c-p0mXcbWDauUkpCPpKz91BBSUF7GgOdY9jFHgTb5ilQmcJ42JIkNjZTabiFPGOy9M9SH-Jkrj6b8pcOUh7zqCVm-oMYEVZx0LwwESUQELWKlHcXSMLAm5RCkEPp4JHi3apE2s2PVOCc23WINPUTgkpMje2X6PBEfco57eJ8kM6tSTqxwTsWVLyXjpvVbvz8TZpsOCYPvOW8k4AhiPgqMApWbnQpe2NhugbWvY3Ml"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-margin flex-1 overflow-y-auto">
+<div class="mb-lg flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Clinic Queue Monitor</h2>
+<p class="text-body-md text-on-surface-variant">Live triage status for Emergency and Urgent Care departments</p>
+</div>
+<div class="flex space-x-sm">
+<span class="inline-flex items-center px-3 py-1 bg-tertiary-container text-on-tertiary-container rounded-full text-label-sm">
+<span class="w-2 h-2 bg-on-tertiary-container rounded-full animate-pulse mr-2"></span>
+                        Live Dashboard
+                    </span>
+</div>
+</div>
+<!-- Dashboard Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-xl">
+<div class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Total Active</p>
+<p class="text-display-lg font-display-lg text-primary mt-xs">42</p>
+<p class="text-body-sm text-on-surface-variant mt-sm flex items-center">
+<span class="material-symbols-outlined text-tertiary mr-1" data-icon="trending_up">trending_up</span>
+                        12% vs last hour
+                    </p>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Critical/ER</p>
+<p class="text-display-lg font-display-lg text-error mt-xs">08</p>
+<p class="text-body-sm text-on-surface-variant mt-sm flex items-center">
+<span class="material-symbols-outlined text-error mr-1" data-icon="warning">warning</span>
+                        High priority queue
+                    </p>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Wait Time (Avg)</p>
+<p class="text-display-lg font-display-lg text-on-surface mt-xs">18m</p>
+<p class="text-body-sm text-on-surface-variant mt-sm flex items-center">
+<span class="material-symbols-outlined text-primary mr-1" data-icon="schedule">schedule</span>
+                        Optimal target met
+                    </p>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Staff Online</p>
+<p class="text-display-lg font-display-lg text-tertiary mt-xs">24</p>
+<p class="text-body-sm text-on-surface-variant mt-sm flex items-center">
+<span class="material-symbols-outlined text-tertiary mr-1" data-icon="check_circle">check_circle</span>
+                        Full coverage active
+                    </p>
+</div>
+</div>
+<section class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm mb-xl">
+    <div class="flex items-center justify-between mb-sm">
+        <h3 class="font-headline-md text-headline-md text-on-surface">Demo Queue</h3>
+        <span class="text-[11px] text-on-surface-variant">Mock data</span>
+    </div>
+    <div class="divide-y divide-outline-variant" data-mock="queue"></div>
+</section>
+<!-- Queue Table -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container sticky top-0 z-10">
+<tr>
+<th class="p-md font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">Patient ID</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">Severity</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">Chief Complaint</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">Wait Time</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">Location</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr>
+<td class="p-md font-body-sm text-primary font-bold">#PT-9921</td>
+<td class="p-md">
+<span class="px-2 py-1 bg-error text-on-error rounded text-[10px] font-bold uppercase">Urgent/ER</span>
+</td>
+<td class="p-md font-body-sm">Chest Pain / Dyspnea</td>
+<td class="p-md font-body-sm text-error font-medium">02:45</td>
+<td class="p-md font-body-sm">ER Intake - Bay 3</td>
+<td class="p-md">
+<button class="text-primary hover:underline text-label-sm font-semibold">View Records</button>
+</td>
+</tr>
+<tr class="bg-surface-container-low/20">
+<td class="p-md font-body-sm text-primary font-bold">#PT-8840</td>
+<td class="p-md">
+<span class="px-2 py-1 bg-secondary text-on-secondary rounded text-[10px] font-bold uppercase">In Progress</span>
+</td>
+<td class="p-md font-body-sm">Post-Op Recovery Follow-up</td>
+<td class="p-md font-body-sm">12:10</td>
+<td class="p-md font-body-sm">Clinical Ward B</td>
+<td class="p-md">
+<button class="text-primary hover:underline text-label-sm font-semibold">View Records</button>
+</td>
+</tr>
+<tr>
+<td class="p-md font-body-sm text-primary font-bold">#PT-9128</td>
+<td class="p-md">
+<span class="px-2 py-1 bg-surface-container-high text-on-surface-variant rounded text-[10px] font-bold uppercase">Waiting</span>
+</td>
+<td class="p-md font-body-sm">Routine Bloodwork</td>
+<td class="p-md font-body-sm">24:55</td>
+<td class="p-md font-body-sm">Diagnostics Wing</td>
+<td class="p-md">
+<button class="text-primary hover:underline text-label-sm font-semibold">View Records</button>
+</td>
+</tr>
+<tr>
+<td class="p-md font-body-sm text-primary font-bold">#PT-7712</td>
+<td class="p-md">
+<span class="px-2 py-1 bg-tertiary text-on-tertiary rounded text-[10px] font-bold uppercase">Completed</span>
+</td>
+<td class="p-md font-body-sm">Fracture Consultation</td>
+<td class="p-md font-body-sm">--:--</td>
+<td class="p-md font-body-sm">Orthopedics</td>
+<td class="p-md">
+<button class="text-primary hover:underline text-label-sm font-semibold">View Records</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<!-- Emergency Override Modal Backdrop -->
+<div class="fixed inset-0 bg-inverse-surface/60 glass-blur z-50 flex items-center justify-center p-gutter" id="modalBackdrop">
+<!-- Emergency Override Modal -->
+<div class="bg-surface-container-lowest w-full max-w-lg rounded-xl shadow-2xl overflow-hidden border border-outline-variant animate-in fade-in zoom-in duration-300">
+<!-- Modal Header -->
+<div class="bg-error px-gutter py-md flex items-center justify-between">
+<div class="flex items-center text-on-error">
+<span class="material-symbols-outlined mr-sm" data-icon="emergency_home">emergency_home</span>
+<h3 class="font-headline-md text-headline-md font-bold">Emergency Override</h3>
+</div>
+<button class="text-on-error hover:bg-white/20 p-1 rounded transition-colors" onclick="closeModal()">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-gutter space-y-lg">
+<div class="flex items-start bg-error-container p-md rounded-lg text-on-error-container">
+<span class="material-symbols-outlined mr-md text-error" data-icon="warning">warning</span>
+<div>
+<p class="font-label-md mb-xs">Critical Action Required</p>
+<p class="text-body-sm">You are initiating a queue jump for a patient. This action bypasses standard triage protocols and must be clinically justified for auditing purposes.</p>
+</div>
+</div>
+<div class="space-y-md">
+<div class="flex flex-col space-y-xs">
+<label class="text-label-md font-bold text-on-surface">Selected Patient</label>
+<div class="flex items-center p-sm bg-surface-container rounded-lg border border-outline-variant">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center mr-md">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</div>
+<div>
+<p class="text-body-md font-bold">Sarah Jenkins</p>
+<p class="text-body-sm text-on-surface-variant">DOB: 12/05/1982 | MRN: 44920-X</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col space-y-xs">
+<label class="text-label-md font-bold text-on-surface">Clinical Justification</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-md text-body-md focus:ring-2 focus:ring-error focus:border-error outline-none transition-all cursor-pointer">
+<option value="">Select a reason...</option>
+<option value="cardiac">Cardiac Distress / Acute MI Suspicion</option>
+<option value="stroke">CVA / Acute Stroke Protocol</option>
+<option value="trauma">Level 1 Trauma - Life Threatening</option>
+<option value="respiratory">Acute Respiratory Failure</option>
+<option value="other">Other Life-Threatening Emergency</option>
+</select>
+</div>
+<div class="flex flex-col space-y-xs">
+<label class="text-label-md font-bold text-on-surface">Override Destination</label>
+<div class="grid grid-cols-2 gap-sm">
+<button class="flex items-center justify-center p-md border-2 border-error text-error font-bold rounded-lg bg-error-container/10">
+<span class="material-symbols-outlined mr-xs" data-icon="home_health">home_health</span>
+                                Trauma Bay 1
+                            </button>
+<button class="flex items-center justify-center p-md border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined mr-xs" data-icon="monitor_heart">monitor_heart</span>
+                                ICU Ward 4
+                            </button>
+</div>
+</div>
+<div class="flex flex-col space-y-xs">
+<label class="text-label-md font-bold text-on-surface">Additional Notes (Optional)</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-md text-body-md focus:ring-2 focus:ring-error focus:border-error outline-none transition-all resize-none" placeholder="Enter clinical observations or special handling instructions..." rows="3"></textarea>
+</div>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="px-gutter py-md bg-surface-container-low border-t border-outline-variant flex justify-end space-x-md">
+<button class="px-xl py-sm rounded-lg font-label-md text-on-surface-variant hover:bg-surface-container-high transition-colors" onclick="closeModal()">
+                    Cancel
+                </button>
+<button class="px-xl py-sm rounded-lg font-label-md bg-error text-on-error shadow-lg active:scale-95 transition-transform">
+                    Confirm Routing
+                </button>
+</div>
+</div>
+</div>
+<script>
+        function closeModal() {
+            const modal = document.getElementById('modalBackdrop');
+            modal.style.opacity = '0';
+            modal.style.transition = 'opacity 300ms ease';
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Simple pulse effect for critical items
+        setInterval(() => {
+            const urgentBadges = document.querySelectorAll('.bg-error');
+            urgentBadges.forEach(badge => {
+                badge.classList.toggle('opacity-90');
+            });
+        }, 800);
+    </script>
+    <script src="assets/js/mock-data.js"></script>
+    <script src="assets/js/app.js"></script>
+</body></html>

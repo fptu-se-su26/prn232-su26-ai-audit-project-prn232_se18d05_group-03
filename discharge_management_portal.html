@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SmartCare | Discharge Management Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "primary-fixed-dim": "#a9c7ff",
+                  "surface-container": "#eceef0",
+                  "inverse-primary": "#a9c7ff",
+                  "on-tertiary-container": "#6ff394",
+                  "surface": "#f7f9fb",
+                  "surface-dim": "#d8dadc",
+                  "surface-container-lowest": "#ffffff",
+                  "on-secondary": "#ffffff",
+                  "secondary-container": "#8cf3f3",
+                  "surface-tint": "#005db6",
+                  "on-primary-container": "#c8daff",
+                  "tertiary-fixed": "#78fc9c",
+                  "on-tertiary": "#ffffff",
+                  "surface-container-low": "#f2f4f6",
+                  "on-surface": "#191c1e",
+                  "on-surface-variant": "#424752",
+                  "secondary": "#006a6a",
+                  "on-primary-fixed-variant": "#00468c",
+                  "on-tertiary-fixed": "#00210b",
+                  "background": "#f7f9fb",
+                  "on-primary": "#ffffff",
+                  "tertiary": "#005325",
+                  "inverse-surface": "#2d3133",
+                  "on-tertiary-fixed-variant": "#005225",
+                  "surface-container-high": "#e6e8ea",
+                  "on-background": "#191c1e",
+                  "on-secondary-fixed": "#002020",
+                  "outline-variant": "#c2c6d4",
+                  "surface-container-highest": "#e0e3e5",
+                  "on-error": "#ffffff",
+                  "tertiary-fixed-dim": "#5adf82",
+                  "on-secondary-container": "#007070",
+                  "primary": "#00478d",
+                  "surface-bright": "#f7f9fb",
+                  "outline": "#727783",
+                  "on-error-container": "#93000a",
+                  "on-secondary-fixed-variant": "#004f4f",
+                  "secondary-fixed-dim": "#6fd7d6",
+                  "on-primary-fixed": "#001b3d",
+                  "secondary-fixed": "#8cf3f3",
+                  "primary-fixed": "#d6e3ff",
+                  "inverse-on-surface": "#eff1f3",
+                  "primary-container": "#005eb8",
+                  "tertiary-container": "#006e33",
+                  "error-container": "#ffdad6",
+                  "error": "#ba1a1a",
+                  "surface-variant": "#e0e3e5"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.125rem",
+                  "lg": "0.25rem",
+                  "xl": "0.5rem",
+                  "full": "0.75rem"
+          },
+          "spacing": {
+                  "sm": "8px",
+                  "md": "16px",
+                  "xs": "4px",
+                  "lg": "24px",
+                  "margin": "32px",
+                  "gutter": "24px",
+                  "xxl": "64px",
+                  "base": "4px",
+                  "xl": "40px"
+          },
+          "fontFamily": {
+                  "label-sm": ["Inter"],
+                  "body-md": ["Inter"],
+                  "headline-md": ["Inter"],
+                  "body-lg": ["Inter"],
+                  "display-lg": ["Inter"],
+                  "headline-lg-mobile": ["Inter"],
+                  "code": ["Inter"],
+                  "body-sm": ["Inter"],
+                  "label-md": ["Inter"],
+                  "headline-lg": ["Inter"]
+          },
+          "fontSize": {
+                  "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                  "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                  "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                  "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                  "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                  "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                  "code": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                  "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                  "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                  "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-lg px-md gap-xs bg-surface dark:bg-inverse-surface border-r border-outline-variant dark:border-outline w-64 z-50">
+<div class="mb-xxl px-sm">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary dark:text-inverse-primary leading-tight">SmartCare HIS</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Clinical Operations</p>
+</div>
+<nav class="flex flex-col gap-xs flex-grow">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-all duration-200 rounded-lg scale-95 active:scale-100" href="clinic_dashboard_queue_management.html">
+<span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
+<span class="font-label-md text-label-md">Queue</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-all duration-200 rounded-lg scale-95 active:scale-100" href="outpatient_emr_screen.html">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-label-md text-label-md">Outpatient</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-all duration-200 rounded-lg scale-95 active:scale-100" href="e_prescription_interface.html">
+<span class="material-symbols-outlined" data-icon="prescriptions">prescriptions</span>
+<span class="font-label-md text-label-md">E-Prescription</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-all duration-200 rounded-lg scale-95 active:scale-100" href="telemedicine_consultation.html">
+<span class="material-symbols-outlined" data-icon="videocam">videocam</span>
+<span class="font-label-md text-label-md">Telemedicine</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-primary font-bold bg-primary-container dark:bg-primary-fixed-dim/20 rounded-lg scale-95 active:scale-100" href="inpatient_ward_visual_map.html">
+<span class="material-symbols-outlined" data-icon="bed" style="font-variation-settings: 'FILL' 1;">bed</span>
+<span class="font-label-md text-label-md">Inpatient</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-all duration-200 rounded-lg scale-95 active:scale-100" href="lab_imaging_results_entry.html">
+<span class="material-symbols-outlined" data-icon="biotech">biotech</span>
+<span class="font-label-md text-label-md">Lab/Imaging</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-xs border-t border-outline-variant pt-lg">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-all duration-200 rounded-lg" href="support.html">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-low transition-all duration-200 rounded-lg" href="sign_out.html">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex flex-col min-h-screen relative">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-margin h-16 sticky top-0 z-40 bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-lg flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full pl-xl pr-md py-xs font-body-sm text-on-surface focus:ring-2 focus:ring-primary" placeholder="Search patient ID, name, or ward..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-sm text-on-surface-variant hover:bg-surface-container transition-colors rounded-full relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<a class="p-sm text-on-surface-variant hover:bg-surface-container transition-colors rounded-full" href="support.html">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</a>
+<a class="p-sm text-on-surface-variant hover:bg-surface-container transition-colors rounded-full" href="settings.html">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</a>
+<div class="h-8 w-[1px] bg-outline-variant mx-xs"></div>
+<div class="flex items-center gap-sm cursor-pointer hover:bg-surface-container p-xs rounded-lg transition-colors">
+<img alt="Practitioner Profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="A professional headshot of a middle-aged male doctor with a kind expression, wearing a crisp white medical coat and a stethoscope around his neck. The background is a brightly lit, clean hospital hallway with soft blue and white tones, reflecting a high-end medical environment. The lighting is professional and clear, emphasizing trust and clinical expertise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpyoZIwShVHZ0IPJP-dCX3q91K5ToBpdtfJCiklK9iDjfSzOQqZmBRYMgbSiDxyk34NIN1eHFee_X32bs-YBoR5SsvfcIawDBK7z-EchwjYz_xp76ESxndgXsLsLEGL3XEoCVPb4NWGuv_TAWW5KMS8w1cVdmLf-_WYckudHfXXizdWy237WeFfFPdwSp6BkNolW1jXDoLeotqm_9rjHqcAzxvFfJ1HbtNKwzL2hsVO6-DxOtRwWAvYzzxBzXK3WonxlCzleNJJHvN"/>
+<div class="hidden lg:block">
+<p class="font-label-md text-label-md text-on-surface leading-tight">Dr. Aris Thorne</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Chief Surgeon</p>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="p-margin flex flex-col gap-lg">
+<!-- Header / Breadcrumbs -->
+<section class="flex flex-col gap-xs">
+<div class="flex items-center gap-xs text-on-surface-variant font-label-sm">
+<span>Inpatient</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+<span>Ward 4B</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-primary font-bold">Discharge Management</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Discharge Management Portal</h2>
+</section>
+<section class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+  <div class="flex items-center justify-between mb-sm">
+    <h3 class="font-headline-md text-headline-md text-on-surface">Demo Snapshot</h3>
+    <span class="text-[11px] text-on-surface-variant">Mock data</span>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-md" data-mock="kpis"></div>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Patient Info Card (3 Cols) -->
+<div class="col-span-12 lg:col-span-3 flex flex-col gap-md">
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant shadow-sm h-fit">
+<div class="flex flex-col items-center text-center gap-md mb-lg">
+<img alt="Patient" class="w-24 h-24 rounded-full object-cover border-4 border-surface-container" data-alt="A focused portrait of an elderly female patient with silver hair, looking calm and recovered. She is wearing a soft hospital gown in a warm, comfortable interior setting with gentle, natural sunlight streaming through a window. The aesthetic is peaceful and restorative, utilizing the soft whites and muted blues of a modern healthcare facility." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvGzYy8drBxVDyXW4aZyxIiMlVO10xCxjc8S_nXbCPTkeH8ZBUY4N0-ZwcT5JMfnVwT4TBQcdkz5vn65HhjZ15TrUYGd2ewAGZkEt5gBpXq4YAZD3wz--pZ-_yq40FEtVoEz6zsq-XaPTwi_vzBuKR91ARucKWUiXbonZrcAU2dfQxFdrWeyNhTpFJcubGXquv7b778zIDQKXSMOCdDXwY6MWk7RyY98dH6yGWAyUAguAooBFIJNCE04KeyssHS4OLFVxW4hHDhaWx"/>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Elena Vance</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">ID: #SC-99201-B</p>
+</div>
+</div>
+<div class="space-y-md border-t border-outline-variant pt-md">
+<div class="flex justify-between">
+<span class="text-on-surface-variant font-label-md">Admission</span>
+<span class="font-body-sm">Oct 12, 2023</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant font-label-md">Condition</span>
+<span class="font-body-sm text-secondary font-bold">Post-Op Recovery</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant font-label-md">Bed</span>
+<span class="font-body-sm">Ward 4B - 204</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Central Workflow Area (9 Cols) -->
+<div class="col-span-12 lg:col-span-9 flex flex-col gap-gutter">
+<!-- Discharge Checklist -->
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center gap-sm mb-lg border-b border-outline-variant pb-md">
+<span class="material-symbols-outlined text-primary" data-icon="fact_check">fact_check</span>
+<h3 class="font-headline-md text-headline-md">Discharge Checklist</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<!-- Checklist Item 1 -->
+<label class="group flex items-start gap-md p-md rounded-lg border border-outline-variant hover:border-primary transition-all cursor-pointer bg-surface-container-low/30">
+<div class="relative flex items-center mt-1">
+<input checked="" class="w-6 h-6 rounded border-outline text-primary focus:ring-primary cursor-pointer" type="checkbox"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Physician Cleared</p>
+<p class="text-[12px] text-on-surface-variant">Dr. Aris Thorne • 09:15 AM</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-tertiary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</label>
+<!-- Checklist Item 2 -->
+<label class="group flex items-start gap-md p-md rounded-lg border border-outline-variant hover:border-primary transition-all cursor-pointer bg-surface-container-low/30">
+<div class="relative flex items-center mt-1">
+<input class="w-6 h-6 rounded border-outline text-primary focus:ring-primary cursor-pointer" type="checkbox"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Pharmacy Cleared</p>
+<p class="text-[12px] text-on-surface-variant">Awaiting Prescriptions...</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-outline" data-icon="pending">pending</span>
+</label>
+<!-- Checklist Item 3 -->
+<label class="group flex items-start gap-md p-md rounded-lg border border-outline-variant hover:border-primary transition-all cursor-pointer bg-surface-container-low/30">
+<div class="relative flex items-center mt-1">
+<input class="w-6 h-6 rounded border-outline text-primary focus:ring-primary cursor-pointer" type="checkbox"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Bills Settled</p>
+<p class="text-[12px] text-on-surface-variant">Pending Insurance Auth</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-outline" data-icon="account_balance_wallet">account_balance_wallet</span>
+</label>
+</div>
+</div>
+<!-- Discharge Summary Preview -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="p-lg border-b border-outline-variant bg-surface-container-low/50 flex justify-between items-center">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="summarize">summarize</span>
+<h3 class="font-headline-md text-headline-md">Discharge Summary Preview</h3>
+</div>
+<span class="bg-secondary/10 text-secondary font-label-sm px-md py-1 rounded-full border border-secondary/20">Draft #A-102</span>
+</div>
+<div class="p-lg grid grid-cols-1 md:grid-cols-2 gap-lg">
+<!-- Bed Days Calculation -->
+<div class="space-y-md">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Stay Logistics</h4>
+<div class="bg-surface-container-low p-md rounded-lg border border-outline-variant">
+<div class="flex justify-between items-center mb-sm">
+<span class="font-body-sm">Total Bed Days</span>
+<span class="font-headline-md text-primary">5 Days</span>
+</div>
+<div class="w-full bg-outline-variant h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[80%]"></div>
+</div>
+<p class="mt-xs text-[11px] text-on-surface-variant italic">Inclusive of ICU transition (2 days) and General Ward (3 days).</p>
+</div>
+</div>
+<!-- Procedures Aggregation -->
+<div class="space-y-md">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Procedures Logged</h4>
+<ul class="space-y-sm">
+<li class="flex items-center gap-md text-body-sm p-sm hover:bg-surface-container-low rounded transition-colors border-b border-surface-container">
+<span class="material-symbols-outlined text-[18px] text-secondary" data-icon="medical_information">medical_information</span>
+<span class="flex-grow">Laparoscopic Cholecystectomy</span>
+<span class="font-label-sm text-on-surface-variant">Done</span>
+</li>
+<li class="flex items-center gap-md text-body-sm p-sm hover:bg-surface-container-low rounded transition-colors border-b border-surface-container">
+<span class="material-symbols-outlined text-[18px] text-secondary" data-icon="radiology">radiology</span>
+<span class="flex-grow">Abdominal Ultrasound (Post-Op)</span>
+<span class="font-label-sm text-on-surface-variant">Done</span>
+</li>
+<li class="flex items-center gap-md text-body-sm p-sm hover:bg-surface-container-low rounded transition-colors border-b border-surface-container">
+<span class="material-symbols-outlined text-[18px] text-secondary" data-icon="biotech">biotech</span>
+<span class="flex-grow">Full Blood Count (Final)</span>
+<span class="font-label-sm text-on-surface-variant">Pending</span>
+</li>
+</ul>
+</div>
+</div>
+<!-- Footer Action Area -->
+<div class="p-lg bg-surface-container-low/30 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-md">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-outline" data-icon="info">info</span>
+<p class="text-body-sm text-on-surface-variant max-w-md">Once generated, the summary is locked for physician signature and pushed to the Patient Portal.</p>
+</div>
+<button class="flex items-center gap-md px-xl py-md bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50" id="generateBtn" onclick="simulateGeneration()">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+                Generate Discharge Summary
+              </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Background Elements for Atmosphere -->
+<div class="absolute -bottom-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+<div class="absolute top-1/2 left-1/2 w-64 h-64 bg-secondary/5 rounded-full blur-3xl -z-10"></div>
+</main>
+<script>
+    function simulateGeneration() {
+      const btn = document.getElementById('generateBtn');
+      const originalText = btn.innerHTML;
+      
+      btn.disabled = true;
+      btn.innerHTML = `<span class="material-symbols-outlined animate-spin" data-icon="progress_activity">progress_activity</span> Compiling Records...`;
+      
+      setTimeout(() => {
+        btn.innerHTML = `<span class="material-symbols-outlined" data-icon="check">check</span> Summary Generated!`;
+        btn.classList.remove('bg-primary');
+        btn.classList.add('bg-tertiary');
+        
+        // Show a brief notification simulation
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-lg right-lg bg-inverse-surface text-inverse-on-surface px-xl py-md rounded-xl shadow-2xl flex items-center gap-md z-50 animate-bounce';
+        toast.innerHTML = `<span class="material-symbols-outlined text-tertiary-fixed" data-icon="verified">verified</span> Summary #SC-99201-B Ready for Signature`;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.remove(), 4000);
+      }, 2000);
+    }
+  </script>
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body></html>

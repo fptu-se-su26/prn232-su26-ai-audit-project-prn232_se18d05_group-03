@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lab Result Detailed View - MediCare PHR</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-container": "#6ff394",
+                        "primary": "#00478d",
+                        "on-secondary-fixed-variant": "#004f4f",
+                        "tertiary-container": "#006e33",
+                        "primary-container": "#005eb8",
+                        "primary-fixed": "#d6e3ff",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#005325",
+                        "on-primary-container": "#c8daff",
+                        "surface": "#f7f9fb",
+                        "inverse-surface": "#2d3133",
+                        "surface-tint": "#005db6",
+                        "surface-container-high": "#e6e8ea",
+                        "on-primary-fixed-variant": "#00468c",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#424752",
+                        "outline": "#727783",
+                        "on-background": "#191c1e",
+                        "inverse-primary": "#a9c7ff",
+                        "on-tertiary-fixed-variant": "#005225",
+                        "tertiary-fixed-dim": "#5adf82",
+                        "on-surface": "#191c1e",
+                        "tertiary-fixed": "#78fc9c",
+                        "on-primary-fixed": "#001b3d",
+                        "surface-container-low": "#f2f4f6",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#6fd7d6",
+                        "on-secondary-fixed": "#002020",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#00210b",
+                        "background": "#f7f9fb",
+                        "secondary-container": "#8cf3f3",
+                        "secondary-fixed": "#8cf3f3",
+                        "surface-container-highest": "#e0e3e5",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "surface-variant": "#e0e3e5",
+                        "on-secondary-container": "#007070",
+                        "surface-bright": "#f7f9fb",
+                        "outline-variant": "#c2c6d4",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#eceef0",
+                        "secondary": "#006a6a",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin": "32px",
+                        "gutter": "24px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "xxl": "64px",
+                        "xl": "40px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "code": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "code": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .graph-gradient {
+            background: linear-gradient(180deg, rgba(0, 71, 141, 0.1) 0%, rgba(0, 71, 141, 0) 100%);
+        }
+        .trend-line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 3s linear forwards;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c2c6d4; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="bg-surface-container-lowest dark:bg-surface-container-low shadow-sm dark:shadow-none docked full-width top-0 sticky z-50 border-b border-outline-variant dark:border-outline">
+<div class="flex justify-between items-center w-full px-margin py-4">
+<div class="flex items-center gap-xl">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">MediCare Patient Portal</span>
+<nav class="hidden md:flex gap-lg">
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors cursor-pointer active:scale-95 duration-200" href="patient_dashboard.html">Dashboard</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors cursor-pointer active:scale-95 duration-200" href="appointment_booking_wizard.html">Appointments</a>
+<a class="font-body-md text-body-md text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim font-bold pb-1 cursor-pointer active:scale-95 duration-200" href="phr_vault_medical_timeline.html">Medical Records</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors cursor-pointer active:scale-95 duration-200" href="billing_insurance_integration.html">Billing</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">settings</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img alt="Patient Profile Avatar" data-alt="A professional headshot of a mature woman with a kind expression, captured in soft, natural studio lighting that emphasizes a clean and trustworthy healthcare environment. The background is a soft, blurred neutral gray, aligning with a modern corporate medical aesthetic. She wears professional attire, suggesting a patient who is well-cared for and engaged in her health journey." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuaaZln-baU5jfFY5HrUx1RuQ77UJCkbSYPJUrsuSzHOANGXCUIImOVKX3q_r6IMvimaxIwBslt7YXL4Wu2S5KzaiDSbA_FlJJp5FuL_STRXhF44j5uOtLI_rKBp_E1PPO8rJ09wT8wggespQjTlJ2cJycWRD8v5hLYnbLyYWzDoNS2Sct_mT5AdK2xirzyNQCzsTEiEyMCno7r290EYZTK8DiKA0oIDO8V0oCnPFxdndVfJ1X1SUh5Kba8hI7Bm6Z1xwGmqgUwQGl"/>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-margin py-xl flex flex-col md:flex-row gap-gutter">
+<!-- Left Sidebar: Result Context -->
+<aside class="w-full md:w-80 flex flex-col gap-lg">
+<a class="flex items-center gap-sm text-primary font-label-md hover:underline mb-sm" href="phr_vault_medical_timeline.html">
+<span class="material-symbols-outlined">arrow_back</span>
+                Back to Lab Results
+            </a>
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant shadow-sm">
+<h1 class="font-headline-md text-headline-md text-primary mb-xs">Comprehensive Metabolic Panel</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Collected: Oct 24, 2023 • 08:30 AM</p>
+<div class="flex items-center gap-sm p-sm bg-error-container text-on-error-container rounded-lg mb-lg">
+<span class="material-symbols-outlined">warning</span>
+<span class="font-label-md">2 Alerts Detected</span>
+</div>
+<div class="space-y-md">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Ordered By</p>
+<p class="font-body-md text-body-md font-bold">Dr. Sarah Jenkins, MD</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Facility</p>
+<p class="font-body-md text-body-md">Central Valley Diagnostics</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Accession #</p>
+<p class="font-body-md text-body-md font-code">LAB-9921-XQ</p>
+</div>
+</div>
+</div>
+<div class="bg-primary-container/10 p-lg rounded-xl border border-primary/20">
+<h3 class="font-label-md text-label-md text-primary mb-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm">info</span>
+                    Understanding Results
+                </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                    Values outside the reference range may be normal for you. Always consult with your provider for clinical interpretation.
+                </p>
+</div>
+</aside>
+<!-- Main Content Area -->
+<section class="flex-1 flex flex-col gap-lg">
+<section class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+    <div class="flex items-center justify-between mb-sm">
+        <h2 class="font-headline-md text-headline-md text-on-surface">Demo Lab Orders</h2>
+        <span class="text-[11px] text-on-surface-variant">Mock data</span>
+    </div>
+    <div class="divide-y divide-outline-variant" data-mock="lab-orders"></div>
+</section>
+<!-- Result Tabs -->
+<div class="flex border-b border-outline-variant">
+<button class="px-lg py-md font-label-md border-b-2 border-primary text-primary">Summary Details</button>
+<button class="px-lg py-md font-label-md text-on-surface-variant hover:text-primary transition-colors">Clinical Notes</button>
+<button class="px-lg py-md font-label-md text-on-surface-variant hover:text-primary transition-colors">Raw Data</button>
+</div>
+<!-- Biomarker Focus: Blood Glucose Trend -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="p-lg border-b border-outline-variant flex justify-between items-end">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Glucose, Serum</h2>
+<div class="flex items-center gap-sm mt-xs">
+<span class="text-display-lg font-display-lg text-error">126</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">mg/dL</span>
+<span class="font-label-sm text-label-sm text-error bg-error-container px-xs rounded">HIGH</span>
+</div>
+</div>
+</div>
+<div class="text-right pb-base">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Reference Range</p>
+<p class="font-body-md text-body-md font-bold">65 - 99 mg/dL</p>
+</div>
+</div>
+<!-- Interactive Trend Graph -->
+<div class="p-lg bg-surface-container-low">
+<div class="flex justify-between items-center mb-lg">
+<span class="font-label-md text-label-md text-on-surface">Historical Trend (6 Months)</span>
+<div class="flex gap-sm">
+<button class="px-md py-1 rounded bg-primary text-on-primary text-label-sm">6M</button>
+<button class="px-md py-1 rounded bg-surface-container-highest text-on-surface-variant text-label-sm">1Y</button>
+<button class="px-md py-1 rounded bg-surface-container-highest text-on-surface-variant text-label-sm">ALL</button>
+</div>
+</div>
+<div class="relative h-64 w-full">
+<!-- SVG Graph -->
+<svg class="w-full h-full overflow-visible" viewbox="0 0 1000 250">
+<!-- Reference Range Band -->
+<rect fill="#00478d" fill-opacity="0.05" height="80" width="1000" x="0" y="100"></rect>
+<line opacity="0.2" stroke="#00478d" stroke-dasharray="4" stroke-width="1" x1="0" x2="1000" y1="100" y2="100"></line>
+<line opacity="0.2" stroke="#00478d" stroke-dasharray="4" stroke-width="1" x1="0" x2="1000" y1="180" y2="180"></line>
+<!-- Trend Line -->
+<path class="trend-line" d="M0,160 L150,155 L300,165 L450,140 L600,135 L750,110 L900,45 L1000,30" fill="none" stroke="#00478d" stroke-width="3"></path>
+<!-- Data Points -->
+<circle cx="150" cy="155" fill="#00478d" r="4"></circle>
+<circle cx="300" cy="165" fill="#00478d" r="4"></circle>
+<circle cx="450" cy="140" fill="#00478d" r="4"></circle>
+<circle cx="600" cy="135" fill="#00478d" r="4"></circle>
+<circle cx="750" cy="110" fill="#00478d" r="4"></circle>
+<circle cx="900" cy="45" fill="#ba1a1a" r="6"></circle>
+<!-- Tooltip Simulator (Latest point) -->
+<g transform="translate(860, 5)">
+<rect fill="#191c1e" height="30" rx="4" width="80"></rect>
+<text fill="white" font-family="Inter" font-size="12" text-anchor="middle" x="40" y="20">Oct 24: 126</text>
+</g>
+</svg>
+<div class="flex justify-between mt-sm font-label-sm text-on-surface-variant">
+<span>May</span>
+<span>Jun</span>
+<span>Jul</span>
+<span>Aug</span>
+<span>Sep</span>
+<span>Oct 24</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Detailed Table of Other Biomarkers -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="px-lg py-md border-b border-outline-variant flex justify-between items-center bg-surface-container-high/30">
+<h3 class="font-label-md text-label-md text-on-surface">Other Biomarkers</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">12 components measured</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-lg py-md font-label-md text-on-surface-variant">Component</th>
+<th class="px-lg py-md font-label-md text-on-surface-variant">Result</th>
+<th class="px-lg py-md font-label-md text-on-surface-variant">Flag</th>
+<th class="px-lg py-md font-label-md text-on-surface-variant">Ref Range</th>
+<th class="px-lg py-md font-label-md text-on-surface-variant">Unit</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md font-bold group-hover:text-primary transition-colors">Sodium</td>
+<td class="px-lg py-md">138</td>
+<td class="px-lg py-md"><span class="px-sm py-0.5 bg-surface-container text-on-surface-variant rounded-full text-xs">NORMAL</span></td>
+<td class="px-lg py-md">134 - 144</td>
+<td class="px-lg py-md">mmol/L</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md font-bold group-hover:text-primary transition-colors">Potassium</td>
+<td class="px-lg py-md text-primary font-bold">3.1</td>
+<td class="px-lg py-md"><span class="px-sm py-0.5 bg-primary-container text-on-primary-container rounded-full text-xs font-bold">LOW</span></td>
+<td class="px-lg py-md">3.5 - 5.2</td>
+<td class="px-lg py-md">mmol/L</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md font-bold group-hover:text-primary transition-colors">Calcium</td>
+<td class="px-lg py-md">9.2</td>
+<td class="px-lg py-md"><span class="px-sm py-0.5 bg-surface-container text-on-surface-variant rounded-full text-xs">NORMAL</span></td>
+<td class="px-lg py-md">8.7 - 10.2</td>
+<td class="px-lg py-md">mg/dL</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md font-bold group-hover:text-primary transition-colors">BUN</td>
+<td class="px-lg py-md">14</td>
+<td class="px-lg py-md"><span class="px-sm py-0.5 bg-surface-container text-on-surface-variant rounded-full text-xs">NORMAL</span></td>
+<td class="px-lg py-md">6 - 20</td>
+<td class="px-lg py-md">mg/dL</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md font-bold group-hover:text-primary transition-colors">Creatinine</td>
+<td class="px-lg py-md">0.85</td>
+<td class="px-lg py-md"><span class="px-sm py-0.5 bg-surface-container text-on-surface-variant rounded-full text-xs">NORMAL</span></td>
+<td class="px-lg py-md">0.57 - 1.00</td>
+<td class="px-lg py-md">mg/dL</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md font-bold group-hover:text-primary transition-colors">Albumin</td>
+<td class="px-lg py-md">4.1</td>
+<td class="px-lg py-md"><span class="px-sm py-0.5 bg-surface-container text-on-surface-variant rounded-full text-xs">NORMAL</span></td>
+<td class="px-lg py-md">3.5 - 5.0</td>
+<td class="px-lg py-md">g/dL</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-md text-center">
+<button class="text-primary font-label-md hover:underline">View All 12 Components</button>
+</div>
+</div>
+<!-- Health Insight Card -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant flex flex-col gap-md">
+<div class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">psychology</span>
+</div>
+<div>
+<h4 class="font-body-md text-body-md font-bold text-on-surface">Physician's Interpretive Note</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">
+                            "The elevated serum glucose combined with low potassium suggests a need for closer monitoring. Please continue with the prescribed fasting protocol and schedule a follow-up telehealth visit within 7 days."
+                        </p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant flex flex-col gap-md">
+<div class="w-12 h-12 rounded-lg bg-tertiary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary">trending_up</span>
+</div>
+<div>
+<h4 class="font-body-md text-body-md font-bold text-on-surface">Next Steps</h4>
+<ul class="mt-xs space-y-xs">
+<li class="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-sm text-tertiary">check_circle</span>
+                                Schedule A1C re-test (3 months)
+                            </li>
+<li class="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-sm text-tertiary">check_circle</span>
+                                Potassium supplementation evaluation
+                            </li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- FAB Suppression: This is a detail page, no FAB as per instructions -->
+<script>
+        // Micro-interactions for tab switching simulation
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.classList.contains('active:scale-95')) {
+                    // Visual feedback already handled by tailwind classes
+                }
+            });
+        });
+
+        // Simple animation for the graph reveal on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                }
+            });
+        });
+        
+        const trendPath = document.querySelector('.trend-line');
+        if (trendPath) observer.observe(trendPath);
+    </script>
+    <script src="assets/js/mock-data.js"></script>
+    <script src="assets/js/app.js"></script>
+</body></html>

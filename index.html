@@ -1,0 +1,707 @@
+<!doctype html>
+
+<html class="light" lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SmartCare HIS - Hệ thống Quản lý Bệnh viện Thông minh</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+    </style>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-primary-fixed-variant": "#00468c",
+              "on-surface-variant": "#424752",
+              "surface-dim": "#d8dadc",
+              "on-secondary-container": "#007070",
+              "inverse-primary": "#a9c7ff",
+              outline: "#727783",
+              "on-tertiary-fixed": "#00210b",
+              "on-secondary-fixed-variant": "#004f4f",
+              "surface-container-high": "#e6e8ea",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed-dim": "#5adf82",
+              "on-tertiary-fixed-variant": "#005225",
+              background: "#f7f9fb",
+              "on-secondary": "#ffffff",
+              "secondary-fixed-dim": "#6fd7d6",
+              "surface-container-highest": "#e0e3e5",
+              "tertiary-fixed": "#78fc9c",
+              "surface-tint": "#005db6",
+              "on-tertiary-container": "#6ff394",
+              "on-primary": "#ffffff",
+              "secondary-container": "#8cf3f3",
+              "tertiary-container": "#006e33",
+              "surface-container": "#eceef0",
+              "on-secondary-fixed": "#002020",
+              "surface-container-lowest": "#ffffff",
+              "primary-container": "#005eb8",
+              surface: "#f7f9fb",
+              "secondary-fixed": "#8cf3f3",
+              "on-primary-container": "#c8daff",
+              "inverse-surface": "#2d3133",
+              "outline-variant": "#c2c6d4",
+              "on-surface": "#191c1e",
+              "inverse-on-surface": "#eff1f3",
+              "primary-fixed": "#d6e3ff",
+              error: "#ba1a1a",
+              "surface-variant": "#e0e3e5",
+              "surface-container-low": "#f2f4f6",
+              tertiary: "#005325",
+              primary: "#00478d",
+              "surface-bright": "#f7f9fb",
+              secondary: "#006a6a",
+              "on-error": "#ffffff",
+              "on-background": "#191c1e",
+              "primary-fixed-dim": "#a9c7ff",
+              "error-container": "#ffdad6",
+              "on-primary-fixed": "#001b3d",
+              "on-error-container": "#93000a",
+            },
+            borderRadius: {
+              DEFAULT: "0.125rem",
+              lg: "0.25rem",
+              xl: "0.5rem",
+              full: "0.75rem",
+            },
+            spacing: {
+              margin: "32px",
+              lg: "24px",
+              xs: "4px",
+              xl: "40px",
+              md: "16px",
+              sm: "8px",
+              xxl: "64px",
+              base: "4px",
+              gutter: "24px",
+            },
+            fontFamily: {
+              "body-lg": ["Inter"],
+              "headline-md": ["Inter"],
+              "body-md": ["Inter"],
+              "headline-lg": ["Inter"],
+              "body-sm": ["Inter"],
+              "label-sm": ["Inter"],
+              "label-md": ["Inter"],
+              code: ["Inter"],
+              "headline-lg-mobile": ["Inter"],
+              "display-lg": ["Inter"],
+            },
+            fontSize: {
+              "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+              "headline-md": [
+                "24px",
+                { lineHeight: "32px", fontWeight: "600" },
+              ],
+              "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "headline-lg": [
+                "32px",
+                {
+                  lineHeight: "40px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+              "label-md": [
+                "14px",
+                {
+                  lineHeight: "20px",
+                  letterSpacing: "0.05em",
+                  fontWeight: "600",
+                },
+              ],
+              code: ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-lg-mobile": [
+                "24px",
+                { lineHeight: "32px", fontWeight: "600" },
+              ],
+              "display-lg": [
+                "48px",
+                {
+                  lineHeight: "60px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body class="bg-background text-on-surface font-body-md overflow-x-hidden">
+    <!-- TopNavBar -->
+    <header
+      class="bg-surface-container-lowest sticky top-0 z-50 shadow-sm border-b border-outline-variant flex justify-between items-center w-full px-margin py-4"
+    >
+      <div class="flex items-center gap-sm">
+        <span
+          class="material-symbols-outlined text-primary text-3xl"
+          data-icon="health_and_safety"
+          >health_and_safety</span
+        >
+        <span class="font-headline-md text-headline-md font-bold text-primary"
+          >SmartCare HIS</span
+        >
+      </div>
+      <nav class="hidden md:flex items-center gap-xl">
+        <a
+          class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200"
+          href="index.html"
+          >Giải pháp</a
+        >
+        <a
+          class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200"
+          href="index.html"
+          >Dịch vụ</a
+        >
+        <a
+          class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200"
+          href="index.html"
+          >Về chúng tôi</a
+        >
+      </nav>
+      <div class="flex items-center gap-md">
+        <a
+          class="px-lg py-sm bg-primary text-on-primary rounded-lg font-label-md text-label-md active:scale-95 transition-all duration-200"
+          href="sign_in.html"
+        >
+          Đăng nhập
+        </a>
+        <button
+          class="md:hidden material-symbols-outlined text-on-surface-variant"
+        >
+          menu
+        </button>
+      </div>
+    </header>
+    <main>
+      <!-- Hero Section -->
+      <section
+        class="relative min-h-[716px] flex items-center overflow-hidden bg-surface-container-lowest"
+      >
+        <div class="absolute inset-0 z-0">
+          <img
+            alt="Modern Hospital Architecture"
+            class="w-full h-full object-cover opacity-20"
+            data-alt="A wide-angle, cinematic photograph of a futuristic hospital lobby with clean white lines, large glass windows, and soft natural lighting. The scene features a high-tech reception desk and modern architectural elements, conveying a clinical yet welcoming atmosphere. The color palette is dominated by soft teals, clinical blues, and pristine whites, emphasizing surgical precision and modern medical technology."
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzzAAArJMwm0_mxMYmkIvjSkN-l_n1w61rSsV3f1r5YCIcJRgZ0DLt2hSJMp1EXBkMPI3wz7nz4bu6J98etaHRXO0RF4qvbekMJ0qU_LahbZMTd6dO2SlmNmo5oAP3ZcPjFGkz_TwjJ-88liRTfXIB1N1fd-t8MGDkJMamrI9vzudDxfqDgefJiT-Y-1lTI4NFI9ulVndBbEKWIspfDy42X1wtwgMFfI2PxWjsrwUkhCfRpK3KQMmugu2ncmlPYpMKKhA3VLdDb4rZ"
+          />
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"
+          ></div>
+        </div>
+        <div class="relative z-10 px-margin max-w-4xl">
+          <span
+            class="inline-block px-md py-xs bg-secondary-container text-on-secondary-container rounded-full text-label-sm font-label-sm mb-md uppercase tracking-wider"
+          >
+            Tiêu chuẩn Y tế Thế hệ mới
+          </span>
+          <h1
+            class="font-display-lg text-display-lg text-primary mb-lg leading-tight"
+          >
+            Hệ thống Quản lý Bệnh viện Thông minh
+            <span class="text-secondary">SmartCare</span>
+          </h1>
+          <p
+            class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-xl"
+          >
+            Giải pháp toàn diện cho y tế hiện đại, từ quản lý lâm sàng đến chăm
+            sóc bệnh nhân từ xa, giúp tối ưu hóa vận hành và nâng cao trải
+            nghiệm điều trị.
+          </p>
+          <div class="flex flex-wrap gap-md">
+            <button
+              class="px-xl py-md bg-primary text-on-primary rounded-xl font-label-md text-label-md flex items-center gap-sm shadow-md hover:shadow-lg transition-all"
+            >
+              Khám phá giải pháp
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+            <button
+              class="px-xl py-md border border-primary text-primary rounded-xl font-label-md text-label-md hover:bg-primary/5 transition-all"
+            >
+              Yêu cầu Demo
+            </button>
+          </div>
+        </div>
+      </section>
+      <!-- Main Navigation Cards (Bento Style) -->
+      <section class="py-xxl px-margin bg-surface-container-low">
+        <div class="max-w-7xl mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+            <!-- Patient Portal Card -->
+            <div
+              class="group relative bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant hover:border-primary transition-all duration-300 flex flex-col justify-between overflow-hidden"
+            >
+              <div
+                class="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500"
+              ></div>
+              <div>
+                <div
+                  class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-lg text-primary"
+                >
+                  <span class="material-symbols-outlined text-3xl"
+                    >patient_list</span
+                  >
+                </div>
+                <h3
+                  class="font-headline-md text-headline-md text-on-surface mb-md"
+                >
+                  Cổng Bệnh nhân
+                </h3>
+                <ul class="space-y-sm mb-lg">
+                  <li class="flex items-center gap-sm text-on-surface-variant">
+                    <span class="material-symbols-outlined text-primary text-sm"
+                      >check_circle</span
+                    >
+                    Xem bệnh án điện tử
+                  </li>
+                  <li class="flex items-center gap-sm text-on-surface-variant">
+                    <span class="material-symbols-outlined text-primary text-sm"
+                      >check_circle</span
+                    >
+                    Đặt lịch hẹn trực tuyến
+                  </li>
+                  <li class="flex items-center gap-sm text-on-surface-variant">
+                    <span class="material-symbols-outlined text-primary text-sm"
+                      >check_circle</span
+                    >
+                    Thanh toán hóa đơn 24/7
+                  </li>
+                </ul>
+              </div>
+              <a
+                class="inline-flex items-center gap-xs font-label-md text-label-md text-primary group-hover:gap-sm transition-all"
+                href="patient_dashboard.html"
+              >
+                Truy cập cổng
+                <span class="material-symbols-outlined">chevron_right</span>
+              </a>
+            </div>
+            <!-- Clinical Portal Card -->
+            <div
+              class="group relative bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant hover:border-primary transition-all duration-300 flex flex-col justify-between overflow-hidden"
+            >
+              <div
+                class="absolute -right-8 -top-8 w-32 h-32 bg-secondary/5 rounded-full group-hover:scale-150 transition-transform duration-500"
+              ></div>
+              <div>
+                <div
+                  class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center mb-lg text-secondary"
+                >
+                  <span class="material-symbols-outlined text-3xl"
+                    >stethoscope</span
+                  >
+                </div>
+                <h3
+                  class="font-headline-md text-headline-md text-on-surface mb-md"
+                >
+                  Cổng Lâm sàng
+                </h3>
+                <p class="text-on-surface-variant mb-md font-body-sm">
+                  Dành riêng cho Bác sĩ &amp; Điều dưỡng quản lý toàn bộ quy
+                  trình chuyên môn.
+                </p>
+                <ul class="space-y-sm mb-lg">
+                  <li class="flex items-center gap-sm text-on-surface-variant">
+                    <span
+                      class="material-symbols-outlined text-secondary text-sm"
+                      >clinical_notes</span
+                    >
+                    EMR &amp; Hồ sơ bệnh án
+                  </li>
+                  <li class="flex items-center gap-sm text-on-surface-variant">
+                    <span
+                      class="material-symbols-outlined text-secondary text-sm"
+                      >science</span
+                    >
+                    Chỉ định cận lâm sàng
+                  </li>
+                  <li class="flex items-center gap-sm text-on-surface-variant">
+                    <span
+                      class="material-symbols-outlined text-secondary text-sm"
+                      >bedroom_parent</span
+                    >
+                    Quản lý Nội trú
+                  </li>
+                </ul>
+              </div>
+              <a
+                class="inline-flex items-center gap-xs font-label-md text-label-md text-secondary group-hover:gap-sm transition-all"
+                href="clinic_dashboard_queue_management.html"
+              >
+                Dành cho Chuyên gia
+                <span class="material-symbols-outlined">chevron_right</span>
+              </a>
+            </div>
+            <!-- Admin Portal Card -->
+            <div
+              class="group relative bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant hover:border-primary transition-all duration-300 flex flex-col justify-between overflow-hidden"
+            >
+              <div
+                class="absolute -right-8 -top-8 w-32 h-32 bg-tertiary-container/10 rounded-full group-hover:scale-150 transition-transform duration-500"
+              ></div>
+              <div>
+                <div
+                  class="w-12 h-12 rounded-lg bg-tertiary-container/20 flex items-center justify-center mb-lg text-tertiary"
+                >
+                  <span class="material-symbols-outlined text-3xl"
+                    >admin_panel_settings</span
+                  >
+                </div>
+                <h3
+                  class="font-headline-md text-headline-md text-on-surface mb-md"
+                >
+                  Cổng Quản trị
+                </h3>
+                <ul class="space-y-sm mb-lg">
+                  <li class="flex items-center gap-sm text-on-surface-variant">
+                    <span
+                      class="material-symbols-outlined text-tertiary text-sm"
+                      >analytics</span
+                    >
+                    Phân tích số liệu (BI)
+                  </li>
+                  <li class="flex items-center gap-sm text-on-surface-variant">
+                    <span
+                      class="material-symbols-outlined text-tertiary text-sm"
+                      >groups</span
+                    >
+                    Quản lý nhân sự &amp; ERP
+                  </li>
+                  <li class="flex items-center gap-sm text-on-surface-variant">
+                    <span
+                      class="material-symbols-outlined text-tertiary text-sm"
+                      >security</span
+                    >
+                    Bảo mật hệ thống
+                  </li>
+                </ul>
+              </div>
+              <a
+                class="inline-flex items-center gap-xs font-label-md text-label-md text-tertiary group-hover:gap-sm transition-all"
+                href="hospital_analytics_reports.html"
+              >
+                Quản trị hệ thống
+                <span class="material-symbols-outlined">chevron_right</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Feature Highlights -->
+      <section class="py-xxl px-margin bg-background">
+        <div class="max-w-7xl mx-auto text-center mb-xxl">
+          <h2 class="font-headline-lg text-headline-lg text-primary mb-md">
+            Tính năng Nổi bật
+          </h2>
+          <p class="text-on-surface-variant max-w-xl mx-auto">
+            Áp dụng công nghệ tiên tiến nhất để mang lại hiệu quả vận hành tối
+            đa cho cơ sở y tế của bạn.
+          </p>
+        </div>
+        <div
+          class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg"
+        >
+          <div
+            class="p-lg bg-surface-container-low rounded-xl text-center hover:shadow-md transition-shadow"
+          >
+            <span
+              class="material-symbols-outlined text-primary text-4xl mb-md"
+              data-icon="history_edu"
+              >history_edu</span
+            >
+            <h4 class="font-label-md text-label-md mb-sm text-on-surface">
+              Hồ sơ điện tử (EMR)
+            </h4>
+            <p class="text-body-sm text-on-surface-variant">
+              Lưu trữ tập trung, đồng bộ hóa dữ liệu toàn hệ thống.
+            </p>
+          </div>
+          <div
+            class="p-lg bg-surface-container-low rounded-xl text-center hover:shadow-md transition-shadow"
+          >
+            <span
+              class="material-symbols-outlined text-primary text-4xl mb-md"
+              data-icon="videocam"
+              >videocam</span
+            >
+            <h4 class="font-label-md text-label-md mb-sm text-on-surface">
+              Telemedicine
+            </h4>
+            <p class="text-body-sm text-on-surface-variant">
+              Khám bệnh từ xa với độ trễ thấp và bảo mật tuyệt đối.
+            </p>
+          </div>
+          <div
+            class="p-lg bg-surface-container-low rounded-xl text-center hover:shadow-md transition-shadow"
+          >
+            <span
+              class="material-symbols-outlined text-primary text-4xl mb-md"
+              data-icon="psychology"
+              >psychology</span
+            >
+            <h4 class="font-label-md text-label-md mb-sm text-on-surface">
+              Cảnh báo thông minh
+            </h4>
+            <p class="text-body-sm text-on-surface-variant">
+              AI hỗ trợ chẩn đoán và cảnh báo tương tác thuốc.
+            </p>
+          </div>
+          <div
+            class="p-lg bg-surface-container-low rounded-xl text-center hover:shadow-md transition-shadow"
+          >
+            <span
+              class="material-symbols-outlined text-primary text-4xl mb-md"
+              data-icon="bed"
+              >bed</span
+            >
+            <h4 class="font-label-md text-label-md mb-sm text-on-surface">
+              Quản lý giường bệnh
+            </h4>
+            <p class="text-body-sm text-on-surface-variant">
+              Theo dõi tình trạng giường bệnh trực quan theo thời gian thực.
+            </p>
+          </div>
+        </div>
+      </section>
+      <!-- CTA / Mobile Integration -->
+      <section class="py-xxl px-margin">
+        <div
+          class="max-w-7xl mx-auto bg-primary rounded-xxl p-xl md:p-xxl flex flex-col md:flex-row items-center gap-xl relative overflow-hidden shadow-2xl"
+        >
+          <div class="absolute top-0 right-0 w-1/2 h-full opacity-10">
+            <img
+              alt="Medical Technology"
+              class="w-full h-full object-cover"
+              data-alt="A close-up shot of a modern medical tablet displaying high-resolution heart rate graphs and clinical data. The background is a blurred hospital corridor with cool blue and white tones. The lighting is crisp and professional, highlighting the digital interface's clarity and precision. The overall mood is high-tech and reliable."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpTzSOBdMr59NhzJUSAYQejicL_JlCMGfV3apAd25LrooBYeiFZ57cCn4eeoZaqEdusXrPulblcF-dIpx67YLW1sjMrVJBeUx3abetBcB7Sx_UMp7lr8yQmKcv27mBjh-ETvQB43kWQ5jC2TTgy-CVtLJxEgUbVSWOEnuRaVWWCbATo2Hh4NKQ0aoW6sFPM_jiNrrF7RU0HfV6veLBQ6JvxA4MbTSa9OPFPH6iGsVDSpM6Iar7OboWt9N_bUqqNvrYcBg0TdcpwGeG"
+            />
+          </div>
+          <div class="relative z-10 flex-1">
+            <h2 class="font-headline-lg text-headline-lg text-on-primary mb-md">
+              Sẵn sàng chuyển đổi số cùng SmartCare?
+            </h2>
+            <p class="text-on-primary-container text-body-lg mb-xl">
+              Gia nhập cộng đồng hơn 500+ bệnh viện và phòng khám đã tin dùng
+              giải pháp của chúng tôi.
+            </p>
+            <div class="flex gap-md">
+              <button
+                class="bg-surface-container-lowest text-primary px-xl py-md rounded-xl font-label-md text-label-md hover:bg-on-primary-container transition-all"
+              >
+                Liên hệ ngay
+              </button>
+            </div>
+          </div>
+          <div class="relative z-10 w-full md:w-auto flex justify-center">
+            <div
+              class="bg-surface-container-lowest/10 p-md rounded-xxl backdrop-blur-md border border-white/20"
+            >
+              <div class="grid grid-cols-2 gap-md">
+                <div class="text-center">
+                  <div class="text-headline-lg font-bold text-on-primary">
+                    500+
+                  </div>
+                  <div class="text-label-sm text-on-primary-container">
+                    Đối tác
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="text-headline-lg font-bold text-on-primary">
+                    99%
+                  </div>
+                  <div class="text-label-sm text-on-primary-container">
+                    Hài lòng
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- Footer -->
+    <footer class="bg-inverse-surface text-inverse-on-surface py-xxl px-margin">
+      <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-xl mb-xxl">
+          <div class="col-span-1 md:col-span-1">
+            <div class="flex items-center gap-sm mb-lg">
+              <span
+                class="material-symbols-outlined text-inverse-primary text-3xl"
+                >health_and_safety</span
+              >
+              <span
+                class="font-headline-md text-headline-md font-bold text-inverse-primary"
+                >SmartCare</span
+              >
+            </div>
+            <p class="text-body-sm text-outline-variant mb-lg">
+              Kiến tạo hệ sinh thái y tế thông minh, minh bạch và hiệu quả dựa
+              trên nền tảng dữ liệu số.
+            </p>
+            <div class="flex gap-md">
+              <a
+                class="w-10 h-10 rounded-full bg-surface-variant/10 flex items-center justify-center hover:bg-inverse-primary/20 transition-all"
+                href="index.html"
+              >
+                <span class="material-symbols-outlined text-sm">public</span>
+              </a>
+              <a
+                class="w-10 h-10 rounded-full bg-surface-variant/10 flex items-center justify-center hover:bg-inverse-primary/20 transition-all"
+                href="index.html"
+              >
+                <span class="material-symbols-outlined text-sm">thumb_up</span>
+              </a>
+              <a
+                class="w-10 h-10 rounded-full bg-surface-variant/10 flex items-center justify-center hover:bg-inverse-primary/20 transition-all"
+                href="support.html"
+              >
+                <span class="material-symbols-outlined text-sm">chat</span>
+              </a>
+            </div>
+          </div>
+          <div>
+            <h5 class="font-label-md text-label-md mb-lg text-white">
+              Sản phẩm
+            </h5>
+            <ul class="space-y-sm text-body-sm text-outline-variant">
+              <li>
+                <a class="hover:text-inverse-primary" href="clinic_dashboard_queue_management.html"
+                  >Quản lý lâm sàng</a
+                >
+              </li>
+              <li>
+                <a class="hover:text-inverse-primary" href="lab_imaging_results_entry.html"
+                  >Quản lý cận lâm sàng</a
+                >
+              </li>
+              <li>
+                <a class="hover:text-inverse-primary" href="telemedicine_consultation.html"
+                  >Giải pháp Telehealth</a
+                >
+              </li>
+              <li>
+                <a class="hover:text-inverse-primary" href="cdss_ai_medical_alerts.html"
+                  >Trí tuệ nhân tạo (AI)</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="font-label-md text-label-md mb-lg text-white">
+              Liên hệ
+            </h5>
+            <ul class="space-y-sm text-body-sm text-outline-variant">
+              <li class="flex items-start gap-xs">
+                <span class="material-symbols-outlined text-sm mt-1"
+                  >location_on</span
+                >
+                Tầng 12, Tòa nhà Y Tế Xanh, Quận 1, TP. HCM
+              </li>
+              <li class="flex items-center gap-xs">
+                <span class="material-symbols-outlined text-sm">phone</span>
+                1900 1234
+              </li>
+              <li class="flex items-center gap-xs">
+                <span class="material-symbols-outlined text-sm">mail</span>
+                contact@smartcare.vn
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="font-label-md text-label-md mb-lg text-white">
+              Đăng ký bản tin
+            </h5>
+            <p class="text-body-sm text-outline-variant mb-md">
+              Nhận cập nhật mới nhất về công nghệ y tế.
+            </p>
+            <div class="flex">
+              <input
+                class="bg-surface-variant/10 border-none text-white rounded-l-lg focus:ring-1 focus:ring-inverse-primary w-full text-body-sm"
+                placeholder="Email của bạn"
+                type="email"
+              />
+              <button
+                class="bg-inverse-primary text-on-primary-fixed px-md rounded-r-lg font-label-md"
+              >
+                Gửi
+              </button>
+            </div>
+          </div>
+        </div>
+        <div
+          class="border-t border-outline-variant/30 pt-lg flex flex-col md:flex-row justify-between items-center gap-md"
+        >
+          <p class="text-label-sm text-outline-variant">
+            © 2024 SmartCare HIS. Bảo lưu mọi quyền.
+          </p>
+          <div class="flex gap-xl grayscale opacity-50">
+            <!-- Placeholder logos for medical associations -->
+            <span class="font-bold text-lg">H-TECH</span>
+            <span class="font-bold text-lg">MED-ALLIANCE</span>
+            <span class="font-bold text-lg">ISO-CERT</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <script>
+      // Micro-interaction for cards
+      document.querySelectorAll(".group").forEach((card) => {
+        card.addEventListener("mouseenter", () => {
+          card.style.transform = "translateY(-8px)";
+        });
+        card.addEventListener("mouseleave", () => {
+          card.style.transform = "translateY(0)";
+        });
+      });
+
+      // Simple sticky header effect
+      window.addEventListener("scroll", () => {
+        const header = document.querySelector("header");
+        if (window.scrollY > 20) {
+          header.classList.add("shadow-md");
+          header.classList.remove("shadow-sm");
+        } else {
+          header.classList.add("shadow-sm");
+          header.classList.remove("shadow-md");
+        }
+      });
+    </script>
+    <!-- Demo scripts: mock data + small app helpers -->
+    <script src="assets/js/mock-data.js"></script>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MediCare Patient Portal - Billing &amp; Insurance</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#005325",
+                    "on-primary": "#ffffff",
+                    "on-primary-container": "#c8daff",
+                    "on-secondary-fixed": "#002020",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#005225",
+                    "surface-variant": "#e0e3e5",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "primary-container": "#005eb8",
+                    "background": "#f7f9fb",
+                    "on-secondary-fixed-variant": "#004f4f",
+                    "on-secondary-container": "#007070",
+                    "tertiary-fixed": "#78fc9c",
+                    "surface": "#f7f9fb",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c2c6d4",
+                    "error-container": "#ffdad6",
+                    "primary-fixed": "#d6e3ff",
+                    "on-surface-variant": "#424752",
+                    "tertiary-container": "#006e33",
+                    "secondary-container": "#8cf3f3",
+                    "inverse-primary": "#a9c7ff",
+                    "on-background": "#191c1e",
+                    "secondary-fixed-dim": "#6fd7d6",
+                    "on-primary-fixed": "#001b3d",
+                    "on-primary-fixed-variant": "#00468c",
+                    "tertiary-fixed-dim": "#5adf82",
+                    "inverse-on-surface": "#eff1f3",
+                    "surface-container-high": "#e6e8ea",
+                    "surface-container": "#eceef0",
+                    "primary": "#00478d",
+                    "secondary": "#006a6a",
+                    "on-tertiary-container": "#6ff394",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed": "#8cf3f3",
+                    "surface-container-low": "#f2f4f6",
+                    "on-error": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-surface": "#191c1e",
+                    "inverse-surface": "#2d3133",
+                    "surface-tint": "#005db6",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "#f7f9fb",
+                    "surface-dim": "#d8dadc",
+                    "outline": "#727783",
+                    "on-tertiary-fixed": "#00210b"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xxl": "64px",
+                    "margin": "32px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "gutter": "24px",
+                    "xl": "40px",
+                    "sm": "8px",
+                    "base": "4px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "code": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "code": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .bg-glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+        .payment-card-selected { border-color: #00478d; background-color: #f2f4f6; }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopNavBar -->
+<header class="bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline shadow-sm dark:shadow-none docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-margin py-4">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">MediCare Patient Portal</div>
+<nav class="hidden md:flex items-center gap-xl font-body-md text-body-md">
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95 duration-200" href="patient_dashboard.html">Dashboard</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95 duration-200" href="appointment_booking_wizard.html">Appointments</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95 duration-200" href="phr_vault_medical_timeline.html">Medical Records</a>
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim font-bold pb-1 cursor-pointer active:scale-95 duration-200" href="billing_insurance_integration.html">Billing</a>
+</nav>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">notifications</button>
+<a class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors" href="settings.html">settings</a>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden">
+<img alt="Patient Profile Avatar" class="w-full h-full object-cover" data-alt="A professional close-up headshot of a friendly patient for a medical portal profile. The individual has a serene expression, with soft, natural daylight illuminating their features against a clean, blurred clinical background. The image is crisp and minimalist, following a high-key light mode aesthetic with cool blue and white tones to suggest a clean and professional healthcare environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVkYxtiqVI9ij3mtxYCPDnXZTJxJ4y7WGUYJ9ig6c6CdtTn3q1KmIDwcxCoh-n9zRAB57QNgaic5kRM33USV14VNHcTsxDQTnQ3wiVIUGPFF9SHYb-KjVCpfnQoS35Kc6bilHrQt2zl925UC06QpwERWZd2Es1QER-qYvcBQGfLC4Lgaqdt4ez-Hax3lj4Padt-N7xzWWorV4xS6Rx2fG9ynBAf7AbqoHkiVq_zZfKeC7qAZFUX2wCn5O8npW1jlL4iD9k-eJPFG5-"/>
+</div>
+</div>
+</header>
+<div class="flex">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-[calc(100vh-72px)] w-64 sticky top-[72px] left-0 py-xl px-md gap-sm bg-surface dark:bg-on-background border-r border-outline-variant dark:border-outline">
+<div class="mb-xl px-sm">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">MediCare PHR</div>
+<div class="text-label-md font-label-md text-on-surface-variant">Patient Access</div>
+</div>
+<div class="flex flex-col gap-xs flex-grow">
+<a class="flex items-center gap-md px-md py-sm cursor-pointer transition-all text-on-surface-variant hover:bg-surface-container-high rounded-lg" href="patient_dashboard.html">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm cursor-pointer transition-all text-on-surface-variant hover:bg-surface-container-high rounded-lg" href="appointment_booking_wizard.html">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label-md text-label-md">Appointments</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm cursor-pointer transition-all text-on-surface-variant hover:bg-surface-container-high rounded-lg" href="phr_vault_medical_timeline.html">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-md text-label-md">Medical Records</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm cursor-pointer transition-all bg-primary-container text-on-primary-container rounded-lg font-bold" href="billing_insurance_integration.html">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-md text-label-md">Billing</span>
+</a>
+</div>
+<a class="mt-xl w-full py-md bg-primary text-on-primary rounded-xl font-bold hover:bg-primary-container hover:text-on-primary-container transition-all text-center" href="appointment_booking_wizard.html">
+                Book Appointment
+            </a>
+<div class="mt-auto border-t border-outline-variant pt-md flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm cursor-pointer transition-all text-on-surface-variant hover:bg-surface-container-high rounded-lg" href="support.html">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm cursor-pointer transition-all text-on-surface-variant hover:bg-surface-container-high rounded-lg" href="sign_out.html">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-grow p-margin max-w-7xl mx-auto">
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Page Header -->
+<div class="col-span-12 mb-md">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-xs">Invoice &amp; Insurance</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Review your medical expenses and apply insurance coverage.</p>
+</div>
+<div class="col-span-12">
+    <div class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+        <div class="flex items-center justify-between mb-sm">
+            <h2 class="font-headline-md text-headline-md text-on-surface">Demo Summary</h2>
+            <span class="text-[11px] text-on-surface-variant">Mock data</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-md" data-mock="kpis"></div>
+    </div>
+</div>
+<!-- Bento Grid Layout -->
+<!-- Left Column: Invoice Details -->
+<div class="col-span-12 lg:col-span-8 space-y-gutter">
+<!-- Invoice Breakdown Table -->
+<section class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant">
+<div class="flex items-center justify-between mb-lg">
+<h2 class="font-headline-md text-headline-md">Invoice Breakdown</h2>
+<span class="bg-surface-container-high text-on-surface-variant px-md py-xs rounded-full font-label-md text-label-sm">Inv #MED-2023-089</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="border-b border-outline-variant">
+<th class="py-md font-label-md text-label-md text-on-surface-variant">Description</th>
+<th class="py-md font-label-md text-label-md text-on-surface-variant text-right">Amount</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm">
+<tr class="border-b border-outline-variant">
+<td class="py-md text-on-surface">Consultation Fee (Dr. Sarah Chen)</td>
+<td class="py-md text-right font-semibold">$150.00</td>
+</tr>
+<tr class="border-b border-outline-variant">
+<td class="py-md text-on-surface">Lab Test (Full Blood Count &amp; Lipid Profile)</td>
+<td class="py-md text-right font-semibold">$320.00</td>
+</tr>
+<tr class="border-b border-outline-variant">
+<td class="py-md text-on-surface">Medicine (Statins 20mg x 30)</td>
+<td class="py-md text-right font-semibold">$85.00</td>
+</tr>
+<tr class="border-b border-outline-variant">
+<td class="py-md text-on-surface">Facility Charges</td>
+<td class="py-md text-right font-semibold">$45.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Insurance Module -->
+<section class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant">
+<div class="flex items-center gap-md mb-md">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<h2 class="font-headline-md text-headline-md">Insurance Module</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-lg">Enter your Health Insurance Card ID (BHYT) to automatically apply eligible coverage.</p>
+<div class="flex flex-col sm:flex-row gap-md">
+<div class="flex-grow relative">
+<label class="absolute -top-3 left-3 bg-surface-container-lowest px-xs font-label-sm text-label-sm text-primary">Health Insurance Card ID (BHYT)</label>
+<input class="w-full h-14 border border-outline px-md rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="e.g., SV 1 23 45 67890" type="text"/>
+</div>
+<button class="h-14 px-xl bg-secondary text-on-secondary font-bold rounded-lg hover:bg-on-secondary-container transition-all active:scale-95">Apply</button>
+</div>
+<!-- Insurance Applied Status (Mock) -->
+<div class="mt-lg p-md bg-tertiary-container/10 border border-tertiary-container rounded-lg flex items-start gap-md">
+<span class="material-symbols-outlined text-tertiary-container">check_circle</span>
+<div>
+<p class="font-label-md text-label-md text-tertiary">BHYT Card Validated</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Coverage tier: Tier 2 (80% reimbursement). Government subsidized health care benefits applied to eligible services.</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Summary & Payment -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<!-- Summary Box -->
+<section class="bg-primary text-on-primary p-lg rounded-xl shadow-xl relative overflow-hidden">
+<!-- Abstract Background Decoration -->
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-primary-container/20 rounded-full blur-3xl"></div>
+<div class="absolute -left-8 -bottom-8 w-32 h-32 bg-primary-container/20 rounded-full blur-3xl"></div>
+<h2 class="font-headline-md text-headline-md mb-xl relative z-10">Payment Summary</h2>
+<div class="space-y-md relative z-10">
+<div class="flex justify-between items-center font-body-md text-body-md opacity-90">
+<span>Subtotal</span>
+<span>$600.00</span>
+</div>
+<div class="flex justify-between items-center font-body-md text-body-md text-on-tertiary-container">
+<div class="flex items-center gap-xs">
+<span>Insurance Coverage</span>
+<span class="text-label-sm px-sm py-0.5 rounded-full bg-tertiary-container text-on-tertiary">80%</span>
+</div>
+<span>-$480.00</span>
+</div>
+<div class="h-px bg-on-primary/20 my-md"></div>
+<div class="flex justify-between items-end">
+<span class="font-label-md text-label-md uppercase tracking-wider opacity-80">Total Payable</span>
+<span class="font-display-lg text-display-lg">$120.00</span>
+</div>
+</div>
+</section>
+<!-- Payment Gateway Selector -->
+<section class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant">
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-lg">Payment Gateway</h2>
+<div class="space-y-md mb-xl">
+<!-- VNPay -->
+<div class="payment-option cursor-pointer group flex items-center justify-between p-md border border-outline-variant rounded-xl hover:border-primary transition-all active:scale-95 bg-surface" onclick="selectPayment(this)">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-2 shadow-sm">
+<img alt="VNPay Logo" class="w-full object-contain" data-alt="A clean, minimalist logo icon for a financial technology service, featuring abstract geometric shapes and a professional blue and white color scheme. The background is a crisp, sterile white, reflecting a modern corporate and clinical aesthetic. The lighting is even and high-key, suggesting reliability and technological sophistication." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuUXsXsua9LAdVmXHEFT-KZMuJPzmPAmc2v5pYXtSAAmquBML9lzvWU-oabw6ZCNGuqzAesVG4PJZWd9rJfhpUB5xDrTpPxx37rL2RqUm9_6DWgwVjHdao5IVx0Sfvlb5f0X7FCLAUky-BQ8O_UgxYBXTPUVD439Hzc79XTJdZheY6SI0vCfzXaF-15xCBETkqPZchca64UR8Wa21pe_7YVyOXnV9WjqT6zy5plDcQwBBbyPdlUggse8UfmwsQLD235MjkwDa9FzHU"/>
+</div>
+<span class="font-label-md text-label-md text-on-surface">VNPay QR</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-[.payment-card-selected]:text-primary group-[.payment-card-selected]:fill-1">radio_button_unchecked</span>
+</div>
+<!-- MoMo -->
+<div class="payment-option cursor-pointer group flex items-center justify-between p-md border border-outline-variant rounded-xl hover:border-primary transition-all active:scale-95 bg-surface" onclick="selectPayment(this)">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-2 shadow-sm">
+<img alt="MoMo Logo" class="w-full object-contain" data-alt="A minimalist tech logo for a digital wallet application, utilizing vibrant magenta and white tones. The icon is centered in a brightly lit, modern digital context with soft shadows and sharp edges. The overall aesthetic is clean, professional, and friendly, matching a high-end corporate mobile interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcwRXdBBLH_Gpnm8NknuZ92LvLRaES293NbxKhiSZeTWADZmhlLGDFV-cbE2Jl8Zmq_iEQj4VSpTohC0iVpjEI3fUZEy-9oCrJCyj1Wec18TX0I9UksSt7UVmwa73WY2ZLiZ3BaTuNRsqS0V5libWGLAqd8e0dn6Ru6zA09uiozq-axfUc9Hs-5JDOlvgE4eN5l9VOgw1eiiruCiRp1xBkysMQk2icncxZyKzAFTBiUF5wCeth9dJYlsPEuRPs6sDNkEHaoYE2eI8M"/>
+</div>
+<span class="font-label-md text-label-md text-on-surface">MoMo E-Wallet</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-[.payment-card-selected]:text-primary group-[.payment-card-selected]:fill-1">radio_button_unchecked</span>
+</div>
+<!-- Credit Card -->
+<div class="payment-option cursor-pointer group flex items-center justify-between p-md border border-outline-variant rounded-xl hover:border-primary transition-all active:scale-95 payment-card-selected bg-surface" onclick="selectPayment(this)">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-2 shadow-sm">
+<span class="material-symbols-outlined text-primary text-3xl">credit_card</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Credit Card</span>
+</div>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<button class="w-full py-xl bg-primary text-on-primary font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-md">
+<span>Pay Now</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<p class="mt-md text-center font-label-sm text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-xs align-middle">lock</span> 
+                            Secure Encrypted Transaction
+                        </p>
+</section>
+</div>
+</div>
+</main>
+</div>
+<!-- Bottom Navigation Bar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant flex justify-around py-sm z-50">
+<div class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-sm font-label-sm">Dashboard</span>
+</div>
+<div class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-label-sm font-label-sm">Bookings</span>
+</div>
+<div class="flex flex-col items-center gap-xs text-primary font-bold">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="text-label-sm font-label-sm">Billing</span>
+</div>
+<div class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined">person</span>
+<span class="text-label-sm font-label-sm">Profile</span>
+</div>
+</nav>
+<script>
+        function selectPayment(element) {
+            // Remove selection from all
+            document.querySelectorAll('.payment-option').forEach(opt => {
+                opt.classList.remove('payment-card-selected');
+                const icon = opt.querySelector('.material-symbols-outlined:last-child');
+                icon.innerText = 'radio_button_unchecked';
+                icon.style.fontVariationSettings = "'FILL' 0";
+                icon.classList.remove('text-primary');
+                icon.classList.add('text-outline-variant');
+            });
+
+            // Add selection to clicked
+            element.classList.add('payment-card-selected');
+            const selectedIcon = element.querySelector('.material-symbols-outlined:last-child');
+            selectedIcon.innerText = 'check_circle';
+            selectedIcon.style.fontVariationSettings = "'FILL' 1";
+            selectedIcon.classList.remove('text-outline-variant');
+            selectedIcon.classList.add('text-primary');
+        }
+
+        // Mini interaction for the 'Apply' button
+        document.querySelector('.bg-secondary').addEventListener('click', function() {
+            this.innerText = 'Applying...';
+            setTimeout(() => {
+                this.innerText = 'Applied';
+                this.classList.replace('bg-secondary', 'bg-tertiary');
+            }, 1000);
+        });
+    </script>
+    <script src="assets/js/mock-data.js"></script>
+    <script src="assets/js/app.js"></script>
+</body></html>
