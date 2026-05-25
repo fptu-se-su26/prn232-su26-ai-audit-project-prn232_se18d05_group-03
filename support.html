@@ -1,20 +1,180 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Support — SmartCare</title>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>SmartCare HIS - Hỗ trợ kỹ thuật</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#00478d', secondary: '#006a6a', tertiary: '#005325',
+            background: '#f7f9fb', surface: '#ffffff',
+            'surface-container-low': '#f2f4f6', 'surface-container-lowest': '#ffffff',
+            'surface-container-high': '#e6e8ea', 'surface-container': '#eceef0',
+            'outline-variant': '#c2c6d4', outline: '#727783',
+            'on-surface': '#191c1e', 'on-surface-variant': '#424752',
+            'on-primary': '#ffffff', 'secondary-container': '#8cf3f3',
+            'on-secondary-container': '#007070', 'inverse-surface': '#2d3133',
+            'inverse-on-surface': '#eff1f3', 'inverse-primary': '#a9c7ff',
+            'primary-fixed': '#d6e3ff', 'on-primary-fixed': '#001b3d'
+          },
+          borderRadius: { DEFAULT: '0.125rem', lg: '0.25rem', xl: '0.5rem', full: '0.75rem' },
+          spacing: { margin: '32px', xxl: '64px', xl: '40px', lg: '24px', md: '16px', sm: '8px', xs: '4px', gutter: '24px', base: '4px' },
+          fontFamily: { 'body-md': ['Inter'], 'body-sm': ['Inter'], 'body-lg': ['Inter'], 'label-md': ['Inter'], 'label-sm': ['Inter'], 'headline-md': ['Inter'], 'headline-lg': ['Inter'] },
+          fontSize: {
+            'headline-lg': ['32px', {lineHeight: '40px', fontWeight: '600'}],
+            'headline-md': ['24px', {lineHeight: '32px', fontWeight: '600'}],
+            'body-lg': ['18px', {lineHeight: '28px', fontWeight: '400'}],
+            'body-md': ['16px', {lineHeight: '24px', fontWeight: '400'}],
+            'body-sm': ['14px', {lineHeight: '20px', fontWeight: '400'}],
+            'label-md': ['14px', {lineHeight: '20px', letterSpacing: '0.05em', fontWeight: '600'}],
+            'label-sm': ['12px', {lineHeight: '16px', fontWeight: '500'}]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen">
-  <header class="bg-white shadow p-4 flex items-center justify-between">
-    <a href="index.html" class="text-xl font-bold">SmartCare</a>
+<body class="bg-background text-on-surface min-h-screen">
+  <!-- Header -->
+  <header class="bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-10 shadow-sm px-margin py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-2xl">health_and_safety</span>
+        <span class="font-headline-md text-headline-md font-bold text-primary">SmartCare HIS</span>
+      </a>
+    </div>
+    <a href="sign_in.html" class="px-lg py-sm bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors">
+      Đăng nhập
+    </a>
   </header>
-  <main class="max-w-4xl mx-auto p-8">
-    <h1 class="text-2xl font-semibold mb-4">Support</h1>
-    <p class="text-gray-600 mb-6">Placeholder Support page. Provide FAQs, contact, and help resources here.</p>
-    <a href="support.html#contact" class="text-primary underline">Contact Support</a>
+
+  <main class="max-w-4xl mx-auto px-margin py-xxl">
+    <!-- Hero -->
+    <div class="text-center mb-xxl">
+      <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-lg">
+        <span class="material-symbols-outlined text-primary" style="font-size:32px">support_agent</span>
+      </div>
+      <h1 class="font-headline-lg text-headline-lg text-primary mb-md">Trung tâm Hỗ trợ</h1>
+      <p class="font-body-lg text-on-surface-variant max-w-xl mx-auto">Chúng tôi luôn sẵn sàng hỗ trợ bạn. Tìm câu trả lời hoặc liên hệ trực tiếp với đội ngũ kỹ thuật.</p>
+    </div>
+
+    <!-- FAQ -->
+    <section class="mb-xxl">
+      <h2 class="font-headline-md text-headline-md text-on-surface mb-lg">Câu hỏi thường gặp</h2>
+      <div class="flex flex-col gap-sm" id="faq-list">
+        <details class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden group">
+          <summary class="px-lg py-md font-label-md text-label-md cursor-pointer flex justify-between items-center hover:bg-surface-container-low transition-colors list-none">
+            Làm thế nào để đặt lịch hẹn khám?
+            <span class="material-symbols-outlined text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+          </summary>
+          <div class="px-lg pb-md font-body-sm text-on-surface-variant">Truy cập Cổng bệnh nhân → chọn "Đặt lịch hẹn" → chọn chuyên khoa, bác sĩ và khung giờ phù hợp. Hệ thống sẽ gửi xác nhận qua email và SMS.</div>
+        </details>
+        <details class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden group">
+          <summary class="px-lg py-md font-label-md text-label-md cursor-pointer flex justify-between items-center hover:bg-surface-container-low transition-colors list-none">
+            Tôi quên mật khẩu, phải làm sao?
+            <span class="material-symbols-outlined text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+          </summary>
+          <div class="px-lg pb-md font-body-sm text-on-surface-variant">Tại trang Đăng nhập, nhấn vào "Quên mật khẩu?" và nhập email đã đăng ký. Hệ thống sẽ gửi link đặt lại mật khẩu trong vài phút.</div>
+        </details>
+        <details class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden group">
+          <summary class="px-lg py-md font-label-md text-label-md cursor-pointer flex justify-between items-center hover:bg-surface-container-low transition-colors list-none">
+            Dữ liệu y tế của tôi có được bảo mật không?
+            <span class="material-symbols-outlined text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+          </summary>
+          <div class="px-lg pb-md font-body-sm text-on-surface-variant">SmartCare HIS tuân thủ tiêu chuẩn bảo mật ISO 27001 và quy định bảo vệ dữ liệu y tế. Mọi dữ liệu được mã hóa end-to-end và chỉ bác sĩ được ủy quyền mới có quyền truy cập.</div>
+        </details>
+        <details class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden group">
+          <summary class="px-lg py-md font-label-md text-label-md cursor-pointer flex justify-between items-center hover:bg-surface-container-low transition-colors list-none">
+            Tôi có thể xem kết quả xét nghiệm ở đâu?
+            <span class="material-symbols-outlined text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+          </summary>
+          <div class="px-lg pb-md font-body-sm text-on-surface-variant">Kết quả xét nghiệm hiển thị trong Cổng bệnh nhân → mục "Kết quả xét nghiệm". Kết quả thường có trong vòng 2–4 giờ sau khi hoàn tất phân tích.</div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="grid grid-cols-1 sm:grid-cols-3 gap-md mb-xxl">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg text-center hover:shadow-md transition-shadow">
+        <span class="material-symbols-outlined text-primary text-3xl mb-md">phone</span>
+        <h3 class="font-label-md text-label-md text-on-surface mb-sm">Hotline 24/7</h3>
+        <p class="font-body-sm text-on-surface-variant">1900 1234</p>
+        <p class="font-label-sm text-label-sm text-outline mt-xs">Miễn phí cước gọi</p>
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg text-center hover:shadow-md transition-shadow">
+        <span class="material-symbols-outlined text-secondary text-3xl mb-md">mail</span>
+        <h3 class="font-label-md text-label-md text-on-surface mb-sm">Email hỗ trợ</h3>
+        <p class="font-body-sm text-on-surface-variant">support@smartcare.vn</p>
+        <p class="font-label-sm text-label-sm text-outline mt-xs">Phản hồi trong 2 giờ</p>
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg text-center hover:shadow-md transition-shadow">
+        <span class="material-symbols-outlined text-tertiary text-3xl mb-md">chat</span>
+        <h3 class="font-label-md text-label-md text-on-surface mb-sm">Live Chat</h3>
+        <p class="font-body-sm text-on-surface-variant">Trò chuyện trực tiếp với chuyên viên hỗ trợ</p>
+        <p class="font-label-sm text-label-sm text-outline mt-xs">8:00 – 22:00 hàng ngày</p>
+      </div>
+    </section>
+
+    <!-- Contact form -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-xl">
+      <h2 class="font-headline-md text-headline-md text-on-surface mb-lg">Gửi yêu cầu hỗ trợ</h2>
+      <form class="flex flex-col gap-md" onsubmit="submitForm(event)">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+          <div class="flex flex-col gap-xs">
+            <label class="font-label-md text-label-md text-on-surface-variant">Họ tên</label>
+            <input class="w-full px-md py-sm border border-outline-variant rounded bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-body-sm" placeholder="Nguyễn Văn A" type="text" />
+          </div>
+          <div class="flex flex-col gap-xs">
+            <label class="font-label-md text-label-md text-on-surface-variant">Email</label>
+            <input class="w-full px-md py-sm border border-outline-variant rounded bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-body-sm" placeholder="nguyen@email.com" type="email" />
+          </div>
+        </div>
+        <div class="flex flex-col gap-xs">
+          <label class="font-label-md text-label-md text-on-surface-variant">Loại yêu cầu</label>
+          <select class="w-full px-md py-sm border border-outline-variant rounded bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-body-sm">
+            <option>Sự cố kỹ thuật</option>
+            <option>Câu hỏi về tính năng</option>
+            <option>Vấn đề tài khoản</option>
+            <option>Góp ý / phản hồi</option>
+            <option>Khác</option>
+          </select>
+        </div>
+        <div class="flex flex-col gap-xs">
+          <label class="font-label-md text-label-md text-on-surface-variant">Mô tả vấn đề</label>
+          <textarea class="w-full px-md py-sm border border-outline-variant rounded bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-body-sm resize-none" rows="4" placeholder="Mô tả chi tiết vấn đề bạn gặp phải..."></textarea>
+        </div>
+        <button type="submit" class="w-full sm:w-auto sm:self-start px-xl py-md bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors">
+          Gửi yêu cầu
+        </button>
+      </form>
+    </section>
   </main>
+
+  <!-- Footer -->
+  <footer class="bg-inverse-surface text-inverse-on-surface py-lg px-margin mt-xxl text-center">
+    <p class="font-label-sm text-outline-variant">© 2024 SmartCare HIS. Bảo lưu mọi quyền.</p>
+  </footer>
+
+  <script>
+    function submitForm(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type=submit]');
+      btn.textContent = 'Đã gửi!';
+      btn.disabled = true;
+      btn.classList.replace('bg-primary', 'bg-secondary');
+    }
+  </script>
 </body>
 </html>

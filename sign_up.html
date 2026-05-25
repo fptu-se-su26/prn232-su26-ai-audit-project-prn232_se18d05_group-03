@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SmartCare HIS - Đăng ký tài khoản</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml"/>
+<link rel="stylesheet" href="assets/css/styles.css"/>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "surface-dim": "#d8dadc",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-highest": "#e0e3e5",
+                    "primary-fixed": "#d6e3ff",
+                    "on-secondary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-error-container": "#93000a",
+                    "surface-bright": "#f7f9fb",
+                    "outline-variant": "#c2c6d4",
+                    "primary": "#00478d",
+                    "on-primary": "#ffffff",
+                    "inverse-surface": "#2d3133",
+                    "surface-container": "#eceef0",
+                    "outline": "#727783",
+                    "surface": "#f7f9fb",
+                    "on-error": "#ffffff",
+                    "surface-variant": "#e0e3e5",
+                    "on-surface": "#191c1e",
+                    "inverse-primary": "#a9c7ff",
+                    "secondary-container": "#8cf3f3",
+                    "background": "#f7f9fb",
+                    "on-primary-container": "#c8daff",
+                    "surface-container-low": "#f2f4f6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface-variant": "#424752",
+                    "surface-container-high": "#e6e8ea",
+                    "primary-container": "#005eb8",
+                    "secondary": "#006a6a",
+                    "error-container": "#ffdad6",
+                    "on-background": "#191c1e",
+                    "tertiary": "#005325",
+                    "on-secondary-container": "#007070"
+                },
+                borderRadius: {
+                    DEFAULT: "0.125rem",
+                    lg: "0.25rem",
+                    xl: "0.5rem",
+                    full: "0.75rem"
+                },
+                spacing: {
+                    margin: "32px",
+                    xxl: "64px",
+                    base: "4px",
+                    xl: "40px",
+                    sm: "8px",
+                    md: "16px",
+                    lg: "24px",
+                    gutter: "24px",
+                    xs: "4px"
+                },
+                fontFamily: {
+                    "display-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Inter"]
+                },
+                fontSize: {
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                }
+            }
+        }
+    }
+</script>
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .medical-bg {
+        background: radial-gradient(circle at 10% 20%, rgba(0, 71, 141, 0.03) 0%, transparent 20%),
+                    radial-gradient(circle at 90% 80%, rgba(0, 106, 106, 0.03) 0%, transparent 20%);
+    }
+    .auth-card {
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.05);
+    }
+</style>
+</head>
+<body class="bg-surface font-body-md text-on-surface medical-bg min-h-screen flex items-center justify-center p-margin">
+<main class="w-full max-w-[520px] flex flex-col gap-lg">
+  <!-- Header / Logo -->
+  <div class="flex flex-col items-center text-center gap-base">
+    <div class="w-16 h-16 bg-primary flex items-center justify-center rounded-lg mb-sm">
+      <span class="material-symbols-outlined text-on-primary text-[32px]">medical_services</span>
+    </div>
+    <h1 class="font-headline-lg text-headline-lg text-primary">SmartCare HIS</h1>
+    <p class="font-body-md text-on-surface-variant">Tạo tài khoản mới để bắt đầu</p>
+  </div>
+
+  <!-- Auth Card -->
+  <section class="bg-surface-container-lowest border border-outline-variant p-xl rounded-lg auth-card">
+    <div class="flex flex-col gap-lg">
+      <div class="flex flex-col gap-xs">
+        <h2 class="font-headline-md text-headline-md text-on-surface">Đăng ký tài khoản</h2>
+        <p class="font-body-sm text-on-surface-variant">Vui lòng điền đầy đủ thông tin bên dưới</p>
+      </div>
+
+      <form class="flex flex-col gap-md" id="register-form" onsubmit="handleRegister(event)">
+        <!-- Role selector -->
+        <div class="flex flex-col gap-xs">
+          <label class="font-label-md text-label-md text-on-surface-variant">Vai trò</label>
+          <div class="grid grid-cols-3 gap-sm" id="role-selector">
+            <button class="role-card selected border border-primary bg-primary/5 rounded-lg p-3 text-left transition-all" data-role="patient" type="button">
+              <div class="font-label-md text-label-md text-primary">Bệnh nhân</div>
+              <div class="font-body-sm text-on-surface-variant text-xs">Cổng bệnh nhân</div>
+            </button>
+            <button class="role-card border border-outline-variant bg-surface rounded-lg p-3 text-left transition-all" data-role="doctor" type="button">
+              <div class="font-label-md text-label-md text-on-surface">Bác sĩ</div>
+              <div class="font-body-sm text-on-surface-variant text-xs">Cổng lâm sàng</div>
+            </button>
+            <button class="role-card border border-outline-variant bg-surface rounded-lg p-3 text-left transition-all" data-role="admin" type="button">
+              <div class="font-label-md text-label-md text-on-surface">Admin</div>
+              <div class="font-body-sm text-on-surface-variant text-xs">Cổng quản trị</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Full Name -->
+        <div class="flex flex-col gap-xs">
+          <label class="font-label-md text-label-md text-on-surface-variant" for="fullname">Họ và tên</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">person</span>
+            <input class="w-full pl-[48px] pr-md py-sm border border-outline-variant rounded bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="fullname" placeholder="Nguyễn Văn A" type="text" required/>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="flex flex-col gap-xs">
+          <label class="font-label-md text-label-md text-on-surface-variant" for="email">Email</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">mail</span>
+            <input class="w-full pl-[48px] pr-md py-sm border border-outline-variant rounded bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="email" placeholder="nguyen.van.a@hospital.vn" type="email" required/>
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div class="flex flex-col gap-xs">
+          <label class="font-label-md text-label-md text-on-surface-variant" for="phone">Số điện thoại</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">phone</span>
+            <input class="w-full pl-[48px] pr-md py-sm border border-outline-variant rounded bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="phone" placeholder="0901 234 567" type="tel"/>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="flex flex-col gap-xs">
+          <label class="font-label-md text-label-md text-on-surface-variant" for="password">Mật khẩu</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">lock</span>
+            <input class="w-full pl-[48px] pr-[48px] py-sm border border-outline-variant rounded bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="password" placeholder="Tối thiểu 8 ký tự" type="password" required/>
+            <button type="button" onclick="togglePassword('password','eye-1')" class="absolute right-md top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
+              <span class="material-symbols-outlined" id="eye-1">visibility_off</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="flex flex-col gap-xs">
+          <label class="font-label-md text-label-md text-on-surface-variant" for="confirm-password">Xác nhận mật khẩu</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">lock</span>
+            <input class="w-full pl-[48px] pr-[48px] py-sm border border-outline-variant rounded bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="confirm-password" placeholder="Nhập lại mật khẩu" type="password" required/>
+            <button type="button" onclick="togglePassword('confirm-password','eye-2')" class="absolute right-md top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
+              <span class="material-symbols-outlined" id="eye-2">visibility_off</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Terms -->
+        <div class="flex items-start gap-sm">
+          <input id="terms" type="checkbox" class="mt-1 rounded border-outline-variant text-primary focus:ring-primary/20" required/>
+          <label for="terms" class="font-body-sm text-on-surface-variant">
+            Tôi đồng ý với
+            <a href="#" class="text-primary hover:underline">Điều khoản dịch vụ</a>
+            và
+            <a href="#" class="text-primary hover:underline">Chính sách bảo mật</a>
+            của SmartCare HIS.
+          </label>
+        </div>
+
+        <!-- Error message (hidden) -->
+        <div id="error-msg" class="hidden bg-error-container text-on-error-container rounded p-sm font-body-sm flex items-center gap-sm">
+          <span class="material-symbols-outlined text-sm">error</span>
+          <span id="error-text"></span>
+        </div>
+
+        <button class="w-full bg-primary text-on-primary py-md rounded font-label-md text-label-md hover:bg-primary/90 transition-colors cursor-pointer active:scale-[0.98] duration-200" type="submit">
+          Tạo tài khoản
+        </button>
+      </form>
+
+      <div class="text-center font-body-sm text-on-surface-variant">
+        Đã có tài khoản?
+        <a class="text-primary hover:underline font-label-md" href="sign_in.html">Đăng nhập ngay</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Info -->
+  <footer class="flex flex-col items-center gap-sm">
+    <div class="flex gap-md">
+      <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary" href="#">Điều khoản</a>
+      <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary" href="#">Bảo mật</a>
+      <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary" href="support.html">Hỗ trợ</a>
+    </div>
+    <p class="font-label-sm text-label-sm text-outline">© 2024 SmartCare HIS. Bảo lưu mọi quyền.</p>
+  </footer>
+</main>
+
+<script>
+    let selectedRole = 'patient';
+
+    function setSelectedRole(role) {
+        selectedRole = role;
+        document.querySelectorAll('.role-card').forEach((card) => {
+            const isActive = card.dataset.role === role;
+            card.classList.toggle('selected', isActive);
+            card.classList.toggle('border-primary', isActive);
+            card.classList.toggle('bg-primary/5', isActive);
+            card.classList.toggle('border-outline-variant', !isActive);
+            card.classList.toggle('bg-surface', !isActive);
+        });
+    }
+
+    function togglePassword(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = 'visibility';
+        } else {
+            input.type = 'password';
+            icon.textContent = 'visibility_off';
+        }
+    }
+
+    function showError(msg) {
+        const box = document.getElementById('error-msg');
+        document.getElementById('error-text').textContent = msg;
+        box.classList.remove('hidden');
+    }
+
+    function handleRegister(e) {
+        e.preventDefault();
+        const pw = document.getElementById('password').value;
+        const cpw = document.getElementById('confirm-password').value;
+        if (pw !== cpw) {
+            showError('Mật khẩu xác nhận không khớp.');
+            return;
+        }
+        if (pw.length < 8) {
+            showError('Mật khẩu phải có ít nhất 8 ký tự.');
+            return;
+        }
+        const ROLE_PAGES = { patient: 'patient_dashboard.html', doctor: 'doctor_dashboard.html', admin: 'admin_dashboard.html' };
+        localStorage.setItem('smartcare_role', selectedRole);
+        window.location.href = ROLE_PAGES[selectedRole];
+    }
+
+    document.querySelectorAll('.role-card').forEach((button) => {
+        button.addEventListener('click', () => setSelectedRole(button.dataset.role));
+    });
+</script>
+</body>
+</html>

@@ -1,23 +1,234 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>View Record — SmartCare</title>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>SmartCare HIS - Hồ sơ bệnh nhân</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#00478d', secondary: '#006a6a', tertiary: '#005325',
+            background: '#f7f9fb', surface: '#ffffff',
+            'surface-container-low': '#f2f4f6', 'surface-container-lowest': '#ffffff',
+            'surface-container-high': '#e6e8ea', 'surface-container': '#eceef0',
+            'outline-variant': '#c2c6d4', outline: '#727783',
+            'on-surface': '#191c1e', 'on-surface-variant': '#424752',
+            'on-primary': '#ffffff', 'secondary-container': '#8cf3f3',
+            'on-secondary-container': '#007070', 'error': '#ba1a1a',
+            'on-error': '#ffffff', 'error-container': '#ffdad6',
+            'surface-dim': '#d8dadc', 'surface-bright': '#f7f9fb',
+            'inverse-surface': '#2d3133', 'inverse-on-surface': '#eff1f3',
+            'inverse-primary': '#a9c7ff', 'surface-tint': '#005db6'
+          },
+          borderRadius: { DEFAULT: '0.125rem', lg: '0.25rem', xl: '0.5rem', full: '0.75rem' },
+          spacing: { margin: '32px', xxl: '64px', xl: '40px', lg: '24px', md: '16px', sm: '8px', xs: '4px', gutter: '24px', base: '4px' },
+          fontFamily: { 'body-md': ['Inter'], 'body-sm': ['Inter'], 'label-md': ['Inter'], 'label-sm': ['Inter'], 'headline-md': ['Inter'], 'headline-lg': ['Inter'], code: ['Inter'] },
+          fontSize: {
+            'headline-lg': ['32px', {lineHeight: '40px', fontWeight: '600'}],
+            'headline-md': ['24px', {lineHeight: '32px', fontWeight: '600'}],
+            'body-md': ['16px', {lineHeight: '24px', fontWeight: '400'}],
+            'body-sm': ['14px', {lineHeight: '20px', fontWeight: '400'}],
+            'label-md': ['14px', {lineHeight: '20px', letterSpacing: '0.05em', fontWeight: '600'}],
+            'label-sm': ['12px', {lineHeight: '16px', fontWeight: '500'}],
+            code: ['14px', {lineHeight: '20px', fontWeight: '400'}]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen">
-  <header class="bg-white shadow p-4 flex items-center justify-between">
-    <a href="index.html" class="text-xl font-bold">SmartCare</a>
+<body class="bg-background text-on-surface min-h-screen">
+  <!-- Header -->
+  <header class="bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-10 shadow-sm px-margin py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <a href="javascript:history.back()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors text-on-surface-variant">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </a>
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-2xl">health_and_safety</span>
+        <span class="font-headline-md text-headline-md font-bold text-primary">SmartCare HIS</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-full">Hồ sơ bệnh nhân</span>
+    </div>
   </header>
-  <main class="max-w-4xl mx-auto p-8">
-    <h1 class="text-2xl font-semibold mb-4">Patient Record</h1>
-    <div id="mock-record" class="p-4 bg-white border rounded mb-4">Loading record...</div>
-    <p class="text-gray-600 mb-6">Placeholder for patient record viewer. Replace with detailed record UI.</p>
-    <a href="clinic_dashboard_queue_management.html" class="text-primary underline">Back to Queue</a>
+
+  <main class="max-w-4xl mx-auto px-margin py-lg">
+    <!-- Patient info from mock data -->
+    <div id="mock-record" class="mb-lg p-lg bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary">person</span>
+        </div>
+        <div>
+          <p class="font-body-sm text-on-surface-variant">Đang tải thông tin bệnh nhân...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-lg border-b border-outline-variant">
+      <button onclick="showTab('overview')" id="tab-overview" class="tab-btn px-lg py-sm font-label-md text-label-md text-primary border-b-2 border-primary -mb-px">Tổng quan</button>
+      <button onclick="showTab('vitals')" id="tab-vitals" class="tab-btn px-lg py-sm font-label-md text-label-md text-on-surface-variant border-b-2 border-transparent hover:text-primary transition-colors -mb-px">Sinh hiệu</button>
+      <button onclick="showTab('labs')" id="tab-labs" class="tab-btn px-lg py-sm font-label-md text-label-md text-on-surface-variant border-b-2 border-transparent hover:text-primary transition-colors -mb-px">Xét nghiệm</button>
+      <button onclick="showTab('meds')" id="tab-meds" class="tab-btn px-lg py-sm font-label-md text-label-md text-on-surface-variant border-b-2 border-transparent hover:text-primary transition-colors -mb-px">Thuốc</button>
+    </div>
+
+    <!-- Tab: Overview -->
+    <div id="panel-overview">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-md mb-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+          <p class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-1">Chẩn đoán chính</p>
+          <p class="font-body-md text-on-surface">Tăng huyết áp giai đoạn 2 (I10)</p>
+          <p class="font-body-sm text-on-surface-variant mt-1">Đái tháo đường type 2 (E11.9)</p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+          <p class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-1">Bác sĩ phụ trách</p>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="material-symbols-outlined text-secondary text-lg">stethoscope</span>
+            <p class="font-body-md text-on-surface">BS. Nguyễn Minh Tuấn</p>
+          </div>
+          <p class="font-body-sm text-on-surface-variant">Khoa Nội Tim mạch</p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+          <p class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-1">Ngày nhập viện</p>
+          <p class="font-body-md text-on-surface">20/05/2026</p>
+          <p class="font-body-sm text-on-surface-variant">Dự kiến xuất viện: 27/05/2026</p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+          <p class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-1">Phòng / Giường</p>
+          <p class="font-body-md text-on-surface">Phòng 301A — Giường 2</p>
+          <p class="font-body-sm text-on-surface-variant">Khoa Nội — Tầng 3</p>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-3">Ghi chú lâm sàng gần nhất</p>
+        <p class="font-body-sm text-on-surface leading-relaxed">Bệnh nhân ổn định, huyết áp dao động 145/90 mmHg. Tiếp tục phác đồ điều trị hiện tại. Theo dõi đường huyết buổi sáng. Tái khám sau 7 ngày hoặc khi có triệu chứng bất thường.</p>
+      </div>
+    </div>
+
+    <!-- Tab: Vitals (hidden by default) -->
+    <div id="panel-vitals" class="hidden">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-md">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg text-center">
+          <span class="material-symbols-outlined text-error mb-1">favorite</span>
+          <p class="font-body-sm text-on-surface-variant">Nhịp tim</p>
+          <p class="font-headline-md text-headline-md text-on-surface">82 <span class="text-sm font-normal">bpm</span></p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg text-center">
+          <span class="material-symbols-outlined text-primary mb-1">blood_pressure</span>
+          <p class="font-body-sm text-on-surface-variant">Huyết áp</p>
+          <p class="font-headline-md text-headline-md text-on-surface">145/90</p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg text-center">
+          <span class="material-symbols-outlined text-secondary mb-1">thermostat</span>
+          <p class="font-body-sm text-on-surface-variant">Nhiệt độ</p>
+          <p class="font-headline-md text-headline-md text-on-surface">37.1 <span class="text-sm font-normal">°C</span></p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg text-center">
+          <span class="material-symbols-outlined text-tertiary mb-1">respiratory_rate</span>
+          <p class="font-body-sm text-on-surface-variant">SpO₂</p>
+          <p class="font-headline-md text-headline-md text-on-surface">98 <span class="text-sm font-normal">%</span></p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg text-center">
+          <span class="material-symbols-outlined text-on-surface-variant mb-1">scale</span>
+          <p class="font-body-sm text-on-surface-variant">Cân nặng</p>
+          <p class="font-headline-md text-headline-md text-on-surface">72 <span class="text-sm font-normal">kg</span></p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg text-center">
+          <span class="material-symbols-outlined text-on-surface-variant mb-1">height</span>
+          <p class="font-body-sm text-on-surface-variant">Chiều cao</p>
+          <p class="font-headline-md text-headline-md text-on-surface">168 <span class="text-sm font-normal">cm</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Labs (hidden by default) -->
+    <div id="panel-labs" class="hidden">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-surface-container-low">
+            <tr>
+              <th class="px-gutter py-sm text-left font-label-md text-label-md text-on-surface-variant">Xét nghiệm</th>
+              <th class="px-gutter py-sm text-left font-label-md text-label-md text-on-surface-variant">Kết quả</th>
+              <th class="px-gutter py-sm text-left font-label-md text-label-md text-on-surface-variant">Tham chiếu</th>
+              <th class="px-gutter py-sm text-left font-label-md text-label-md text-on-surface-variant">Ngày</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            <tr><td class="px-gutter py-sm font-body-sm">HbA1c</td><td class="px-gutter py-sm font-body-sm text-error font-semibold">8.2%</td><td class="px-gutter py-sm font-body-sm text-on-surface-variant">&lt; 7.0%</td><td class="px-gutter py-sm font-body-sm text-on-surface-variant">22/05/2026</td></tr>
+            <tr><td class="px-gutter py-sm font-body-sm">Glucose (đói)</td><td class="px-gutter py-sm font-body-sm text-error font-semibold">9.4 mmol/L</td><td class="px-gutter py-sm font-body-sm text-on-surface-variant">3.9–5.6</td><td class="px-gutter py-sm font-body-sm text-on-surface-variant">22/05/2026</td></tr>
+            <tr><td class="px-gutter py-sm font-body-sm">Creatinine</td><td class="px-gutter py-sm font-body-sm">88 μmol/L</td><td class="px-gutter py-sm font-body-sm text-on-surface-variant">53–106</td><td class="px-gutter py-sm font-body-sm text-on-surface-variant">22/05/2026</td></tr>
+            <tr><td class="px-gutter py-sm font-body-sm">Cholesterol TP</td><td class="px-gutter py-sm font-body-sm text-error font-semibold">6.1 mmol/L</td><td class="px-gutter py-sm font-body-sm text-on-surface-variant">&lt; 5.2</td><td class="px-gutter py-sm font-body-sm text-on-surface-variant">22/05/2026</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: Medications (hidden by default) -->
+    <div id="panel-meds" class="hidden">
+      <div class="flex flex-col gap-sm">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex justify-between items-start">
+          <div>
+            <p class="font-label-md text-label-md text-on-surface">Amlodipine 5mg</p>
+            <p class="font-body-sm text-on-surface-variant">1 viên / ngày — Uống buổi sáng</p>
+          </div>
+          <span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container font-label-sm text-label-sm rounded-full">Đang dùng</span>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex justify-between items-start">
+          <div>
+            <p class="font-label-md text-label-md text-on-surface">Metformin 500mg</p>
+            <p class="font-body-sm text-on-surface-variant">2 viên / ngày — Sau ăn sáng và tối</p>
+          </div>
+          <span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container font-label-sm text-label-sm rounded-full">Đang dùng</span>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex justify-between items-start">
+          <div>
+            <p class="font-label-md text-label-md text-on-surface">Rosuvastatin 10mg</p>
+            <p class="font-body-sm text-on-surface-variant">1 viên / ngày — Uống buổi tối</p>
+          </div>
+          <span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container font-label-sm text-label-sm rounded-full">Đang dùng</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-lg flex gap-md">
+      <a href="javascript:history.back()" class="px-lg py-sm border border-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+        <span class="material-symbols-outlined text-sm">arrow_back</span>
+        Quay lại
+      </a>
+      <a href="outpatient_emr_screen.html" class="px-lg py-sm bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors flex items-center gap-xs">
+        <span class="material-symbols-outlined text-sm">edit_note</span>
+        Chỉnh sửa hồ sơ
+      </a>
+    </div>
   </main>
+
   <script src="assets/js/mock-data.js"></script>
   <script src="assets/js/app.js"></script>
+  <script>
+    function showTab(name) {
+      ['overview','vitals','labs','meds'].forEach(t => {
+        document.getElementById('panel-' + t).classList.toggle('hidden', t !== name);
+        const btn = document.getElementById('tab-' + t);
+        btn.classList.toggle('text-primary', t === name);
+        btn.classList.toggle('border-primary', t === name);
+        btn.classList.toggle('text-on-surface-variant', t !== name);
+        btn.classList.toggle('border-transparent', t !== name);
+      });
+    }
+  </script>
 </body>
 </html>
