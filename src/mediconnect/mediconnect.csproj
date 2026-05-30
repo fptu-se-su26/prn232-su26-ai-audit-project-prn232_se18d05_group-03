@@ -15,6 +15,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mediconnect.Application\Mediconnect.Application.csproj" />
+    <ProjectReference Include="..\Mediconnect.Infrastructure\Mediconnect.Infrastructure.csproj" />
+    <ProjectReference Include="..\Mediconnect.Domain\Mediconnect.Domain.csproj" />
   </ItemGroup>
 
 </Project>

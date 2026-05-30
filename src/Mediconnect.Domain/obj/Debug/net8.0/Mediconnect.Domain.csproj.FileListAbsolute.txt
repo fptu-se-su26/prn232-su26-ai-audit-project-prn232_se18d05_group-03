@@ -1,0 +1,12 @@
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\bin\Debug\net8.0\Mediconnect.Domain.deps.json
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\bin\Debug\net8.0\Mediconnect.Domain.dll
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\bin\Debug\net8.0\Mediconnect.Domain.pdb
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\obj\Debug\net8.0\Mediconnect.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\obj\Debug\net8.0\Mediconnect.Domain.AssemblyInfoInputs.cache
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\obj\Debug\net8.0\Mediconnect.Domain.AssemblyInfo.cs
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\obj\Debug\net8.0\Mediconnect.Domain.csproj.CoreCompileInputs.cache
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\obj\Debug\net8.0\Mediconnect.Domain.sourcelink.json
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\obj\Debug\net8.0\Mediconnect.Domain.dll
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\obj\Debug\net8.0\refint\Mediconnect.Domain.dll
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\obj\Debug\net8.0\Mediconnect.Domain.pdb
+C:\Users\gia huy\Documents\duan\prn232-su26-ai-audit-project-prn232_se18d05_group-03\src\Mediconnect.Domain\obj\Debug\net8.0\ref\Mediconnect.Domain.dll
