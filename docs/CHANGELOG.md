@@ -240,8 +240,8 @@ DD/MM/YYYY
 | 1 | Tao DbContext va bo Models cho HIS & Telemedicine |  | src/mediconnect/Models; src/mediconnect/Data |  |
 | 2 | Them EF Core packages va connection string SQL Server |  | src/mediconnect/mediconnect.csproj; src/mediconnect/appsettings.json; src/mediconnect/Program.cs |  |
 | 3 | Cap nhat README huong dan chay project |  | README.md |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 4 | [DE180526] Tạo SmartQueueDtos, IQueueService, QueueService - Feature 1 smart queue | DE180526 - Nguyen Duy Luong | src/Mediconnect.Application/DTOs/SmartQueueDtos.cs; src/Mediconnect.Application/Interfaces/IQueueService.cs; src/Mediconnect.Application/Services/QueueService.cs |  |
+| 5 | [DE180526] Tạo SmartQueueController, enhance ClinicsController & MedicalServicesController | DE180526 - Nguyen Duy Luong | src/mediconnect/Controllers/SmartQueueController.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |  |
 
 ## AI có hỗ trợ không?
 

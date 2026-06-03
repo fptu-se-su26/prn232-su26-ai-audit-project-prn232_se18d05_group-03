@@ -189,9 +189,57 @@ public class CareOrdersController : CrudController<CareOrder, CareOrderReadDto, 
 
 public class ClinicsController : CrudController<Clinic, ClinicReadDto, ClinicWriteDto>
 {
-    public ClinicsController(ICrudService<Clinic, ClinicReadDto, ClinicWriteDto> service)
+    private readonly IRepository<Clinic> _clinicRepository;
+    private readonly IRepository<MedicalService> _serviceRepository;
+
+    public ClinicsController(
+        ICrudService<Clinic, ClinicReadDto, ClinicWriteDto> service,
+        IRepository<Clinic> clinicRepository,
+        IRepository<MedicalService> serviceRepository)
         : base(service)
     {
+        _clinicRepository = clinicRepository;
+        _serviceRepository = serviceRepository;
+    }
+
+    /// <summary>
+    /// Lấy danh sách phòng khám đang hoạt động.
+    /// </summary>
+    [HttpGet("active")]
+    public async Task<ActionResult<IReadOnlyList<ClinicReadDto>>> GetActive(CancellationToken cancellationToken)
+    {
+        var clinics = await _clinicRepository.ListAsync(c => c.IsActive, cancellationToken);
+        var result = clinics.Select(SimpleMapper.Map<Clinic, ClinicReadDto>).ToList();
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Lấy danh sách dịch vụ thuộc phòng khám (theo khoa của phòng khám).
+    /// </summary>
+    [HttpGet("{id:guid}/services")]
+    public async Task<ActionResult<ClinicWithServicesDto>> GetServices(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var clinic = await _clinicRepository.GetByIdAsync(id, cancellationToken);
+        if (clinic is null)
+            return NotFound();
+
+        var services = await _serviceRepository.ListAsync(
+            s => s.DepartmentId == clinic.DepartmentId && s.IsActive,
+            cancellationToken);
+
+        var result = new ClinicWithServicesDto
+        {
+            Id = clinic.Id,
+            DepartmentId = clinic.DepartmentId,
+            Name = clinic.Name,
+            RoomNumber = clinic.RoomNumber,
+            IsActive = clinic.IsActive,
+            Services = services.Select(SimpleMapper.Map<MedicalService, MedicalServiceReadDto>).ToList()
+        };
+
+        return Ok(result);
     }
 }
 
@@ -331,9 +379,33 @@ public class LabResultsController : CrudController<LabResult, LabResultReadDto, 
 
 public class MedicalServicesController : CrudController<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto>
 {
-    public MedicalServicesController(ICrudService<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto> service)
+    private readonly IRepository<MedicalService> _serviceRepository;
+
+    public MedicalServicesController(
+        ICrudService<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto> service,
+        IRepository<MedicalService> serviceRepository)
         : base(service)
     {
+        _serviceRepository = serviceRepository;
+    }
+
+    /// <summary>
+    /// Cập nhật giá khám cho một dịch vụ y tế.
+    /// </summary>
+    [HttpPatch("{id:guid}/price")]
+    public async Task<IActionResult> UpdatePrice(
+        Guid id,
+        [FromBody] PriceUpdateDto dto,
+        CancellationToken cancellationToken)
+    {
+        var service = await _serviceRepository.GetByIdAsync(id, cancellationToken);
+        if (service is null)
+            return NotFound();
+
+        service.Price = dto.Price;
+        _serviceRepository.Update(service);
+        await _serviceRepository.SaveChangesAsync(cancellationToken);
+        return NoContent();
     }
 }
 

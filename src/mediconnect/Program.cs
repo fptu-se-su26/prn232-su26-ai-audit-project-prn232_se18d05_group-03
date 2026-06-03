@@ -47,6 +47,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped(typeof(ICrudService<,,>), typeof(CrudService<,,>));
 builder.Services.AddScoped<ICrudService<UserAccount, UserAccountReadDto, UserAccountWriteDto>, UserAccountService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IQueueService, QueueService>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>() ?? new JwtSettings();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

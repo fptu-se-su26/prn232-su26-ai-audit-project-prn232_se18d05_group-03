@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("mediconnect")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4b952314d093fccf4af3120550e0270448ecd09f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fcc0671b71f45cbaa7daeeacd818507aeda502f1")]
 [assembly: System.Reflection.AssemblyProductAttribute("mediconnect")]
 [assembly: System.Reflection.AssemblyTitleAttribute("mediconnect")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

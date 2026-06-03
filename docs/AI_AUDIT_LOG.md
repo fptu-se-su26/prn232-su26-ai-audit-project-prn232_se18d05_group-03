@@ -184,6 +184,71 @@ Da ghi log truoc khi thuc hien thiet ke models.
 
 ---
 
+### Lần sử dụng AI số 3
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 03/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Tham khảo ý tưởng thiết kế interface và cấu trúc service cho tính năng smart queue |
+| Phần việc liên quan | Design / Backend |
+| Mức độ sử dụng | Hỗ trợ ý tưởng |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Tôi cần thiết kế interface và service pattern cho tính năng quản lý hàng đợi phòng khám trong .NET Clean Architecture.
+Có thể gợi ý cách tổ chức không?
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+AI gợi ý tổ chức theo pattern Clean Architecture: tạo interface IQueueService ở Application layer,
+và đặt logic phát số thứ tự trong service class. Gợi ý dùng repository pattern đã có sẵn.
+Đề xuất 3 method chính: CheckIn, GetQueue, CallNext.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+- Tham khảo cách đặt tên 3 method: CheckInAsync, GetClinicQueueAsync, CallNextAsync
+- Tham khảo cách tổ chức interface theo layer Clean Architecture
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Điều chỉnh date-range query (todayStart/todayEnd) thay vì .Date để EF Core SQL Server dịch đúng
+- Bổ sung kiểm tra clinic.IsActive trước khi phát số thứ tự
+- Thiết kế DTO phù hợp với domain HIS: CheckInRequestDto, QueueTicketDetailDto, ClinicQueueDto, ClinicWithServicesDto, PriceUpdateDto
+- Bổ sung endpoint GET /active và GET /{id}/services cho ClinicsController
+- Bổ sung endpoint PATCH /{id}/price cho MedicalServicesController
+- Xác nhận IRepository<> generic đã đăng ký, không cần đăng ký thêm
+- Kiểm tra và sửa duplicate using trong Program.cs
+- Xác nhận route /active không conflict với constraint {id:guid}
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit |  |
+| File liên quan | src/Mediconnect.Application/DTOs/SmartQueueDtos.cs; src/Mediconnect.Application/Interfaces/IQueueService.cs; src/Mediconnect.Application/Services/QueueService.cs; src/mediconnect/Controllers/SmartQueueController.cs |
+| Screenshot |  |
+| Kết quả chạy/test |  |
+| Link video demo |  |
+| Ghi chú khác |  |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Hỏi AI để tham khảo pattern tổ chức service layer. Các DTO và business logic
+được điều chỉnh phù hợp với domain HIS của dự án.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.
