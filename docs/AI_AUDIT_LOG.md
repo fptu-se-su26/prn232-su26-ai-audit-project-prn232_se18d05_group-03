@@ -180,7 +180,63 @@ Da ghi log truoc khi thuc hien thiet ke models.
 
 ---
 
+### Lần sử dụng AI số 3
 
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 05/06/2026 |
+| Công cụ AI | Claude |
+| Mục đích sử dụng | Sinh code Feature 1 – Sơ đồ & phân bổ giường bệnh nội trú |
+| Phần việc liên quan | Backend / Coding |
+| Mức độ sử dụng | Hỗ trợ sinh code |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Thành viên 3 – Vận hành Nội Trú & Điều phối Lâm sàng
+Feature 1: Sơ đồ và phân bổ giường bệnh nội trú
+- Bản đồ giường bệnh trực quan (Trống, Đang có người, Đang dọn dẹp).
+- Điều chuyển bệnh nhân từ khu vực ngoại trú vào nội trú, xử lý luồng chuyển khoa.
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+AI phân tích codebase hiện có, xác định các endpoint còn thiếu và sinh code:
+- GET /api/beds/map: nhóm giường theo BedStatus, hỗ trợ filter ?departmentId
+- GET /api/inpatient-admissions/{id}/bed-assignments: lịch sử phân bổ giường theo ca
+- POST /api/inpatient-admissions/{id}/transfer: chuyển khoa (cập nhật DepartmentId)
+- DTO BedMapGroupDto và TransferAdmissionDto
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ code sinh ra vào EntityControllers.cs và EntityDtos.cs sau khi review và xác nhận đúng pattern của project.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Kiểm tra build thành công (0 error, 0 warning). Xác nhận logic GroupBy BedStatus và OrderBy đúng yêu cầu hiển thị bản đồ giường.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | feat(member3): F1 - bed map, bed-assignments & transfer endpoints |
+| File liên quan | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
+| Screenshot |  |
+| Kết quả chạy/test | dotnet build: 0 Error(s) |
+| Link video demo |  |
+| Ghi chú khác |  |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+AI giúp tăng tốc việc viết boilerplate code cho các endpoint nested route. Cần tự review để đảm bảo logic GroupBy và filter đúng nghiệp vụ.
+```
 
 ---
 
