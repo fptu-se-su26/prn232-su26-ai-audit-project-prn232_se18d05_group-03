@@ -532,3 +532,15 @@ public class VitalSignWriteDto
     public int? RespiratoryRate { get; set; }
     public int? SpO2 { get; set; }
 }
+
+public class BedMapGroupDto
+{
+    public BedStatus Status { get; set; }
+    public int Count { get; set; }
+    public IList<BedReadDto> Beds { get; set; } = new List<BedReadDto>();
+}
+
+public class TransferAdmissionDto
+{
+    public Guid DepartmentId { get; set; }
+}

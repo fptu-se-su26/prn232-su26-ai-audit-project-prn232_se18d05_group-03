@@ -61,6 +61,29 @@ public class BedsController : CrudController<Bed, BedReadDto, BedWriteDto>
         await _repository.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
+
+    [HttpGet("map")]
+    public async Task<ActionResult<IList<BedMapGroupDto>>> GetMap(
+        [FromQuery] Guid? departmentId,
+        CancellationToken cancellationToken)
+    {
+        var beds = departmentId.HasValue
+            ? await _repository.ListAsync(b => b.DepartmentId == departmentId.Value, cancellationToken)
+            : await _repository.GetAllAsync(cancellationToken);
+
+        var groups = beds
+            .GroupBy(b => b.Status)
+            .Select(g => new BedMapGroupDto
+            {
+                Status = g.Key,
+                Count = g.Count(),
+                Beds = g.Select(SimpleMapper.Map<Bed, BedReadDto>).ToList()
+            })
+            .OrderBy(g => g.Status)
+            .ToList();
+
+        return Ok(groups);
+    }
 }
 
 public class BedAssignmentsController : CrudController<BedAssignment, BedAssignmentReadDto, BedAssignmentWriteDto>
@@ -279,15 +302,18 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
 {
     private readonly IRepository<InpatientAdmission> _repository;
     private readonly IRepository<DischargeSummary> _dischargeRepository;
+    private readonly IRepository<BedAssignment> _bedAssignmentRepository;
 
     public InpatientAdmissionsController(
         ICrudService<InpatientAdmission, InpatientAdmissionReadDto, InpatientAdmissionWriteDto> service,
         IRepository<InpatientAdmission> repository,
-        IRepository<DischargeSummary> dischargeRepository)
+        IRepository<DischargeSummary> dischargeRepository,
+        IRepository<BedAssignment> bedAssignmentRepository)
         : base(service)
     {
         _repository = repository;
         _dischargeRepository = dischargeRepository;
+        _bedAssignmentRepository = bedAssignmentRepository;
     }
 
     [HttpPatch("{id:guid}/status")]
@@ -332,6 +358,45 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         await _repository.SaveChangesAsync(cancellationToken);
 
         var result = SimpleMapper.Map<DischargeSummary, DischargeSummaryReadDto>(summary);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/bed-assignments")]
+    public async Task<ActionResult<IReadOnlyList<BedAssignmentReadDto>>> GetBedAssignments(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var admission = await _repository.GetByIdAsync(id, cancellationToken);
+        if (admission is null)
+        {
+            return NotFound();
+        }
+
+        var assignments = await _bedAssignmentRepository.ListAsync(
+            a => a.AdmissionId == id, cancellationToken);
+
+        var result = assignments.Select(SimpleMapper.Map<BedAssignment, BedAssignmentReadDto>).ToList();
+        return Ok(result);
+    }
+
+    [HttpPost("{id:guid}/transfer")]
+    public async Task<ActionResult<InpatientAdmissionReadDto>> Transfer(
+        Guid id,
+        TransferAdmissionDto dto,
+        CancellationToken cancellationToken)
+    {
+        var admission = await _repository.GetByIdAsync(id, cancellationToken);
+        if (admission is null)
+        {
+            return NotFound();
+        }
+
+        admission.DepartmentId = dto.DepartmentId;
+        admission.Status = AdmissionStatus.Active;
+        _repository.Update(admission);
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        var result = SimpleMapper.Map<InpatientAdmission, InpatientAdmissionReadDto>(admission);
         return Ok(result);
     }
 }
