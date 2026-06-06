@@ -56,8 +56,10 @@ Sinh viên/nhóm cần ghi lại:
 | 2 | 17/05/2026 | GitHub Copilot | Thiết kế models code-first cho .NET API | Xác nhận stack .NET + SQL Server; yêu cầu hỗ trợ models cho HIS | Sẽ tạo models theo domain; cần xác định nơi đặt project và cấu trúc solution | Có | docs/PROMPTS.md, docs/AI_AUDIT_LOG.md |
 | 3 | 17/05/2026 | GitHub Copilot | Tao project .NET Web API va them DbContext + Models | Tao project mediconnect, them EF Core, DbContext, Models cho HIS | Da scaffold du an va them models, DbContext, connection string | Có | src/mediconnect; docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
 | 4 | 17/05/2026 | GitHub Copilot | Tao file solution cho du an .NET Web API | Yeu cau co file .sln cho project | Da tao mediconnect.sln va add project | Có | mediconnect.sln; docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
-| 5 |  |  |  |  |  | Có / Không |  |
-| 6 |  |  |  |  |  | Có / Không |  |
+| 5 | 03/06/2026 | Claude (Claude Code) | Tham khảo cách tổ chức interface và service pattern cho smart queue | Hỏi cách tổ chức IQueueService trong Clean Architecture | AI gợi ý tên method và cách tổ chức layer; DTO và logic được điều chỉnh theo yêu cầu dự án | Có | src/Mediconnect.Application/Interfaces/IQueueService.cs |
+
+| 6 | 05/06/2026 | Claude | Sinh code Feature 1: Bed Map & Inpatient Transfer | Them endpoints GET /api/beds/map, GET bed-assignments, POST transfer vao BedsController va InpatientAdmissionsController | Da sinh endpoints va DTOs dung clean architecture pattern | Có | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
+
 | 7 |  |  |  |  |  | Có / Không |  |
 | 8 |  |  |  |  |  | Có / Không |  |
 | 9 |  |  |  |  |  | Có / Không |  |
@@ -223,6 +225,91 @@ Viết tại đây...
 
 ---
 
+
+### Prompt số 3
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 03/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích | Tham khảo cách tổ chức interface và service pattern cho tính năng smart queue |
+| Phần việc liên quan | Design / Backend |
+| Mức độ sử dụng | Hỏi ý tưởng |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Tôi cần thiết kế interface và service pattern cho tính năng quản lý hàng đợi phòng khám
+trong .NET Clean Architecture. Có thể gợi ý cách tổ chức không?
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Đã có sẵn entity Clinic, MedicalService, QueueTicket và basic CRUD.
+Cần tham khảo thêm về cách đặt tên interface và tổ chức service layer cho hàng đợi thông minh.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI gợi ý tổ chức interface IQueueService ở Application layer với khoảng 3 method chính
+(CheckIn, GetQueue, CallNext), sử dụng lại repository pattern đã có.
+Không cung cấp implementation cụ thể.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Tham khảo tên 3 method: CheckInAsync, GetClinicQueueAsync, CallNextAsync
+và cách tổ chức interface theo layer.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Thiết kế DTO phù hợp với domain HIS: CheckInRequestDto, QueueTicketDetailDto,
+  ClinicQueueDto, ClinicWithServicesDto, PriceUpdateDto
+- Điều chỉnh logic phát số: max(số trong ngày) + 1, bắt đầu từ 1 nếu chưa có vé
+- Dùng date-range (todayStart/todayEnd) thay vì .Date để EF Core dịch đúng sang SQL Server
+- Thiết kế luồng CallNext: hoàn tất InProgress trước, lấy Waiting có số nhỏ nhất
+- Thêm kiểm tra clinic.IsActive trước khi phát số
+- Bổ sung endpoint GET /active, GET /{id}/services cho ClinicsController
+- Bổ sung endpoint PATCH /{id}/price cho MedicalServicesController
+- Sửa duplicate using trong Program.cs
+- Xác nhận route {id:guid} không conflict với /active
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [x] Prompt còn thiếu thông tin
+- [ ] Prompt tạo ra kết quả tốt
+- [x] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [x] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit |  |
+| File liên quan | src/Mediconnect.Application/Interfaces/IQueueService.cs |
+| Screenshot |  |
+| Kết quả chạy/test |  |
+| Link tài liệu/báo cáo |  |
+| Ghi chú khác |  |
+
+#### 5.8. Ghi chú thêm
+
+```text
+AI gợi ý tên method ở mức cao. DTO, logic nghiệp vụ và tích hợp vào project
+được điều chỉnh theo yêu cầu cụ thể của dự án.
+```
+
+---
 
 ## 6. Prompt quan trọng nhất
 

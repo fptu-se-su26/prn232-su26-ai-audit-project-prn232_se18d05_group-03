@@ -61,6 +61,29 @@ public class BedsController : CrudController<Bed, BedReadDto, BedWriteDto>
         await _repository.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
+
+    [HttpGet("map")]
+    public async Task<ActionResult<IList<BedMapGroupDto>>> GetMap(
+        [FromQuery] Guid? departmentId,
+        CancellationToken cancellationToken)
+    {
+        var beds = departmentId.HasValue
+            ? await _repository.ListAsync(b => b.DepartmentId == departmentId.Value, cancellationToken)
+            : await _repository.GetAllAsync(cancellationToken);
+
+        var groups = beds
+            .GroupBy(b => b.Status)
+            .Select(g => new BedMapGroupDto
+            {
+                Status = g.Key,
+                Count = g.Count(),
+                Beds = g.Select(SimpleMapper.Map<Bed, BedReadDto>).ToList()
+            })
+            .OrderBy(g => g.Status)
+            .ToList();
+
+        return Ok(groups);
+    }
 }
 
 public class BedAssignmentsController : CrudController<BedAssignment, BedAssignmentReadDto, BedAssignmentWriteDto>
@@ -189,9 +212,57 @@ public class CareOrdersController : CrudController<CareOrder, CareOrderReadDto, 
 
 public class ClinicsController : CrudController<Clinic, ClinicReadDto, ClinicWriteDto>
 {
-    public ClinicsController(ICrudService<Clinic, ClinicReadDto, ClinicWriteDto> service)
+    private readonly IRepository<Clinic> _clinicRepository;
+    private readonly IRepository<MedicalService> _serviceRepository;
+
+    public ClinicsController(
+        ICrudService<Clinic, ClinicReadDto, ClinicWriteDto> service,
+        IRepository<Clinic> clinicRepository,
+        IRepository<MedicalService> serviceRepository)
         : base(service)
     {
+        _clinicRepository = clinicRepository;
+        _serviceRepository = serviceRepository;
+    }
+
+    /// <summary>
+    /// Lấy danh sách phòng khám đang hoạt động.
+    /// </summary>
+    [HttpGet("active")]
+    public async Task<ActionResult<IReadOnlyList<ClinicReadDto>>> GetActive(CancellationToken cancellationToken)
+    {
+        var clinics = await _clinicRepository.ListAsync(c => c.IsActive, cancellationToken);
+        var result = clinics.Select(SimpleMapper.Map<Clinic, ClinicReadDto>).ToList();
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Lấy danh sách dịch vụ thuộc phòng khám (theo khoa của phòng khám).
+    /// </summary>
+    [HttpGet("{id:guid}/services")]
+    public async Task<ActionResult<ClinicWithServicesDto>> GetServices(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var clinic = await _clinicRepository.GetByIdAsync(id, cancellationToken);
+        if (clinic is null)
+            return NotFound();
+
+        var services = await _serviceRepository.ListAsync(
+            s => s.DepartmentId == clinic.DepartmentId && s.IsActive,
+            cancellationToken);
+
+        var result = new ClinicWithServicesDto
+        {
+            Id = clinic.Id,
+            DepartmentId = clinic.DepartmentId,
+            Name = clinic.Name,
+            RoomNumber = clinic.RoomNumber,
+            IsActive = clinic.IsActive,
+            Services = services.Select(SimpleMapper.Map<MedicalService, MedicalServiceReadDto>).ToList()
+        };
+
+        return Ok(result);
     }
 }
 
@@ -231,15 +302,18 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
 {
     private readonly IRepository<InpatientAdmission> _repository;
     private readonly IRepository<DischargeSummary> _dischargeRepository;
+    private readonly IRepository<BedAssignment> _bedAssignmentRepository;
 
     public InpatientAdmissionsController(
         ICrudService<InpatientAdmission, InpatientAdmissionReadDto, InpatientAdmissionWriteDto> service,
         IRepository<InpatientAdmission> repository,
-        IRepository<DischargeSummary> dischargeRepository)
+        IRepository<DischargeSummary> dischargeRepository,
+        IRepository<BedAssignment> bedAssignmentRepository)
         : base(service)
     {
         _repository = repository;
         _dischargeRepository = dischargeRepository;
+        _bedAssignmentRepository = bedAssignmentRepository;
     }
 
     [HttpPatch("{id:guid}/status")]
@@ -284,6 +358,45 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         await _repository.SaveChangesAsync(cancellationToken);
 
         var result = SimpleMapper.Map<DischargeSummary, DischargeSummaryReadDto>(summary);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/bed-assignments")]
+    public async Task<ActionResult<IReadOnlyList<BedAssignmentReadDto>>> GetBedAssignments(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var admission = await _repository.GetByIdAsync(id, cancellationToken);
+        if (admission is null)
+        {
+            return NotFound();
+        }
+
+        var assignments = await _bedAssignmentRepository.ListAsync(
+            a => a.AdmissionId == id, cancellationToken);
+
+        var result = assignments.Select(SimpleMapper.Map<BedAssignment, BedAssignmentReadDto>).ToList();
+        return Ok(result);
+    }
+
+    [HttpPost("{id:guid}/transfer")]
+    public async Task<ActionResult<InpatientAdmissionReadDto>> Transfer(
+        Guid id,
+        TransferAdmissionDto dto,
+        CancellationToken cancellationToken)
+    {
+        var admission = await _repository.GetByIdAsync(id, cancellationToken);
+        if (admission is null)
+        {
+            return NotFound();
+        }
+
+        admission.DepartmentId = dto.DepartmentId;
+        admission.Status = AdmissionStatus.Active;
+        _repository.Update(admission);
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        var result = SimpleMapper.Map<InpatientAdmission, InpatientAdmissionReadDto>(admission);
         return Ok(result);
     }
 }
@@ -331,9 +444,33 @@ public class LabResultsController : CrudController<LabResult, LabResultReadDto, 
 
 public class MedicalServicesController : CrudController<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto>
 {
-    public MedicalServicesController(ICrudService<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto> service)
+    private readonly IRepository<MedicalService> _serviceRepository;
+
+    public MedicalServicesController(
+        ICrudService<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto> service,
+        IRepository<MedicalService> serviceRepository)
         : base(service)
     {
+        _serviceRepository = serviceRepository;
+    }
+
+    /// <summary>
+    /// Cập nhật giá khám cho một dịch vụ y tế.
+    /// </summary>
+    [HttpPatch("{id:guid}/price")]
+    public async Task<IActionResult> UpdatePrice(
+        Guid id,
+        [FromBody] PriceUpdateDto dto,
+        CancellationToken cancellationToken)
+    {
+        var service = await _serviceRepository.GetByIdAsync(id, cancellationToken);
+        if (service is null)
+            return NotFound();
+
+        service.Price = dto.Price;
+        _serviceRepository.Update(service);
+        await _serviceRepository.SaveChangesAsync(cancellationToken);
+        return NoContent();
     }
 }
 

@@ -240,8 +240,10 @@ DD/MM/YYYY
 | 1 | Tao DbContext va bo Models cho HIS & Telemedicine |  | src/mediconnect/Models; src/mediconnect/Data |  |
 | 2 | Them EF Core packages va connection string SQL Server |  | src/mediconnect/mediconnect.csproj; src/mediconnect/appsettings.json; src/mediconnect/Program.cs |  |
 | 3 | Cap nhat README huong dan chay project |  | README.md |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 4 |  Tạo SmartQueueDtos, IQueueService, QueueService - Feature 1 smart queue | DE180526  | src/Mediconnect.Application/DTOs/SmartQueueDtos.cs; src/Mediconnect.Application/Interfaces/IQueueService.cs; src/Mediconnect.Application/Services/QueueService.cs |  |
+| 5 |  Tạo SmartQueueController, enhance ClinicsController & MedicalServicesController | DE180526   | src/mediconnect/Controllers/SmartQueueController.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |  |
+| 6 | Them endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST /api/inpatient-admissions/{id}/transfer | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed map & transfer |
+| 7 | Them DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - bed map & transfer |
 
 ## AI có hỗ trợ không?
 
@@ -252,6 +254,7 @@ Nếu có, mô tả AI đã hỗ trợ phần nào:
 
 ```text
 AI ho tro scaffold du an, bo models, DbContext va cau hinh EF Core.
+AI ho tro sinh code endpoints GET /api/beds/map (nhom giuong theo trang thai), GET bed-assignments (lich su phan bo giuong), POST transfer (chuyen khoa) va cac DTO tuong ung.
 ```
 
 ## Commit/Screenshot minh chứng
