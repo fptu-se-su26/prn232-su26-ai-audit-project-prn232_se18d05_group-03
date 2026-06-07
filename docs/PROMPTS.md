@@ -37,11 +37,11 @@ Sinh viên/nhóm cần ghi lại:
 Đánh dấu các công cụ AI đã sử dụng.
 
 - [ ] ChatGPT
-- [ ] Gemini
-- [ ] Claude
+- [x] Gemini
+- [x] Claude
 - [ ] GitHub Copilot
 - [ ] Cursor
-- [ ] Antigravity
+- [x] Antigravity
 - [ ] Microsoft Copilot
 - [ ] Perplexity
 - [ ] Công cụ khác: ....................................
@@ -60,10 +60,9 @@ Sinh viên/nhóm cần ghi lại:
 
 | 6 | 05/06/2026 | Claude | Sinh code Feature 1: Bed Map & Inpatient Transfer | Them endpoints GET /api/beds/map, GET bed-assignments, POST transfer vao BedsController va InpatientAdmissionsController | Da sinh endpoints va DTOs dung clean architecture pattern | Có | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
 
-| 7 |  |  |  |  |  | Có / Không |  |
-| 8 |  |  |  |  |  | Có / Không |  |
-| 9 |  |  |  |  |  | Có / Không |  |
-| 10 |  |  |  |  |  | Có / Không |  |
+| 7 | 06/06/2026 | Antigravity | Viết backend modular riêng biệt cho smart clinic | viet backend o folder module rieng biet | Gợi ý cấu trúc module và sinh ClinicDashboard/ClinicManagement Controller | Có | src/mediconnect/Modules/SmartClinic |
+| 8 | 06/06/2026 | Antigravity | Kiểm tra lỗi cơ sở dữ liệu | check for database error | Phân tích DLL lock, giải phóng tiến trình và kiểm tra EF database up-to-date | Có | dotnet ef database update |
+| 9 | 06/06/2026 | Antigravity | Sửa lỗi mất session / đăng nhập lặp | toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap | Phát hiện login redirect loop về /booking và sửa đổi LoginPage/AuthContext | Có | src/mediconnect-web/src/pages/LoginPage.tsx |
 
 ---
 
@@ -308,6 +307,174 @@ và cách tổ chức interface theo layer.
 AI gợi ý tên method ở mức cao. DTO, logic nghiệp vụ và tích hợp vào project
 được điều chỉnh theo yêu cầu cụ thể của dự án.
 ```
+
+---
+
+### Prompt số 7
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 06/06/2026 |
+| Công cụ AI | Antigravity |
+| Mục đích | Viết backend modular riêng biệt cho smart clinic |
+| Phần việc liên quan | Backend / Coding / Design |
+| Mức độ sử dụng | Hỏi sinh code |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+viet backend o folder module rieng biet
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Cần triển khai backend cho các tính năng của Feature 1 tách biệt hẳn so với các controller Entity CRUD cũ để đảm bảo tính modular.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI đề xuất tạo thư mục Modules/SmartClinic/ trong API project và sinh ra hai controller riêng biệt:
+1. ClinicDashboardController.cs: Quản lý hàng đợi thời gian thực.
+2. ClinicManagementController.cs: Cung cấp CRUD nâng cao cho khoa, phòng và dịch vụ.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng hai controller mới vào dự án, đồng thời cập nhật DTO và Service tương ứng.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Kiểm tra DI container tự động đăng ký, không cần sửa đổi file Program.cs.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | |
+| File liên quan | src/mediconnect/Modules/SmartClinic/ClinicDashboardController.cs |
+
+---
+
+### Prompt số 8
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 06/06/2026 |
+| Công cụ AI | Antigravity |
+| Mục đích | Kiểm tra lỗi kết nối cơ sở dữ liệu |
+| Phần việc liên quan | Database / Testing |
+| Mức độ sử dụng | Hỏi xử lý lỗi |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+check for database error
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Cần đảm bảo cơ sở dữ liệu SQL Server cục bộ hoạt động đúng trước khi tích hợp chạy frontend.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI đề xuất chạy `dotnet ef database update`. Phát hiện lỗi tệp tin DLL bị khóa bởi tiến trình IIS/dotnet đang chạy ngầm và đưa ra lệnh kill tiến trình thích hợp.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Tắt tiến trình bị treo, giải phóng DLL, và thực hiện thành công việc kiểm tra trạng thái database up-to-date.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Kiểm tra trực tiếp cổng 5079 bằng lệnh Get-NetTCPConnection để đảm bảo cổng được giải phóng trước khi restart.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit |  |
+| File liên quan | dotnet ef database update log |
+
+---
+
+### Prompt số 9
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 06/06/2026 |
+| Công cụ AI | Antigravity |
+| Mục đích | Sửa lỗi mất session và tự động đăng xuất |
+| Phần việc liên quan | Frontend / Debugging / Authentication |
+| Mức độ sử dụng | Hỏi xử lý lỗi |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Khi đăng nhập với vai trò Bác sĩ/Admin, trang bị tải lại liên tục và quay về màn đăng nhập /login, không thể truy cập dashboard hàng đợi.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI phân tích thấy trang LoginPage mặc định điều hướng mọi người dùng đến /booking (được bảo vệ chỉ cho phép Patient). Điều này dẫn đến vòng lặp chuyển hướng thất bại sang trang chủ, trả về 401 khi call API do thiếu quyền và trigger interceptor xóa token.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Sửa đổi LoginPage.tsx chuyển hướng theo role, và AuthContext.tsx để trả về user đồng bộ.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Kiểm tra biên dịch và test thực tế, xác nhận Bác sĩ vào thẳng /clinic-dashboard và Admin vào thẳng /manage-services không còn bị logout.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | |
+| File liên quan | src/mediconnect-web/src/pages/LoginPage.tsx; src/mediconnect-web/src/context/AuthContext.tsx |
 
 ---
 

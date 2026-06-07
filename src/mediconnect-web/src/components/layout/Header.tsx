@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
+import { UserRole } from "../../types";
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -11,6 +12,10 @@ export default function Header() {
     logout();
     navigate("/login");
   };
+
+  const isPatient = user?.role === UserRole.Patient;
+  const isStaff = user?.role === UserRole.Doctor || user?.role === UserRole.Nurse || user?.role === UserRole.Admin;
+  const isAdmin = user?.role === UserRole.Admin;
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-outline-variant">
@@ -26,18 +31,38 @@ export default function Header() {
           <nav className="hidden md:flex items-center gap-6">
             {isAuthenticated && (
               <>
-                <Link
-                  to="/booking"
-                  className="text-on-surface-variant hover:text-primary transition-colors font-medium"
-                >
-                  Dat lich kham
-                </Link>
-                <Link
-                  to="/appointments"
-                  className="text-on-surface-variant hover:text-primary transition-colors font-medium"
-                >
-                  Lich hen cua toi
-                </Link>
+                {isPatient && (
+                  <>
+                    <Link
+                      to="/booking"
+                      className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    >
+                      Đặt lịch khám
+                    </Link>
+                    <Link
+                      to="/appointments"
+                      className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    >
+                      Lịch hẹn của tôi
+                    </Link>
+                  </>
+                )}
+                {isStaff && (
+                  <Link
+                    to="/clinic-dashboard"
+                    className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                  >
+                    Hàng đợi phòng khám
+                  </Link>
+                )}
+                {isAdmin && (
+                  <Link
+                    to="/manage-services"
+                    className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                  >
+                    Quản lý dịch vụ
+                  </Link>
+                )}
               </>
             )}
           </nav>
@@ -57,7 +82,7 @@ export default function Header() {
                   onClick={handleLogout}
                   className="px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-error transition-colors"
                 >
-                  Dang xuat
+                  Đăng xuất
                 </button>
               </div>
             ) : (
@@ -66,13 +91,13 @@ export default function Header() {
                   to="/login"
                   className="px-4 py-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                 >
-                  Dang nhap
+                  Đăng nhập
                 </Link>
                 <Link
                   to="/register"
                   className="px-5 py-2 text-sm font-medium bg-primary text-on-primary rounded-full hover:bg-primary/90 transition-colors"
                 >
-                  Dang ky
+                  Đăng ký
                 </Link>
               </>
             )}
@@ -92,25 +117,50 @@ export default function Header() {
           <div className="md:hidden pb-4 border-t border-outline-variant mt-2 pt-3 flex flex-col gap-2">
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/booking"
-                  className="px-3 py-2 text-on-surface-variant hover:text-primary"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Dat lich kham
-                </Link>
-                <Link
-                  to="/appointments"
-                  className="px-3 py-2 text-on-surface-variant hover:text-primary"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Lich hen cua toi
-                </Link>
+                {isPatient && (
+                  <>
+                    <Link
+                      to="/booking"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Đặt lịch khám
+                    </Link>
+                    <Link
+                      to="/appointments"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Lịch hẹn của tôi
+                    </Link>
+                  </>
+                )}
+                {isStaff && (
+                  <Link
+                    to="/clinic-dashboard"
+                    className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Hàng đợi phòng khám
+                  </Link>
+                )}
+                {isAdmin && (
+                  <Link
+                    to="/manage-services"
+                    className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Quản lý dịch vụ
+                  </Link>
+                )}
                 <button
-                  onClick={handleLogout}
-                  className="px-3 py-2 text-left text-error"
+                  onClick={() => {
+                    handleLogout();
+                    setMenuOpen(false);
+                  }}
+                  className="px-3 py-2 text-left text-error w-full"
                 >
-                  Dang xuat
+                  Đăng xuất
                 </button>
               </>
             ) : (
@@ -120,14 +170,14 @@ export default function Header() {
                   className="px-3 py-2 text-primary"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Dang nhap
+                  Đăng nhập
                 </Link>
                 <Link
                   to="/register"
                   className="px-3 py-2 text-primary"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Dang ky
+                  Đăng ký
                 </Link>
               </>
             )}
