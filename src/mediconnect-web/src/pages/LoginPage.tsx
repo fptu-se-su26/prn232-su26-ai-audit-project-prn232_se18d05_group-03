@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { UserRole } from "../types";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -15,14 +16,23 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await login(email, password);
-      navigate("/booking");
+      const user = await login(email, password);
+      if (user.role === UserRole.Patient) {
+        navigate("/booking");
+      } else if (user.role === UserRole.Doctor || user.role === UserRole.Nurse) {
+        navigate("/clinic-dashboard");
+      } else if (user.role === UserRole.Admin) {
+        navigate("/manage-services");
+      } else {
+        navigate("/");
+      }
     } catch {
-      setError("Email hoac mat khau khong dung.");
+      setError("Email hoặc mật khẩu không đúng.");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">

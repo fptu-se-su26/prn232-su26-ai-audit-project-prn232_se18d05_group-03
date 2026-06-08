@@ -222,9 +222,9 @@ DD/MM/YYYY
 
 - [x] Tạo project structure
 - [x] Cài đặt database connection
-- [ ] Xây dựng backend
-- [ ] Xây dựng frontend
-- [ ] Xây dựng authentication/authorization
+- [x] Xây dựng backend
+- [x] Xây dựng frontend
+- [x] Xây dựng authentication/authorization
 - [ ] Xử lý CRUD
 - [ ] Xử lý validation
 - [ ] Tích hợp API
@@ -244,6 +244,9 @@ DD/MM/YYYY
 | 5 |  Tạo SmartQueueController, enhance ClinicsController & MedicalServicesController | DE180526   | src/mediconnect/Controllers/SmartQueueController.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |  |
 | 6 | Them endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST /api/inpatient-admissions/{id}/transfer | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed map & transfer |
 | 7 | Them DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - bed map & transfer |
+| 8 | Tạo modular controllers: ClinicDashboardController & ClinicManagementController | DE190123 | src/mediconnect/Modules/SmartClinic | Build 0 errors |
+| 9 | Thiết kế giao diện ClinicDashboardPage & ManageServicesPage | DE190123 | src/mediconnect-web/src/pages | npm run build success |
+| 10 | Sửa đổi logic LoginPage, AuthContext, App.tsx, Header.tsx để phân quyền chuyển hướng | DE190123 | src/mediconnect-web/src | Đăng nhập điều hướng theo role |
 
 ## AI có hỗ trợ không?
 
@@ -282,23 +285,23 @@ DD/MM/YYYY
 ## Đã hoàn thành
 
 - [ ] Viết test case
-- [ ] Chạy test chức năng chính
-- [ ] Kiểm tra output
+- [x] Chạy test chức năng chính
+- [x] Kiểm tra output
 - [ ] Kiểm tra validation
-- [ ] Kiểm tra lỗi giao diện
-- [ ] Kiểm tra lỗi database
-- [ ] Kiểm tra phân quyền
+- [x] Kiểm tra lỗi giao diện
+- [x] Kiểm tra lỗi database
+- [x] Kiểm tra phân quyền
 - [ ] Kiểm tra bảo mật cơ bản
-- [ ] Fix bug
-- [ ] Chạy lại sau khi fix bug
-- [ ] Ghi nhận kết quả test
+- [x] Fix bug
+- [x] Chạy lại sau khi fix bug
+- [x] Ghi nhận kết quả test
 
 ## Danh sách lỗi đã xử lý
 
 | STT | Lỗi phát hiện | Nguyên nhân | Cách xử lý | Trạng thái |
 |---:|---|---|---|---|
-| 1 |  |  |  | Open / Fixed / Pending |
-| 2 |  |  |  | Open / Fixed / Pending |
+| 1 | Không build được project backend do DLL bị khóa bởi tiến trình IIS Express/mediconnect cũ | Tiến trình dotnet cũ chạy ngầm giữ file DLL và không cho ghi đè | Kill tiến trình mediconnect cũ qua Powershell và build lại | Fixed |
+| 2 | Mất session và bị đẩy về màn đăng nhập sau khi vào trang Dashboard | Vòng lặp redirect do LoginPage mặc định điều hướng role Staff về /booking (vốn chỉ dành cho Patient), gây lỗi quyền và trigger Axios interceptor 401 | Cập nhật AuthContext trả về user, LoginPage điều hướng theo role, và cập nhật AllowedRoles trong Router | Fixed |
 | 3 |  |  |  | Open / Fixed / Pending |
 | 4 |  |  |  | Open / Fixed / Pending |
 | 5 |  |  |  | Open / Fixed / Pending |
@@ -307,19 +310,19 @@ DD/MM/YYYY
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
 |---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
+| 1 | Kiểm tra kết nối và chạy migrations trên SQL Server bằng dotnet ef | DE190123 | src/Mediconnect.Infrastructure | Database up to date |
+| 2 | Khắc phục lỗi điều hướng LoginPage và AuthContext | DE190123 | LoginPage.tsx, AuthContext.tsx | Đăng nhập và chuyển hướng đúng role |
 | 3 |  |  |  |  |
 
 ## AI có hỗ trợ không?
 
-- [ ] Có
+- [x] Có
 - [ ] Không
 
 Nếu có, mô tả AI đã hỗ trợ phần nào:
 
 ```text
-Viết tại đây...
+AI hỗ trợ viết code hoàn chỉnh giao diện Clinic Dashboard và Manage Services, phân tích lỗi DLL bị lock và gỡ lỗi vòng lặp redirect mất session khi đăng nhập.
 ```
 
 ## Commit/Screenshot minh chứng

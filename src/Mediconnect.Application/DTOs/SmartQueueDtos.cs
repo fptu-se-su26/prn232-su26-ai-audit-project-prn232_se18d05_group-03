@@ -15,6 +15,8 @@ public class QueueTicketDetailDto
     public string ClinicName { get; set; } = string.Empty;
     public string? ClinicRoomNumber { get; set; }
     public Guid? AppointmentId { get; set; }
+    public Guid? PatientId { get; set; }
+    public string? PatientName { get; set; }
     public int Number { get; set; }
     public DateTime IssuedAt { get; set; }
     public QueueStatus Status { get; set; }
@@ -43,4 +45,38 @@ public class ClinicWithServicesDto
 public class PriceUpdateDto
 {
     public decimal Price { get; set; }
+}
+
+/// <summary>
+/// Tóm tắt trạng thái hàng đợi của một phòng khám, dùng cho trang Clinic Dashboard.
+/// </summary>
+public class ClinicQueueSummaryDto
+{
+    public Guid ClinicId { get; set; }
+    public string ClinicName { get; set; } = string.Empty;
+    public string? RoomNumber { get; set; }
+    public bool IsActive { get; set; }
+    public int WaitingCount { get; set; }
+    public int InProgressCount { get; set; }
+    public int? CurrentNumber { get; set; }
+    public string? CurrentPatientName { get; set; }
+}
+
+/// <summary>
+/// Yêu cầu chuyển vé số sang phòng khám khác.
+/// </summary>
+public class TransferTicketDto
+{
+    public Guid TargetClinicId { get; set; }
+}
+
+/// <summary>
+/// Yêu cầu check-in mở rộng: hỗ trợ cả bệnh nhân vãng lai (không có appointment).
+/// </summary>
+public class WalkInCheckInRequestDto
+{
+    public Guid ClinicId { get; set; }
+    public Guid? AppointmentId { get; set; }
+    /// <summary>Tên bệnh nhân vãng lai (khi không có AppointmentId).</summary>
+    public string? PatientName { get; set; }
 }

@@ -14,13 +14,13 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<UserAccount>;
   register: (data: {
     fullName: string;
     email: string;
     password: string;
     phoneNumber?: string;
-  }) => Promise<void>;
+  }) => Promise<UserAccount>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("user", JSON.stringify(data.user));
     setState({ token: data.accessToken, user: data.user });
+    return data.user;
   }, []);
 
   const register = useCallback(
@@ -57,9 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("user", JSON.stringify(data.user));
       setState({ token: data.accessToken, user: data.user });
+      return data.user;
     },
     []
   );
+
 
   const logout = useCallback(() => {
     localStorage.removeItem("accessToken");
