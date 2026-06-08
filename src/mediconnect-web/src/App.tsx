@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import BookingPage from "./pages/BookingPage";
 import AppointmentsPage from "./pages/AppointmentsPage";
+import ScheduleManagementPage from "./pages/ScheduleManagementPage";
 import type { ReactNode } from "react";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -54,6 +55,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AppointmentsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/schedules"
+              element={
+                <ProtectedRoute>
+                  <ScheduleManagementPage />
                 </ProtectedRoute>
               }
             />

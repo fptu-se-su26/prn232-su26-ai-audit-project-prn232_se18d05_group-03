@@ -19,17 +19,17 @@ Nguyên tắc ghi changelog:
 
 | Thông tin | Nội dung |
 |---|---|
-| Môn học |  |
-| Mã môn học |  |
-| Lớp |  |
-| Học kỳ |  |
-| Tên bài tập / Project |  |
-| Tên sinh viên / Nhóm |  |
-| MSSV / Danh sách MSSV |  |
+| Môn học | Building Cross-Platform Back-End Application with .NET |
+| Mã môn học | PRN232 |
+| Lớp | SE18D05 |
+| Học kỳ | SU26 |
+| Tên bài tập / Project | MEDICONNECT – Hệ thống Quản lý Bệnh viện Thông minh |
+| Tên sinh viên / Nhóm | Nhóm 3 |
+| MSSV / Danh sách MSSV | DE180522, DE180526, DE190580, DE190123 |
 | Giảng viên hướng dẫn |  |
-| Repository URL |  |
-| Ngày bắt đầu |  |
-| Ngày hoàn thành |  |
+| Repository URL | https://github.com/fptu-se-su26/prn232-su26-ai-audit-project-prn232_se18d05_group-03 |
+| Ngày bắt đầu | 17/05/2026 |
+| Ngày hoàn thành | Đang thực hiện |
 
 ---
 

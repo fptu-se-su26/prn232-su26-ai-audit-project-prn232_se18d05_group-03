@@ -146,7 +146,43 @@ public class DbInitializer
         await _context.Departments.AddRangeAsync(departments, cancellationToken);
         await _context.Clinics.AddRangeAsync(clinics, cancellationToken);
         await _context.UserAccounts.AddRangeAsync(new[] { adminUser, doctorUser, nurseUser, patientUser }, cancellationToken);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var staffSchedules = new[]
+        {
+            new StaffSchedule
+            {
+                Id = Guid.NewGuid(),
+                StaffId = staffProfiles[0].Id,
+                ShiftDate = today,
+                ShiftType = ShiftType.Morning,
+                StartTime = new TimeOnly(6, 0),
+                EndTime = new TimeOnly(12, 0),
+                WorkRoom = "B201"
+            },
+            new StaffSchedule
+            {
+                Id = Guid.NewGuid(),
+                StaffId = staffProfiles[0].Id,
+                ShiftDate = today.AddDays(1),
+                ShiftType = ShiftType.Afternoon,
+                StartTime = new TimeOnly(12, 0),
+                EndTime = new TimeOnly(18, 0),
+                WorkRoom = "B201"
+            },
+            new StaffSchedule
+            {
+                Id = Guid.NewGuid(),
+                StaffId = staffProfiles[1].Id,
+                ShiftDate = today,
+                ShiftType = ShiftType.Evening,
+                StartTime = new TimeOnly(18, 0),
+                EndTime = new TimeOnly(23, 59),
+                WorkRoom = "A101"
+            }
+        };
+
         await _context.StaffProfiles.AddRangeAsync(staffProfiles, cancellationToken);
+        await _context.StaffSchedules.AddRangeAsync(staffSchedules, cancellationToken);
         await _context.PatientProfiles.AddAsync(patientProfile, cancellationToken);
 
         await _context.SaveChangesAsync(cancellationToken);

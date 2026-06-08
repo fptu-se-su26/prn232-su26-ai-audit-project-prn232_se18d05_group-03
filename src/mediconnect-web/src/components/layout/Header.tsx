@@ -38,6 +38,12 @@ export default function Header() {
                 >
                   Lich hen cua toi
                 </Link>
+                <Link
+                  to="/schedules"
+                  className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                >
+                  Lich truc
+                </Link>
               </>
             )}
           </nav>
@@ -105,6 +111,13 @@ export default function Header() {
                   onClick={() => setMenuOpen(false)}
                 >
                   Lich hen cua toi
+                </Link>
+                <Link
+                  to="/schedules"
+                  className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Lich truc
                 </Link>
                 <button
                   onClick={handleLogout}

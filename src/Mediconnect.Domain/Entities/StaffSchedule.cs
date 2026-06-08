@@ -16,7 +16,12 @@ public class StaffSchedule
 
     public DateOnly ShiftDate { get; set; }
 
+    public ShiftType ShiftType { get; set; }
+
     public TimeOnly StartTime { get; set; }
 
     public TimeOnly EndTime { get; set; }
+
+    [MaxLength(100)]
+    public string? WorkRoom { get; set; }
 }

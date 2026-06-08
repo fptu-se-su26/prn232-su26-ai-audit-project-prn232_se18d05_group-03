@@ -10,6 +10,9 @@ import type {
   AppointmentRead,
   AppointmentWrite,
   QueueTicketDetail,
+  ScheduleFlat,
+  ScheduleWrite,
+  PagedResult,
 } from "../types";
 
 export const authApi = {
@@ -37,6 +40,28 @@ export const clinicApi = {
 export const staffApi = {
   getAll: () => api.get<StaffProfile[]>("/staff"),
   getById: (id: string) => api.get<StaffProfile>(`/staff/${id}`),
+  create: (data: Omit<StaffProfile, "id">) =>
+    api.post<StaffProfile>("/staff", data),
+  update: (id: string, data: Omit<StaffProfile, "id">) =>
+    api.put(`/staff/${id}`, data),
+  delete: (id: string) => api.delete(`/staff/${id}`),
+};
+
+export const scheduleApi = {
+  getAll: () => api.get<ScheduleFlat[]>("/schedules/all"),
+  filter: (params: {
+    startDate?: string;
+    endDate?: string;
+    currentWeek?: boolean;
+    departmentId?: string;
+    page?: number;
+    pageSize?: number;
+  }) => api.get<PagedResult<ScheduleFlat>>("/schedules", { params }),
+  create: (data: ScheduleWrite) =>
+    api.post<ScheduleFlat>("/schedules", data),
+  update: (id: string, data: ScheduleWrite) =>
+    api.put<ScheduleFlat>(`/schedules/${id}`, data),
+  delete: (id: string) => api.delete(`/schedules/${id}`),
 };
 
 export const userApi = {

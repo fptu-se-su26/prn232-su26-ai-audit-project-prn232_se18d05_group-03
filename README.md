@@ -29,6 +29,41 @@
 
 ```text
 src/
+├── mediconnect/                         # .NET 8 Web API (startup project)
+│   ├── Controllers/
+│   │   ├── StaffController.cs
+│   │   ├── ScheduleController.cs        # HR & Scheduling – 5 endpoints
+│   │   └── ...
+│   ├── appsettings.json
+│   └── Program.cs
+├── Mediconnect.Application/             # Business logic layer
+│   ├── DTOs/
+│   │   ├── EntityDtos.cs
+│   │   └── ScheduleDtos.cs             # ScheduleFlatReadDto, ScheduleWriteDto, ...
+│   ├── Interfaces/
+│   │   ├── IStaffScheduleService.cs
+│   │   └── IStaffScheduleQuery.cs
+│   └── Services/
+│       └── StaffScheduleService.cs     # Business rules: duplicate check, max 2 shifts/day
+├── Mediconnect.Domain/
+│   └── Entities/
+│       ├── StaffSchedule.cs
+│       ├── StaffProfile.cs
+│       └── Enums.cs                    # ShiftType, StaffType
+├── Mediconnect.Infrastructure/
+│   ├── Persistence/
+│   │   ├── AppDbContext.cs
+│   │   └── DbInitializer.cs
+│   ├── Migrations/
+│   └── Repositories/
+│       └── StaffScheduleQuery.cs       # Flat LINQ projection
+└── mediconnect-web/                    # React 18 + TypeScript + TailwindCSS v4
+    └── src/
+        ├── pages/
+        │   ├── ScheduleManagementPage.tsx  # Gantt chart view
+        │   └── ...
+        ├── api/services.ts
+        └── types/index.ts
 docs/
 .github/
 README.md
@@ -105,9 +140,56 @@ feat, fix, docs, test, refactor, style, chore
 
 ## 8. How to Run
 
-```text
-Students write project running instructions here.
+### Yêu cầu môi trường
+
+- .NET 8 SDK
+- SQL Server (instance mặc định, user `sa`, password `1234`)
+- Node.js 18+
+
+### 1. Backend (.NET 8 Web API)
+
+```bash
+# Apply migration lên database
+dotnet ef database update --project src/Mediconnect.Infrastructure --startup-project src/mediconnect
+
+# Chạy API server
+dotnet run --project src/mediconnect
 ```
+
+API chạy tại: **http://localhost:5079**  
+Swagger UI: **http://localhost:5079/swagger**
+
+> Nếu dùng SQL Server khác, cập nhật connection string trong `src/mediconnect/appsettings.json`:
+> ```
+> "Server=.;uid=sa;pwd=<password>;Database=NewMediconnect;TrustServerCertificate=True"
+> ```
+
+### 2. Frontend (React + TypeScript)
+
+```bash
+cd src/mediconnect-web
+npm install
+npm run dev
+```
+
+Frontend chạy tại: **http://localhost:5173**
+
+### 3. Tài khoản mặc định (seed data)
+
+| Email | Password | Role |
+|---|---|---|
+| admin@mediconnect.local | Admin@123 | Admin |
+| doctor@mediconnect.local | Doctor@123 | Doctor |
+| nurse@mediconnect.local | Nurse@123 | Nurse |
+| patient@mediconnect.local | Patient@123 | Patient |
+
+### 4. Các trang chính
+
+| URL | Tính năng |
+|---|---|
+| `/` | Trang chủ |
+| `/schedules` | Quản lý Nhân sự & Lịch trực (Gantt chart) |
+| `/appointments` | Quản lý Lịch hẹn |
 
 ---
 

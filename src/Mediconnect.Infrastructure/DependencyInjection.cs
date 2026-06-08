@@ -2,6 +2,7 @@ using Mediconnect.Application.Interfaces;
 using Mediconnect.Infrastructure.Auth;
 using Mediconnect.Infrastructure.Persistence;
 using Mediconnect.Infrastructure.Repositories;
+using Mediconnect.Application.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,8 @@ public static class DependencyInjection
 
         services.AddScoped<DbInitializer>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+        services.AddScoped<IStaffScheduleQuery, StaffScheduleQuery>();
+        services.AddScoped<IStaffScheduleService, StaffScheduleService>();
         services.AddScoped<IPasswordHasher, PasswordHasherService>();
         services.AddScoped<ITokenService, JwtTokenService>();
 

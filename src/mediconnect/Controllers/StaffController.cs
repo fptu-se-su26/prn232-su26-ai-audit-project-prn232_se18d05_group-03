@@ -1,4 +1,5 @@
 using Mediconnect.Application.DTOs;
+using Mediconnect.Application.Exceptions;
 using Mediconnect.Application.Interfaces;
 using Mediconnect.Application.Mapping;
 using Mediconnect.Domain.Entities;
@@ -14,13 +15,16 @@ public class StaffController : ControllerBase
 {
     private readonly ICrudService<StaffProfile, StaffProfileReadDto, StaffProfileWriteDto> _crudService;
     private readonly IRepository<StaffSchedule> _scheduleRepository;
+    private readonly IStaffScheduleService _scheduleService;
 
     public StaffController(
         ICrudService<StaffProfile, StaffProfileReadDto, StaffProfileWriteDto> crudService,
-        IRepository<StaffSchedule> scheduleRepository)
+        IRepository<StaffSchedule> scheduleRepository,
+        IStaffScheduleService scheduleService)
     {
         _crudService = crudService;
         _scheduleRepository = scheduleRepository;
+        _scheduleService = scheduleService;
     }
 
     [HttpGet]
@@ -69,17 +73,27 @@ public class StaffController : ControllerBase
     }
 
     [HttpPost("{id:guid}/schedules")]
-    public async Task<ActionResult<StaffScheduleReadDto>> CreateSchedule(
+    public async Task<ActionResult<ScheduleFlatReadDto>> CreateSchedule(
         Guid id,
         StaffScheduleWriteDto dto,
         CancellationToken cancellationToken)
     {
         dto.StaffId = id;
-        var schedule = SimpleMapper.Map<StaffScheduleWriteDto, StaffSchedule>(dto);
-        await _scheduleRepository.AddAsync(schedule, cancellationToken);
-        await _scheduleRepository.SaveChangesAsync(cancellationToken);
-
-        var result = SimpleMapper.Map<StaffSchedule, StaffScheduleReadDto>(schedule);
-        return CreatedAtAction(nameof(GetSchedules), new { id }, result);
+        try
+        {
+            var writeDto = new ScheduleWriteDto
+            {
+                StaffId = dto.StaffId,
+                ShiftDate = dto.ShiftDate,
+                ShiftType = dto.ShiftType,
+                WorkRoom = dto.WorkRoom
+            };
+            var created = await _scheduleService.CreateAsync(writeDto, cancellationToken);
+            return CreatedAtAction(nameof(GetSchedules), new { id }, created);
+        }
+        catch (ScheduleValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
