@@ -45,6 +45,12 @@ export default function Header() {
                     >
                       Lịch hẹn của tôi
                     </Link>
+                    <Link
+                      to="/health-records"
+                      className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    >
+                      Hồ sơ sức khỏe
+                    </Link>
                   </>
                 )}
                 {isStaff && (
@@ -132,6 +138,13 @@ export default function Header() {
                       onClick={() => setMenuOpen(false)}
                     >
                       Lịch hẹn của tôi
+                    </Link>
+                    <Link
+                      to="/health-records"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Hồ sơ sức khỏe
                     </Link>
                   </>
                 )}

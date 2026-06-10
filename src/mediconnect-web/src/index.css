@@ -23,6 +23,11 @@
   --color-on-error: #ffffff;
   --color-success: #006d3b;
   --color-on-success: #ffffff;
+  --color-on-secondary-container: #002020;
+  --color-tertiary-container: #b7f2cb;
+  --color-on-tertiary-container: #002110;
+  --color-surface-variant: #e2e3ed;
+  --color-on-surface-variant: #43474e;
 }
 
 body {

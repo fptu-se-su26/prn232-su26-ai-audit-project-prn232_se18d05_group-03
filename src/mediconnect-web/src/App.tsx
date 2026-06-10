@@ -8,6 +8,7 @@ import BookingPage from "./pages/BookingPage";
 import AppointmentsPage from "./pages/AppointmentsPage";
 import ClinicDashboardPage from "./pages/ClinicDashboardPage";
 import ManageServicesPage from "./pages/ManageServicesPage";
+import PHRPage from "./pages/PHRPage";
 import { UserRole } from "./types";
 import type { ReactNode } from "react";
 
@@ -80,6 +81,14 @@ export default function App() {
               element={
                 <RoleProtectedRoute allowedRoles={[UserRole.Admin]}>
                   <ManageServicesPage />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/health-records"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Patient]}>
+                  <PHRPage />
                 </RoleProtectedRoute>
               }
             />

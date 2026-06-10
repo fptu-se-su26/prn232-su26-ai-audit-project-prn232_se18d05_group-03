@@ -7,12 +7,16 @@ import type {
   StaffProfile,
   UserAccount,
   PatientProfile,
+  PatientHistoryDto,
   AppointmentRead,
   AppointmentWrite,
   QueueTicketDetail,
   ClinicQueueSummary,
   ClinicQueue,
   MedicalService,
+  LabOrder,
+  PrescriptionItem,
+  Drug,
 } from "../types";
 
 export const authApi = {
@@ -51,6 +55,15 @@ export const patientApi = {
   getMe: () => api.get<PatientProfile>("/patients/me"),
   create: (data: { userAccountId: string }) =>
     api.post<PatientProfile>("/patients", data),
+  getHistory: (id: string) =>
+    api.get<PatientHistoryDto>(`/patients/${id}/history`),
+};
+
+export const phrApi = {
+  getAllLabOrders: () => api.get<LabOrder[]>("/lab-orders"),
+  getAllPrescriptionItems: () => api.get<PrescriptionItem[]>("/prescription-items"),
+  getAllDrugs: () => api.get<Drug[]>("/drugs"),
+  getAllClinics: () => api.get<Clinic[]>("/clinics"),
 };
 
 export const appointmentApi = {

@@ -141,3 +141,92 @@ export interface ClinicQueue {
   tickets: QueueTicketDetail[];
 }
 
+// ── PHR – Hồ sơ Sức khỏe Điện tử ─────────────────────────────────────────────
+
+export enum VisitStatus {
+  Waiting = 0,
+  InProgress = 1,
+  Completed = 2,
+  Cancelled = 3,
+}
+
+export enum LabOrderStatus {
+  Ordered = 0,
+  InProgress = 1,
+  Completed = 2,
+  Cancelled = 3,
+}
+
+export enum Gender {
+  Unknown = 0,
+  Male = 1,
+  Female = 2,
+  Other = 3,
+}
+
+export interface OutpatientVisit {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  clinicId: string;
+  queueTicketId?: string;
+  visitDate: string;
+  chiefComplaint?: string;
+  diagnosisCode?: string;
+  diagnosisDescription?: string;
+  status: VisitStatus;
+  notes?: string;
+}
+
+export interface LabOrder {
+  id: string;
+  outpatientVisitId: string;
+  orderedById: string;
+  testName: string;
+  status: LabOrderStatus;
+  orderedAt: string;
+  notes?: string;
+}
+
+export interface LabResult {
+  id: string;
+  labOrderId: string;
+  resultText?: string;
+  resultFileUrl?: string;
+  resultedAt?: string;
+}
+
+export interface Prescription {
+  id: string;
+  outpatientVisitId: string;
+  doctorId: string;
+  issuedAt: string;
+  notes?: string;
+}
+
+export interface PrescriptionItem {
+  id: string;
+  prescriptionId: string;
+  drugId: string;
+  dose?: string;
+  frequency?: string;
+  durationDays: number;
+  quantity: number;
+}
+
+export interface Drug {
+  id: string;
+  name: string;
+  code?: string;
+  unit?: string;
+  stockQuantity: number;
+  unitPrice: number;
+  isActive: boolean;
+}
+
+export interface PatientHistoryDto {
+  visits: OutpatientVisit[];
+  labResults: LabResult[];
+  prescriptions: Prescription[];
+}
+

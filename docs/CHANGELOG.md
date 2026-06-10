@@ -247,6 +247,11 @@ DD/MM/YYYY
 | 8 | Tạo modular controllers: ClinicDashboardController & ClinicManagementController | DE190123 | src/mediconnect/Modules/SmartClinic | Build 0 errors |
 | 9 | Thiết kế giao diện ClinicDashboardPage & ManageServicesPage | DE190123 | src/mediconnect-web/src/pages | npm run build success |
 | 10 | Sửa đổi logic LoginPage, AuthContext, App.tsx, Header.tsx để phân quyền chuyển hướng | DE190123 | src/mediconnect-web/src | Đăng nhập điều hướng theo role |
+| 11 | Thêm types PHR vào types/index.ts: enum VisitStatus, LabOrderStatus, Gender + 7 interface mới | DE180526 | src/mediconnect-web/src/types/index.ts | chưa commit |
+| 12 | Thêm patientApi.getHistory và phrApi (4 methods) vào services.ts | DE180526 | src/mediconnect-web/src/api/services.ts | chưa commit |
+| 13 | Tạo PHRPage.tsx — giao diện Hồ sơ sức khỏe 3 tab, 7 API calls song song, enrichment client-side | DE180526 | src/mediconnect-web/src/pages/PHRPage.tsx | chưa commit |
+| 14 | Thêm route /health-records (Patient only) vào App.tsx | DE180526 | src/mediconnect-web/src/App.tsx | chưa commit |
+
 
 ## AI có hỗ trợ không?
 
@@ -256,8 +261,10 @@ DD/MM/YYYY
 Nếu có, mô tả AI đã hỗ trợ phần nào:
 
 ```text
-AI ho tro scaffold du an, bo models, DbContext va cau hinh EF Core.
-AI ho tro sinh code endpoints GET /api/beds/map (nhom giuong theo trang thai), GET bed-assignments (lich su phan bo giuong), POST transfer (chuyen khoa) va cac DTO tuong ung.
+AI hỗ trợ scaffold dự án, bo models, DbContext va cấu hình EF Core.
+AI sinh code endpoints GET /api/beds/map, GET bed-assignments, POST transfer và các DTO tương ứng.
+AI sinh toàn bộ giao diện PHRPage.tsx (Feature 2) với 3 tab + logic enrichment dữ liệu client-side.
+Backend API cho Feature 2 đã hoàn thiện từ trước (PatientsController + EntityControllers); session PHR chỉ làm frontend.
 ```
 
 ## Commit/Screenshot minh chứng

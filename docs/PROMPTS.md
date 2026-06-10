@@ -63,6 +63,7 @@ Sinh viên/nhóm cần ghi lại:
 | 7 | 06/06/2026 | Antigravity | Viết backend modular riêng biệt cho smart clinic | viet backend o folder module rieng biet | Gợi ý cấu trúc module và sinh ClinicDashboard/ClinicManagement Controller | Có | src/mediconnect/Modules/SmartClinic |
 | 8 | 06/06/2026 | Antigravity | Kiểm tra lỗi cơ sở dữ liệu | check for database error | Phân tích DLL lock, giải phóng tiến trình và kiểm tra EF database up-to-date | Có | dotnet ef database update |
 | 9 | 06/06/2026 | Antigravity | Sửa lỗi mất session / đăng nhập lặp | toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap | Phát hiện login redirect loop về /booking và sửa đổi LoginPage/AuthContext | Có | src/mediconnect-web/src/pages/LoginPage.tsx |
+| 10 | 10/06/2026 | Claude (Claude Code) | Xây dựng frontend Feature 2: Hồ sơ sức khỏe điện tử | Làm chức năng PHR cho bệnh nhân: xem lịch sử khám, đơn thuốc, kết quả xét nghiệm, tải file | Tạo PHRPage.tsx với 3 tab + 7 API calls + enrichment dữ liệu client-side | Có | src/mediconnect-web/src/pages/PHRPage.tsx |
 
 ---
 
@@ -478,6 +479,76 @@ Kiểm tra biên dịch và test thực tế, xác nhận Bác sĩ vào thẳng 
 
 ---
 
+### Prompt số 10
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 10/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích | Xây dựng giao diện frontend Feature 2: Hồ sơ sức khỏe điện tử |
+| Phần việc liên quan | Frontend / Coding |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Làm chức năng Feature 2: Quản lý Hồ sơ Sức khỏe Điện tử (PHR) cho bệnh nhân. Bệnh nhân có thể xem lịch sử khám, đơn thuốc, kết quả xét nghiệm và tải file kết quả.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Thiếu frontend (PatientsController với GET /history;
+EntityControllers với /lab-orders, /prescription-items, /drugs, /clinics).
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI tạo PHRPage.tsx với 3 tab:
+- Tab 1 (Lịch sử khám): timeline numbered cards, tìm kiếm, sắp xếp, modal xem chẩn đoán + bác sĩ + phòng khám.
+- Tab 2 (Đơn thuốc): danh sách accordion, mỗi đơn mở ra bảng chi tiết thuốc (tên, liều, tần suất, số ngày).
+- Tab 3 (Kết quả xét nghiệm): filter theo trạng thái, modal xem kết quả text, nút tải file.
+AI phát hiện /history trả DTO thiếu testName và drug items.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng code vào dự án:
+- PHRPage.tsx (route /health-records, Patient only)
+- Cập nhật types/index.ts, services.ts, App.tsx, Header.tsx
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Đọc EntityDtos.cs xác nhận DTO shape trước khi code
+- Chạy npm run build xác nhận 0 TypeScript error
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | chưa commit |
+| File liên quan | src/mediconnect-web/src/pages/PHRPage.tsx |
+| Screenshot |  |
+| Kết quả chạy/test | npm run build: 0 error |
+| Ghi chú khác | Backend endpoint đã có từ trước session này |
+
+---
+
 ## 6. Prompt quan trọng nhất
 
 Chọn một prompt có ảnh hưởng lớn nhất đến bài tập/project.
@@ -485,31 +556,34 @@ Chọn một prompt có ảnh hưởng lớn nhất đến bài tập/project.
 ### 6.1. Prompt được chọn
 
 ```text
-Dán prompt quan trọng nhất tại đây.
+Làm chức năng Feature 2: Quản lý Hồ sơ Sức khỏe Điện tử (PHR) cho bệnh nhân. Bệnh nhân có thể xem lịch sử khám, đơn thuốc, kết quả xét nghiệm và tải file kết quả.
 ```
 
 ### 6.2. Vì sao prompt này quan trọng?
 
 ```text
-Viết tại đây...
+Đây là prompt sinh ra nhiều code nhất trong cả dự án (~560 dòng TypeScript).
+AI còn tự phân tích DTO mismatch và đề xuất giải pháp enrichment client-side mà không cần sửa backend.
 ```
 
 ### 6.3. Kết quả prompt này mang lại
 
 ```text
-Viết tại đây...
+PHRPage.tsx hoàn chỉnh với 3 tab, 7 API calls song song, enrichment dữ liệu client-side,
+modal xem chi tiết, tải file kết quả — đủ yêu cầu Feature 2.
 ```
 
 ### 6.4. Sinh viên/nhóm đã kiểm tra kết quả như thế nào?
 
 ```text
-Viết tại đây...
+Chạy npm run build (0 TypeScript error), test thủ công route /health-records theo role,
+kiểm tra console log [PHR] trong DevTools, đọc EntityDtos.cs xác nhận DTO shape.
 ```
 
 ### 6.5. Sinh viên/nhóm đã cải tiến gì từ kết quả AI?
 
 ```text
-Viết tại đây...
+
 ```
 
 ---
