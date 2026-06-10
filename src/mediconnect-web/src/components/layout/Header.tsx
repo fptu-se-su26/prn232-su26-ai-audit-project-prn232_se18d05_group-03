@@ -31,6 +31,7 @@ export default function Header() {
           <nav className="hidden md:flex items-center gap-6">
             {isAuthenticated && (
               <>
+
                 {isPatient && (
                   <>
                     <Link
@@ -63,6 +64,7 @@ export default function Header() {
                     Quản lý dịch vụ
                   </Link>
                 )}
+
               </>
             )}
           </nav>
@@ -117,6 +119,7 @@ export default function Header() {
           <div className="md:hidden pb-4 border-t border-outline-variant mt-2 pt-3 flex flex-col gap-2">
             {isAuthenticated ? (
               <>
+
                 {isPatient && (
                   <>
                     <Link
@@ -153,6 +156,7 @@ export default function Header() {
                     Quản lý dịch vụ
                   </Link>
                 )}
+
                 <button
                   onClick={() => {
                     handleLogout();

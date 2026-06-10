@@ -6,9 +6,11 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import BookingPage from "./pages/BookingPage";
 import AppointmentsPage from "./pages/AppointmentsPage";
+import ScheduleManagementPage from "./pages/ScheduleManagementPage";
 import ClinicDashboardPage from "./pages/ClinicDashboardPage";
 import ManageServicesPage from "./pages/ManageServicesPage";
 import { UserRole } from "./types";
+
 import type { ReactNode } from "react";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -81,6 +83,14 @@ export default function App() {
                 <RoleProtectedRoute allowedRoles={[UserRole.Admin]}>
                   <ManageServicesPage />
                 </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/schedules"
+              element={
+                <ProtectedRoute>
+                  <ScheduleManagementPage />
+                </ProtectedRoute>
               }
             />
           </Route>

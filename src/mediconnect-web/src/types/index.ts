@@ -94,6 +94,71 @@ export interface StaffWithUser extends StaffProfile {
   email: string;
 }
 
+export interface StaffDirectory {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  staffType: StaffType;
+  departmentId: string;
+  department: string;
+  specialty?: string;
+  yearsExperience: number;
+  degree?: string;
+}
+
+export enum ShiftType {
+  Morning = 0,
+  Afternoon = 1,
+  Evening = 2,
+}
+
+export enum StaffType {
+  Doctor = 0,
+  Nurse = 1,
+  Admin = 2,
+  Caregiver = 3,
+}
+
+export interface ScheduleFlat {
+  id: string;
+  staffId: string;
+  /** "yyyy-MM-dd" — ngày trực */
+  date: string;
+  /** Vietnamese display name: "Ca Sáng" | "Ca Chiều" | "Ca Tối" */
+  shift: string;
+  /** Numeric enum — dùng để pre-fill form chỉnh sửa */
+  shiftType: ShiftType;
+  startTime: string;
+  endTime: string;
+  workRoom?: string;
+  /** UserAccount.Id — khác với staffId (StaffProfile.Id) */
+  userId: string;
+  name: string;
+  email: string;
+  specialty?: string;
+  yearsExperience: number;
+  degree?: string;
+  departmentId: string;
+  department: string;
+  staffType: StaffType;
+}
+
+export interface ScheduleWrite {
+  staffId: string;
+  shiftDate: string;
+  shiftType: ShiftType;
+  workRoom?: string;
+}
+
+export interface PagedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export interface AppointmentWrite {
   patientId: string;
   doctorId: string;
