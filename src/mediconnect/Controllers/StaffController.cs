@@ -16,15 +16,18 @@ public class StaffController : ControllerBase
     private readonly ICrudService<StaffProfile, StaffProfileReadDto, StaffProfileWriteDto> _crudService;
     private readonly IRepository<StaffSchedule> _scheduleRepository;
     private readonly IStaffScheduleService _scheduleService;
+    private readonly IStaffScheduleQuery _scheduleQuery;
 
     public StaffController(
         ICrudService<StaffProfile, StaffProfileReadDto, StaffProfileWriteDto> crudService,
         IRepository<StaffSchedule> scheduleRepository,
-        IStaffScheduleService scheduleService)
+        IStaffScheduleService scheduleService,
+        IStaffScheduleQuery scheduleQuery)
     {
         _crudService = crudService;
         _scheduleRepository = scheduleRepository;
         _scheduleService = scheduleService;
+        _scheduleQuery = scheduleQuery;
     }
 
     [HttpGet]
@@ -32,6 +35,14 @@ public class StaffController : ControllerBase
     {
         var staff = await _crudService.GetAllAsync(cancellationToken);
         return Ok(staff);
+    }
+
+    /// <summary>Returns all staff with full name, email and department name joined.</summary>
+    [HttpGet("directory")]
+    public async Task<ActionResult<IReadOnlyList<StaffDirectoryDto>>> GetDirectory(CancellationToken cancellationToken)
+    {
+        var result = await _scheduleQuery.GetStaffDirectoryAsync(cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]

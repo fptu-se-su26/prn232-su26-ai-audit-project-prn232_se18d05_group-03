@@ -5,6 +5,7 @@ import type {
   Clinic,
   ClinicWithServices,
   StaffProfile,
+  StaffDirectory,
   UserAccount,
   PatientProfile,
   AppointmentRead,
@@ -40,6 +41,7 @@ export const clinicApi = {
 export const staffApi = {
   getAll: () => api.get<StaffProfile[]>("/staff"),
   getById: (id: string) => api.get<StaffProfile>(`/staff/${id}`),
+  getDirectory: () => api.get<StaffDirectory[]>("/staff/directory"),
   create: (data: Omit<StaffProfile, "id">) =>
     api.post<StaffProfile>("/staff", data),
   update: (id: string, data: Omit<StaffProfile, "id">) =>

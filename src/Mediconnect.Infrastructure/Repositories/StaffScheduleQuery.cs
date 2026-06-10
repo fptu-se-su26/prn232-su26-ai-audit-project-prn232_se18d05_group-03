@@ -63,6 +63,29 @@ public class StaffScheduleQuery : IStaffScheduleQuery
         };
     }
 
+    public async Task<IReadOnlyList<StaffDirectoryDto>> GetStaffDirectoryAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.StaffProfiles
+            .AsNoTracking()
+            .Select(s => new StaffDirectoryDto
+            {
+                Id         = s.Id,
+                UserId     = s.UserAccountId,
+                Name       = s.UserAccount.FullName,
+                Email      = s.UserAccount.Email,
+                StaffType  = s.StaffType,
+                DepartmentId = s.DepartmentId,
+                Department = s.Department.Name,
+                Specialty  = s.Specialty,
+                YearsExperience = s.YearsExperience,
+                Degree     = s.Degree
+            })
+            .OrderBy(s => s.Department)
+            .ThenBy(s => s.StaffType)
+            .ThenBy(s => s.Name)
+            .ToListAsync(cancellationToken);
+    }
+
     private IQueryable<ScheduleFlatReadDto> BuildFlatQuery()
     {
         return _context.StaffSchedules

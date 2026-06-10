@@ -9,7 +9,7 @@
 | Semester | SU26 |
 | Group | 3 |
 | Topic | MEDIC0NNECT |
-| Repository |  |
+| Repository | https://github.com/fptu-se-su26/prn232-su26-ai-audit-project-prn232_se18d05_group-03 |
 
 ---
 
@@ -31,39 +31,49 @@
 src/
 ├── mediconnect/                         # .NET 8 Web API (startup project)
 │   ├── Controllers/
-│   │   ├── StaffController.cs
-│   │   ├── ScheduleController.cs        # HR & Scheduling – 5 endpoints
+│   │   ├── AuthController.cs           # POST /api/auth/login, register
+│   │   ├── StaffController.cs          # CRUD + GET /api/staff/directory
+│   │   ├── ScheduleController.cs       # 5 endpoints: GET all, GET filter, POST, PUT, DELETE
+│   │   ├── SmartQueueController.cs
+│   │   ├── EntityControllers.cs        # Bed map, inpatient transfer
 │   │   └── ...
 │   ├── appsettings.json
 │   └── Program.cs
 ├── Mediconnect.Application/             # Business logic layer
 │   ├── DTOs/
 │   │   ├── EntityDtos.cs
-│   │   └── ScheduleDtos.cs             # ScheduleFlatReadDto, ScheduleWriteDto, ...
+│   │   ├── ScheduleDtos.cs             # ScheduleFlatReadDto, ScheduleWriteDto, StaffDirectoryDto, PagedResult
+│   │   └── SmartQueueDtos.cs
 │   ├── Interfaces/
 │   │   ├── IStaffScheduleService.cs
-│   │   └── IStaffScheduleQuery.cs
+│   │   └── IStaffScheduleQuery.cs      # GetStaffDirectoryAsync, FilterFlatAsync
 │   └── Services/
-│       └── StaffScheduleService.cs     # Business rules: duplicate check, max 2 shifts/day
+│       └── StaffScheduleService.cs     # Business rules: duplicate check, max 2 shifts/day, auto time
 ├── Mediconnect.Domain/
 │   └── Entities/
-│       ├── StaffSchedule.cs
+│       ├── StaffSchedule.cs            # ShiftDate, ShiftType, StartTime, EndTime, WorkRoom
 │       ├── StaffProfile.cs
-│       └── Enums.cs                    # ShiftType, StaffType
+│       └── Enums.cs                    # ShiftType (Morning/Afternoon/Evening), StaffType
 ├── Mediconnect.Infrastructure/
 │   ├── Persistence/
 │   │   ├── AppDbContext.cs
-│   │   └── DbInitializer.cs
+│   │   └── DbInitializer.cs            # Seed: departments, staff, default users
 │   ├── Migrations/
+│   │   ├── 20260530032158_InitialCreate.cs
+│   │   └── 20260606053017_AddStaffScheduleShiftType.cs
 │   └── Repositories/
-│       └── StaffScheduleQuery.cs       # Flat LINQ projection
-└── mediconnect-web/                    # React 18 + TypeScript + TailwindCSS v4
+│       └── StaffScheduleQuery.cs       # Flat LINQ projection (no .Include, uses .Select)
+└── mediconnect-web/                    # React 19 + TypeScript + TailwindCSS v4
     └── src/
         ├── pages/
-        │   ├── ScheduleManagementPage.tsx  # Gantt chart view
+        │   ├── ScheduleManagementPage.tsx  # KPI bar + Staff Grid + Day/Week Gantt
+        │   ├── BookingPage.tsx
+        │   ├── AppointmentsPage.tsx
         │   └── ...
-        ├── api/services.ts
-        └── types/index.ts
+        ├── api/
+        │   ├── client.ts               # Axios instance với JWT interceptor
+        │   └── services.ts             # staffApi, scheduleApi, departmentApi, ...
+        └── types/index.ts              # StaffDirectory, ScheduleFlat, ShiftType, StaffType, ...
 docs/
 .github/
 README.md
@@ -188,8 +198,27 @@ Frontend chạy tại: **http://localhost:5173**
 | URL | Tính năng |
 |---|---|
 | `/` | Trang chủ |
-| `/schedules` | Quản lý Nhân sự & Lịch trực (Gantt chart) |
+| `/login` | Đăng nhập |
+| `/register` | Đăng ký |
+| `/booking` | Đặt lịch khám (chọn chuyên khoa → bác sĩ → ngày giờ) |
 | `/appointments` | Quản lý Lịch hẹn |
+| `/schedules` | Nhân sự & Lịch trực: KPI bar, Staff Grid, Gantt ngày/tuần |
+
+### 5. Schedule API Endpoints
+
+| Method | URL | Mô tả |
+|---|---|---|
+| `GET` | `/api/schedules` | Lọc theo tuần/ngày/khoa (có phân trang) |
+| `GET` | `/api/schedules/all` | Tất cả ca trực (không phân trang) |
+| `POST` | `/api/schedules` | Tạo ca trực mới |
+| `PUT` | `/api/schedules/{id}` | Cập nhật ca trực |
+| `DELETE` | `/api/schedules/{id}` | Xóa ca trực |
+| `GET` | `/api/staff/directory` | Danh sách nhân viên với tên, email, khoa |
+
+**Business rules:**
+- Không tạo 2 ca cùng loại trong ngày cho 1 nhân viên (400 + message)
+- Mỗi nhân viên tối đa 2 ca/ngày
+- Giờ tự động: Ca Sáng 06:00–12:00, Chiều 12:00–18:00, Tối 18:00–23:59
 
 ---
 

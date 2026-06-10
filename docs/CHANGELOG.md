@@ -37,12 +37,12 @@ Nguyên tắc ghi changelog:
 
 | Phiên bản/Giai đoạn | Thời gian | Nội dung chính | Trạng thái |
 |---|---|---|---|
-| Phase 01 |  | Khởi tạo project | Not Started / In Progress / Completed |
-| Phase 02 |  | Phân tích yêu cầu | Not Started / In Progress / Completed |
-| Phase 03 |  | Thiết kế hệ thống | Not Started / In Progress / Completed |
-| Phase 04 |  | Implementation | Not Started / In Progress / Completed |
-| Phase 05 |  | Testing & Debug | Not Started / In Progress / Completed |
-| Phase 06 |  | Hoàn thiện báo cáo và demo | Not Started / In Progress / Completed |
+| Phase 01 | 17/05/2026 | Khởi tạo project | Completed |
+| Phase 02 | 17/05/2026 | Phân tích yêu cầu | Completed |
+| Phase 03 | 05/06/2026 | Thiết kế hệ thống | Completed |
+| Phase 04 | 06/06/2026 – 10/06/2026 | Implementation | Completed |
+| Phase 05 | 10/06/2026 | Testing & Debug | Completed |
+| Phase 06 |  | Hoàn thiện báo cáo và demo | In Progress |
 
 ---
 
@@ -161,89 +161,30 @@ Viết tại đây...
 ## Ngày thực hiện
 
 ```text
-DD/MM/YYYY
+05/06/2026
 ```
 
 ## Đã hoàn thành
 
-- [ ] Thiết kế kiến trúc tổng quan
-- [ ] Thiết kế database/ERD
-- [ ] Thiết kế API
-- [ ] Thiết kế giao diện/wireframe
-- [ ] Thiết kế flow xử lý
+- [x] Thiết kế kiến trúc tổng quan (Clean Architecture: Domain / Application / Infrastructure / API)
+- [x] Thiết kế database/ERD (StaffSchedule, StaffProfile, UserAccount, Department)
+- [x] Thiết kế API (5 Schedule endpoints + 1 Staff directory endpoint)
+- [x] Thiết kế giao diện/wireframe (dựa theo base-html: hr_shift_scheduling_matrix.html)
+- [x] Thiết kế flow xử lý (validate → save → flat projection → response)
 - [ ] Thiết kế class diagram
 - [ ] Thiết kế sequence diagram
-- [ ] Thiết kế security/authorization flow
-- [ ] Review thiết kế
-- [ ] Chỉnh sửa thiết kế sau feedback
+- [x] Thiết kế security/authorization flow (JWT Bearer, [Authorize] trên tất cả controller)
+- [x] Review thiết kế
 
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
 |---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-
-## AI có hỗ trợ không?
-
-- [ ] Có
-- [ ] Không
-
-Nếu có, mô tả AI đã hỗ trợ phần nào:
-
-```text
-Viết tại đây...
-```
-
-## Commit/Screenshot minh chứng
-
-```text
-Dán link commit, screenshot hoặc mô tả minh chứng tại đây...
-```
-
-## Ghi chú
-
-```text
-Viết tại đây...
-```
-
----
-
-# [Phase 04] Implementation
-
-## Ngày thực hiện
-
-```text
-DD/MM/YYYY
-```
-
-## Đã hoàn thành
-
-- [x] Tạo project structure
-- [x] Cài đặt database connection
-- [ ] Xây dựng backend
-- [ ] Xây dựng frontend
-- [ ] Xây dựng authentication/authorization
-- [ ] Xử lý CRUD
-- [ ] Xử lý validation
-- [ ] Tích hợp API
-- [ ] Xử lý upload/download file
-- [ ] Xử lý lỗi
-- [ ] Tối ưu giao diện
-- [ ] Cập nhật README hướng dẫn chạy
-
-## Thay đổi chi tiết
-
-| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 | Tao DbContext va bo Models cho HIS & Telemedicine |  | src/mediconnect/Models; src/mediconnect/Data |  |
-| 2 | Them EF Core packages va connection string SQL Server |  | src/mediconnect/mediconnect.csproj; src/mediconnect/appsettings.json; src/mediconnect/Program.cs |  |
-| 3 | Cap nhat README huong dan chay project |  | README.md |  |
-| 4 |  Tạo SmartQueueDtos, IQueueService, QueueService - Feature 1 smart queue | DE180526  | src/Mediconnect.Application/DTOs/SmartQueueDtos.cs; src/Mediconnect.Application/Interfaces/IQueueService.cs; src/Mediconnect.Application/Services/QueueService.cs |  |
-| 5 |  Tạo SmartQueueController, enhance ClinicsController & MedicalServicesController | DE180526   | src/mediconnect/Controllers/SmartQueueController.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |  |
-| 6 | Them endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST /api/inpatient-admissions/{id}/transfer | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed map & transfer |
-| 7 | Them DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - bed map & transfer |
+| 1 | Thiết kế entity StaffSchedule với các field: StaffId, ShiftDate, ShiftType, StartTime, EndTime, WorkRoom | DE180522 | `Mediconnect.Domain/Entities/StaffSchedule.cs` | commit 912b0cf |
+| 2 | Thiết kế enum ShiftType (Morning/Afternoon/Evening), StaffType (Doctor/Nurse/Admin/Caregiver) | DE180522 | `Mediconnect.Domain/Entities/Enums.cs` | commit 912b0cf |
+| 3 | Thiết kế interface IStaffScheduleService (create/update/delete với validation), IStaffScheduleQuery (flat read, paged filter, directory) | DE180522 | `Mediconnect.Application/Interfaces/` | commit 912b0cf |
+| 4 | Thiết kế DTO phẳng ScheduleFlatReadDto (join StaffProfile + UserAccount + Department) | DE180522 | `Mediconnect.Application/DTOs/ScheduleDtos.cs` | commit 912b0cf |
+| 5 | Thiết kế giao diện Gantt chart (staff rows × date columns) theo base-html | DE180522 | `base-html/hr_shift_scheduling_matrix.html` | — |
 
 ## AI có hỗ trợ không?
 
@@ -253,20 +194,108 @@ DD/MM/YYYY
 Nếu có, mô tả AI đã hỗ trợ phần nào:
 
 ```text
-AI ho tro scaffold du an, bo models, DbContext va cau hinh EF Core.
-AI ho tro sinh code endpoints GET /api/beds/map (nhom giuong theo trang thai), GET bed-assignments (lich su phan bo giuong), POST transfer (chuyen khoa) va cac DTO tuong ung.
+AI hỗ trợ thiết kế cấu trúc DTO phẳng (flat projection) để tránh N+1 query khi join
+StaffSchedule → StaffProfile → UserAccount → Department. AI cũng đề xuất pattern
+IStaffScheduleQuery tách biệt read-side khỏi write-side (CQRS lite).
 ```
 
 ## Commit/Screenshot minh chứng
 
 ```text
-Cap nhat ma nguon: src/mediconnect
+Branch: feature/de180522-HumanResourcesandSchedulingManagement
+Commit: 912b0cf [DE180522] feat: add HR & Staff Schedule Management (Gantt chart)
 ```
 
 ## Ghi chú
 
 ```text
-Viết tại đây...
+Kiến trúc chọn flat projection (.Select) thay vì .Include() để EF Core sinh SQL tối ưu hơn,
+tránh circular reference khi serialize JSON.
+```
+
+---
+
+# [Phase 04] Implementation
+
+## Ngày thực hiện
+
+```text
+06/06/2026 – 10/06/2026
+```
+
+## Đã hoàn thành
+
+- [x] Tạo project structure
+- [x] Cài đặt database connection
+- [x] Xây dựng backend
+- [x] Xây dựng frontend
+- [x] Xây dựng authentication/authorization
+- [x] Xử lý CRUD
+- [x] Xử lý validation
+- [x] Tích hợp API
+- [ ] Xử lý upload/download file
+- [x] Xử lý lỗi
+- [x] Tối ưu giao diện
+- [x] Cập nhật README hướng dẫn chạy
+
+## Thay đổi chi tiết
+
+| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
+|---:|---|---|---|---|
+| 1 | Tạo DbContext và Models cho HIS & Telemedicine (25+ entities) | DE180526 | `src/mediconnect/Models`, `AppDbContext.cs` | commit fcc0671 |
+| 2 | Thêm EF Core packages, connection string SQL Server, migration InitialCreate | DE180526 | `mediconnect.csproj`, `appsettings.json` | commit fcc0671 |
+| 3 | Tạo SmartQueueDtos, IQueueService, QueueService – Feature smart queue | DE180526 | `DTOs/SmartQueueDtos.cs`, `Services/QueueService.cs` | commit e74ba55 |
+| 4 | Tạo SmartQueueController, ClinicsController, MedicalServicesController | DE180526 | `Controllers/SmartQueueController.cs`, `EntityControllers.cs` | commit e74ba55 |
+| 5 | Thêm React TypeScript frontend: LoginPage, RegisterPage, BookingPage, AppointmentsPage | DE180526 | `src/mediconnect-web/` | commit 8c5e747 |
+| 6 | Thêm endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST transfer | Park Jea Minh | `Controllers/EntityControllers.cs` | commit 9c8929b |
+| 7 | Thêm DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | `DTOs/EntityDtos.cs` | commit 9c8929b |
+| 8 | Tạo EF migration AddStaffScheduleShiftType (thêm StartTime, EndTime, WorkRoom) | DE180522 | `Migrations/20260606053017_AddStaffScheduleShiftType.cs` | commit 912b0cf |
+| 9 | Implement IStaffScheduleService với business rules: duplicate check, max 2 ca/ngày, giờ tự động | DE180522 | `Services/StaffScheduleService.cs` | commit 912b0cf |
+| 10 | Implement IStaffScheduleQuery: GetAllFlatAsync, FilterFlatAsync (paged), GetStaffDirectoryAsync | DE180522 | `Repositories/StaffScheduleQuery.cs` | commit 912b0cf |
+| 11 | Thêm ScheduleController: GET /api/schedules, GET /api/schedules/all, POST, PUT, DELETE | DE180522 | `Controllers/ScheduleController.cs` | commit 912b0cf |
+| 12 | Thêm endpoint GET /api/staff/directory (join StaffProfile → UserAccount → Department) | DE180522 | `Controllers/StaffController.cs` | commit 912b0cf |
+| 13 | Xây dựng ScheduleManagementPage: KPI bar, Staff Profiles Grid, Week Gantt, Day Gantt (24h) | DE180522 | `src/mediconnect-web/src/pages/ScheduleManagementPage.tsx` | commit 912b0cf |
+| 14 | Thêm types StaffDirectory, ScheduleFlat, ScheduleWrite, ShiftType, StaffType vào types/index.ts | DE180522 | `src/mediconnect-web/src/types/index.ts` | commit 912b0cf |
+| 15 | Thêm scheduleApi (filter/create/update/delete), staffApi.getDirectory vào services.ts | DE180522 | `src/mediconnect-web/src/api/services.ts` | commit 912b0cf |
+| 16 | Cập nhật README: thêm repo URL, cấu trúc project, hướng dẫn chạy, bảng API endpoints | DE180522 | `README.md` | commit hiện tại |
+
+## AI có hỗ trợ không?
+
+- [x] Có
+- [ ] Không
+
+Nếu có, mô tả AI đã hỗ trợ phần nào:
+
+```text
+AI (Claude Code) hỗ trợ:
+- Scaffold dự án, DbContext, EF Core models và cấu hình ban đầu.
+- Sinh code endpoints GET /api/beds/map, bed-assignments, transfer và DTOs tương ứng.
+- Thiết kế và implement toàn bộ module HR & Scheduling (DE180522):
+  • StaffScheduleService với validation rules (duplicate, max 2 ca/ngày, thời gian tự động)
+  • StaffScheduleQuery với flat LINQ projection (không dùng .Include, tránh N+1)
+  • ScheduleController (5 endpoints) và StaffController.GetDirectory
+  • ScheduleManagementPage.tsx: KPI stats bar, Staff Profiles Directory Grid,
+    Week Gantt (staff × date), Day Gantt (24h timeline với shift bars định vị theo giờ thực)
+- Fix lỗi React 19 deprecation: React.FormEvent → inline e.preventDefault()
+- Fix connection string: bỏ Trusted_Connection=True xung đột với SQL auth
+```
+
+## Commit/Screenshot minh chứng
+
+```text
+Branch: feature/de180522-HumanResourcesandSchedulingManagement
+Commit DE180522: 912b0cf [DE180522] feat: add HR & Staff Schedule Management (Gantt chart)
+Commit DE180526: 8c5e747 [DE180526] feat: add React TypeScript frontend and fix backend API integration
+Commit DE180526: e74ba55 [DE180526] feat: add smart queue service and clinic/service management endpoints
+Commit Park Jea Minh: 9c8929b feat(member3): F1 - bed map, bed-assignments & transfer endpoints
+```
+
+## Ghi chú
+
+```text
+- ScheduleManagementPage sử dụng Vite proxy (port 5173 → 5079) để tránh CORS.
+- JWT token lưu trong localStorage, Axios interceptor tự đính vào header Authorization.
+- EF Core dùng .Select() thay .Include() để EF sinh SQL tối ưu, không circular reference.
 ```
 
 ---
@@ -276,62 +305,81 @@ Viết tại đây...
 ## Ngày thực hiện
 
 ```text
-DD/MM/YYYY
+10/06/2026
 ```
 
 ## Đã hoàn thành
 
-- [ ] Viết test case
-- [ ] Chạy test chức năng chính
-- [ ] Kiểm tra output
-- [ ] Kiểm tra validation
-- [ ] Kiểm tra lỗi giao diện
-- [ ] Kiểm tra lỗi database
-- [ ] Kiểm tra phân quyền
+- [x] Viết test case (smoke test toàn bộ API bằng PowerShell)
+- [x] Chạy test chức năng chính
+- [x] Kiểm tra output (response body, field mapping, thời gian ca trực)
+- [x] Kiểm tra validation (duplicate shift, max 2 ca/ngày)
+- [x] Kiểm tra lỗi giao diện (TypeScript build 0 errors)
+- [x] Kiểm tra lỗi database (migration applied, seed data OK)
+- [x] Kiểm tra phân quyền (endpoint trả 401 khi thiếu token)
 - [ ] Kiểm tra bảo mật cơ bản
-- [ ] Fix bug
-- [ ] Chạy lại sau khi fix bug
-- [ ] Ghi nhận kết quả test
+- [x] Fix bug
+- [x] Chạy lại sau khi fix bug
+- [x] Ghi nhận kết quả test
 
 ## Danh sách lỗi đã xử lý
 
 | STT | Lỗi phát hiện | Nguyên nhân | Cách xử lý | Trạng thái |
 |---:|---|---|---|---|
-| 1 |  |  |  | Open / Fixed / Pending |
-| 2 |  |  |  | Open / Fixed / Pending |
-| 3 |  |  |  | Open / Fixed / Pending |
-| 4 |  |  |  | Open / Fixed / Pending |
-| 5 |  |  |  | Open / Fixed / Pending |
+| 1 | `React.FormEvent` deprecated in React 19 | React 19 không export type này theo cách cũ | Bỏ tham số event khỏi handleSubmit, đổi prop `onSubmit` → `onSave: () => void`, thêm `e.preventDefault()` inline trong JSX | Fixed |
+| 2 | Backend không kết nối SQL Server (login fail) | `appsettings.json` có `Trusted_Connection=True` xung đột với `uid/pwd` SQL auth | Xóa `Trusted_Connection=True` khỏi connection string | Fixed |
+| 3 | `appsettings.Development.json` trỏ sai server (`DEMO\SQLEXPRESS`) | Dev config cũ chưa cập nhật | Đổi thành `Server=.` | Fixed |
+| 4 | Field `s.ShiftDate` → `s.Date` trong FilterFlatAsync | DTO rename không đồng bộ | Sửa trong `StaffScheduleQuery.cs` | Fixed |
+| 5 | `@types/react` không tìm thấy khi IDE mở lần đầu | `node_modules` chưa được install | Chạy `npm install` trong `src/mediconnect-web/` | Fixed |
 
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
 |---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| 1 | Fix React.FormEvent deprecated, đổi prop onSubmit → onSave | DE180522 | `ScheduleManagementPage.tsx` | commit 912b0cf |
+| 2 | Fix connection string (bỏ Trusted_Connection), fix dev appsettings server | DE180522 | `appsettings.json`, `appsettings.Development.json` | commit 912b0cf |
+| 3 | Fix field name ShiftDate → Date trong DTO và query | DE180522 | `StaffScheduleQuery.cs`, `ScheduleDtos.cs` | commit 912b0cf |
+
+## Kết quả smoke test (10/06/2026)
+
+| # | Endpoint | Kết quả | Ghi chú |
+|---:|---|---|---|
+| 1 | `GET /api/departments` | PASS | 2 khoa |
+| 2 | `GET /api/staff` | PASS | 2 nhân viên |
+| 3 | `GET /api/staff/directory` | PASS | Tên + email + khoa + degree |
+| 4 | `POST /api/schedules` | PASS | Tạo ca trực, trả ScheduleFlatReadDto |
+| 5 | `GET /api/schedules` (filter tuần) | PASS | totalCount=3, paged |
+| 6 | `GET /api/schedules` (filter hôm nay) | PASS | 2 ca trong ngày |
+| 7 | `GET /api/schedules/all` | PASS | 6 ca tổng |
+| 8 | `PUT /api/schedules/{id}` | PASS | Cập nhật shiftType + workRoom |
+| 9 | `DELETE /api/schedules/{id}` | PASS | Xóa sạch |
+| 10 | Duplicate prevention | PASS | 400 + message "Staff already has a Ca Sáng shift on 2026-06-10" |
 
 ## AI có hỗ trợ không?
 
-- [ ] Có
+- [x] Có
 - [ ] Không
 
 Nếu có, mô tả AI đã hỗ trợ phần nào:
 
 ```text
-Viết tại đây...
+AI (Claude Code) hỗ trợ viết smoke test script PowerShell để test toàn bộ 10 scenario
+API (GET/POST/PUT/DELETE/duplicate/proxy), phân tích lỗi và đề xuất cách fix từng bug.
 ```
 
 ## Commit/Screenshot minh chứng
 
 ```text
-Dán link commit, screenshot hoặc mô tả minh chứng tại đây...
+Smoke test chạy trực tiếp qua PowerShell, tất cả 10/10 test PASS.
+Vite proxy (5173 → 5079) hoạt động sau khi backend khởi động.
+tsc --noEmit → 0 errors.
 ```
 
 ## Ghi chú
 
 ```text
-Viết tại đây...
+Test thực hiện manual (smoke test) qua PowerShell Invoke-RestMethod, không có automated test suite.
+Các test case cover: CRUD đầy đủ, business rule duplicate, proxy Vite.
 ```
 
 ---
@@ -396,11 +444,16 @@ Viết tại đây...
 
 | STT | Chức năng | Trạng thái | Minh chứng | Ghi chú |
 |---:|---|---|---|---|
-| 1 |  | Completed / Partial / Not Completed |  |  |
-| 2 |  | Completed / Partial / Not Completed |  |  |
-| 3 |  | Completed / Partial / Not Completed |  |  |
-| 4 |  | Completed / Partial / Not Completed |  |  |
-| 5 |  | Completed / Partial / Not Completed |  |  |
+| 1 | Authentication (JWT): đăng ký, đăng nhập | Completed | `AuthController.cs`, `LoginPage.tsx` | Token lưu localStorage |
+| 2 | Booking flow: chọn chuyên khoa → bác sĩ → ngày giờ → xác nhận | Completed | `BookingPage.tsx`, `AppointmentsPage.tsx` | DE180526 |
+| 3 | Smart Queue: check-in, xếp hàng theo phòng khám | Completed | `SmartQueueController.cs`, `QueueService.cs` | DE180526 |
+| 4 | Bed Management: bản đồ giường, lịch sử phân bổ, chuyển khoa | Completed | `EntityControllers.cs` | Park Jea Minh |
+| 5 | HR & Staff Schedule Management: CRUD lịch trực, business rules | Completed | `ScheduleController.cs`, `StaffScheduleService.cs` | DE180522 |
+| 6 | Staff Directory API: danh sách nhân viên với tên, email, khoa | Completed | `StaffController.GetDirectory`, `StaffScheduleQuery.GetStaffDirectoryAsync` | DE180522 |
+| 7 | Gantt chart tuần (staff × date, clickable shift blocks) | Completed | `ScheduleManagementPage.tsx` – Week view | DE180522 |
+| 8 | Gantt chart ngày (24h timeline, shift bars định vị theo giờ thực) | Completed | `ScheduleManagementPage.tsx` – Day view | DE180522 |
+| 9 | KPI stats bar (tổng nhân viên, đang trực, ca tuần, tỷ lệ phủ) | Completed | `ScheduleManagementPage.tsx` – KPI section | DE180522 |
+| 10 | Staff Profiles Grid (card trạng thái Đang trực/Nghỉ, liên kết Xem lịch trực) | Completed | `ScheduleManagementPage.tsx` – Staff section | DE180522 |
 
 ---
 
@@ -418,14 +471,14 @@ Viết tại đây...
 
 | Hạng mục | AI có hỗ trợ không? | Mức độ hỗ trợ | Ghi chú |
 |---|---|---|---|
-| Requirement | Có / Không | Ít / Trung bình / Nhiều |  |
-| Design | Có / Không | Ít / Trung bình / Nhiều |  |
-| Database | Có / Không | Ít / Trung bình / Nhiều |  |
-| Coding | Có / Không | Ít / Trung bình / Nhiều |  |
-| Debug | Có / Không | Ít / Trung bình / Nhiều |  |
-| Testing | Có / Không | Ít / Trung bình / Nhiều |  |
-| Report | Có / Không | Ít / Trung bình / Nhiều |  |
-| Presentation | Có / Không | Ít / Trung bình / Nhiều |  |
+| Requirement | Có | Ít | Hỗ trợ phân tích yêu cầu từ base-html design |
+| Design | Có | Trung bình | Đề xuất flat projection pattern, CQRS lite interface |
+| Database | Có | Nhiều | Scaffold entities, migrations, DbContext, seed data |
+| Coding | Có | Nhiều | StaffScheduleService, StaffScheduleQuery, ScheduleController, toàn bộ frontend Gantt |
+| Debug | Có | Nhiều | Phát hiện và fix 5 bugs (React.FormEvent, connection string, DTO rename, ...) |
+| Testing | Có | Trung bình | Viết smoke test script PowerShell 10 scenarios |
+| Report | Có | Trung bình | Hỗ trợ điền CHANGELOG, README |
+| Presentation | Không | — | — |
 
 ---
 

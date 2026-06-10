@@ -94,6 +94,19 @@ export interface StaffWithUser extends StaffProfile {
   email: string;
 }
 
+export interface StaffDirectory {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  staffType: StaffType;
+  departmentId: string;
+  department: string;
+  specialty?: string;
+  yearsExperience: number;
+  degree?: string;
+}
+
 export enum ShiftType {
   Morning = 0,
   Afternoon = 1,

@@ -11,4 +11,6 @@ public interface IStaffScheduleQuery
     Task<PagedResult<ScheduleFlatReadDto>> FilterFlatAsync(
         ScheduleFilterQuery query,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<StaffDirectoryDto>> GetStaffDirectoryAsync(CancellationToken cancellationToken = default);
 }

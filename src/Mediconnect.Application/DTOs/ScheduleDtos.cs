@@ -67,3 +67,17 @@ public class PagedResult<T>
     public int TotalCount { get; set; }
     public int TotalPages { get; set; }
 }
+
+public class StaffDirectoryDto
+{
+    public Guid Id { get; set; }        // StaffProfile.Id
+    public Guid UserId { get; set; }    // UserAccount.Id
+    public string Name { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public StaffType StaffType { get; set; }
+    public Guid DepartmentId { get; set; }
+    public string Department { get; set; } = string.Empty;
+    public string? Specialty { get; set; }
+    public int YearsExperience { get; set; }
+    public string? Degree { get; set; }
+}
