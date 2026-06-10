@@ -179,9 +179,22 @@ export interface QueueTicketDetail {
   clinicName: string;
   clinicRoomNumber?: string;
   appointmentId?: string;
+  patientId?: string;
+  patientName?: string;
   number: number;
   issuedAt: string;
   status: QueueStatus;
+}
+
+export interface ClinicQueueSummary {
+  clinicId: string;
+  clinicName: string;
+  roomNumber?: string;
+  isActive: boolean;
+  waitingCount: number;
+  inProgressCount: number;
+  currentNumber?: number;
+  currentPatientName?: string;
 }
 
 export interface ClinicQueue {
@@ -192,3 +205,4 @@ export interface ClinicQueue {
   currentNumber?: number;
   tickets: QueueTicketDetail[];
 }
+

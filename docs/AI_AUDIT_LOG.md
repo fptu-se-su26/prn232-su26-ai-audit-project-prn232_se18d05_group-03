@@ -22,11 +22,11 @@
 Đánh dấu các công cụ AI đã sử dụng trong quá trình thực hiện bài tập/project.
 
 - [ ] ChatGPT
-- [ ] Gemini
-- [ ] Claude
+- [x] Gemini
+- [x] Claude
 - [ ] GitHub Copilot
 - [ ] Cursor
-- [ ] Antigravity
+- [x] Antigravity
 - [ ] Perplexity
 - [ ] Microsoft Copilot
 - [ ] Công cụ khác: ....................................
@@ -240,7 +240,7 @@ AI giúp tăng tốc việc viết boilerplate code cho các endpoint nested rou
 
 ---
 
-### Lần sử dụng AI số 3
+### Lần sử dụng AI số 4
 
 | Nội dung | Thông tin |
 |---|---|
@@ -301,6 +301,64 @@ và đặt logic phát số thứ tự trong service class. Gợi ý dùng repos
 ```text
 Hỏi AI để tham khảo pattern tổ chức service layer. Các DTO và business logic
 được điều chỉnh phù hợp với domain HIS của dự án.
+```
+
+---
+
+### Lần sử dụng AI số 5
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 06/06/2026 |
+| Công cụ AI | Antigravity |
+| Mục đích sử dụng | Thiết kế backend modular, frontend Clinic Dashboard / Manage Services, sửa lỗi port và session redirection |
+| Phần việc liên quan | Backend / Frontend / Coding / Debugging |
+| Mức độ sử dụng | Hỗ trợ nhiều / Sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+1. viet backend o folder module rieng biet
+2. check for database error
+3. toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+- Gợi ý cấu trúc module tách biệt cho backend với các controller: ClinicDashboardController và ClinicManagementController.
+- Hỗ trợ viết code giao diện hoàn chỉnh cho ClinicDashboardPage.tsx và ManageServicesPage.tsx bằng Tailwind CSS và React Router.
+- Phát hiện lỗi lock tiến trình DLL, giải phóng port 5079, phát hiện lỗi vòng lặp chuyển hướng sai vai trò dẫn đến mất session khi đăng nhập và sửa đổi LoginPage.tsx / AuthContext.tsx.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ code frontend, backend controllers mới và logic sửa đổi Auth/Routing vào dự án sau khi kiểm tra biên dịch thành công.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Tắt các tiến trình ngầm cũ bị treo để giải phóng quyền ghi file DLL.
+- Chạy thử nghiệm các api endpoint bằng tập lệnh script PowerShell để xác nhận trạng thái 200 OK của tất cả các route mới tạo.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | feat: smart clinic module backend and frontend dashboard |
+| File liên quan | src/mediconnect/Modules/SmartClinic/ClinicDashboardController.cs; src/mediconnect/Modules/SmartClinic/ClinicManagementController.cs; src/mediconnect-web/src/pages/ClinicDashboardPage.tsx; src/mediconnect-web/src/pages/ManageServicesPage.tsx; src/mediconnect-web/src/pages/LoginPage.tsx; src/mediconnect-web/src/context/AuthContext.tsx |
+| Screenshot |  |
+| Kết quả chạy/test | dotnet build: 0 error, 0 warning; npm run build: compile & type-check success |
+| Link video demo |  |
+| Ghi chú khác |  |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Hỏi AI để thiết kế các trang giao diện phức tạp và phân tích các lỗi về cơ sở dữ liệu hoặc xung đột cổng mạng, phân quyền chuyển hướng. Code sinh ra chạy ngay và giúp gỡ lỗi hệ thống rất nhanh.
 ```
 
 ---

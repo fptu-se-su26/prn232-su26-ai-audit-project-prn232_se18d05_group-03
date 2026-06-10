@@ -227,12 +227,12 @@ tránh circular reference khi serialize JSON.
 
 - [x] Tạo project structure
 - [x] Cài đặt database connection
-- [x] Xây dựng backend
-- [x] Xây dựng frontend
-- [x] Xây dựng authentication/authorization
-- [x] Xử lý CRUD
-- [x] Xử lý validation
-- [x] Tích hợp API
+- [ ] Xây dựng backend
+- [ ] Xây dựng frontend
+- [ ] Xây dựng authentication/authorization
+- [ ] Xử lý CRUD
+- [ ] Xử lý validation
+- [ ] Tích hợp API
 - [ ] Xử lý upload/download file
 - [x] Xử lý lỗi
 - [x] Tối ưu giao diện
@@ -242,22 +242,13 @@ tránh circular reference khi serialize JSON.
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
 |---:|---|---|---|---|
-| 1 | Tạo DbContext và Models cho HIS & Telemedicine (25+ entities) | DE180526 | `src/mediconnect/Models`, `AppDbContext.cs` | commit fcc0671 |
-| 2 | Thêm EF Core packages, connection string SQL Server, migration InitialCreate | DE180526 | `mediconnect.csproj`, `appsettings.json` | commit fcc0671 |
-| 3 | Tạo SmartQueueDtos, IQueueService, QueueService – Feature smart queue | DE180526 | `DTOs/SmartQueueDtos.cs`, `Services/QueueService.cs` | commit e74ba55 |
-| 4 | Tạo SmartQueueController, ClinicsController, MedicalServicesController | DE180526 | `Controllers/SmartQueueController.cs`, `EntityControllers.cs` | commit e74ba55 |
-| 5 | Thêm React TypeScript frontend: LoginPage, RegisterPage, BookingPage, AppointmentsPage | DE180526 | `src/mediconnect-web/` | commit 8c5e747 |
-| 6 | Thêm endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST transfer | Park Jea Minh | `Controllers/EntityControllers.cs` | commit 9c8929b |
-| 7 | Thêm DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | `DTOs/EntityDtos.cs` | commit 9c8929b |
-| 8 | Tạo EF migration AddStaffScheduleShiftType (thêm StartTime, EndTime, WorkRoom) | DE180522 | `Migrations/20260606053017_AddStaffScheduleShiftType.cs` | commit 912b0cf |
-| 9 | Implement IStaffScheduleService với business rules: duplicate check, max 2 ca/ngày, giờ tự động | DE180522 | `Services/StaffScheduleService.cs` | commit 912b0cf |
-| 10 | Implement IStaffScheduleQuery: GetAllFlatAsync, FilterFlatAsync (paged), GetStaffDirectoryAsync | DE180522 | `Repositories/StaffScheduleQuery.cs` | commit 912b0cf |
-| 11 | Thêm ScheduleController: GET /api/schedules, GET /api/schedules/all, POST, PUT, DELETE | DE180522 | `Controllers/ScheduleController.cs` | commit 912b0cf |
-| 12 | Thêm endpoint GET /api/staff/directory (join StaffProfile → UserAccount → Department) | DE180522 | `Controllers/StaffController.cs` | commit 912b0cf |
-| 13 | Xây dựng ScheduleManagementPage: KPI bar, Staff Profiles Grid, Week Gantt, Day Gantt (24h) | DE180522 | `src/mediconnect-web/src/pages/ScheduleManagementPage.tsx` | commit 912b0cf |
-| 14 | Thêm types StaffDirectory, ScheduleFlat, ScheduleWrite, ShiftType, StaffType vào types/index.ts | DE180522 | `src/mediconnect-web/src/types/index.ts` | commit 912b0cf |
-| 15 | Thêm scheduleApi (filter/create/update/delete), staffApi.getDirectory vào services.ts | DE180522 | `src/mediconnect-web/src/api/services.ts` | commit 912b0cf |
-| 16 | Cập nhật README: thêm repo URL, cấu trúc project, hướng dẫn chạy, bảng API endpoints | DE180522 | `README.md` | commit hiện tại |
+| 1 | Tao DbContext va bo Models cho HIS & Telemedicine |  | src/mediconnect/Models; src/mediconnect/Data |  |
+| 2 | Them EF Core packages va connection string SQL Server |  | src/mediconnect/mediconnect.csproj; src/mediconnect/appsettings.json; src/mediconnect/Program.cs |  |
+| 3 | Cap nhat README huong dan chay project |  | README.md |  |
+| 4 |  Tạo SmartQueueDtos, IQueueService, QueueService - Feature 1 smart queue | DE180526  | src/Mediconnect.Application/DTOs/SmartQueueDtos.cs; src/Mediconnect.Application/Interfaces/IQueueService.cs; src/Mediconnect.Application/Services/QueueService.cs |  |
+| 5 |  Tạo SmartQueueController, enhance ClinicsController & MedicalServicesController | DE180526   | src/mediconnect/Controllers/SmartQueueController.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |  |
+| 6 | Them endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST /api/inpatient-admissions/{id}/transfer | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed map & transfer |
+| 7 | Them DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - bed map & transfer |
 
 ## AI có hỗ trợ không?
 
@@ -310,13 +301,13 @@ Commit Park Jea Minh: 9c8929b feat(member3): F1 - bed map, bed-assignments & tra
 
 ## Đã hoàn thành
 
-- [x] Viết test case (smoke test toàn bộ API bằng PowerShell)
-- [x] Chạy test chức năng chính
-- [x] Kiểm tra output (response body, field mapping, thời gian ca trực)
-- [x] Kiểm tra validation (duplicate shift, max 2 ca/ngày)
-- [x] Kiểm tra lỗi giao diện (TypeScript build 0 errors)
-- [x] Kiểm tra lỗi database (migration applied, seed data OK)
-- [x] Kiểm tra phân quyền (endpoint trả 401 khi thiếu token)
+- [ ] Viết test case
+- [ ] Chạy test chức năng chính
+- [ ] Kiểm tra output
+- [ ] Kiểm tra validation
+- [ ] Kiểm tra lỗi giao diện
+- [ ] Kiểm tra lỗi database
+- [ ] Kiểm tra phân quyền
 - [ ] Kiểm tra bảo mật cơ bản
 - [x] Fix bug
 - [x] Chạy lại sau khi fix bug
@@ -326,34 +317,19 @@ Commit Park Jea Minh: 9c8929b feat(member3): F1 - bed map, bed-assignments & tra
 
 | STT | Lỗi phát hiện | Nguyên nhân | Cách xử lý | Trạng thái |
 |---:|---|---|---|---|
-| 1 | `React.FormEvent` deprecated in React 19 | React 19 không export type này theo cách cũ | Bỏ tham số event khỏi handleSubmit, đổi prop `onSubmit` → `onSave: () => void`, thêm `e.preventDefault()` inline trong JSX | Fixed |
-| 2 | Backend không kết nối SQL Server (login fail) | `appsettings.json` có `Trusted_Connection=True` xung đột với `uid/pwd` SQL auth | Xóa `Trusted_Connection=True` khỏi connection string | Fixed |
-| 3 | `appsettings.Development.json` trỏ sai server (`DEMO\SQLEXPRESS`) | Dev config cũ chưa cập nhật | Đổi thành `Server=.` | Fixed |
-| 4 | Field `s.ShiftDate` → `s.Date` trong FilterFlatAsync | DTO rename không đồng bộ | Sửa trong `StaffScheduleQuery.cs` | Fixed |
-| 5 | `@types/react` không tìm thấy khi IDE mở lần đầu | `node_modules` chưa được install | Chạy `npm install` trong `src/mediconnect-web/` | Fixed |
+| 1 |  |  |  | Open / Fixed / Pending |
+| 2 |  |  |  | Open / Fixed / Pending |
+| 3 |  |  |  | Open / Fixed / Pending |
+| 4 |  |  |  | Open / Fixed / Pending |
+| 5 |  |  |  | Open / Fixed / Pending |
 
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
 |---:|---|---|---|---|
-| 1 | Fix React.FormEvent deprecated, đổi prop onSubmit → onSave | DE180522 | `ScheduleManagementPage.tsx` | commit 912b0cf |
-| 2 | Fix connection string (bỏ Trusted_Connection), fix dev appsettings server | DE180522 | `appsettings.json`, `appsettings.Development.json` | commit 912b0cf |
-| 3 | Fix field name ShiftDate → Date trong DTO và query | DE180522 | `StaffScheduleQuery.cs`, `ScheduleDtos.cs` | commit 912b0cf |
-
-## Kết quả smoke test (10/06/2026)
-
-| # | Endpoint | Kết quả | Ghi chú |
-|---:|---|---|---|
-| 1 | `GET /api/departments` | PASS | 2 khoa |
-| 2 | `GET /api/staff` | PASS | 2 nhân viên |
-| 3 | `GET /api/staff/directory` | PASS | Tên + email + khoa + degree |
-| 4 | `POST /api/schedules` | PASS | Tạo ca trực, trả ScheduleFlatReadDto |
-| 5 | `GET /api/schedules` (filter tuần) | PASS | totalCount=3, paged |
-| 6 | `GET /api/schedules` (filter hôm nay) | PASS | 2 ca trong ngày |
-| 7 | `GET /api/schedules/all` | PASS | 6 ca tổng |
-| 8 | `PUT /api/schedules/{id}` | PASS | Cập nhật shiftType + workRoom |
-| 9 | `DELETE /api/schedules/{id}` | PASS | Xóa sạch |
-| 10 | Duplicate prevention | PASS | 400 + message "Staff already has a Ca Sáng shift on 2026-06-10" |
+| 1 |  |  |  |  |
+| 2 |  |  |  |  |
+| 3 |  |  |  |  |
 
 ## AI có hỗ trợ không?
 
@@ -363,8 +339,7 @@ Commit Park Jea Minh: 9c8929b feat(member3): F1 - bed map, bed-assignments & tra
 Nếu có, mô tả AI đã hỗ trợ phần nào:
 
 ```text
-AI (Claude Code) hỗ trợ viết smoke test script PowerShell để test toàn bộ 10 scenario
-API (GET/POST/PUT/DELETE/duplicate/proxy), phân tích lỗi và đề xuất cách fix từng bug.
+Viết tại đây...
 ```
 
 ## Commit/Screenshot minh chứng

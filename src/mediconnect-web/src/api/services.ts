@@ -14,6 +14,10 @@ import type {
   ScheduleFlat,
   ScheduleWrite,
   PagedResult,
+  ClinicQueueSummary,
+  ClinicQueue,
+  MedicalService,
+
 } from "../types";
 
 export const authApi = {
@@ -93,3 +97,63 @@ export const queueApi = {
       appointmentId,
     }),
 };
+
+export const clinicDashboardApi = {
+  getOverview: () =>
+    api.get<ClinicQueueSummary[]>("/clinic-dashboard/overview"),
+  getQueue: (clinicId: string) =>
+    api.get<ClinicQueue>(`/clinic-dashboard/clinics/${clinicId}/queue`),
+  checkIn: (data: { clinicId: string; appointmentId?: string; patientName?: string }) =>
+    api.post<QueueTicketDetail>("/clinic-dashboard/check-in", data),
+  callNext: (clinicId: string) =>
+    api.post<{ message: string; ticket: QueueTicketDetail | null }>(`/clinic-dashboard/clinics/${clinicId}/call-next`),
+  transferTicket: (ticketId: string, targetClinicId: string) =>
+    api.patch<QueueTicketDetail>(`/clinic-dashboard/tickets/${ticketId}/transfer`, { targetClinicId }),
+};
+
+export const clinicManagementApi = {
+  // Departments
+  getDepartments: () =>
+    api.get<Department[]>("/clinic-management/departments"),
+  getDepartmentById: (id: string) =>
+    api.get<Department>(`/clinic-management/departments/${id}`),
+  createDepartment: (data: { name: string; code?: string; description?: string }) =>
+    api.post<Department>("/clinic-management/departments", data),
+  updateDepartment: (id: string, data: { name: string; code?: string; description?: string }) =>
+    api.put(`/clinic-management/departments/${id}`, data),
+  deleteDepartment: (id: string) =>
+    api.delete(`/clinic-management/departments/${id}`),
+
+  // Clinics
+  getClinics: () =>
+    api.get<ClinicWithServices[]>("/clinic-management/clinics"),
+  getClinicById: (id: string) =>
+    api.get<ClinicWithServices>(`/clinic-management/clinics/${id}`),
+  createClinic: (data: { departmentId: string; name: string; roomNumber?: string; isActive?: boolean }) =>
+    api.post<Clinic>("/clinic-management/clinics", data),
+  updateClinic: (id: string, data: { departmentId: string; name: string; roomNumber?: string; isActive?: boolean }) =>
+    api.put(`/clinic-management/clinics/${id}`, data),
+  toggleClinicActive: (id: string) =>
+    api.patch<{ id: string; isActive: boolean }>(`/clinic-management/clinics/${id}/toggle-active`),
+  deleteClinic: (id: string) =>
+    api.delete(`/clinic-management/clinics/${id}`),
+
+  // Services
+  getServices: (departmentId?: string, activeOnly?: boolean) =>
+    api.get<MedicalService[]>("/clinic-management/services", {
+      params: { departmentId, activeOnly },
+    }),
+  getServiceById: (id: string) =>
+    api.get<MedicalService>(`/clinic-management/services/${id}`),
+  createService: (data: { departmentId: string; name: string; code?: string; price: number; isActive?: boolean }) =>
+    api.post<MedicalService>("/clinic-management/services", data),
+  updateService: (id: string, data: { departmentId: string; name: string; code?: string; price: number; isActive?: boolean }) =>
+    api.put(`/clinic-management/services/${id}`, data),
+  updateServicePrice: (id: string, price: number) =>
+    api.patch<{ id: string; price: number }>(`/clinic-management/services/${id}/price`, { price }),
+  toggleServiceActive: (id: string) =>
+    api.patch<{ id: string; isActive: boolean }>(`/clinic-management/services/${id}/toggle-active`),
+  deleteService: (id: string) =>
+    api.delete(`/clinic-management/services/${id}`),
+};
+
