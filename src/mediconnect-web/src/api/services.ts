@@ -60,8 +60,8 @@ export const patientApi = {
 };
 
 export const phrApi = {
-  getAllLabOrders: () => api.get<LabOrder[]>("/lab-orders"),
-  getAllPrescriptionItems: () => api.get<PrescriptionItem[]>("/prescription-items"),
+  getAllLabOrders: () => api.get<LabOrder[]>("/LabOrders"),
+  getAllPrescriptionItems: () => api.get<PrescriptionItem[]>("/PrescriptionItems"),
   getAllDrugs: () => api.get<Drug[]>("/drugs"),
   getAllClinics: () => api.get<Clinic[]>("/clinics"),
 };
