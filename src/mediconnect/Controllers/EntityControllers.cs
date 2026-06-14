@@ -255,17 +255,23 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
     private readonly IRepository<InpatientAdmission> _repository;
     private readonly IRepository<DischargeSummary> _dischargeRepository;
     private readonly IRepository<BedAssignment> _bedAssignmentRepository;
+    private readonly IRepository<VitalSign> _vitalSignRepository;
+    private readonly IRepository<CareOrder> _careOrderRepository;
 
     public InpatientAdmissionsController(
         ICrudService<InpatientAdmission, InpatientAdmissionReadDto, InpatientAdmissionWriteDto> service,
         IRepository<InpatientAdmission> repository,
         IRepository<DischargeSummary> dischargeRepository,
-        IRepository<BedAssignment> bedAssignmentRepository)
+        IRepository<BedAssignment> bedAssignmentRepository,
+        IRepository<VitalSign> vitalSignRepository,
+        IRepository<CareOrder> careOrderRepository)
         : base(service)
     {
         _repository = repository;
         _dischargeRepository = dischargeRepository;
         _bedAssignmentRepository = bedAssignmentRepository;
+        _vitalSignRepository = vitalSignRepository;
+        _careOrderRepository = careOrderRepository;
     }
 
     [HttpPatch("{id:guid}/status")]
@@ -328,6 +334,67 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
             a => a.AdmissionId == id, cancellationToken);
 
         var result = assignments.Select(SimpleMapper.Map<BedAssignment, BedAssignmentReadDto>).ToList();
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/vital-signs")]
+    public async Task<ActionResult<IReadOnlyList<VitalSignReadDto>>> GetVitalSigns(
+        Guid id,
+        [FromQuery] DateOnly? date,
+        CancellationToken cancellationToken)
+    {
+        var admission = await _repository.GetByIdAsync(id, cancellationToken);
+        if (admission is null)
+        {
+            return NotFound();
+        }
+
+        var vitalSigns = await _vitalSignRepository.ListAsync(
+            v => v.AdmissionId == id, cancellationToken);
+
+        var query = vitalSigns.AsEnumerable();
+        if (date.HasValue)
+        {
+            query = query.Where(v => DateOnly.FromDateTime(v.RecordedAt) == date.Value);
+        }
+
+        var result = query
+            .OrderByDescending(v => v.RecordedAt)
+            .Select(SimpleMapper.Map<VitalSign, VitalSignReadDto>)
+            .ToList();
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/care-orders")]
+    public async Task<ActionResult<IReadOnlyList<CareOrderReadDto>>> GetCareOrders(
+        Guid id,
+        [FromQuery] CareOrderType? orderType,
+        [FromQuery] bool? pending,
+        CancellationToken cancellationToken)
+    {
+        var admission = await _repository.GetByIdAsync(id, cancellationToken);
+        if (admission is null)
+        {
+            return NotFound();
+        }
+
+        var careOrders = await _careOrderRepository.ListAsync(
+            c => c.AdmissionId == id, cancellationToken);
+
+        var query = careOrders.AsEnumerable();
+        if (orderType.HasValue)
+        {
+            query = query.Where(c => c.OrderType == orderType.Value);
+        }
+        if (pending == true)
+        {
+            query = query.Where(c => !c.IsCompleted);
+        }
+
+        var result = query
+            .OrderByDescending(c => c.OrderedAt)
+            .Select(SimpleMapper.Map<CareOrder, CareOrderReadDto>)
+            .ToList();
         return Ok(result);
     }
 
