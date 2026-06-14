@@ -242,6 +242,7 @@ DD/MM/YYYY
 | 3 | Cap nhat README huong dan chay project |  | README.md |  |
 | 4 | Them endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST /api/inpatient-admissions/{id}/transfer | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed map & transfer |
 | 5 | Them DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - bed map & transfer |
+| 6 | Them endpoints GET /api/inpatient-admissions/{id}/vital-signs (loc theo ?date), GET /api/inpatient-admissions/{id}/care-orders (loc theo ?orderType, ?pending) cho Y lenh & cham soc hang ngay | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F2 - admission-scoped vital signs & care orders endpoints |
 
 ## AI có hỗ trợ không?
 
@@ -253,6 +254,7 @@ Nếu có, mô tả AI đã hỗ trợ phần nào:
 ```text
 AI ho tro scaffold du an, bo models, DbContext va cau hinh EF Core.
 AI ho tro sinh code endpoints GET /api/beds/map (nhom giuong theo trang thai), GET bed-assignments (lich su phan bo giuong), POST transfer (chuyen khoa) va cac DTO tuong ung.
+AI ho tro sinh code endpoints F2: GET vital-signs (chi so sinh ton theo ca nhap vien, loc theo ngay) va GET care-orders (y lenh theo loai va trang thai hoan thanh) theo dung pattern nested route.
 ```
 
 ## Commit/Screenshot minh chứng

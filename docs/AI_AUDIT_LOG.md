@@ -240,6 +240,64 @@ AI giúp tăng tốc việc viết boilerplate code cho các endpoint nested rou
 
 ---
 
+### Lần sử dụng AI số 4
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 14/06/2026 |
+| Công cụ AI | Claude |
+| Mục đích sử dụng | Sinh code Feature 2 – Quản lý Y lệnh và Chăm sóc hàng ngày |
+| Phần việc liên quan | Backend / Coding |
+| Mức độ sử dụng | Hỗ trợ sinh code |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Thành viên 3 – Vận hành Nội Trú & Điều phối Lâm sàng
+Feature 2: Quản lý Y lệnh và Chăm sóc hàng ngày
+- Y tá cập nhật chỉ số sinh tồn hàng ngày (mạch, nhiệt độ) của bệnh nhân tại giường.
+- Bác sĩ cập nhật y lệnh hàng ngày (thuốc tiêm, truyền dịch, chỉ định suất ăn).
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+AI phân tích codebase, xác định entity VitalSign/CareOrder và controller CRUD đã có sẵn; khoảng trống là thiếu endpoint lấy dữ liệu theo từng ca nhập viện. AI sinh code:
+- GET /api/inpatient-admissions/{id}/vital-signs: chỉ số sinh tồn theo ca nhập viện, mới nhất trước, lọc tùy chọn theo ?date.
+- GET /api/inpatient-admissions/{id}/care-orders: y lệnh theo ca nhập viện, lọc tùy chọn theo ?orderType và ?pending.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ code sinh ra vào InpatientAdmissionsController (EntityControllers.cs) sau khi review đúng pattern nested route của F1.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Kiểm tra build thành công (0 error, 0 warning). Xác nhận luồng ghi chỉ số/y lệnh qua POST /api/vital-signs, POST /api/care-orders và PATCH /api/care-orders/{id}/complete đã có sẵn, không thay đổi schema nên không cần migration.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | feat(member3): F2 - admission-scoped vital signs & care orders endpoints |
+| File liên quan | src/mediconnect/Controllers/EntityControllers.cs |
+| Screenshot |  |
+| Kết quả chạy/test | dotnet build: 0 Error(s) |
+| Link video demo |  |
+| Ghi chú khác |  |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+AI tái sử dụng đúng pattern IRepository + SimpleMapper của F1, giảm thời gian viết boilerplate. Cần tự review logic lọc theo date/orderType/pending đúng nghiệp vụ.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.

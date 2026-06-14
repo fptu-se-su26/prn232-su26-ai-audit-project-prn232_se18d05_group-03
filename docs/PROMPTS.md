@@ -57,7 +57,7 @@ Sinh viên/nhóm cần ghi lại:
 | 3 | 17/05/2026 | GitHub Copilot | Tao project .NET Web API va them DbContext + Models | Tao project mediconnect, them EF Core, DbContext, Models cho HIS | Da scaffold du an va them models, DbContext, connection string | Có | src/mediconnect; docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
 | 4 | 17/05/2026 | GitHub Copilot | Tao file solution cho du an .NET Web API | Yeu cau co file .sln cho project | Da tao mediconnect.sln va add project | Có | mediconnect.sln; docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
 | 5 | 05/06/2026 | Claude | Sinh code Feature 1: Bed Map & Inpatient Transfer | Them endpoints GET /api/beds/map, GET bed-assignments, POST transfer vao BedsController va InpatientAdmissionsController | Da sinh endpoints va DTOs dung clean architecture pattern | Có | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
-| 6 |  |  |  |  |  | Có / Không |  |
+| 6 | 14/06/2026 | Claude | Sinh code Feature 2: Y lenh & cham soc hang ngay | Them endpoints GET vital-signs va GET care-orders theo ca nhap vien (loc theo ngay/loai/trang thai) vao InpatientAdmissionsController | Da sinh 2 nested-route endpoint tai su dung IRepository + SimpleMapper, build sach 0 error | Có | src/mediconnect/Controllers/EntityControllers.cs |
 | 7 |  |  |  |  |  | Có / Không |  |
 | 8 |  |  |  |  |  | Có / Không |  |
 | 9 |  |  |  |  |  | Có / Không |  |
@@ -219,6 +219,82 @@ Chua co; can xac nhan vi tri project/solution de them models.
 
 ```text
 Viết tại đây...
+```
+
+---
+
+### Prompt số 3
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 14/06/2026 |
+| Công cụ AI | Claude |
+| Mục đích | Sinh code Feature 2 – Quản lý Y lệnh và Chăm sóc hàng ngày |
+| Phần việc liên quan | Backend / Coding |
+| Mức độ sử dụng | Hỏi sinh code |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Thành viên 3 – Vận hành Nội Trú & Điều phối Lâm sàng
+Feature 2: Quản lý Y lệnh và Chăm sóc hàng ngày
+- Y tá cập nhật chỉ số sinh tồn hàng ngày (mạch, nhiệt độ) của bệnh nhân tại giường.
+- Bác sĩ cập nhật y lệnh hàng ngày (thuốc tiêm, truyền dịch, chỉ định suất ăn).
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Cac entity VitalSign, CareOrder va controller CRUD da co san. Can bo sung endpoint lay du lieu theo tung ca nhap vien (admission) de y ta/bac si xem tai giuong, thay vi tra ve toan bo benh nhan.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI phan tich codebase, xac dinh khoang trong la thieu endpoint scoped theo admission va sinh code:
+- GET /api/inpatient-admissions/{id}/vital-signs: chi so sinh ton theo ca nhap vien, sap xep moi nhat truoc, loc tuy chon theo ?date.
+- GET /api/inpatient-admissions/{id}/care-orders: y lenh theo ca nhap vien, loc tuy chon theo ?orderType (Medication/Infusion/Diet...) va ?pending.
+Tai su dung IRepository.ListAsync + SimpleMapper theo dung pattern cua F1 (GetBedAssignments).
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Ap dung toan bo code sinh ra vao InpatientAdmissionsController trong EntityControllers.cs sau khi review dung pattern.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Kiem tra build thanh cong (0 error, 0 warning). Xac nhan tao/ghi chi so va y lenh dung qua POST /api/vital-signs, POST /api/care-orders va PATCH /api/care-orders/{id}/complete co san.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | feat(member3): F2 - admission-scoped vital signs & care orders endpoints |
+| File liên quan | src/mediconnect/Controllers/EntityControllers.cs |
+| Screenshot |  |
+| Kết quả chạy/test | dotnet build: 0 Error(s) |
+| Link tài liệu/báo cáo |  |
+| Ghi chú khác |  |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Khong can EF migration vi khong thay doi schema; chi them endpoint doc du lieu.
 ```
 
 ---
