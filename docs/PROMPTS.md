@@ -63,6 +63,8 @@ Sinh viên/nhóm cần ghi lại:
 | 7 | 06/06/2026 | Antigravity | Viết backend modular riêng biệt cho smart clinic | viet backend o folder module rieng biet | Gợi ý cấu trúc module và sinh ClinicDashboard/ClinicManagement Controller | Có | src/mediconnect/Modules/SmartClinic |
 | 8 | 06/06/2026 | Antigravity | Kiểm tra lỗi cơ sở dữ liệu | check for database error | Phân tích DLL lock, giải phóng tiến trình và kiểm tra EF database up-to-date | Có | dotnet ef database update |
 | 9 | 06/06/2026 | Antigravity | Sửa lỗi mất session / đăng nhập lặp | toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap | Phát hiện login redirect loop về /booking và sửa đổi LoginPage/AuthContext | Có | src/mediconnect-web/src/pages/LoginPage.tsx |
+| 10 | 14/06/2026 | GitHub Copilot, Claude | Implement Outpatient Record UI and diagnose/create flow | Scaffold OutpatientRecordPage, handle diagnose->create->retry, add local/top search and header link | Implemented OutpatientRecordPage.tsx, header link, ClinicDashboard navigation and payload checks | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+| 11 | 14/06/2026 | GitHub Copilot | Debug duplicate PatientProfile creation | Avoid duplicate PatientProfile by checking existing profile before create (GET /api/patients/me) | Added getMe() check and fallback create in OutpatientRecordPage.tsx to prevent DB unique index error | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
 
 ---
 
@@ -475,6 +477,96 @@ Kiểm tra biên dịch và test thực tế, xác nhận Bác sĩ vào thẳng 
 |---|---|
 | Link commit | |
 | File liên quan | src/mediconnect-web/src/pages/LoginPage.tsx; src/mediconnect-web/src/context/AuthContext.tsx |
+
+### Prompt số 9
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 14/06/2026 |
+| Công cụ AI | GitHub Copilot, Claude |
+| Mục đích | Implement Outpatient Record page and client-side diagnose/create flow |
+| Phần việc liên quan | Frontend UI, API integration, routing |
+| Mức độ sử dụng | Sinh code và gợi ý giải pháp |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Create an Outpatient Record page for doctors using React+TypeScript: left waiting list, middle patient overview, right consultation form. Implement POST /api/medical-records/diagnose call. If server returns visit-not-found, call POST /api/OutpatientVisits to create visit and retry diagnose. Resolve doctorId mapping to StaffProfile.Id and create/reuse PatientProfile when missing. Add local search for waiting list and top-level search that scans clinic queues.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Need a complete doctor-facing UI to record outpatient consultations and robust client behavior when backend requires an existing OutpatientVisit.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Generated component scaffold, sample API calls, and suggested control flow: diagnose -> if visit missing -> create visit -> retry. Recommended resolving staff profile id via /api/staff/directory and checking/creating patient profile via /api/patients endpoints.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Implemented mediconnect-web/src/pages/OutpatientRecordPage.tsx, added header link and ClinicDashboard navigation, added payload checks and retries, and applied theme styles.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Adapted payload shapes to match backend DTOs, added defensive checks (patient get/create, staffProfile resolution), improved error handling and messages, and prevented duplicate patient creation.
+```
+
+#### 5.6. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | branch: feature/de190123-outpatientRecords |
+| File liên quan | mediconnect-web/src/pages/OutpatientRecordPage.tsx; mediconnect-web/src/components/layout/Header.tsx; mediconnect-web/src/pages/ClinicDashboardPage.tsx |
+
+---
+
+### Prompt số 10
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 14/06/2026 |
+| Công cụ AI | GitHub Copilot |
+| Mục đích | Debug duplicate PatientProfile creation (DB unique index violation) |
+| Phần việc liên quan | Frontend error handling, API usage |
+| Mức độ sử dụng | Gợi ý sửa lỗi và kiểm tra |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Database throws unique index error when creating PatientProfile: IX_PatientProfiles_UserAccountId duplicate key. How to avoid duplicate creation in client-side flow that auto-creates patient profile?
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Client code attempted to auto-create PatientProfile before creating OutpatientVisit, causing SQL unique index violation when profile already exists (race or prior create).
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Recommend to call GET /api/patients/me (or endpoint to fetch patient profile by userAccountId) before creating; only call create when not found. Handle 404/409; surface clear message to user. Add logging and retry logic if needed.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Implemented patientApi.getMe() check in OutpatientRecordPage.tsx and fallback to patientApi.create() only when profile is absent. Added error handling to avoid duplicate insert and surfaced errors.
+```
+
+#### 5.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | branch: feature/de190123-outpatientRecords |
+| File liên quan | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
 
 ---
 

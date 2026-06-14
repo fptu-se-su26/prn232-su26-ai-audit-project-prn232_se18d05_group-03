@@ -245,10 +245,12 @@ tránh circular reference khi serialize JSON.
 | 1 | Tao DbContext va bo Models cho HIS & Telemedicine |  | src/mediconnect/Models; src/mediconnect/Data |  |
 | 2 | Them EF Core packages va connection string SQL Server |  | src/mediconnect/mediconnect.csproj; src/mediconnect/appsettings.json; src/mediconnect/Program.cs |  |
 | 3 | Cap nhat README huong dan chay project |  | README.md |  |
-| 4 |  Tạo SmartQueueDtos, IQueueService, QueueService - Feature 1 smart queue | DE180526  | src/Mediconnect.Application/DTOs/SmartQueueDtos.cs; src/Mediconnect.Application/Interfaces/IQueueService.cs; src/Mediconnect.Application/Services/QueueService.cs |  |
-| 5 |  Tạo SmartQueueController, enhance ClinicsController & MedicalServicesController | DE180526   | src/mediconnect/Controllers/SmartQueueController.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |  |
+| 4 | Tạo SmartQueueDtos, IQueueService, QueueService - Feature 1 smart queue | DE180526  | src/Mediconnect.Application/DTOs/SmartQueueDtos.cs; src/Mediconnect.Application/Interfaces/IQueueService.cs; src/Mediconnect.Application/Services/QueueService.cs |  |
+| 5 | Tạo SmartQueueController, enhance ClinicsController & MedicalServicesController | DE180526   | src/mediconnect/Controllers/SmartQueueController.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |  |
 | 6 | Them endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST /api/inpatient-admissions/{id}/transfer | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed map & transfer |
 | 7 | Them DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - bed map & transfer |
+| 8 | Thiết kế backend modular; frontend Clinic Dashboard & Manage Services; sửa lỗi port và session redirect | DE190123 | src/mediconnect/Modules/SmartClinic/*; src/mediconnect-web/src/pages/ClinicDashboardPage.tsx; src/mediconnect-web/src/pages/ManageServicesPage.tsx; src/mediconnect-web/src/context/AuthContext.tsx | feat: Smart Clinic Dashboard & Service Management - MouGlanzuddli |
+| 9 | Implement Outpatient Record (doctor) feature and robust diagnose/save flow | DE190123 | mediconnect-web/src/pages/OutpatientRecordPage.tsx; mediconnect-web/src/components/layout/Header.tsx; Mediconnect.Application/Services/MedicalRecordService.cs; mediconnect/Modules/SmartClinic/OutpatientRecordController.cs | feat(outpatient): UI + save flow; added fallback create visit and lab order creation |
 
 ## AI có hỗ trợ không?
 
@@ -279,6 +281,7 @@ Commit DE180522: 912b0cf [DE180522] feat: add HR & Staff Schedule Management (Ga
 Commit DE180526: 8c5e747 [DE180526] feat: add React TypeScript frontend and fix backend API integration
 Commit DE180526: e74ba55 [DE180526] feat: add smart queue service and clinic/service management endpoints
 Commit Park Jea Minh: 9c8929b feat(member3): F1 - bed map, bed-assignments & transfer endpoints
+Commit DE190123: 00ea032 feat: Smart Clinic Dashboard & Service Management
 ```
 
 ## Ghi chú
@@ -429,6 +432,8 @@ Viết tại đây...
 | 8 | Gantt chart ngày (24h timeline, shift bars định vị theo giờ thực) | Completed | `ScheduleManagementPage.tsx` – Day view | DE180522 |
 | 9 | KPI stats bar (tổng nhân viên, đang trực, ca tuần, tỷ lệ phủ) | Completed | `ScheduleManagementPage.tsx` – KPI section | DE180522 |
 | 10 | Staff Profiles Grid (card trạng thái Đang trực/Nghỉ, liên kết Xem lịch trực) | Completed | `ScheduleManagementPage.tsx` – Staff section | DE180522 |
+| 11 | SmartClinic: backend modularization + Clinic Dashboard & Manage Services (frontend) + port/session fixes | Completed | `Modules/SmartClinic/*`, `ClinicDashboardPage.tsx`, `ManageServicesPage.tsx`, `AuthContext.tsx` | DE190123 |
+| 12 | Outpatient Record: doctor UI, diagnose/save flow, auto-create visit/patient, lab orders | Completed | `mediconnect-web/src/pages/OutpatientRecordPage.tsx`, `mediconnect-web/src/components/layout/Header.tsx`, `Mediconnect.Application/Services/MedicalRecordService.cs` | DE190123 |
 
 ---
 

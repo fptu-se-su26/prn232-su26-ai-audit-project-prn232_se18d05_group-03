@@ -9,6 +9,7 @@ import AppointmentsPage from "./pages/AppointmentsPage";
 import ScheduleManagementPage from "./pages/ScheduleManagementPage";
 import ClinicDashboardPage from "./pages/ClinicDashboardPage";
 import ManageServicesPage from "./pages/ManageServicesPage";
+import OutpatientRecordPage from "./pages/OutpatientRecordPage";
 import { UserRole } from "./types";
 
 import type { ReactNode } from "react";
@@ -86,6 +87,14 @@ export default function App() {
               }
             />
             <Route
+              path="/outpatient-record"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Doctor, UserRole.Nurse]}>
+                  <OutpatientRecordPage />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
               path="/schedules"
               element={
                 <ProtectedRoute>
@@ -94,6 +103,7 @@ export default function App() {
               }
             />
           </Route>
+
         </Routes>
       </AuthProvider>
     </BrowserRouter>

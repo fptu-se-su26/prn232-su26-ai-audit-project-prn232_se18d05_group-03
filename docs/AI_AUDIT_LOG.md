@@ -362,6 +362,101 @@ Hỏi AI để thiết kế các trang giao diện phức tạp và phân tích 
 ```
 
 ---
+---
+### Lần sử dụng AI số 6
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 14/06/2026 |
+| Công cụ AI | GitHub Copilot, Claude |
+| Mục đích sử dụng | Implement Outpatient Record feature (frontend) and wire to backend diagnose flow; add UI, search, and navigation integration |
+| Phần việc liên quan | Frontend UI, API integration, routing, UX polish |
+| Mức độ sử dụng | AI-assisted coding and debugging |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Implement an Outpatient Record page for doctors: waiting list, patient overview, consultation form. Add logic to call POST /api/medical-records/diagnose. If visit not found, create OutpatientVisit then retry. Add local waiting-list search and top-level search, and add link in header. Ensure doctorId matches StaffProfile.Id.
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+Generated TypeScript React code for OutpatientRecordPage.tsx, header navigation modifications, and client-side API usage patterns. Suggested flow: diagnose -> if missing visit -> create visit -> retry diagnose. Recommended resolving staffProfileId from staff directory and creating or reusing PatientProfile if missing.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Applied generated code and patterns after review: created OutpatientRecordPage UI, added top/local search, added header link, and wired ClinicDashboard "Ghi khám" button to navigate with ticket state.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Reviewed and adjusted API payload shapes, added defensive checks (resolve staffProfileId, fetch/create patient profile), added console debug and error handling. Adjusted styles to match project theme.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Commits on branch feature/de190123-outpatientRecords |
+| File liên quan | mediconnect-web/src/pages/OutpatientRecordPage.tsx; mediconnect-web/src/components/layout/Header.tsx; mediconnect-web/src/pages/ClinicDashboardPage.tsx |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+AI accelerated UI scaffold and error-handling patterns. Human review required to align IDs and DB FK expectations.
+```
+
+### Lần sử dụng AI số 7
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 14/06/2026 |
+| Công cụ AI | GitHub Copilot |
+| Mục đích sử dụng | Debug and fix duplicate PatientProfile creation (DB unique index violation) |
+| Phần việc liên quan | Frontend error handling and API usage |
+| Mức độ sử dụng | AI-assisted debugging and code edits |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Database throws unique index error when creating PatientProfile: IX_PatientProfiles_UserAccountId duplicate key. How to avoid duplicate creation in client-side flow that auto-creates patient profile?
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+Recommended to call GET /api/patients/me (or an endpoint to fetch patient profile by userAccountId) before attempting create; only call create if not found. Add robust error handling for 409/duplicate and surface clear messages to user.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Implemented getMe() check in OutpatientRecordPage.tsx and fallback to create only when profile is missing or GET returns 404. Added logs and error handling to avoid duplicate insert attempts.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Handled edge cases: if GET fails with non-404 error, surface it to user; throw and stop flow on unexpected server errors. Recommended backend change: validate and return 400/409 instead of 500 for business validation.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Commits on branch feature/de190123-outpatientRecords |
+| File liên quan | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+AI provided a practical, standard approach to avoid duplicate FK errors. Human verification of API endpoints (GET /patients/me) was required to ensure compatibility.
+```
+---
 
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
@@ -496,3 +591,4 @@ Sinh viên/nhóm cam kết rằng:
 | Đại diện sinh viên/nhóm | Ngày xác nhận |
 |---|---|
 |  |  |
+

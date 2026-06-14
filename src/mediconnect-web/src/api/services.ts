@@ -81,6 +81,18 @@ export const patientApi = {
     api.post<PatientProfile>("/patients", data),
 };
 
+export const outpatientApi = {
+  create: (data: {
+    patientId: string;
+    doctorId: string;
+    clinicId: string;
+    queueTicketId?: string | null;
+    visitDate?: string;
+    status?: number;
+    notes?: string;
+  }) => api.post<{ id: string }>("/OutpatientVisits", data),
+};
+
 export const appointmentApi = {
   getAll: () => api.get<AppointmentRead[]>("/appointments"),
   getById: (id: string) => api.get<AppointmentRead>(`/appointments/${id}`),
@@ -109,6 +121,19 @@ export const clinicDashboardApi = {
     api.post<{ message: string; ticket: QueueTicketDetail | null }>(`/clinic-dashboard/clinics/${clinicId}/call-next`),
   transferTicket: (ticketId: string, targetClinicId: string) =>
     api.patch<QueueTicketDetail>(`/clinic-dashboard/tickets/${ticketId}/transfer`, { targetClinicId }),
+};
+
+export const medicalRecordApi = {
+  diagnose: (data: {
+    visitId: string;
+    doctorId: string;
+    chiefComplaint?: string;
+    symptoms?: string;
+    diagnosisCode?: string;
+    diagnosisDescription?: string;
+    orderedTests?: string[];
+    notes?: string;
+  }) => api.post("/medical-records/diagnose", data),
 };
 
 export const clinicManagementApi = {
