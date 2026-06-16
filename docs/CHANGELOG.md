@@ -243,6 +243,8 @@ DD/MM/YYYY
 | 4 | Them endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST /api/inpatient-admissions/{id}/transfer | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed map & transfer |
 | 5 | Them DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - bed map & transfer |
 | 6 | Them endpoints GET /api/inpatient-admissions/{id}/vital-signs (loc theo ?date), GET /api/inpatient-admissions/{id}/care-orders (loc theo ?orderType, ?pending) cho Y lenh & cham soc hang ngay | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F2 - admission-scoped vital signs & care orders endpoints |
+| 7 | F3 Can lam sang: them GET /api/lab-orders/filter (theo status/bac si), PATCH /api/lab-orders/{id}/status, POST/GET /api/lab-orders/{id}/result, va luu file that (PDF/JPG/PNG) o POST /api/lab-results/{id}/file + bat UseStaticFiles | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs | feat(member3): F3 - lab orders queue, results & file upload |
+| 8 | F4 Xuat vien: nang cap POST /api/inpatient-admissions/{id}/discharge - tong hop tien giuong + thuoc + thu thuat thanh BillingInvoice (Pending) gui sang Thanh toan, tra ra DischargeResultDto | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F4 - discharge cost aggregation & billing handoff |
 
 ## AI có hỗ trợ không?
 
@@ -255,6 +257,8 @@ Nếu có, mô tả AI đã hỗ trợ phần nào:
 AI ho tro scaffold du an, bo models, DbContext va cau hinh EF Core.
 AI ho tro sinh code endpoints GET /api/beds/map (nhom giuong theo trang thai), GET bed-assignments (lich su phan bo giuong), POST transfer (chuyen khoa) va cac DTO tuong ung.
 AI ho tro sinh code endpoints F2: GET vital-signs (chi so sinh ton theo ca nhap vien, loc theo ngay) va GET care-orders (y lenh theo loai va trang thai hoan thanh) theo dung pattern nested route.
+AI ho tro sinh code F3 (Can lam sang): endpoint tiep nhan chi dinh theo status, nhap ket qua va tu dong hoan thanh order de tra ve bac si, luu file ket qua that (PDF/JPG/PNG) co kiem tra dinh dang va dung luong.
+AI ho tro sinh code F4 (Xuat vien): logic tong hop chi phi luu giuong (theo so ngay) + thuoc + thu thuat thanh BillingInvoice trang thai Pending de gui sang phan he Thanh toan, dong thoi giai phong giuong va chuyen trang thai sang Cleaning.
 ```
 
 ## Commit/Screenshot minh chứng

@@ -298,6 +298,62 @@ AI tái sử dụng đúng pattern IRepository + SimpleMapper của F1, giảm t
 
 ---
 
+### Lần sử dụng AI số 5
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 16/06/2026 |
+| Công cụ AI | Claude |
+| Mục đích sử dụng | Sinh code Feature 3 (Cận lâm sàng) và Feature 4 (Xuất viện) |
+| Phần việc liên quan | Backend / Coding |
+| Mức độ sử dụng | Hỗ trợ sinh code |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+làm hai phần
+F3: Quản lý Cận lâm sàng – tiếp nhận chỉ định, nhập kết quả, tải file ảnh/PDF, tự động trả kết quả về bác sĩ.
+F4: Quản lý xuất viện – tổng hợp chi phí lưu giường, tiền thuốc, thủ thuật gửi sang phân hệ Thanh toán.
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+F3: GET /api/lab-orders/filter (lọc theo status/bác sĩ), PATCH /api/lab-orders/{id}/status, POST /api/lab-orders/{id}/result (nhập kết quả + tự động Completed), GET /api/lab-orders/{id}/result; nâng cấp POST /api/lab-results/{id}/file để lưu file thật (PDF/JPG/PNG, ≤10MB) và bật app.UseStaticFiles().
+F4: nâng cấp POST /api/inpatient-admissions/{id}/discharge để tính tiền giường theo số ngày × đơn giá, liệt kê care order (thuốc/thủ thuật) thành BillingItem, tạo BillingInvoice trạng thái Pending gửi sang Thanh toán, giải phóng giường (Cleaning), lưu TotalCost vào DischargeSummary; trả về DischargeResultDto.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ code vào EntityControllers.cs, Program.cs và EntityDtos.cs sau khi review đúng pattern repository/mapper của dự án.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Build thành công 0 error/0 warning. Ghi nhận hạn chế mô hình dữ liệu: Bed không có trường đơn giá nên dùng hằng số BedDailyRate; CareOrder là text tự do (không gắn Drug/giá) nên tiền thuốc/thủ thuật được liệt kê thành line item giá 0 để bộ phận Thanh toán điền giá.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | feat(member3): F3 - lab orders queue, results & file upload; feat(member3): F4 - discharge cost aggregation & billing handoff |
+| File liên quan | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
+| Screenshot |  |
+| Kết quả chạy/test | dotnet build: 0 Error(s) |
+| Link video demo |  |
+| Ghi chú khác |  |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+AI giúp hoàn thành nhanh 2 feature backend; phần cần tự đánh giá là cách xử lý hạn chế dữ liệu (đơn giá giường, giá thuốc) và đảm bảo luồng bàn giao hoá đơn sang phân hệ Thanh toán đúng nghiệp vụ.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.
