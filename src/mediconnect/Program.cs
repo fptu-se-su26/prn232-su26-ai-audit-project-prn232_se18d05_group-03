@@ -80,6 +80,8 @@ if (!string.IsNullOrWhiteSpace(httpsPort))
     app.UseHttpsRedirection();
 }
 
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -252,11 +252,17 @@ public class DrugInteractionsController : CrudController<DrugInteraction, DrugIn
 
 public class InpatientAdmissionsController : CrudController<InpatientAdmission, InpatientAdmissionReadDto, InpatientAdmissionWriteDto>
 {
+    // Daily bed charge used when aggregating the discharge invoice (beds have no per-day price in the model).
+    private const decimal BedDailyRate = 500_000m;
+
     private readonly IRepository<InpatientAdmission> _repository;
     private readonly IRepository<DischargeSummary> _dischargeRepository;
     private readonly IRepository<BedAssignment> _bedAssignmentRepository;
     private readonly IRepository<VitalSign> _vitalSignRepository;
     private readonly IRepository<CareOrder> _careOrderRepository;
+    private readonly IRepository<Bed> _bedRepository;
+    private readonly IRepository<BillingInvoice> _invoiceRepository;
+    private readonly IRepository<BillingItem> _billingItemRepository;
 
     public InpatientAdmissionsController(
         ICrudService<InpatientAdmission, InpatientAdmissionReadDto, InpatientAdmissionWriteDto> service,
@@ -264,7 +270,10 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         IRepository<DischargeSummary> dischargeRepository,
         IRepository<BedAssignment> bedAssignmentRepository,
         IRepository<VitalSign> vitalSignRepository,
-        IRepository<CareOrder> careOrderRepository)
+        IRepository<CareOrder> careOrderRepository,
+        IRepository<Bed> bedRepository,
+        IRepository<BillingInvoice> invoiceRepository,
+        IRepository<BillingItem> billingItemRepository)
         : base(service)
     {
         _repository = repository;
@@ -272,6 +281,9 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         _bedAssignmentRepository = bedAssignmentRepository;
         _vitalSignRepository = vitalSignRepository;
         _careOrderRepository = careOrderRepository;
+        _bedRepository = bedRepository;
+        _invoiceRepository = invoiceRepository;
+        _billingItemRepository = billingItemRepository;
     }
 
     [HttpPatch("{id:guid}/status")]
@@ -292,9 +304,12 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         return NoContent();
     }
 
+    // Marks the patient discharged, releases beds, and aggregates bed/drug/procedure charges
+    // into a Pending invoice handed off to the Billing subsystem.
     [HttpPost("{id:guid}/discharge")]
-    public async Task<ActionResult<DischargeSummaryReadDto>> Discharge(
+    public async Task<ActionResult<DischargeResultDto>> Discharge(
         Guid id,
+        [FromBody] DischargeRequestDto? request,
         CancellationToken cancellationToken)
     {
         var admission = await _repository.GetByIdAsync(id, cancellationToken);
@@ -303,19 +318,120 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
             return NotFound();
         }
 
+        if (admission.Status == AdmissionStatus.Discharged)
+        {
+            return BadRequest(new { message = "Admission is already discharged." });
+        }
+
+        var dischargeDate = DateTime.UtcNow;
+
+        var invoice = new BillingInvoice
+        {
+            Id = Guid.NewGuid(),
+            PatientId = admission.PatientId,
+            CreatedAt = dischargeDate,
+            Status = InvoiceStatus.Pending,
+            InsuranceDeduction = request?.InsuranceDeduction ?? 0m
+        };
+
+        var items = new List<BillingItem>();
+
+        // 1. Bed charges: sum of occupied days across all bed assignments for this admission.
+        var assignments = await _bedAssignmentRepository.ListAsync(a => a.AdmissionId == id, cancellationToken);
+        var totalBedDays = 0;
+        foreach (var assignment in assignments)
+        {
+            var end = assignment.ReleasedAt ?? dischargeDate;
+            var days = (int)Math.Ceiling((end - assignment.AssignedAt).TotalDays);
+            totalBedDays += Math.Max(days, 1);
+
+            // Release any still-occupied bed and flag it for cleaning (links back to F1 bed map).
+            if (assignment.ReleasedAt is null)
+            {
+                assignment.ReleasedAt = dischargeDate;
+                _bedAssignmentRepository.Update(assignment);
+
+                var bed = await _bedRepository.GetByIdAsync(assignment.BedId, cancellationToken);
+                if (bed is not null)
+                {
+                    bed.Status = BedStatus.Cleaning;
+                    _bedRepository.Update(bed);
+                }
+            }
+        }
+
+        if (totalBedDays > 0)
+        {
+            items.Add(new BillingItem
+            {
+                Id = Guid.NewGuid(),
+                BillingInvoiceId = invoice.Id,
+                ItemType = BillingItemType.Bed,
+                Description = $"Bed charge ({totalBedDays} day(s))",
+                Quantity = totalBedDays,
+                UnitPrice = BedDailyRate,
+                Amount = totalBedDays * BedDailyRate
+            });
+        }
+
+        // 2. Drug & procedure charges: enumerate care orders as line items for Billing to price.
+        var careOrders = await _careOrderRepository.ListAsync(c => c.AdmissionId == id, cancellationToken);
+        foreach (var order in careOrders)
+        {
+            var itemType = order.OrderType switch
+            {
+                CareOrderType.Medication or CareOrderType.Infusion => BillingItemType.Drug,
+                CareOrderType.Procedure => BillingItemType.Procedure,
+                _ => (BillingItemType?)null
+            };
+
+            if (itemType is null)
+            {
+                continue;
+            }
+
+            items.Add(new BillingItem
+            {
+                Id = Guid.NewGuid(),
+                BillingInvoiceId = invoice.Id,
+                ItemType = itemType.Value,
+                Description = order.Description,
+                Quantity = 1,
+                UnitPrice = 0m,
+                Amount = 0m
+            });
+        }
+
+        invoice.Subtotal = items.Sum(i => i.Amount);
+        invoice.TotalAmount = invoice.Subtotal - invoice.InsuranceDeduction;
+
+        await _invoiceRepository.AddAsync(invoice, cancellationToken);
+        foreach (var item in items)
+        {
+            await _billingItemRepository.AddAsync(item, cancellationToken);
+        }
+
         admission.Status = AdmissionStatus.Discharged;
         _repository.Update(admission);
 
         var summary = new DischargeSummary
         {
+            Id = Guid.NewGuid(),
             AdmissionId = id,
-            DischargeDate = DateTime.UtcNow
+            DischargeDate = dischargeDate,
+            Summary = request?.Summary,
+            TotalCost = invoice.TotalAmount
         };
-
         await _dischargeRepository.AddAsync(summary, cancellationToken);
+
         await _repository.SaveChangesAsync(cancellationToken);
 
-        var result = SimpleMapper.Map<DischargeSummary, DischargeSummaryReadDto>(summary);
+        var result = new DischargeResultDto
+        {
+            Summary = SimpleMapper.Map<DischargeSummary, DischargeSummaryReadDto>(summary),
+            Invoice = SimpleMapper.Map<BillingInvoice, BillingInvoiceReadDto>(invoice),
+            Items = items.Select(SimpleMapper.Map<BillingItem, BillingItemReadDto>).ToList()
+        };
         return Ok(result);
     }
 
@@ -422,30 +538,147 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
 
 public class LabOrdersController : CrudController<LabOrder, LabOrderReadDto, LabOrderWriteDto>
 {
-    public LabOrdersController(ICrudService<LabOrder, LabOrderReadDto, LabOrderWriteDto> service)
+    private readonly IRepository<LabOrder> _repository;
+    private readonly IRepository<LabResult> _resultRepository;
+
+    public LabOrdersController(
+        ICrudService<LabOrder, LabOrderReadDto, LabOrderWriteDto> service,
+        IRepository<LabOrder> repository,
+        IRepository<LabResult> resultRepository)
         : base(service)
     {
+        _repository = repository;
+        _resultRepository = resultRepository;
+    }
+
+    // Lab department receives incoming orders; ordering doctor polls their own results.
+    [HttpGet("filter")]
+    public async Task<ActionResult<IReadOnlyList<LabOrderReadDto>>> Filter(
+        [FromQuery] LabOrderStatus? status,
+        [FromQuery] Guid? orderedById,
+        CancellationToken cancellationToken)
+    {
+        var orders = await _repository.GetAllAsync(cancellationToken);
+
+        var query = orders.AsEnumerable();
+        if (status.HasValue)
+        {
+            query = query.Where(o => o.Status == status.Value);
+        }
+        if (orderedById.HasValue)
+        {
+            query = query.Where(o => o.OrderedById == orderedById.Value);
+        }
+
+        var result = query
+            .OrderByDescending(o => o.OrderedAt)
+            .Select(SimpleMapper.Map<LabOrder, LabOrderReadDto>)
+            .ToList();
+        return Ok(result);
+    }
+
+    [HttpPatch("{id:guid}/status")]
+    public async Task<IActionResult> UpdateStatus(
+        Guid id,
+        StatusUpdateDto<LabOrderStatus> dto,
+        CancellationToken cancellationToken)
+    {
+        var order = await _repository.GetByIdAsync(id, cancellationToken);
+        if (order is null)
+        {
+            return NotFound();
+        }
+
+        order.Status = dto.Status;
+        _repository.Update(order);
+        await _repository.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
+    // Lab enters a result for an order; the order is auto-completed so it surfaces on the doctor's screen.
+    [HttpPost("{id:guid}/result")]
+    public async Task<ActionResult<LabResultReadDto>> EnterResult(
+        Guid id,
+        LabResultEntryDto dto,
+        CancellationToken cancellationToken)
+    {
+        var order = await _repository.GetByIdAsync(id, cancellationToken);
+        if (order is null)
+        {
+            return NotFound();
+        }
+
+        var result = new LabResult
+        {
+            LabOrderId = id,
+            ResultText = dto.ResultText,
+            ResultedAt = DateTime.UtcNow
+        };
+        await _resultRepository.AddAsync(result, cancellationToken);
+
+        order.Status = LabOrderStatus.Completed;
+        _repository.Update(order);
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        var read = SimpleMapper.Map<LabResult, LabResultReadDto>(result);
+        return CreatedAtAction(nameof(GetResults), new { id }, read);
+    }
+
+    [HttpGet("{id:guid}/result")]
+    public async Task<ActionResult<IReadOnlyList<LabResultReadDto>>> GetResults(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var order = await _repository.GetByIdAsync(id, cancellationToken);
+        if (order is null)
+        {
+            return NotFound();
+        }
+
+        var results = await _resultRepository.ListAsync(r => r.LabOrderId == id, cancellationToken);
+        var read = results
+            .OrderByDescending(r => r.ResultedAt)
+            .Select(SimpleMapper.Map<LabResult, LabResultReadDto>)
+            .ToList();
+        return Ok(read);
     }
 }
 
 public class LabResultsController : CrudController<LabResult, LabResultReadDto, LabResultWriteDto>
 {
+    private static readonly string[] AllowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
+    private const long MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
+
     private readonly IRepository<LabResult> _repository;
+    private readonly IWebHostEnvironment _environment;
 
     public LabResultsController(
         ICrudService<LabResult, LabResultReadDto, LabResultWriteDto> service,
-        IRepository<LabResult> repository)
+        IRepository<LabResult> repository,
+        IWebHostEnvironment environment)
         : base(service)
     {
         _repository = repository;
+        _environment = environment;
     }
 
     [HttpPost("{id:guid}/file")]
-    public async Task<IActionResult> UploadFile(Guid id, IFormFile file, CancellationToken cancellationToken)
+    public async Task<ActionResult<LabResultReadDto>> UploadFile(Guid id, IFormFile file, CancellationToken cancellationToken)
     {
         if (file is null || file.Length == 0)
         {
             return BadRequest(new { message = "File is required." });
+        }
+
+        if (file.Length > MaxFileSizeBytes)
+        {
+            return BadRequest(new { message = "File exceeds the 10 MB limit." });
+        }
+
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!AllowedExtensions.Contains(extension))
+        {
+            return BadRequest(new { message = "Only PDF, JPG and PNG files are allowed." });
         }
 
         var result = await _repository.GetByIdAsync(id, cancellationToken);
@@ -454,10 +687,26 @@ public class LabResultsController : CrudController<LabResult, LabResultReadDto, 
             return NotFound();
         }
 
-        result.ResultFileUrl = $"/uploads/lab-results/{id}/{file.FileName}";
+        var webRoot = _environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+        var folder = Path.Combine(webRoot, "uploads", "lab-results", id.ToString());
+        Directory.CreateDirectory(folder);
+
+        var storedFileName = $"{Guid.NewGuid()}{extension}";
+        var fullPath = Path.Combine(folder, storedFileName);
+        await using (var stream = new FileStream(fullPath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream, cancellationToken);
+        }
+
+        result.ResultFileUrl = $"/uploads/lab-results/{id}/{storedFileName}";
+        if (result.ResultedAt is null)
+        {
+            result.ResultedAt = DateTime.UtcNow;
+        }
         _repository.Update(result);
         await _repository.SaveChangesAsync(cancellationToken);
-        return NoContent();
+
+        return Ok(SimpleMapper.Map<LabResult, LabResultReadDto>(result));
     }
 }
 

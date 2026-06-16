@@ -544,3 +544,23 @@ public class TransferAdmissionDto
 {
     public Guid DepartmentId { get; set; }
 }
+
+// Feature 3 - Lab / imaging results
+public class LabResultEntryDto
+{
+    public string? ResultText { get; set; }
+}
+
+// Feature 4 - Discharge & aggregated billing
+public class DischargeRequestDto
+{
+    public string? Summary { get; set; }
+    public decimal InsuranceDeduction { get; set; }
+}
+
+public class DischargeResultDto
+{
+    public DischargeSummaryReadDto Summary { get; set; } = null!;
+    public BillingInvoiceReadDto Invoice { get; set; } = null!;
+    public IList<BillingItemReadDto> Items { get; set; } = new List<BillingItemReadDto>();
+}
