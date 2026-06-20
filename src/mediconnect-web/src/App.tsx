@@ -9,6 +9,11 @@ import AppointmentsPage from "./pages/AppointmentsPage";
 import ScheduleManagementPage from "./pages/ScheduleManagementPage";
 import ClinicDashboardPage from "./pages/ClinicDashboardPage";
 import ManageServicesPage from "./pages/ManageServicesPage";
+import RevenueDashboardPage from "./pages/RevenueDashboardPage";
+import OperationsReportPage from "./pages/OperationsReportPage";
+import UserManagementPage from "./pages/UserManagementPage";
+import StaffManagementPage from "./pages/StaffManagementPage";
+import DrugInteractionPage from "./pages/DrugInteractionPage";
 import { UserRole } from "./types";
 
 import type { ReactNode } from "react";
@@ -91,6 +96,47 @@ export default function App() {
                 <ProtectedRoute>
                   <ScheduleManagementPage />
                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports/revenue"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Admin]}>
+                  <RevenueDashboardPage />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports/operations"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Admin]}>
+                  <OperationsReportPage />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route path="/reports" element={<Navigate to="/reports/revenue" replace />} />
+            <Route
+              path="/admin/users"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Admin]}>
+                  <UserManagementPage />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/staff"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Admin]}>
+                  <StaffManagementPage />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/drug-interactions"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Admin]}>
+                  <DrugInteractionPage />
+                </RoleProtectedRoute>
               }
             />
           </Route>

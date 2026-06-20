@@ -63,6 +63,10 @@ Sinh viên/nhóm cần ghi lại:
 | 7 | 06/06/2026 | Antigravity | Viết backend modular riêng biệt cho smart clinic | viet backend o folder module rieng biet | Gợi ý cấu trúc module và sinh ClinicDashboard/ClinicManagement Controller | Có | src/mediconnect/Modules/SmartClinic |
 | 8 | 06/06/2026 | Antigravity | Kiểm tra lỗi cơ sở dữ liệu | check for database error | Phân tích DLL lock, giải phóng tiến trình và kiểm tra EF database up-to-date | Có | dotnet ef database update |
 | 9 | 06/06/2026 | Antigravity | Sửa lỗi mất session / đăng nhập lặp | toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap | Phát hiện login redirect loop về /booking và sửa đổi LoginPage/AuthContext | Có | src/mediconnect-web/src/pages/LoginPage.tsx |
+| 10 | 20/06/2026 | Claude (Claude Code) | Kiểm thử end-to-end chức năng Statistics Report bằng Playwright, thêm seed data và xác nhận sửa lỗi | bạn test lại xem đã chạy ổn chức năng report này chưa / thêm data vào database rồi test lại / tất cả đã oke hết chưa | Phát hiện và sửa 2 bug thật: lệch ngày do `toISOString()` lấy giờ UTC ở frontend, và endDate không bao trọn ngày cuối ở backend; seed thêm dữ liệu invoice/khoa phòng để dashboard có số liệu thực tế | Có | C:/tmp/pwtest/*.mjs; src/Mediconnect.Infrastructure/Repositories/ReportQuery.cs; src/mediconnect-web/src/utils/reportUtils.ts |
+| 11 | 20/06/2026 | Claude (Claude Code) | Sinh code Screen 3.1 (Dashboard Doanh thu) và Screen 3.2 (Dashboard Vận hành) từ backend đến frontend theo đặc tả chính xác | Dashboard Thống kê & Báo cáo... Screen 3.1: Dashboard Doanh thu tài chính... Screen 3.2: Dashboard Báo cáo vận hành... hãy làm theo 2 màn hình như này từ backend đến frontend | Sinh DTO/Interface/Query/Controller cho Report module theo pattern CQRS-lite có sẵn; sinh 2 trang React riêng biệt dùng SVG chart tự viết (Bar/Line/Pie), filter theo kỳ và khoa phòng, export CSV | Có | src/Mediconnect.Application/DTOs/ReportDtos.cs; src/mediconnect-web/src/pages/RevenueDashboardPage.tsx; src/mediconnect-web/src/pages/OperationsReportPage.tsx |
+| 12 | 20/06/2026 | Claude (Claude Code) | Đọc checkfile.md để đối chiếu các screen của Admin (Thành viên 4) đã có/chưa có trong project | hãy đọc file này và tổng hợp các screen nào là của admin mà cái nào đã có trong project và cái nào chưa có | Liệt kê 6 screen thuộc Thành viên 4, xác định 3 đã có backend nhưng chưa có UI (Quản lý nhân sự, Cảnh báo tương tác thuốc, Quản lý tài khoản) và 2 chưa làm (Banner cảnh báo quá liều, Cấu hình OTP) | Có | docs (đối chiếu nội bộ, không tạo file mới) |
+| 13 | 20/06/2026 | Claude (Claude Code) | Hoàn thiện frontend cho 3 trang Admin còn thiếu UI: Quản lý nhân sự, Cảnh báo tương tác thuốc (CDSS), Quản lý tài khoản | hãy hoàn thiện các trang đang nửa vời | Sinh 3 trang React đầy đủ CRUD + kiểm thử bằng Playwright (gọi API thật qua fetch để xác nhận persist), phát hiện 1 bug trong chính script test (chọn nhầm nút do selector trùng text) chứ không phải bug ứng dụng | Có | src/mediconnect-web/src/pages/StaffManagementPage.tsx; src/mediconnect-web/src/pages/UserManagementPage.tsx; src/mediconnect-web/src/pages/DrugInteractionPage.tsx |
 
 ---
 
@@ -478,6 +482,344 @@ Kiểm tra biên dịch và test thực tế, xác nhận Bác sĩ vào thẳng 
 
 ---
 
+### Prompt số 10
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 20/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích | Kiểm thử end-to-end chức năng Statistics Report, thêm seed data, xác nhận sửa lỗi |
+| Phần việc liên quan | Testing / Backend / Frontend |
+| Mức độ sử dụng | Hỏi xử lý lỗi + sinh code |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+bạn test lại xem đã chạy ổn chức năng report này chưa
+thêm data vào database rồi test lại
+tất cả đã oke hết chưa
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Trang báo cáo thống kê đã được code trước đó nhưng chưa được kiểm thử thực tế trên
+trình duyệt, dữ liệu mẫu trong database còn ít nên dashboard khó đánh giá đúng/sai.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI dựng môi trường Playwright (headless Chromium) tại C:/tmp/pwtest để tránh lỗi do
+đường dẫn project có khoảng trắng, đăng nhập bằng tài khoản admin đã seed, điều hướng
+qua từng filter (kỳ, khoảng ngày tuỳ chọn, khoa phòng) và chụp ảnh/đọc DOM để so sánh
+số liệu hiển thị với số liệu thực trong database. Phát hiện 2 lỗi thật:
+1. Lệch ngày: toDateStr() dùng toISOString() trả về giờ UTC, ở UTC+7 ngày 1/6 local
+   bị lùi thành 31/5.
+2. endDate không bao trọn ngày cuối ở backend (ReportQuery), khiến khoảng ngày tuỳ
+   chọn bị thiếu dữ liệu của ngày cuối cùng.
+Sau khi sửa, AI seed thêm dữ liệu (departments, invoices, bed assignments) qua SQL
+trực tiếp để dashboard có số liệu phong phú hơn rồi test lại để xác nhận khớp số.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng cả 2 bản sửa lỗi (frontend reportUtils.ts và backend ReportQuery.cs) và giữ
+lại dữ liệu seed thêm trong database để phục vụ demo/kiểm thử về sau.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Tự kiểm tra lại bằng cách đối chiếu số liệu trả về từ API với SQL query thủ công
+trước khi xác nhận đã sửa đúng; xoá các script test tạm sau khi xác nhận xong.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [ ] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [x] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [x] Kết quả AI có lỗi hoặc chưa chính xác (lỗi nằm ở code cũ, được AI phát hiện qua test thật)
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit |  |
+| File liên quan | src/Mediconnect.Infrastructure/Repositories/ReportQuery.cs; src/mediconnect-web/src/utils/reportUtils.ts |
+| Screenshot | C:/tmp/pwtest/*.png |
+| Kết quả chạy/test | C:/tmp/pwtest/*.mjs |
+| Link tài liệu/báo cáo |  |
+| Ghi chú khác |  |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Đây là ví dụ điển hình về việc AI tìm ra lỗi thật nhờ chạy thử ứng dụng (Playwright),
+không chỉ đọc code suông — vì lỗi lệch ngày chỉ xuất hiện khi chạy ở giờ UTC+7.
+```
+
+---
+
+### Prompt số 11
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 20/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích | Sinh code Screen 3.1 (Dashboard Doanh thu tài chính) và Screen 3.2 (Dashboard Báo cáo vận hành) từ backend đến frontend |
+| Phần việc liên quan | Backend / Frontend / Design |
+| Mức độ sử dụng | Hỏi sinh code |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Dashboard Thống kê & Báo cáo
+Screen 3.1: Dashboard Doanh thu tài chính - Các biểu đồ cột, biểu đồ đường thể hiện
+doanh thu theo ngày, tháng và lọc theo từng khoa phòng.
+Screen 3.2: Dashboard Báo cáo vận hành - Biểu đồ tròn và bảng số liệu phân tích công
+suất giường bệnh nội trú, biểu đồ đường thể hiện số lượt khám ngoại trú.
+hãy làm theo 2 màn hình như này từ backend đến frontend
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Trang report cũ là 1 trang gộp chung, chưa khớp đúng với đặc tả 2 màn hình riêng biệt
+(3.1 doanh thu, 3.2 vận hành) mà đề bài yêu cầu, nên cần tách lại và bổ sung đúng loại
+biểu đồ theo từng màn.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI thiết kế DTO/Interface/Query/Controller mới cho Report module (tái dùng pattern
+CQRS-lite + flat projection đã có trong IStaffScheduleQuery), tách trang cũ thành 2
+trang riêng: RevenueDashboardPage (biểu đồ cột + đường, filter kỳ/khoa phòng, export
+CSV) và OperationsReportPage (biểu đồ tròn công suất giường + bảng theo khoa + biểu đồ
+đường lượt khám ngoại trú). Tự viết SVG chart component (Bar/Line/Pie) thay vì dùng
+thư viện ngoài để giữ bundle nhẹ.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ: ReportDtos.cs, IReportQuery.cs, ReportQuery.cs, ReportsController.cs,
+RevenueDashboardPage.tsx, OperationsReportPage.tsx, các component chart/report dùng
+chung, và route /reports/revenue, /reports/operations trong App.tsx.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Xoá trang StatisticsReportPage.tsx cũ (đã được thay thế hoàn toàn); kiểm thử lại bằng
+Playwright sau khi tách trang để đảm bảo không phát sinh lỗi mới; bổ sung link điều
+hướng "Doanh thu"/"Vận hành" vào Header (cả desktop và mobile menu).
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit |  |
+| File liên quan | src/Mediconnect.Application/DTOs/ReportDtos.cs; src/Mediconnect.Infrastructure/Repositories/ReportQuery.cs; src/mediconnect/Controllers/ReportsController.cs; src/mediconnect-web/src/pages/RevenueDashboardPage.tsx; src/mediconnect-web/src/pages/OperationsReportPage.tsx |
+| Screenshot |  |
+| Kết quả chạy/test |  |
+| Link tài liệu/báo cáo |  |
+| Ghi chú khác |  |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Prompt dán nguyên văn đặc tả đề bài (copy từ checklist môn học) giúp AI bám sát đúng
+yêu cầu loại biểu đồ cho từng màn hình, tránh làm lại 1 trang gộp như trước.
+```
+
+---
+
+### Prompt số 12
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 20/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích | Đối chiếu checkfile.md để xác định các screen của Admin (Thành viên 4) đã có/chưa có trong project |
+| Phần việc liên quan | Requirement / Design |
+| Mức độ sử dụng | Hỏi phân tích |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+hãy đọc file này và tổng hợp các screen nào là của admin mà cái nào đã có trong
+project và cái nào chưa có
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Cần rà soát lại toàn bộ đặc tả 4 thành viên (checkfile.md) để biết phần việc của
+Thành viên 4 (Admin) còn thiếu màn hình nào trước khi tiếp tục code.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI liệt kê 6 screen thuộc Thành viên 4: Quản lý nhân sự (1.1), Cảnh báo tương tác
+thuốc (2.1), Banner cảnh báo quá liều (2.2), Dashboard Doanh thu (3.1), Dashboard Vận
+hành (3.2), Quản lý tài khoản (4.1), Cấu hình OTP (4.2). Đối chiếu với project hiện
+tại: 3.1/3.2 đã có; 1.1/2.1/4.1 đã có backend đầy đủ nhưng chưa có trang frontend;
+2.2/4.2 chưa có cả backend và frontend.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Dùng bảng tổng hợp này làm checklist để quyết định thứ tự ưu tiên hoàn thiện các
+trang còn thiếu (1.1, 2.1, 4.1 trước vì đã có backend sẵn).
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Tự kiểm tra lại bằng cách grep trực tiếp routes/controllers trong source code để xác
+nhận đúng những gì AI báo là "đã có backend" thực sự tồn tại trước khi tin theo.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit |  |
+| File liên quan | checkfile.md |
+| Screenshot |  |
+| Kết quả chạy/test |  |
+| Link tài liệu/báo cáo |  |
+| Ghi chú khác |  |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Prompt phân tích kèm file đặc tả gốc giúp AI tổng hợp chính xác hơn việc tự đoán scope
+dựa trên tên file/route trong code.
+```
+
+---
+
+### Prompt số 13
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 20/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích | Hoàn thiện frontend cho 3 trang Admin còn thiếu UI: Quản lý nhân sự, Cảnh báo tương tác thuốc (CDSS), Quản lý tài khoản |
+| Phần việc liên quan | Frontend / Coding / Testing |
+| Mức độ sử dụng | Hỏi sinh code |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+hãy hoàn thiện các trang đang nửa vời
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Theo kết quả đối chiếu ở Prompt số 12, 3 màn hình (Quản lý nhân sự, Cảnh báo tương tác
+thuốc, Quản lý tài khoản) đã có đầy đủ API backend nhưng chưa có giao diện, cần hoàn
+thiện để đủ chức năng cho vai trò Admin.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI sinh 3 trang React đầy đủ CRUD: StaffManagementPage (giới hạn tạo mới chỉ với
+UserAccount có role Doctor/Nurse chưa có StaffProfile), UserManagementPage (KPI tổng
+quan, khoá/mở khoá, đổi role, có chặn admin tự khoá/tự xoá/tự đổi role của chính
+mình), DrugInteractionPage (3 tab: kiểm tra tương tác thuốc với popup đỏ cảnh báo,
+danh mục thuốc, danh mục cặp tương tác). Bổ sung dropdown "Quản trị" và route mới vào
+Header/App.tsx. Sau đó tự viết script Playwright gọi thẳng API qua fetch() trong
+page.evaluate() để xác nhận các thay đổi (khoá/mở khoá, đổi role, xoá) thực sự được
+lưu ở backend, không chỉ đổi trên UI.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ 3 trang mới, cập nhật services.ts (userApi, drugApi,
+drugInteractionApi, cdssApi) và types/index.ts (Drug, DrugInteraction), cập nhật
+Header.tsx với dropdown Quản trị.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Phát hiện 1 lần test báo sai "Interaction warning shown: false" do chính script test
+dùng selector mơ hồ (button:has-text("Kiểm tra") trùng cả nút tab và nút submit) —
+xác nhận lại bằng selector cụ thể hơn để chứng minh đây là lỗi của script test, không
+phải lỗi ứng dụng, trước khi kết luận. Sau khi xác minh xong, xoá dữ liệu test tạo ra
+(3 thuốc, 1 cặp tương tác, 1 tài khoản test) để database sạch.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [ ] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [x] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit |  |
+| File liên quan | src/mediconnect-web/src/pages/StaffManagementPage.tsx; src/mediconnect-web/src/pages/UserManagementPage.tsx; src/mediconnect-web/src/pages/DrugInteractionPage.tsx |
+| Screenshot | C:/tmp/pwtest/admin_users.png; C:/tmp/pwtest/admin_staff.png; C:/tmp/pwtest/cdss_check_fixed.png |
+| Kết quả chạy/test | C:/tmp/pwtest/test_admin_pages.mjs; C:/tmp/pwtest/test_user_actions.mjs; C:/tmp/pwtest/test_cdss_check.mjs |
+| Link tài liệu/báo cáo |  |
+| Ghi chú khác |  |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Prompt ngắn ("hoàn thiện các trang đang nửa vời") chỉ hiệu quả vì có Prompt số 12 làm
+rõ scope trước đó — minh chứng cho việc nên tách bước phân tích yêu cầu ra trước khi
+yêu cầu sinh code hàng loạt.
+```
+
+---
+
 ## 6. Prompt quan trọng nhất
 
 Chọn một prompt có ảnh hưởng lớn nhất đến bài tập/project.
@@ -600,12 +942,12 @@ Viết tại đây...
 
 | Loại prompt | Số lượng | Ví dụ prompt tiêu biểu |
 |---|---:|---|
-| Prompt phân tích yêu cầu |  |  |
+| Prompt phân tích yêu cầu | 2 | Prompt số 1, Prompt số 12 |
 | Prompt giải thích kiến thức |  |  |
-| Prompt thiết kế giải pháp |  |  |
-| Prompt thiết kế database |  |  |
-| Prompt sinh code mẫu |  |  |
-| Prompt debug lỗi |  |  |
+| Prompt thiết kế giải pháp | 1 | Prompt số 5 |
+| Prompt thiết kế database | 1 | Prompt số 2 |
+| Prompt sinh code mẫu | 4 | Prompt số 6, 7, 11, 13 |
+| Prompt debug lỗi | 3 | Prompt số 8, 9, 10 |
 | Prompt viết test case |  |  |
 | Prompt review code |  |  |
 | Prompt tối ưu code |  |  |

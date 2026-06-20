@@ -42,6 +42,7 @@ Nguyên tắc ghi changelog:
 | Phase 03 | 05/06/2026 | Thiết kế hệ thống | Completed |
 | Phase 04 | 06/06/2026 – 10/06/2026 | Implementation | Completed |
 | Phase 05 | 10/06/2026 | Testing & Debug | Completed |
+| Phase 07 | 11/06/2026 – 20/06/2026 | Thành viên 4: Dashboard Thống kê & Quản trị Hệ thống | Completed |
 | Phase 06 |  | Hoàn thiện báo cáo và demo | In Progress |
 
 ---
@@ -359,6 +360,110 @@ Các test case cover: CRUD đầy đủ, business rule duplicate, proxy Vite.
 
 ---
 
+# [Phase 07] Thành viên 4: Dashboard Thống kê & Quản trị Hệ thống
+
+## Ngày thực hiện
+
+```text
+11/06/2026 – 20/06/2026
+```
+
+## Đã hoàn thành
+
+- [x] Thiết kế & xây dựng backend Report API (4 endpoints: summary, revenue, bed-occupancy, outpatient-visits)
+- [x] Xây dựng Screen 3.1 – Dashboard Doanh thu tài chính (bar chart theo ngày + line chart 12 tháng, lọc theo khoa)
+- [x] Xây dựng Screen 3.2 – Dashboard Báo cáo vận hành (pie chart công suất giường + data table + line chart lượt khám ngoại trú)
+- [x] Phát hiện và sửa lỗi timezone ở frontend (`toDateStr` dùng `toISOString()` UTC thay vì local date)
+- [x] Phát hiện và sửa lỗi backend: `endDate` không inclusive cả ngày cuối trong `ReportQuery.GetRevenueAsync` / `GetOutpatientVisitsAsync`
+- [x] Refactor: tách `StatisticsReportPage.tsx` (gộp) thành 2 trang riêng + shared components (`BarChart`, `LineChart`, `PieChart`, `KpiCard`, `ReportFilterBar`, `reportUtils.ts`)
+- [x] Đối chiếu `checkfile.md` (đặc tả 4 thành viên) với code hiện có để xác định các Screen Admin còn thiếu
+- [x] Hoàn thiện Screen 1.1 (TV4-F1) – Quản lý Hồ sơ Nhân sự (`StaffManagementPage.tsx`)
+- [x] Hoàn thiện Screen 2.1 (TV4-F2) – Cảnh báo Tương tác Thuốc / CDSS (`DrugInteractionPage.tsx`)
+- [x] Hoàn thiện Screen 4.1 (TV4-F4) – User Management Console (`UserManagementPage.tsx`)
+- [x] Mở rộng `userApi`, thêm `drugApi`/`drugInteractionApi`/`cdssApi` trong `services.ts`
+- [x] Tái cấu trúc Header: gom các trang Admin vào dropdown "Quản trị"
+- [x] Kiểm thử end-to-end bằng Playwright (đăng nhập thật, chụp screenshot, kiểm tra console error = 0)
+- [x] Seed dữ liệu test (4 khoa, 6 bệnh nhân, 24 giường, 15 invoice, 58 lượt khám) rồi dọn dẹp sau khi verify
+
+## Thay đổi chi tiết
+
+| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
+|---:|---|---|---|---|
+| 1 | Thêm `ReportDtos.cs`, `IReportQuery`, `ReportQuery` (LINQ projection, AsNoTracking, GroupBy server-side cho bed-occupancy) | DE180522 | `Mediconnect.Application/DTOs/ReportDtos.cs`; `Mediconnect.Application/Interfaces/IReportQuery.cs`; `Mediconnect.Infrastructure/Repositories/ReportQuery.cs` | dotnet build: 0 error |
+| 2 | Thêm `ReportsController` (4 endpoint, validate period/groupBy, trả 400 khi sai) | DE180522 | `src/mediconnect/Controllers/ReportsController.cs` | API test PowerShell: 4/4 HTTP 200 |
+| 3 | Đăng ký `IReportQuery` trong DI container | DE180522 | `Mediconnect.Infrastructure/DependencyInjection.cs` | — |
+| 4 | Tạo `RevenueDashboardPage.tsx` (Screen 3.1): bar chart theo ngày, line chart trend 12 tháng, panel "By Department", filter Today/This Month/Last 30/YTD/Custom + Department, export CSV | DE180522 | `src/mediconnect-web/src/pages/RevenueDashboardPage.tsx` | Playwright screenshot `screen31_revenue.png` |
+| 5 | Tạo `OperationsReportPage.tsx` (Screen 3.2): pie chart Occupied/Available, data table breakdown theo khoa, line chart outpatient visits | DE180522 | `src/mediconnect-web/src/pages/OperationsReportPage.tsx` | Playwright screenshot `screen32_operations.png` |
+| 6 | Tạo shared chart components SVG (không dùng lib ngoài) | DE180522 | `src/mediconnect-web/src/components/charts/{BarChart,LineChart,PieChart}.tsx` | — |
+| 7 | Tạo shared UI components + utils (period/date-range/CSV export) | DE180522 | `src/mediconnect-web/src/components/reports/{KpiCard,Skeleton,ReportFilterBar}.tsx`; `src/mediconnect-web/src/utils/reportUtils.ts` | — |
+| 8 | Fix bug timezone: `toDateStr` dùng `getFullYear/getMonth/getDate()` thay `toISOString()` | DE180522 | `reportUtils.ts` | Trước fix: `startDate=2026-05-31` (sai 1 ngày ở UTC+7); sau fix: `2026-06-01` (đúng) |
+| 9 | Fix bug backend: `endDate` inclusive cả ngày (`.Date.AddDays(1).AddTicks(-1)`) trong `GetRevenueAsync` và `GetOutpatientVisitsAsync` | DE180522 | `Mediconnect.Infrastructure/Repositories/ReportQuery.cs` | Custom range Jun5-9: trước fix thiếu data Jun 9 ($120M/4 bars), sau fix đủ ($183M/5 bars) |
+| 10 | Xóa `StatisticsReportPage.tsx` (gộp) sau khi tách thành 2 trang riêng | DE180522 | route `/reports` redirect sang `/reports/revenue` | — |
+| 11 | Thêm types `Drug`, `DrugInteraction`; mở rộng `userApi` (create/update/delete/updateStatus/updateRole); thêm `drugApi`, `drugInteractionApi`, `cdssApi` | DE180522 | `src/mediconnect-web/src/types/index.ts`; `src/mediconnect-web/src/api/services.ts` | tsc --noEmit: 0 errors |
+| 12 | Tạo `StaffManagementPage.tsx` (Screen 1.1 TV4): CRUD hồ sơ nhân sự, chỉ cho gán user role Doctor/Nurse chưa có hồ sơ | DE180522 | `src/mediconnect-web/src/pages/StaffManagementPage.tsx` | Playwright screenshot `admin_staff.png` |
+| 13 | Tạo `DrugInteractionPage.tsx` (Screen 2.1 TV4): tab Kiểm tra tương tác (popup đỏ khi phát hiện), Danh mục thuốc, Cặp tương tác | DE180522 | `src/mediconnect-web/src/pages/DrugInteractionPage.tsx` | Playwright screenshot `cdss_check_fixed.png` – phát hiện đúng 1 cặp Warfarin↔Aspirin |
+| 14 | Tạo `UserManagementPage.tsx` (Screen 4.1 TV4): KPI, search/filter, đổi role inline, khóa/mở khóa, CRUD tài khoản | DE180522 | `src/mediconnect-web/src/pages/UserManagementPage.tsx` | Playwright: tạo/khóa/đổi role/xóa đều verify qua API backend persist đúng |
+| 15 | Cập nhật `Header.tsx`: dropdown "Quản trị" gom 4 link admin, bổ sung mobile menu thiếu Doanh thu/Vận hành | DE180522 | `src/mediconnect-web/src/components/layout/Header.tsx` | — |
+| 16 | Cập nhật `App.tsx`: thêm route `/reports/revenue`, `/reports/operations`, `/admin/staff`, `/admin/users`, `/admin/drug-interactions` (RoleProtectedRoute Admin) | DE180522 | `src/mediconnect-web/src/App.tsx` | — |
+| 17 | Bổ sung color token thiếu trong Tailwind v4 theme (`error-container`, `tertiary-container`, `surface-container-lowest`,...) | DE180522 | `src/mediconnect-web/src/index.css` | — |
+
+## AI có hỗ trợ không?
+
+- [x] Có
+- [ ] Không
+
+Nếu có, mô tả AI đã hỗ trợ phần nào:
+
+```text
+AI (Claude Code) hỗ trợ:
+- Đọc base-html (hospital_analytics_reports.html) để xác định layout cần dựng cho Screen 3.1/3.2.
+- Thiết kế và sinh toàn bộ backend Report module (DTO, IReportQuery, ReportQuery với LINQ projection
+  tối ưu, ReportsController với validation 400).
+- Sinh code 2 trang dashboard (Revenue/Operations) + 3 component chart SVG tự viết (Bar/Line/Pie,
+  không phụ thuộc thư viện ngoài) + shared utils/components để tránh trùng code.
+- Tự phát hiện 2 bug qua kiểm thử Playwright thực tế (không phải đọc code suy luận):
+  (1) bug timezone frontend khi tính date-range cho "This Month" ở UTC+7,
+  (2) bug backend bỏ sót dữ liệu ngày cuối cùng trong custom date range.
+- Đọc checkfile.md (đặc tả đầy đủ 4 thành viên), đối chiếu với codebase hiện có (Controllers,
+  Pages, routes) để liệt kê chính xác Screen nào đã có / nửa vời / chưa có cho vai trò Admin.
+- Sinh toàn bộ 3 trang Admin còn thiếu (Staff Management, Drug Interaction CDSS, User Management
+  Console) dựa trên các API/DTO backend đã có sẵn (không cần sửa backend).
+- Tự seed dữ liệu test qua API (không sửa trực tiếp DB) để kiểm thử CDSS warning thực tế, sau đó
+  tự dọn dẹp dữ liệu test sau khi verify xong.
+- Toàn bộ kiểm thử qua Playwright thật (đăng nhập, click, screenshot, kiểm tra console error),
+  không chỉ đọc code suy luận.
+```
+
+## Commit/Screenshot minh chứng
+
+```text
+Branch: feature/de180522-statisticalreport (chưa commit tại thời điểm ghi log)
+Files mới: ReportDtos.cs, IReportQuery.cs, ReportQuery.cs, ReportsController.cs,
+  RevenueDashboardPage.tsx, OperationsReportPage.tsx, StaffManagementPage.tsx,
+  UserManagementPage.tsx, DrugInteractionPage.tsx, components/charts/*, components/reports/*,
+  utils/reportUtils.ts
+tsc --noEmit: 0 errors (toàn bộ frontend)
+dotnet build: 0 Error(s), 0 Warning(s)
+Playwright headless test: report_loaded.png, report_today.png, report_dept.png, report_v2.png,
+  screen31_revenue.png, screen32_operations.png, admin_users.png, admin_staff.png,
+  cdss_check_fixed.png — console errors: NONE trên tất cả trang
+```
+
+## Ghi chú
+
+```text
+- Backend cho 3 trang Admin (StaffController, UsersController, DrugsController,
+  DrugInteractionsController, CdssController) đã tồn tại từ trước — chỉ cần xây frontend.
+- 2 Screen còn thiếu hoàn toàn (chưa làm trong phase này): Banner cảnh báo quá liều (2.2 TV4-F2,
+  backend `dose-check` mới là stub "not configured") và Cấu hình/bảo mật OTP (4.2 TV4-F4,
+  chưa có code nào ở cả backend và frontend).
+- Service endpoint `/api/druginteractions`, `/api/drugs` dùng chung `CrudController<T>` generic,
+  route tự sinh từ tên class (`[Route("api/[controller]")]`), ASP.NET routing case-insensitive
+  nên gọi `/api/druginteractions` (chữ thường) từ frontend vẫn khớp.
+```
+
+---
+
 # [Phase 06] Hoàn thiện báo cáo và demo
 
 ## Ngày thực hiện
@@ -429,6 +534,12 @@ Viết tại đây...
 | 8 | Gantt chart ngày (24h timeline, shift bars định vị theo giờ thực) | Completed | `ScheduleManagementPage.tsx` – Day view | DE180522 |
 | 9 | KPI stats bar (tổng nhân viên, đang trực, ca tuần, tỷ lệ phủ) | Completed | `ScheduleManagementPage.tsx` – KPI section | DE180522 |
 | 10 | Staff Profiles Grid (card trạng thái Đang trực/Nghỉ, liên kết Xem lịch trực) | Completed | `ScheduleManagementPage.tsx` – Staff section | DE180522 |
+| 11 | Report API: summary, revenue (theo ngày/tháng + lọc khoa), bed-occupancy, outpatient-visits | Completed | `ReportsController.cs`, `ReportQuery.cs` | DE180522 |
+| 12 | Screen 3.1 – Dashboard Doanh thu tài chính (bar + line chart, lọc khoa, export CSV) | Completed | `RevenueDashboardPage.tsx` | DE180522 |
+| 13 | Screen 3.2 – Dashboard Báo cáo vận hành (pie chart, data table, line chart outpatient) | Completed | `OperationsReportPage.tsx` | DE180522 |
+| 14 | Screen 1.1 (TV4) – Quản lý Hồ sơ Nhân sự (CRUD chuyên khoa/kinh nghiệm/học vị) | Completed | `StaffManagementPage.tsx` | DE180522 |
+| 15 | Screen 2.1 (TV4) – Cảnh báo Tương tác Thuốc CDSS (check + CRUD Drug/DrugInteraction) | Completed | `DrugInteractionPage.tsx` | DE180522 |
+| 16 | Screen 4.1 (TV4) – User Management Console (đổi role, khóa/mở khóa, CRUD tài khoản) | Completed | `UserManagementPage.tsx` | DE180522 |
 
 ---
 
@@ -436,8 +547,8 @@ Viết tại đây...
 
 | STT | Chức năng | Lý do chưa hoàn thành | Hướng cải thiện |
 |---:|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
+| 1 | Screen 2.2 (TV4-F2) – Banner cảnh báo quá liều | Backend `CdssController.DoseCheck` mới là stub trả "not configured", chưa có công thức tính ngưỡng liều theo cân nặng/chiều cao | Cần định nghĩa công thức liều khuyến nghị theo loại thuốc rồi implement logic thật |
+| 2 | Screen 4.2 (TV4-F4) – Cấu hình & bảo mật OTP | Chưa có code OTP ở cả backend và frontend (gửi email/SMS, xác thực mã) | Cần chọn provider gửi OTP (email/SMS), thêm entity OtpCode + endpoint generate/verify |
 | 3 |  |  |  |
 
 ---
@@ -451,8 +562,8 @@ Viết tại đây...
 | Database | Có | Nhiều | Scaffold entities, migrations, DbContext, seed data |
 | Coding | Có | Nhiều | StaffScheduleService, StaffScheduleQuery, ScheduleController, toàn bộ frontend Gantt |
 | Debug | Có | Nhiều | Phát hiện và fix 5 bugs (React.FormEvent, connection string, DTO rename, ...) |
-| Testing | Có | Trung bình | Viết smoke test script PowerShell 10 scenarios |
-| Report | Có | Trung bình | Hỗ trợ điền CHANGELOG, README |
+| Testing | Có | Nhiều | Smoke test PowerShell + Playwright headless thực (login thật, click, screenshot) cho toàn bộ Report dashboard và 3 trang Admin; tự phát hiện 2 bug timezone qua test thực tế |
+| Report | Có | Trung bình | Hỗ trợ điền CHANGELOG, README, AI_AUDIT_LOG, PROMPTS |
 | Presentation | Không | — | — |
 
 ---

@@ -363,24 +363,174 @@ Hỏi AI để thiết kế các trang giao diện phức tạp và phân tích 
 
 ---
 
+### Lần sử dụng AI số 6
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 11/06/2026 – 20/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Xây dựng Dashboard Thống kê & Báo cáo (Screen 3.1, 3.2 – Thành viên 4) từ backend đến frontend |
+| Phần việc liên quan | Backend / Frontend / Coding / Testing |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+đọc nhánh base-html xem các trang nào là report và làm kết nối api cho tôi, sau đó test và fix hết bug
+
+Dashboard Thống kê & Báo cáo
+Screen 3.1: Dashboard Doanh thu tài chính - Các biểu đồ cột, biểu đồ đường thể hiện doanh thu
+theo ngày, tháng và lọc theo từng khoa phòng.
+Screen 3.2: Dashboard Báo cáo vận hành - Biểu đồ tròn và bảng số liệu phân tích công suất giường
+bệnh nội trú, biểu đồ đường thể hiện số lượt khám ngoại trú.
+hãy làm theo 2 màn hình như này từ backend đến frontend
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+- Đọc file hospital_analytics_reports.html (branch base-html) để xác định layout cần dựng.
+- Sinh toàn bộ backend Report module: ReportDtos.cs, IReportQuery, ReportQuery (LINQ projection,
+  AsNoTracking, GroupBy server-side cho bed-occupancy), ReportsController (4 endpoint có validate).
+- Sinh trang StatisticsReportPage.tsx gộp ban đầu, sau đó tách thành 2 trang riêng theo đúng yêu
+  cầu spec: RevenueDashboardPage.tsx (bar+line chart, lọc khoa) và OperationsReportPage.tsx
+  (pie chart + data table + line chart outpatient).
+- Tự viết 3 chart component SVG thuần (BarChart/LineChart/PieChart) không phụ thuộc thư viện ngoài.
+- Tự kiểm thử bằng Playwright thật (đăng nhập admin thật, click filter, chụp screenshot) và
+  PHÁT HIỆN 2 BUG thực tế qua test, không chỉ đọc code suy luận:
+  1) Bug timezone frontend: toDateStr() dùng toISOString() (UTC) trên Date local -> ở UTC+7,
+     "đầu tháng 6" bị lệch thành 2026-05-31 thay vì 2026-06-01.
+  2) Bug backend: endDate trong GetRevenueAsync/GetOutpatientVisitsAsync không inclusive cả
+     ngày cuối -> custom range Jun5-9 bị thiếu dữ liệu Jun 9.
+- Tự fix cả 2 bug, rebuild backend, re-test xác nhận đã đúng.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ code backend (Report module) và frontend (2 trang dashboard + shared chart
+components) vào project sau khi xác nhận build/tsc sạch và test Playwright pass.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Yêu cầu AI seed thêm dữ liệu test (4 khoa, 24 giường, 15 invoice, 58 lượt khám) để biểu đồ có
+  dữ liệu thực tế thay vì chỉ 1-2 điểm dữ liệu ban đầu.
+- Yêu cầu tách 1 trang gộp thành đúng 2 màn hình riêng biệt theo đúng đặc tả Screen 3.1/3.2 thay
+  vì giữ nguyên 1 dashboard tổng hợp.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Chưa commit (branch feature/de180522-statisticalreport) |
+| File liên quan | `Mediconnect.Application/DTOs/ReportDtos.cs`; `Mediconnect.Infrastructure/Repositories/ReportQuery.cs`; `src/mediconnect/Controllers/ReportsController.cs`; `src/mediconnect-web/src/pages/RevenueDashboardPage.tsx`; `src/mediconnect-web/src/pages/OperationsReportPage.tsx`; `src/mediconnect-web/src/components/charts/*` |
+| Screenshot | report_loaded.png, report_today.png, report_dept.png, report_v2.png, screen31_revenue.png, screen32_operations.png |
+| Kết quả chạy/test | tsc --noEmit: 0 errors; dotnet build: 0 Error(s); Playwright: console errors = NONE trên cả 2 trang |
+| Link video demo |  |
+| Ghi chú khác | Custom range Jun5-9 trước fix: $120M/4 bars → sau fix: $183M/5 bars (đúng) |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+AI không chỉ sinh code mà còn tự kiểm thử bằng cách thật (đăng nhập, click, screenshot) và phát
+hiện 2 bug thực tế (timezone + endDate inclusive) mà nếu chỉ review code tĩnh sẽ khó nhận ra ngay.
+Đây là điểm khác biệt so với việc chỉ "đọc code rồi đoán đúng/sai".
+```
+
+---
+
+### Lần sử dụng AI số 7
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 20/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Đối chiếu đặc tả 4 thành viên (checkfile.md) với code hiện có để xác định Screen Admin còn thiếu, sau đó hoàn thiện các trang "nửa vời" |
+| Phần việc liên quan | Requirement / Backend / Frontend / Coding |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+hãy đọc file này và tổng hợp các screen nào là của admin mà cái nào đã có trong project và cái
+nào chưa có
+
+hãy hoàn thiện các trang đang nửa vời
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+- Đọc toàn bộ checkfile.md (đặc tả 16 Feature / 32 Screen của 4 thành viên), lọc ra các Screen
+  thuộc vai trò Admin (chủ yếu ở Thành viên 4: System/Staff/CDSS).
+- Đối chiếu với codebase thực tế (Controllers, Pages, App.tsx routes) để phân loại từng Screen:
+  Đã có / Nửa vời (có backend, thiếu frontend) / Chưa có gì.
+- Kết quả: 4/9 đã có, 3/9 nửa vời (Hồ sơ nhân sự, Cảnh báo tương tác thuốc, User Management),
+  2/9 chưa có gì (Banner quá liều, OTP).
+- Khi được yêu cầu hoàn thiện 3 trang nửa vời: sinh StaffManagementPage.tsx,
+  DrugInteractionPage.tsx, UserManagementPage.tsx — toàn bộ dựa trên API/DTO backend đã có sẵn
+  (StaffController, UsersController, DrugsController, DrugInteractionsController, CdssController),
+  không cần sửa backend.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ 3 trang frontend mới + mở rộng services.ts/types.ts + cập nhật Header dropdown
+"Quản trị" sau khi xác nhận build sạch và test Playwright pass cho cả 3 trang.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Yêu cầu AI seed dữ liệu thuốc thật (Warfarin + Aspirin có tương tác High) để verify popup cảnh
+  báo đỏ hiển thị đúng, sau đó dọn dẹp dữ liệu test khỏi DB.
+- Yêu cầu verify các hành động ghi dữ liệu (khóa tài khoản, đổi role, xóa) thật sự persist vào
+  backend (gọi lại API kiểm tra) chứ không chỉ tin vào việc UI hiển thị đúng.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Chưa commit (branch feature/de180522-statisticalreport) |
+| File liên quan | `src/mediconnect-web/src/pages/StaffManagementPage.tsx`; `src/mediconnect-web/src/pages/DrugInteractionPage.tsx`; `src/mediconnect-web/src/pages/UserManagementPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/components/layout/Header.tsx` |
+| Screenshot | admin_users.png, admin_staff.png, cdss_check_fixed.png |
+| Kết quả chạy/test | tsc --noEmit: 0 errors; Playwright: tạo/khóa/đổi role/xóa tài khoản đều verify đúng qua API; CDSS check phát hiện đúng 1 cặp tương tác Warfarin↔Aspirin (severity High) |
+| Link video demo |  |
+| Ghi chú khác | 2 Screen còn lại (Banner quá liều, OTP) chưa làm vì cần thiết kế logic nghiệp vụ mới ở backend, không chỉ là thiếu UI |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Việc đọc lại đặc tả gốc (checkfile.md) và đối chiếu với code thực tế giúp phát hiện chính xác
+phần nào "tưởng đã xong" (có backend) nhưng thực ra người dùng chưa thể dùng được (thiếu UI).
+Tránh được việc báo cáo sai tiến độ hoàn thành.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.
 
 | Hạng mục | Không dùng AI | AI hỗ trợ ít | AI hỗ trợ nhiều | AI sinh chính | Ghi chú |
 |---|:---:|:---:|:---:|:---:|---|
-| Phân tích yêu cầu |  |  |  |  |  |
+| Phân tích yêu cầu |  |  | x |  | Đối chiếu checkfile.md với codebase để xác định Screen Admin thiếu/đủ |
 | Viết user story/use case |  |  |  |  |  |
-| Thiết kế database |  |  |  |  |  |
-| Thiết kế kiến trúc hệ thống |  |  |  |  |  |
-| Thiết kế giao diện |  |  |  |  |  |
-| Code frontend |  |  |  |  |  |
-| Code backend |  |  |  |  |  |
-| Debug lỗi |  |  |  |  |  |
-| Viết test case |  |  |  |  |  |
-| Kiểm thử sản phẩm |  |  |  |  |  |
-| Tối ưu code |  |  |  |  |  |
-| Viết báo cáo |  |  |  |  |  |
+| Thiết kế database |  |  | x |  | Report module dùng entity có sẵn, không thêm bảng mới |
+| Thiết kế kiến trúc hệ thống |  | x |  |  | Tái dùng pattern Clean Architecture đã có (IReportQuery tương tự IStaffScheduleQuery) |
+| Thiết kế giao diện |  |  |  | x | 5 trang mới (2 dashboard + 3 admin) dựng từ đầu theo base-html/spec |
+| Code frontend |  |  |  | x | RevenueDashboardPage, OperationsReportPage, StaffManagementPage, UserManagementPage, DrugInteractionPage, 3 chart SVG component |
+| Code backend |  |  |  | x | ReportDtos, IReportQuery, ReportQuery, ReportsController |
+| Debug lỗi |  |  |  | x | Tự phát hiện & fix 2 bug (timezone frontend, endDate inclusive backend) qua test thực tế |
+| Viết test case |  |  |  | x | Playwright script (login thật, click, screenshot, verify API persist) |
+| Kiểm thử sản phẩm |  |  |  | x | Chạy Playwright headless cho tất cả 5 trang mới, xác nhận console error = 0 |
+| Tối ưu code |  | x |  |  | Tách shared components/utils tránh trùng code giữa 2 trang report |
+| Viết báo cáo |  |  | x |  | Hỗ trợ điền CHANGELOG.md, AI_AUDIT_LOG.md, PROMPTS.md |
 | Làm slide thuyết trình |  |  |  |  |  |
 
 ---

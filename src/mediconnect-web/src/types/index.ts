@@ -107,6 +107,26 @@ export interface StaffDirectory {
   degree?: string;
 }
 
+// ── CDSS: Drugs & Drug Interactions ───────────────────────────────────────────
+
+export interface Drug {
+  id: string;
+  name: string;
+  code?: string;
+  unit?: string;
+  stockQuantity: number;
+  unitPrice: number;
+  isActive: boolean;
+}
+
+export interface DrugInteraction {
+  id: string;
+  drugId: string;
+  interactingDrugId: string;
+  severity?: string;
+  description?: string;
+}
+
 export enum ShiftType {
   Morning = 0,
   Afternoon = 1,
@@ -206,3 +226,37 @@ export interface ClinicQueue {
   tickets: QueueTicketDetail[];
 }
 
+// ── Report DTOs ──────────────────────────────────────────────────────────────
+
+export interface SummaryReport {
+  totalRevenue: number;
+  bedOccupancyRate: number;
+  totalOutpatientVisits: number;
+  activeInpatients: number;
+}
+
+export interface RevenueItem {
+  timePeriod: string;
+  department: string;
+  revenue: number;
+}
+
+export interface BedDeptBreakdown {
+  department: string;
+  total: number;
+  occupied: number;
+  percentage: number;
+}
+
+export interface BedOccupancyReport {
+  totalBeds: number;
+  occupiedBeds: number;
+  availableBeds: number;
+  occupancyPercentage: number;
+  byDepartmentBreakdown: BedDeptBreakdown[];
+}
+
+export interface OutpatientVisitItem {
+  timePeriod: string;
+  visitCount: number;
+}
