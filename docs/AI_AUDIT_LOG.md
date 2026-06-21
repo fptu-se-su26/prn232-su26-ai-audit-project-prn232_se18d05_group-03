@@ -422,6 +422,64 @@ AI xử lý tốt việc phân tích DTO shape và tự đề xuất cách enric
 
 ---
 
+### Lần sử dụng AI số 7
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 21/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Viết backend Feature 3: Quản lý viện phí & tích hợp BHYT |
+| Phần việc liên quan | Backend / Coding |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Làm chức năng Feature 3: Quản lý Viện phí & Tích hợp Bảo hiểm Y tế. Hệ thống tự động gom chi phí
+(khám, xét nghiệm, thuốc) thành phiếu thu tổng. Nhập mã thẻ BHYT, tự động tính mức khấu trừ.
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+AI đề xuất thêm BillingService (IBillingService) với 2 hàm: GenerateInvoiceAsync (gom phí khám,
+xét nghiệm, thuốc thành các BillingItem) và CalculateInsuranceAsync (tính khấu trừ BHYT theo mức 80%).
+Gắn 2 endpoint mới vào BillingInvoicesController: POST /generate và sửa lại /calculate-insurance.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Dùng cấu trúc service + 2 endpoint trên, các entity BillingInvoice/BillingItem đã có sẵn từ trước nên
+chỉ cần thêm logic tính toán.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Bỏ đoạn code cũ (stub CalculateInsurance) thay vì giữ lại song song để tránh code chết.
+- Xác nhận mức khấu trừ 80% và giá xét nghiệm mặc định là giả định đơn giản hóa, ghi rõ trong comment.
+- Build lại dự án (dotnet build) xác nhận 0 lỗi trước khi coi là xong.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | chưa commit |
+| File liên quan | src/Mediconnect.Application/Services/BillingService.cs; src/Mediconnect.Application/Interfaces/IBillingService.cs; src/Mediconnect.Application/DTOs/BillingDtos.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |
+| Kết quả chạy/test | dotnet build: 0 Warning, 0 Error |
+
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Phần khó nhất là tính phí xét nghiệm vì LabOrder không lưu giá - phải tự quyết định cách map sang
+MedicalService theo tên, AI chỉ gợi ý hướng còn cách làm cụ thể tự viết lại cho phù hợp dữ liệu hiện có.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.

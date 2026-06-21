@@ -116,17 +116,36 @@ public class BedAssignmentsController : CrudController<BedAssignment, BedAssignm
 
 public class BillingInvoicesController : CrudController<BillingInvoice, BillingInvoiceReadDto, BillingInvoiceWriteDto>
 {
-    private readonly IRepository<BillingInvoice> _invoiceRepository;
     private readonly IRepository<BillingItem> _billingItemRepository;
+    private readonly IBillingService _billingService;
 
     public BillingInvoicesController(
         ICrudService<BillingInvoice, BillingInvoiceReadDto, BillingInvoiceWriteDto> service,
-        IRepository<BillingInvoice> invoiceRepository,
-        IRepository<BillingItem> billingItemRepository)
+        IRepository<BillingItem> billingItemRepository,
+        IBillingService billingService)
         : base(service)
     {
-        _invoiceRepository = invoiceRepository;
         _billingItemRepository = billingItemRepository;
+        _billingService = billingService;
+    }
+
+    /// <summary>
+    /// Tự động gom chi phí khám + xét nghiệm + thuốc của một lần khám thành phiếu thu tổng.
+    /// </summary>
+    [HttpPost("generate")]
+    public async Task<ActionResult<BillingInvoiceDetailDto>> Generate(
+        GenerateInvoiceRequestDto dto,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _billingService.GenerateInvoiceAsync(dto, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("{id:guid}/items")]
@@ -153,23 +172,24 @@ public class BillingInvoicesController : CrudController<BillingInvoice, BillingI
         return CreatedAtAction(nameof(GetItems), new { id }, result);
     }
 
+    /// <summary>
+    /// Nhập/cập nhật mã thẻ BHYT và tính lại mức khấu trừ bảo hiểm cho phiếu thu.
+    /// </summary>
     [HttpPost("{id:guid}/calculate-insurance")]
-    public async Task<ActionResult<BillingInvoiceReadDto>> CalculateInsurance(
+    public async Task<ActionResult<BillingInvoiceDetailDto>> CalculateInsurance(
         Guid id,
+        InsuranceCalculationRequestDto dto,
         CancellationToken cancellationToken)
     {
-        var invoice = await _invoiceRepository.GetByIdAsync(id, cancellationToken);
-        if (invoice is null)
+        try
         {
-            return NotFound();
+            var result = await _billingService.CalculateInsuranceAsync(id, dto.InsuranceNumber, cancellationToken);
+            return Ok(result);
         }
-
-        invoice.InsuranceDeduction = 0m;
-        invoice.TotalAmount = invoice.Subtotal - invoice.InsuranceDeduction;
-        _invoiceRepository.Update(invoice);
-        await _invoiceRepository.SaveChangesAsync(cancellationToken);
-
-        return Ok(SimpleMapper.Map<BillingInvoice, BillingInvoiceReadDto>(invoice));
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
     }
 }
 

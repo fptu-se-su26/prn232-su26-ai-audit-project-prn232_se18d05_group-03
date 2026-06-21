@@ -64,6 +64,7 @@ Sinh viên/nhóm cần ghi lại:
 | 8 | 06/06/2026 | Antigravity | Kiểm tra lỗi cơ sở dữ liệu | check for database error | Phân tích DLL lock, giải phóng tiến trình và kiểm tra EF database up-to-date | Có | dotnet ef database update |
 | 9 | 06/06/2026 | Antigravity | Sửa lỗi mất session / đăng nhập lặp | toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap | Phát hiện login redirect loop về /booking và sửa đổi LoginPage/AuthContext | Có | src/mediconnect-web/src/pages/LoginPage.tsx |
 | 10 | 10/06/2026 | Claude (Claude Code) | Xây dựng frontend Feature 2: Hồ sơ sức khỏe điện tử | Làm chức năng PHR cho bệnh nhân: xem lịch sử khám, đơn thuốc, kết quả xét nghiệm, tải file | Tạo PHRPage.tsx với 3 tab + 7 API calls + enrichment dữ liệu client-side | Có | src/mediconnect-web/src/pages/PHRPage.tsx |
+| 11 | 21/06/2026 | Claude (Claude Code) | Viết backend Feature 3: Quản lý viện phí & BHYT | Gom phí khám/xét nghiệm/thuốc thành phiếu thu tổng, nhập mã BHYT tự tính khấu trừ | Tạo BillingService với GenerateInvoiceAsync + CalculateInsuranceAsync, thêm endpoint POST /generate | Có | src/Mediconnect.Application/Services/BillingService.cs |
 
 ---
 
@@ -546,6 +547,71 @@ AI phát hiện /history trả DTO thiếu testName và drug items.
 | Screenshot |  |
 | Kết quả chạy/test | npm run build: 0 error |
 | Ghi chú khác | Backend endpoint đã có từ trước session này |
+
+---
+
+### Prompt số 11
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 21/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích | Viết backend Feature 3: Quản lý viện phí & tích hợp BHYT |
+| Phần việc liên quan | Backend / Coding |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Làm chức năng : Quản lý Viện phí & Tích hợp Bảo hiểm Y tế. Hệ thống tự động gom chi phí
+(khám, xét nghiệm, thuốc) thành phiếu thu tổng. Nhập mã thẻ BHYT, tự động tính mức khấu trừ.
+Chỉ làm backend, không cần code frontend.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Entity BillingInvoice, BillingItem, Payment đã có sẵn từ trước nhưng chưa có logic tính toán thật;
+endpoint calculate-insurance cũ chỉ là stub luôn trả về khấu trừ = 0.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI đề xuất BillingService với 2 hàm: GenerateInvoiceAsync (gom phí khám + xét nghiệm + thuốc thành
+BillingItem) và CalculateInsuranceAsync (tính khấu trừ BHYT 80%). Thêm endpoint POST /generate,
+sửa lại /calculate-insurance dùng service mới.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Dùng cấu trúc service + endpoint AI đề xuất, áp dụng trực tiếp vào BillingInvoicesController.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Xóa hẳn đoạn code stub cũ thay vì giữ song song để tránh code chết.
+- Tự quyết cách map giá xét nghiệm (LabOrder không lưu giá sẵn) bằng cách so khớp tên với MedicalService.
+- Chạy dotnet build xác nhận 0 lỗi trước khi coi là xong.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | chưa commit |
+| File liên quan | src/Mediconnect.Application/Services/BillingService.cs; src/mediconnect/Controllers/EntityControllers.cs |
+| Kết quả chạy/test | dotnet build: 0 Warning, 0 Error |
+| Ghi chú khác | Không yêu cầu frontend cho feature này |
 
 ---
 

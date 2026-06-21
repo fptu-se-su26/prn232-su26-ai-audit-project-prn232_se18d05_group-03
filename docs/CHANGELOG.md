@@ -251,6 +251,8 @@ DD/MM/YYYY
 | 12 | Thêm patientApi.getHistory và phrApi (4 methods) vào services.ts | DE180526 | src/mediconnect-web/src/api/services.ts | chưa commit |
 | 13 | Tạo PHRPage.tsx — giao diện Hồ sơ sức khỏe 3 tab, 7 API calls song song, enrichment client-side | DE180526 | src/mediconnect-web/src/pages/PHRPage.tsx | chưa commit |
 | 14 | Thêm route /health-records (Patient only) vào App.tsx | DE180526 | src/mediconnect-web/src/App.tsx | chưa commit |
+| 15 | Thêm BillingService, IBillingService, BillingDtos - gom phí khám/xét nghiệm/thuốc thành phiếu thu, tính khấu trừ BHYT | DE180526 | src/Mediconnect.Application/Services/BillingService.cs; Interfaces/IBillingService.cs; DTOs/BillingDtos.cs | chưa commit |
+| 16 | Thêm endpoint POST /api/billing-invoices/generate, sửa lại /calculate-insurance dùng BillingService | DE180526 | src/mediconnect/Controllers/EntityControllers.cs; Program.cs | dotnet build: 0 lỗi |
 
 
 ## AI có hỗ trợ không?
@@ -265,6 +267,8 @@ AI hỗ trợ scaffold dự án, bo models, DbContext va cấu hình EF Core.
 AI sinh code endpoints GET /api/beds/map, GET bed-assignments, POST transfer và các DTO tương ứng.
 AI sinh toàn bộ giao diện PHRPage.tsx (Feature 2) với 3 tab + logic enrichment dữ liệu client-side.
 Backend API cho Feature 2 đã hoàn thiện từ trước (PatientsController + EntityControllers); session PHR chỉ làm frontend.
+AI gợi ý cấu trúc BillingService cho Feature 3 (gom phí + tính BHYT); tự quyết cách map giá xét nghiệm
+vì LabOrder không lưu giá sẵn, và bỏ code stub cũ thay vì giữ song song.
 ```
 
 ## Commit/Screenshot minh chứng
