@@ -1,36 +1,47 @@
-﻿using Mediconnect.Application.Interfaces;
+using Mediconnect.Application.DTOs;
+using Mediconnect.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Mediconnect.Application.DTOs;
 
 namespace Mediconnect.Modules.SmartClinic;
+
 [ApiController]
 [Authorize]
 [Route("api/medical-records")]
 public class OutpatientRecordController : ControllerBase
 {
     private readonly IMedicalRecordService _medicalRecordService;
-    
-    private readonly IQueueService _queueService;
 
-    public OutpatientRecordController(IMedicalRecordService medicalRecordService, IQueueService queueService)
+    public OutpatientRecordController(IMedicalRecordService medicalRecordService)
     {
         _medicalRecordService = medicalRecordService;
-        _queueService = queueService;
     }
 
     [HttpPost("diagnose")]
-    public async Task<IActionResult> SaveDiagnosis([FromBody] MedicalRecordDtos dto)
+    public async Task<IActionResult> SaveDiagnosis([FromBody] MedicalRecordDtos dto, CancellationToken cancellationToken)
     {
-       
-        await _medicalRecordService.SaveMedicalRecordAsync(dto);
+        await _medicalRecordService.SaveMedicalRecordAsync(dto, cancellationToken);
         return Ok(new { message = "Lưu bệnh án thành công" });
     }
 
-    //[HttpGet("icd10/search")]
-    //public async Task<IActionResult> SearchICD10([FromQuery] string query)
-    //{
-    //    var results = await _medicalRecordService.SearchICD10Async(query);
-    //    return Ok(results);
-    //}
+    [HttpGet("icd10/search")]
+    public async Task<ActionResult<IReadOnlyList<ICD10ResultDto>>> SearchICD10(
+        [FromQuery] string query,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return Ok(Array.Empty<ICD10ResultDto>());
+
+        var results = await _medicalRecordService.SearchICD10Async(query, cancellationToken);
+        return Ok(results);
+    }
+
+    [HttpGet("patients/{patientId:guid}/diagnosis-history")]
+    public async Task<ActionResult<IReadOnlyList<PatientDiagnosisHistoryDto>>> GetDiagnosisHistory(
+        Guid patientId,
+        CancellationToken cancellationToken)
+    {
+        var history = await _medicalRecordService.GetPatientDiagnosisHistoryAsync(patientId, cancellationToken);
+        return Ok(history);
+    }
 }

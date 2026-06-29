@@ -206,3 +206,14 @@ export interface ClinicQueue {
   tickets: QueueTicketDetail[];
 }
 
+export interface Icd10Result {
+  code: string;
+  description: string;
+}
+
+export interface PatientDiagnosisHistory {
+  diagnosisCode?: string;
+  diagnosisDescription?: string;
+  visitDate: string;
+}
+

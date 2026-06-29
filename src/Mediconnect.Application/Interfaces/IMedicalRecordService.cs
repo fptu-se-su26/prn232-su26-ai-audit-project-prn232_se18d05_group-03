@@ -1,4 +1,4 @@
-﻿using Mediconnect.Application.DTOs;
+using Mediconnect.Application.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +10,7 @@ namespace Mediconnect.Application.Interfaces
     public interface IMedicalRecordService
     {
         Task SaveMedicalRecordAsync(MedicalRecordDtos dto, CancellationToken ct = default);
-        //Task<IEnumerable<ICD10ResultDto>> SearchICD10Async(string query)
+        Task<IReadOnlyList<ICD10ResultDto>> SearchICD10Async(string query, CancellationToken ct = default);
+        Task<IReadOnlyList<PatientDiagnosisHistoryDto>> GetPatientDiagnosisHistoryAsync(Guid patientId, CancellationToken ct = default);
     }
 }

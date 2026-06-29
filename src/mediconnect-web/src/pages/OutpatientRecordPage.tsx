@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { medicalRecordApi, clinicDashboardApi, userApi, outpatientApi, staffApi, patientApi } from "../api/services";
-import type { ClinicQueue, QueueTicketDetail } from "../types";
+import type { ClinicQueue, QueueTicketDetail, Icd10Result, PatientDiagnosisHistory } from "../types";
 import { useAuth } from "../context/AuthContext";
 
 export default function OutpatientRecordPage() {
@@ -16,7 +16,14 @@ export default function OutpatientRecordPage() {
   const [staffProfileId, setStaffProfileId] = useState<string | null>(null);
   const [chiefComplaint, setChiefComplaint] = useState("");
   const [symptoms, setSymptoms] = useState("");
+  const [diagnosisCode, setDiagnosisCode] = useState("");
   const [diagnosisDescription, setDiagnosisDescription] = useState("");
+  const [icdQuery, setIcdQuery] = useState("");
+  const [icdResults, setIcdResults] = useState<Icd10Result[]>([]);
+  const [icdSearching, setIcdSearching] = useState(false);
+  const [showIcdDropdown, setShowIcdDropdown] = useState(false);
+  const [diagnosisHistory, setDiagnosisHistory] = useState<PatientDiagnosisHistory[]>([]);
+  const icdSearchRef = useRef<HTMLDivElement>(null);
   const [orderedTests, setOrderedTests] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -94,6 +101,57 @@ export default function OutpatientRecordPage() {
   }, [selectedTicket]);
 
   useEffect(() => {
+    if (!selectedTicket?.patientId) {
+      setDiagnosisHistory([]);
+      return;
+    }
+
+    (async () => {
+      try {
+        const { data } = await medicalRecordApi.getDiagnosisHistory(selectedTicket.patientId!);
+        setDiagnosisHistory(data);
+      } catch (err) {
+        console.error("failed to load diagnosis history", err);
+        setDiagnosisHistory([]);
+      }
+    })();
+  }, [selectedTicket?.patientId]);
+
+  useEffect(() => {
+    if (icdQuery.trim().length < 2) {
+      setIcdResults([]);
+      setIcdSearching(false);
+      return;
+    }
+
+    setIcdSearching(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const { data } = await medicalRecordApi.searchIcd10(icdQuery.trim());
+        setIcdResults(data);
+        setShowIcdDropdown(true);
+      } catch (err) {
+        console.error("ICD-10 search failed", err);
+        setIcdResults([]);
+      } finally {
+        setIcdSearching(false);
+      }
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [icdQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (icdSearchRef.current && !icdSearchRef.current.contains(e.target as Node)) {
+        setShowIcdDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
     // resolve staff profile id for current user (StaffProfile.Id) so we use correct FK for doctorId
     (async () => {
       if (!user) return;
@@ -116,9 +174,30 @@ export default function OutpatientRecordPage() {
     setSelectedTicket(t);
     setChiefComplaint("");
     setSymptoms("");
+    setDiagnosisCode("");
     setDiagnosisDescription("");
+    setIcdQuery("");
+    setIcdResults([]);
+    setShowIcdDropdown(false);
     setOrderedTests([]);
     setMessage(null);
+  };
+
+  const handleSelectIcd = (item: Icd10Result) => {
+    setDiagnosisCode(item.code);
+    setDiagnosisDescription(item.description);
+    setIcdQuery(`${item.code} - ${item.description}`);
+    setShowIcdDropdown(false);
+  };
+
+  const handleSelectHistoryDiagnosis = (item: PatientDiagnosisHistory) => {
+    setDiagnosisCode(item.diagnosisCode || "");
+    setDiagnosisDescription(item.diagnosisDescription || "");
+    setIcdQuery(
+      item.diagnosisCode && item.diagnosisDescription
+        ? `${item.diagnosisCode} - ${item.diagnosisDescription}`
+        : item.diagnosisCode || item.diagnosisDescription || ""
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,6 +211,7 @@ export default function OutpatientRecordPage() {
         doctorId: staffProfileId || user.id,
         chiefComplaint,
         symptoms,
+        diagnosisCode: diagnosisCode || undefined,
         diagnosisDescription,
         orderedTests: orderedTests.slice(),
         notes: undefined,
@@ -361,10 +441,29 @@ export default function OutpatientRecordPage() {
 
                 <div className="mt-4">
                   <h4 className="text-sm font-semibold mb-3">ICD-10 HISTORY</h4>
-                  <div className="space-y-2 text-sm text-slate-600">
-                    <div className="p-2 rounded-md bg-slate-50">I10 - Hypertension</div>
-                    <div className="p-2 rounded-md bg-slate-50">E11.9 - Type 2 Diabetes</div>
-                    <div className="p-2 rounded-md bg-slate-50">M17.0 - Osteoarthritis</div>
+                  <div className="space-y-2 text-sm text-slate-600 max-h-40 overflow-y-auto">
+                    {diagnosisHistory.length === 0 ? (
+                      <div className="text-xs text-slate-400 italic p-2 rounded-md bg-slate-50">
+                        {selectedTicket?.patientId ? "Chưa có chẩn đoán ICD trước đây." : "Chọn bệnh nhân có hồ sơ để xem lịch sử."}
+                      </div>
+                    ) : (
+                      diagnosisHistory.map((item, idx) => (
+                        <button
+                          key={`${item.diagnosisCode}-${item.visitDate}-${idx}`}
+                          type="button"
+                          onClick={() => handleSelectHistoryDiagnosis(item)}
+                          className="w-full text-left p-2 rounded-md bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-primary/30 transition-colors"
+                        >
+                          <div className="font-medium">
+                            {item.diagnosisCode || "—"}
+                            {item.diagnosisDescription ? ` - ${item.diagnosisDescription}` : ""}
+                          </div>
+                          <div className="text-xs text-slate-400 mt-0.5">
+                            {new Date(item.visitDate).toLocaleDateString("vi-VN")}
+                          </div>
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -386,9 +485,64 @@ export default function OutpatientRecordPage() {
                       <textarea value={symptoms} onChange={e => setSymptoms(e.target.value)} className="w-full border rounded-lg p-2 h-24" />
                     </div>
 
+                    <div ref={icdSearchRef} className="relative">
+                      <label className="block text-sm font-medium mb-1">Mã ICD-10</label>
+                      <input
+                        type="text"
+                        value={icdQuery}
+                        onChange={(e) => setIcdQuery(e.target.value)}
+                        onFocus={() => icdResults.length > 0 && setShowIcdDropdown(true)}
+                        placeholder="Tìm mã hoặc tên bệnh (vd: I10, diabetes, hypertension)..."
+                        className="w-full border rounded-lg px-3 py-2"
+                        autoComplete="off"
+                      />
+                      {icdSearching && (
+                        <div className="absolute right-3 top-9 text-xs text-slate-400">Đang tìm...</div>
+                      )}
+                      {showIcdDropdown && icdResults.length > 0 && (
+                        <ul className="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto bg-white border rounded-lg shadow-lg">
+                          {icdResults.map((item) => (
+                            <li key={item.code}>
+                              <button
+                                type="button"
+                                onClick={() => handleSelectIcd(item)}
+                                className="w-full text-left px-3 py-2 hover:bg-slate-50 text-sm"
+                              >
+                                <span className="font-semibold text-primary">{item.code}</span>
+                                <span className="text-slate-600"> — {item.description}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {diagnosisCode && (
+                        <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-sm">
+                          <span className="font-semibold">{diagnosisCode}</span>
+                          {diagnosisDescription && <span className="text-slate-600">— {diagnosisDescription}</span>}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDiagnosisCode("");
+                              setDiagnosisDescription("");
+                              setIcdQuery("");
+                            }}
+                            className="text-slate-400 hover:text-slate-600 ml-1"
+                            aria-label="Xóa chẩn đoán ICD"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <div>
-                      <label className="block text-sm font-medium mb-1">Chẩn đoán</label>
-                      <textarea value={diagnosisDescription} onChange={e => setDiagnosisDescription(e.target.value)} className="w-full border rounded-lg p-2 h-24" />
+                      <label className="block text-sm font-medium mb-1">Mô tả chẩn đoán</label>
+                      <textarea
+                        value={diagnosisDescription}
+                        onChange={(e) => setDiagnosisDescription(e.target.value)}
+                        placeholder="Mô tả chi tiết chẩn đoán lâm sàng..."
+                        className="w-full border rounded-lg p-2 h-24"
+                      />
                     </div>
 
                     <div className="mt-4 p-4 border rounded-lg bg-slate-50">

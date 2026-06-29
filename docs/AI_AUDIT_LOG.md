@@ -458,6 +458,68 @@ AI provided a practical, standard approach to avoid duplicate FK errors. Human v
 ```
 ---
 
+### Lần sử dụng AI số 8
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 28/06/2026 |
+| Công cụ AI | Antigravity |
+| Mục đích sử dụng | Implement tìm kiếm ICD-10 bằng NLM ClinicalTables API thay thế `Icd10Catalog` chưa khai báo gây build lỗi |
+| Phần việc liên quan | Backend / API integration / Debug |
+| Mức độ sử dụng | AI sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+tim hieu ve du an, chuc nang cua thanh vien "DE190123", tiep tuc hoan thien sua doi tim kiem "ICD-10" dua theo nlm api
+Test kịch bản 1 (Tìm theo mã): Gõ thử chữ E11 xem dropdown có hiển thị các bệnh liên quan đến tiểu đường kèm mô tả tiếng Anh không.
+Test kịch bản 2 (Tìm theo tên): Gõ thử chữ Hypertension xem hệ thống có hiển thị mã code I10 tương ứng không.
+Test lưu trữ: Chọn 1 kết quả, tiến hành Save form và kiểm tra trực tiếp trong cơ sở dữ liệu.
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+- Phân tích codebase, xác định lỗi build: `Icd10Catalog.Search()` được gọi trong MedicalRecordService.cs nhưng class này không được định nghĩa ở bất kỳ đâu trong project.
+- Đề xuất thay thế bằng HttpClient gọi NLM ClinicalTables API:
+  URL: https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms={query}&sf=code,name&df=code,name
+- Sinh code SearchICD10Async(): inject HttpClient, gọi API, parse JSON (mảng 4 phần tử: [count, codes, fields, displayStrings]), trả về List<Icd10Result>.
+- Hướng dẫn đăng ký AddHttpClient<IMedicalRecordService, MedicalRecordService>() trong Program.cs.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+- Toàn bộ implementation SearchICD10Async() trong MedicalRecordService.cs với HttpClient và System.Text.Json.
+- Cú pháp đăng ký HttpClient trong Program.cs.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Xác minh kết quả build thành công (0 Error, 0 Warning) trước khi áp dụng.
+- Test tay 2 kịch bản: gõ "E11" (diabetes) và "Hypertension" (I10) qua dropdown ICD-10 trên giao diện bác sĩ.
+- Xác nhận endpoint /api/medical-records/icd10/search trả về JSON đúng format Icd10Result[].
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | branch: feature/de190123-outpatientRecords |
+| File liên quan | `src/Mediconnect.Application/Services/MedicalRecordService.cs` |
+| Kết quả chạy/test | `dotnet build`: 0 Error(s), 0 Warning(s). Backend khởi động thành công tại http://localhost:5079 |
+| Ghi chú khác | NLM ClinicalTables API miễn phí, không cần API key, hỗ trợ tìm theo mã (E11) và tên (Hypertension) |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Việc dùng API ngoài (NLM) giúp tránh phải tự duy trì bộ dữ liệu ICD-10 cục bộ và luôn có dữ liệu cập nhật.
+AI giúp phát hiện nhanh lỗi class chưa định nghĩa và sinh code tích hợp API thực tế chỉ trong một bước.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.

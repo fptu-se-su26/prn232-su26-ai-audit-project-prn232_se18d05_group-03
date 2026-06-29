@@ -17,6 +17,8 @@ import type {
   ClinicQueueSummary,
   ClinicQueue,
   MedicalService,
+  Icd10Result,
+  PatientDiagnosisHistory,
 
 } from "../types";
 
@@ -134,6 +136,10 @@ export const medicalRecordApi = {
     orderedTests?: string[];
     notes?: string;
   }) => api.post("/medical-records/diagnose", data),
+  searchIcd10: (query: string) =>
+    api.get<Icd10Result[]>("/medical-records/icd10/search", { params: { query } }),
+  getDiagnosisHistory: (patientId: string) =>
+    api.get<PatientDiagnosisHistory[]>(`/medical-records/patients/${patientId}/diagnosis-history`),
 };
 
 export const clinicManagementApi = {
