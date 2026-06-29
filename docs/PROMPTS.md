@@ -65,6 +65,8 @@ Sinh viên/nhóm cần ghi lại:
 | 9 | 06/06/2026 | Antigravity | Sửa lỗi mất session / đăng nhập lặp | toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap | Phát hiện login redirect loop về /booking và sửa đổi LoginPage/AuthContext | Có | src/mediconnect-web/src/pages/LoginPage.tsx |
 | 10 | 14/06/2026 | GitHub Copilot, Claude | Implement Outpatient Record UI and diagnose/create flow | Scaffold OutpatientRecordPage, handle diagnose->create->retry, add local/top search and header link | Implemented OutpatientRecordPage.tsx, header link, ClinicDashboard navigation and payload checks | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
 | 11 | 14/06/2026 | GitHub Copilot | Debug duplicate PatientProfile creation | Avoid duplicate PatientProfile by checking existing profile before create (GET /api/patients/me) | Added getMe() check and fallback create in OutpatientRecordPage.tsx to prevent DB unique index error | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+| 12 | 28/06/2026 | Antigravity | Tích hợp NLM ICD-10 API thay thế `Icd10Catalog` chưa định nghĩa | `tim hieu ve du an... tiep tuc hoan thien sua doi tim kiem ICD-10 dua theo nlm api` + test E11/Hypertension | Sinh `SearchICD10Async()` inject HttpClient, URL NLM, parse `root[3]`, DTO `ICD10ResultDto`, đăng ký `AddHttpClient()` | Có | `src/Mediconnect.Application/Services/MedicalRecordService.cs`; `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs`; `src/mediconnect/Program.cs` |
+| 13 | 28/06/2026 | Antigravity | Sửa lỗi tên walk-in mất khi navigate sang OutpatientRecord | Cùng session với prompt 12; AI phân tích `QueueTicket` thiếu `PatientName` cột | Sinh `navigate('/outpatient-record', { state: { ticket, clinicId } })` và `useLocation` + `loc.state?.ticket` | Có | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx` |
 
 ---
 
@@ -567,6 +569,148 @@ Implemented patientApi.getMe() check in OutpatientRecordPage.tsx and fallback to
 |---|---|
 | Link commit | branch: feature/de190123-outpatientRecords |
 | File liên quan | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+
+---
+
+### Prompt số 11
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 28/06/2026 |
+| Công cụ AI | Antigravity |
+| Mục đích | Tích hợp NLM ClinicalTables API để tìm kiếm ICD-10, thay thế `Icd10Catalog.Search()` chưa định nghĩa |
+| Phần việc liên quan | Backend / API integration / Debug |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+tim hieu ve du an, chuc nang cua thanh vien "DE190123", tiep tuc hoan thien sua doi tim kiem "ICD-10" dua theo nlm api
+Test kịch bản 1 (Tìm theo mã): Gõ thử chữ E11 xem dropdown có hiển thị các bệnh liên quan đến tiểu đường kèm mô tả tiếng Anh không.
+Test kịch bản 2 (Tìm theo tên): Gõ thử chữ Hypertension xem hệ thống có hiển thị mã code I10 tương ứng không.
+Test lưu trữ: Chọn 1 kết quả, tiến hành Save form và kiểm tra trực tiếp trong cơ sở dữ liệu.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Build lỗi vì `Icd10Catalog.Search()` được gọi trong MedicalRecordService.cs nhưng class không tồn tại trong project.
+Cần thay thế bằng giải pháp thực tế không cần tự duy trì bộ dữ liệu ICD-10 cục bộ.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+- Xác định root cause: class `Icd10Catalog` chưa được định nghĩa ở bất kỳ đâu.
+- Đề xuất thay thế bằng NLM ClinicalTables API (miễn phí, không cần API key).
+- URL: https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms={encodedQuery}&sf=code,name&df=code,name
+- Sinh `SearchICD10Async()`: inject `HttpClient`, gọi `GetAsync`, parse JSON response 4-element array [count, codes[], fields[], displayStrings[][]].
+  Đọc `root[3]` (displayStrings), mỗi phần tử là `[code, description]`.
+- Sinh `ICD10ResultDto { Code, Description }` trong `MedicalRecordDtos.cs`.
+- Sinh endpoint `GET icd10/search` trong `OutpatientRecordController.cs`.
+- Hướng dẫn đăng ký `builder.Services.AddHttpClient()` (generic) trong `Program.cs`.
+- Frontend: `searchIcd10(query)` gọi `GET /medical-records/icd10/search?query=`, type `Icd10Result` trong `types/index.ts`.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ: SearchICD10Async(), ICD10ResultDto, endpoint GET icd10/search, AddHttpClient(),
+searchIcd10() API call và Icd10Result type. Build thành công 0 Error, 0 Warning.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Xác nhận đăng ký generic `AddHttpClient()` (không typed) vì MedicalRecordService nhận HttpClient trực tiếp qua constructor.
+- Test tay 2 kịch bản: "E11" → Diabetes mellitus; "Hypertension" → I10.
+- Xác nhận endpoint trả về JSON đúng format Icd10Result[].
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Cần hỏi lại AI nhiều lần
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | `472681e feat(outpatient): add ICD-10 diagnosis lookup via NLM API` |
+| File liên quan | `src/Mediconnect.Application/Services/MedicalRecordService.cs`; `src/Mediconnect.Application/DTOs/MedicalRecordDtos.cs`; `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs`; `src/mediconnect/Program.cs`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
+| Kết quả chạy/test | `dotnet build`: 0 Error(s), 0 Warning(s). Dropdown ICD-10 hoạt động trên giao diện bác sĩ. |
+
+---
+
+### Prompt số 12
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 28/06/2026 |
+| Công cụ AI | Antigravity |
+| Mục đích | Sửa lỗi tên bệnh nhân vãng lai bị mất khi điều hướng từ ClinicDashboard sang OutpatientRecord |
+| Phần việc liên quan | Frontend / Routing / Data persistence |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+(Cùng session với Prompt 11 — phát hiện trong quá trình test lưu trữ)
+Tên bệnh nhân vãng lai không hiển thị trên trang OutpatientRecord sau khi nhấn "Ghi khám" từ ClinicDashboard.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Entity `QueueTicket` trong DB không có cột `PatientName` (chỉ lưu ClinicId, AppointmentId, Number, IssuedAt, Status).
+Khi doctor navigate sang /outpatient-record, tên walk-in bị mất vì API không thể resolve lại từ DB.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+- Xác định root cause: QueueTicket entity thiếu PatientName column → không thể resolve tên walk-in từ DB sau navigate.
+- Đề xuất: truyền toàn bộ QueueTicketDetail object (đã có patientName từ WalkInCheckInAsync response) 
+  qua React Router navigate state thay vì chỉ truyền ID.
+- Code ClinicDashboardPage.tsx: navigate('/outpatient-record', { state: { ticket: currentPatient, clinicId: selectedClinicId } })
+- Code OutpatientRecordPage.tsx: useLocation() → loc.state?.ticket → setSelectedTicket(state.ticket)
+- Hiển thị: patient?.fullName || selectedTicket?.patientName || 'Bệnh nhân'
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng navigate với router state trong ClinicDashboardPage.tsx (line 384).
+Đọc lại trong OutpatientRecordPage.tsx bằng useLocation + loc.state (lines 66–73).
+Hiển thị tên ưu tiên fullName > patientName (line 414).
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Xác nhận không cần DB migration vì giải pháp hoàn toàn client-side.
+- Kiểm tra searchQuery flow (loc.state?.searchQuery) vẫn hoạt động song song.
+- Test: check-in walk-in → gọi khám → Ghi khám → tên hiển thị đúng trên OutpatientRecord.
+- Ghi nhận giới hạn: tên mất nếu user reload trang — known limitation do schema DB.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Cần hỏi lại AI nhiều lần
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | `472681e feat(outpatient): fix walk-in patient data persistence` |
+| File liên quan | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/types/index.ts` (`QueueTicketDetail.patientName`) |
+| Kết quả chạy/test | Tên walk-in hiển thị đúng trên OutpatientRecord. Không cần DB migration. |
+| Ghi chú khác | Workaround dùng React Router state (ephemeral trong SPA session). Known limitation: tên mất nếu reload. |
 
 ---
 
