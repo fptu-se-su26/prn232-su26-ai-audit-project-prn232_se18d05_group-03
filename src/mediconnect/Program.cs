@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Mediconnect.Application.DTOs;
 using Mediconnect.Application.Interfaces;
 using Mediconnect.Application.Services;
@@ -12,7 +13,14 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Serialize enums as readable strings (e.g. "Occupied", "Nurse") so the static UI can
+        // consume them directly instead of magic numbers.
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -80,6 +88,7 @@ if (!string.IsNullOrWhiteSpace(httpsPort))
     app.UseHttpsRedirection();
 }
 
+app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseAuthentication();
@@ -87,7 +96,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/", () => Results.Redirect("/swagger"));
+// Static UI (wwwroot/index.html) is served by UseDefaultFiles; keep a fallback for when it is absent.
+app.MapGet("/", () => Results.Redirect("/index.html"));
 
 using (var scope = app.Services.CreateScope())
 {

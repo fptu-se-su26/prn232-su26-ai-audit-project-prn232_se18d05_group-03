@@ -413,6 +413,63 @@ Các feature đã có sẵn endpoint nhưng còn khoảng trống nghiệp vụ 
 
 ---
 
+### Lần sử dụng AI số 7
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 01/07/2026 |
+| Công cụ AI | Claude |
+| Mục đích sử dụng | Làm giao diện cho 4 trang F1–F4 và nối với API thật |
+| Phần việc liên quan | Frontend / Coding |
+| Mức độ sử dụng | Hỗ trợ sinh code |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Tôi muốn làm UI cho các trang hiện có của tôi thì nên làm ở đây hay dùng Claude Design web; sau đó đưa 4 trang base-html vào project và nối API thật.
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+AI khuyến nghị làm ngay trong repo (Claude Code) vì các trang đã có sẵn trong nhánh base-html (Tailwind + design system chung) và cần gọi API thật; API đã bật UseStaticFiles nên đặt trang vào wwwroot sẽ được phục vụ same-origin (không cần CORS, JWT dùng luôn). AI sinh code:
+- Đưa 4 trang (inpatient_ward_visual_map, nursing_care_plan_vitals_charting, lab_imaging_results_entry, discharge_management_portal) + sign_in + assets từ base-html vào src/mediconnect/wwwroot, thêm index.html làm trang chủ.
+- assets/js/api.js: đăng nhập JWT (lưu localStorage), helper request đính Bearer, và các hàm gọi endpoint F1–F4.
+- Nối từng trang: F1 bản đồ giường + nhập viện/chuyển khoa; F2 chọn ca + ghi sinh tồn + y lệnh; F3 hộp chỉ định + nhập kết quả + upload file; F4 danh sách ca + xuất viện + hiển thị hoá đơn.
+- Program.cs: bật JsonStringEnumConverter (enum trả về chuỗi) và UseDefaultFiles.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ vào src/mediconnect/wwwroot và Program.cs sau khi review, giữ nguyên bộ màu/Tailwind của nhóm.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Build thành công 0 error/0 warning; kiểm tra cú pháp JS toàn bộ trang bằng node --check. Ghi nhận hạn chế: chưa có endpoint liệt kê bệnh nhân/nhân viên nên form nhập viện/y lệnh dùng GUID nhập tay; chưa chạy end-to-end tại máy này do không có SQL Server (connection string trỏ tới máy đồng đội) — cần chạy trên máy có DB để kiểm thử luồng thật.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | feat(member3): wire inpatient/clinical UI pages to real API |
+| File liên quan | src/mediconnect/wwwroot/**; src/mediconnect/wwwroot/assets/js/api.js; src/mediconnect/Program.cs |
+| Screenshot |  |
+| Kết quả chạy/test | dotnet build: 0 Error(s); node --check: toàn bộ script hợp lệ |
+| Link video demo |  |
+| Ghi chú khác | Chưa chạy end-to-end do thiếu SQL Server trong môi trường build |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Việc tái sử dụng design system có sẵn và phục vụ same-origin giúp nối API nhanh mà vẫn đồng bộ giao diện nhóm. Cần tự kiểm thử luồng thật trên máy có database và bổ sung endpoint liệt kê bệnh nhân/nhân viên để bỏ nhập GUID thủ công.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.

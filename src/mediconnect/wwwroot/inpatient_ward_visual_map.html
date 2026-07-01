@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SmartCare | Ward Bed Visual Map</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#a9c7ff",
+                    "surface-container": "#eceef0",
+                    "inverse-primary": "#a9c7ff",
+                    "on-tertiary-container": "#6ff394",
+                    "surface": "#f7f9fb",
+                    "surface-dim": "#d8dadc",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#8cf3f3",
+                    "surface-tint": "#005db6",
+                    "on-primary-container": "#c8daff",
+                    "tertiary-fixed": "#78fc9c",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-low": "#f2f4f6",
+                    "on-surface": "#191c1e",
+                    "on-surface-variant": "#424752",
+                    "secondary": "#006a6a",
+                    "on-primary-fixed-variant": "#00468c",
+                    "on-tertiary-fixed": "#00210b",
+                    "background": "#f7f9fb",
+                    "on-primary": "#ffffff",
+                    "tertiary": "#005325",
+                    "inverse-surface": "#2d3133",
+                    "on-tertiary-fixed-variant": "#005225",
+                    "surface-container-high": "#e6e8ea",
+                    "on-background": "#191c1e",
+                    "on-secondary-fixed": "#002020",
+                    "outline-variant": "#c2c6d4",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#5adf82",
+                    "on-secondary-container": "#007070",
+                    "primary": "#00478d",
+                    "surface-bright": "#f7f9fb",
+                    "outline": "#727783",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#004f4f",
+                    "secondary-fixed-dim": "#6fd7d6",
+                    "on-primary-fixed": "#001b3d",
+                    "secondary-fixed": "#8cf3f3",
+                    "primary-fixed": "#d6e3ff",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary-container": "#005eb8",
+                    "tertiary-container": "#006e33",
+                    "error-container": "#ffdad6",
+                    "error": "#ba1a1a",
+                    "surface-variant": "#e0e3e5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "sm": "8px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "lg": "24px",
+                    "margin": "32px",
+                    "gutter": "24px",
+                    "xxl": "64px",
+                    "base": "4px",
+                    "xl": "40px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "code": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "code": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Sidebar Navigation -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-lg px-md gap-xs bg-surface border-r border-outline-variant w-64 z-50">
+<div class="px-md mb-lg">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">SmartCare HIS</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Clinical Operations</p>
+</div>
+<nav class="flex-1 flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all rounded-lg" href="clinic_dashboard_queue_management.html">
+<span class="material-symbols-outlined">clinical_notes</span>
+<span class="font-label-md text-label-md">Queue</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all rounded-lg" href="outpatient_emr_screen.html">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-label-md text-label-md">Outpatient</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all rounded-lg" href="e_prescription_interface.html">
+<span class="material-symbols-outlined">prescriptions</span>
+<span class="font-label-md text-label-md">E-Prescription</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all rounded-lg" href="telemedicine_consultation.html">
+<span class="material-symbols-outlined">videocam</span>
+<span class="font-label-md text-label-md">Telemedicine</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-primary font-bold bg-primary-container rounded-lg" href="inpatient_ward_visual_map.html">
+<span class="material-symbols-outlined">bed</span>
+<span class="font-label-md text-label-md">Inpatient</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all rounded-lg" href="lab_imaging_results_entry.html">
+<span class="material-symbols-outlined">biotech</span>
+<span class="font-label-md text-label-md">Lab/Imaging</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-lg flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all rounded-lg" href="support.html">
+<span class="material-symbols-outlined">support_agent</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all rounded-lg" href="sign_out.html">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-64 flex-1">
+<!-- Top Bar -->
+<header class="flex justify-between items-center w-full px-margin h-16 sticky top-0 z-40 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-lg">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Ward Bed Visual Map</h2>
+<div class="flex items-center gap-sm bg-surface-container px-md py-xs rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 font-body-sm text-body-sm w-48" placeholder="Search Patient ID..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<a class="flex items-center gap-xs px-md py-sm border border-outline-variant text-on-surface-variant font-label-md text-label-md rounded hover:bg-surface-container-low transition-colors" href="nursing_care_plan_vitals_charting.html">
+                    Nursing Care
+                </a>
+<a class="flex items-center gap-xs px-md py-sm border border-outline-variant text-on-surface-variant font-label-md text-label-md rounded hover:bg-surface-container-low transition-colors" href="discharge_management_portal.html">
+                    Discharge Portal
+                </a>
+<button class="flex items-center gap-xs px-md py-sm bg-primary text-on-primary font-label-md text-label-md rounded hover:opacity-90 transition-colors" onclick="openAdmit()">
+<span class="material-symbols-outlined">person_add</span>
+                    Nhập viện
+                </button>
+<button class="flex items-center gap-xs px-md py-sm border border-primary text-primary font-label-md text-label-md rounded hover:bg-primary-fixed transition-colors" onclick="openTransfer()">
+<span class="material-symbols-outlined">swap_horiz</span>
+                    Chuyển khoa
+                </button>
+<a class="flex items-center gap-xs px-md py-sm border border-outline-variant text-on-surface-variant font-label-md text-label-md rounded hover:bg-surface-container-low transition-colors" href="index.html">
+                    Trang chủ
+                </a>
+<div class="flex items-center gap-xs px-md py-sm bg-surface-container-high font-label-md text-label-md rounded border border-outline-variant cursor-pointer">
+<span class="material-symbols-outlined">filter_list</span>
+                    Floor 3: Cardiology
+                </div>
+<div class="flex items-center gap-md border-l border-outline-variant ml-md pl-md">
+<span class="material-symbols-outlined cursor-pointer text-on-surface-variant">notifications</span>
+<a class="material-symbols-outlined cursor-pointer text-on-surface-variant" href="settings.html">settings</a>
+<img alt="Medical Practitioner Profile" class="w-8 h-8 rounded-full border border-outline object-cover" data-alt="A close-up portrait of a professional medical doctor in a bright, modern hospital setting. He is wearing a clean white coat and a stethoscope around his neck. The lighting is soft and clinical, using a palette of whites and medical blues. The background is slightly blurred to emphasize a clean, high-tech healthcare environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6FGOzuPgXSmamUrU0ad_5ZeyxXPUOofCVKZ65pFitUbYHymgmPzDhPF6idZhM9vAEk-sk4Fy-FKZh_Mgesbl1odvJ7yjbwIzx2k8xNGBUES70XYu0rqNB0hp5pAmiFdxskBSAyxtYXcXAL1UJx11Yu1-gHIL_Ao_sRCa7U_mSigagUesDPOUAUFK3qIivh3O-FPPX2sW90mEkQb01nBCmg0aTZI3Ji_GKvPq_MiKNKf5QnUP8Vx2fthRHJbZQii4ZC7yKGl7DaHoe"/>
+</div>
+</div>
+</header>
+<!-- Legend and Stats -->
+<div class="px-margin pt-lg">
+<div class="flex items-center justify-between mb-lg bg-surface-container-lowest p-md rounded-xl border border-outline-variant">
+<div class="flex gap-lg">
+<div class="flex items-center gap-sm">
+<span class="w-3 h-3 rounded-full bg-tertiary-container"></span>
+<span class="font-label-md text-label-md text-on-surface-variant">Available (<span id="legend-available">0</span>)</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="w-3 h-3 rounded-full bg-primary-container"></span>
+<span class="font-label-md text-label-md text-on-surface-variant">Occupied (<span id="legend-occupied">0</span>)</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<span class="font-label-md text-label-md text-on-surface-variant">Cleaning (<span id="legend-cleaning">0</span>)</span>
+</div>
+</div>
+<div class="flex gap-md">
+<div class="text-right">
+<p class="font-label-sm text-label-sm text-outline">OCCUPANCY RATE</p>
+<p class="font-headline-md text-headline-md font-bold text-primary" id="occupancy-rate">—</p>
+</div>
+</div>
+</div>
+<!-- Live bed grid (rendered from GET /api/beds/map) -->
+<div id="bed-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter mb-xxl">
+<div class="text-on-surface-variant col-span-full">Đang tải sơ đồ giường…</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button for Emergency -->
+<div class="fixed bottom-lg right-lg group">
+<button class="bg-error text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">emergency</span>
+</button>
+<span class="absolute right-xl bottom-md bg-inverse-surface text-inverse-on-surface px-md py-xs rounded font-label-sm text-label-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Emergency Code</span>
+</div>
+<!-- Admit modal -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm" id="admit-modal">
+<div class="bg-white w-[460px] rounded-xl overflow-hidden shadow-2xl">
+<div class="bg-primary p-lg flex justify-between items-center">
+<h3 class="text-white font-headline-md text-headline-md font-bold">Nhập viện &amp; gán giường</h3>
+<button class="text-white hover:bg-white/20 p-xs rounded" onclick="closeModal('admit-modal')"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="p-lg flex flex-col gap-md">
+<label class="flex flex-col gap-xs"><span class="font-label-sm text-label-sm text-outline">Patient ID (GUID)</span>
+<input id="admit-patient" class="px-md py-sm border border-outline-variant rounded" placeholder="00000000-0000-0000-0000-000000000000"/></label>
+<label class="flex flex-col gap-xs"><span class="font-label-sm text-label-sm text-outline">Khoa</span>
+<select id="admit-dept" class="px-md py-sm border border-outline-variant rounded"></select></label>
+<label class="flex flex-col gap-xs"><span class="font-label-sm text-label-sm text-outline">Giường trống</span>
+<select id="admit-bed" class="px-md py-sm border border-outline-variant rounded"></select></label>
+<button class="mt-sm py-md bg-primary text-white rounded font-label-md text-label-md hover:opacity-90" onclick="submitAdmit()">Xác nhận nhập viện</button>
+</div>
+</div>
+</div>
+<!-- Transfer modal -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm" id="transfer-modal">
+<div class="bg-white w-[460px] rounded-xl overflow-hidden shadow-2xl">
+<div class="bg-primary p-lg flex justify-between items-center">
+<h3 class="text-white font-headline-md text-headline-md font-bold">Chuyển khoa</h3>
+<button class="text-white hover:bg-white/20 p-xs rounded" onclick="closeModal('transfer-modal')"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="p-lg flex flex-col gap-md">
+<label class="flex flex-col gap-xs"><span class="font-label-sm text-label-sm text-outline">Ca nhập viện</span>
+<select id="transfer-admission" class="px-md py-sm border border-outline-variant rounded"></select></label>
+<label class="flex flex-col gap-xs"><span class="font-label-sm text-label-sm text-outline">Khoa đích</span>
+<select id="transfer-dept" class="px-md py-sm border border-outline-variant rounded"></select></label>
+<label class="flex flex-col gap-xs"><span class="font-label-sm text-label-sm text-outline">Giường đích (tuỳ chọn)</span>
+<select id="transfer-bed" class="px-md py-sm border border-outline-variant rounded"><option value="">— Không gán giường —</option></select></label>
+<button class="mt-sm py-md bg-primary text-white rounded font-label-md text-label-md hover:opacity-90" onclick="submitTransfer()">Xác nhận chuyển khoa</button>
+</div>
+</div>
+</div>
+<script src="assets/js/api.js"></script>
+<script>
+  Api.requireAuth();
+  const STATUS_STYLE = {
+    Available: { cls: 'bg-tertiary-container text-white', icon: 'check_circle', label: 'Trống' },
+    Occupied:  { cls: 'bg-primary-container text-white',   icon: 'bed',          label: 'Đang dùng' },
+    Cleaning:  { cls: 'bg-secondary-container text-on-secondary-container', icon: 'cleaning_services', label: 'Đang dọn' },
+    OutOfService: { cls: 'bg-surface-dim text-on-surface-variant', icon: 'block', label: 'Ngưng dùng' }
+  };
+  let allBeds = [];
+
+  function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
+  window.addEventListener('keydown', e => { if(e.key==='Escape') document.querySelectorAll('.fixed.inset-0').forEach(m=>m.classList.add('hidden')); });
+
+  function bedCard(bed){
+    const s = STATUS_STYLE[bed.status] || STATUS_STYLE.OutOfService;
+    return `<div class="p-sm rounded-lg ${s.cls} flex flex-col gap-xs" title="${bed.status}">
+      <div class="flex justify-between"><span class="font-label-sm text-label-sm">Giường ${bed.bedNumber}</span>
+      <span class="material-symbols-outlined text-[16px]">${s.icon}</span></div>
+      <span class="font-label-md text-label-md font-bold">${s.label}</span>
+      <span class="font-label-sm text-label-sm opacity-80">${bed.ward || ''}</span></div>`;
+  }
+
+  function render(){
+    const grid = document.getElementById('bed-grid');
+    // group by room
+    const rooms = {};
+    allBeds.forEach(b => { const k = (b.ward||'') + ' · ' + (b.roomNumber||'?'); (rooms[k] = rooms[k]||[]).push(b); });
+    const keys = Object.keys(rooms).sort();
+    grid.innerHTML = keys.length ? keys.map(k => `
+      <div class="bg-white rounded-xl border border-outline-variant p-md shadow-sm">
+        <div class="flex justify-between items-center mb-md border-b border-outline-variant pb-xs">
+          <span class="font-label-md text-label-md font-bold text-on-surface">Phòng ${rooms[k][0].roomNumber || '?'}</span>
+          <span class="font-label-sm text-label-sm text-outline">${rooms[k][0].ward || ''}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-sm">${rooms[k].map(bedCard).join('')}</div>
+      </div>`).join('') : '<div class="col-span-full text-on-surface-variant">Chưa có giường nào. Hãy tạo giường qua API hoặc Swagger.</div>';
+
+    const count = s => allBeds.filter(b => b.status === s).length;
+    document.getElementById('legend-available').textContent = count('Available');
+    document.getElementById('legend-occupied').textContent = count('Occupied');
+    document.getElementById('legend-cleaning').textContent = count('Cleaning');
+    const total = allBeds.length;
+    document.getElementById('occupancy-rate').textContent = total ? Math.round(count('Occupied')/total*100) + '%' : '—';
+  }
+
+  async function loadBeds(){
+    try { allBeds = await Api.getBeds(); render(); }
+    catch(e){ toast(e.message, 'error'); }
+  }
+
+  function fillDeptSelect(sel, depts){ sel.innerHTML = depts.map(d => `<option value="${d.id}">${d.name}</option>`).join(''); }
+  function fillBedSelect(sel, beds, includeBlank){
+    const opts = beds.filter(b => b.status === 'Available').map(b => `<option value="${b.id}">Phòng ${b.roomNumber} · Giường ${b.bedNumber} (${b.ward||''})</option>`).join('');
+    sel.innerHTML = (includeBlank ? '<option value="">— Không gán giường —</option>' : '') + opts;
+  }
+
+  async function openAdmit(){
+    try {
+      const [depts] = await Promise.all([Api.getDepartments()]);
+      fillDeptSelect(document.getElementById('admit-dept'), depts);
+      fillBedSelect(document.getElementById('admit-bed'), allBeds, false);
+      document.getElementById('admit-modal').classList.remove('hidden');
+    } catch(e){ toast(e.message, 'error'); }
+  }
+  async function submitAdmit(){
+    const dto = {
+      patientId: document.getElementById('admit-patient').value.trim(),
+      departmentId: document.getElementById('admit-dept').value,
+      bedId: document.getElementById('admit-bed').value
+    };
+    if(!dto.patientId || !dto.bedId){ toast('Cần Patient ID và giường.', 'error'); return; }
+    try { await Api.admit(dto); toast('Nhập viện thành công.', 'success'); closeModal('admit-modal'); loadBeds(); }
+    catch(e){ toast(e.message, 'error'); }
+  }
+
+  async function openTransfer(){
+    try {
+      const [depts, admissions] = await Promise.all([Api.getDepartments(), Api.getAdmissions()]);
+      const active = admissions.filter(a => a.status === 'Active');
+      document.getElementById('transfer-admission').innerHTML = active.map(a => `<option value="${a.id}">Ca ${a.id.slice(0,8)} · BN ${a.patientId.slice(0,8)}</option>`).join('') || '<option value="">(không có ca Active)</option>';
+      fillDeptSelect(document.getElementById('transfer-dept'), depts);
+      fillBedSelect(document.getElementById('transfer-bed'), allBeds, true);
+      document.getElementById('transfer-modal').classList.remove('hidden');
+    } catch(e){ toast(e.message, 'error'); }
+  }
+  async function submitTransfer(){
+    const id = document.getElementById('transfer-admission').value;
+    const dto = { departmentId: document.getElementById('transfer-dept').value, bedId: document.getElementById('transfer-bed').value || null };
+    if(!id){ toast('Chọn ca nhập viện.', 'error'); return; }
+    try { await Api.transfer(id, dto); toast('Chuyển khoa thành công.', 'success'); closeModal('transfer-modal'); loadBeds(); }
+    catch(e){ toast(e.message, 'error'); }
+  }
+
+  loadBeds();
+</script>
+</body></html>

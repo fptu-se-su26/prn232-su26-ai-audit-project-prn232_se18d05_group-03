@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Daily Medical Orders &amp; Nursing Care Plan - SmartCare</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed-dim": "#a9c7ff",
+                      "surface-container": "#eceef0",
+                      "inverse-primary": "#a9c7ff",
+                      "on-tertiary-container": "#6ff394",
+                      "surface": "#f7f9fb",
+                      "surface-dim": "#d8dadc",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "secondary-container": "#8cf3f3",
+                      "surface-tint": "#005db6",
+                      "on-primary-container": "#c8daff",
+                      "tertiary-fixed": "#78fc9c",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-low": "#f2f4f6",
+                      "on-surface": "#191c1e",
+                      "on-surface-variant": "#424752",
+                      "secondary": "#006a6a",
+                      "on-primary-fixed-variant": "#00468c",
+                      "on-tertiary-fixed": "#00210b",
+                      "background": "#f7f9fb",
+                      "on-primary": "#ffffff",
+                      "tertiary": "#005325",
+                      "inverse-surface": "#2d3133",
+                      "on-tertiary-fixed-variant": "#005225",
+                      "surface-container-high": "#e6e8ea",
+                      "on-background": "#191c1e",
+                      "on-secondary-fixed": "#002020",
+                      "outline-variant": "#c2c6d4",
+                      "surface-container-highest": "#e0e3e5",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed-dim": "#5adf82",
+                      "on-secondary-container": "#007070",
+                      "primary": "#00478d",
+                      "surface-bright": "#f7f9fb",
+                      "outline": "#727783",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed-variant": "#004f4f",
+                      "secondary-fixed-dim": "#6fd7d6",
+                      "on-primary-fixed": "#001b3d",
+                      "secondary-fixed": "#8cf3f3",
+                      "primary-fixed": "#d6e3ff",
+                      "inverse-on-surface": "#eff1f3",
+                      "primary-container": "#005eb8",
+                      "tertiary-container": "#006e33",
+                      "error-container": "#ffdad6",
+                      "error": "#ba1a1a",
+                      "surface-variant": "#e0e3e5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "md": "16px",
+                      "xs": "4px",
+                      "lg": "24px",
+                      "margin": "32px",
+                      "gutter": "24px",
+                      "xxl": "64px",
+                      "base": "4px",
+                      "xl": "40px"
+              },
+              "fontFamily": {
+                      "label-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "code": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "code": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f7f9fb;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .vitals-chart-container {
+            position: relative;
+            height: 180px;
+            width: 100%;
+        }
+        .vitals-line {
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .order-row:hover {
+            background-color: #f2f4f6;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- TopNavBar -->
+<nav class="flex justify-between items-center w-full px-margin h-16 sticky top-0 z-50 bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">SmartCare</span>
+<div class="hidden md:flex gap-md ml-lg">
+<a class="text-on-surface-variant dark:text-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="clinic_dashboard_queue_management.html">Patients</a>
+<a class="text-primary dark:text-inverse-primary border-b-2 border-primary dark:border-inverse-primary pb-1 font-label-md text-label-md" href="inpatient_ward_visual_map.html">Inpatient Care</a>
+<a class="text-on-surface-variant dark:text-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="hr_shift_scheduling_matrix.html">Schedules</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative flex items-center bg-surface-container rounded-full px-md py-xs">
+<span class="material-symbols-outlined text-outline mr-sm" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm p-0 w-48" placeholder="Search patient ID..." type="text"/>
+</div>
+<div class="flex gap-sm">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-highest p-sm rounded-full transition-colors" data-icon="notifications">notifications</button>
+<a class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-highest p-sm rounded-full transition-colors" data-icon="help" href="support.html">help</a>
+<a class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-highest p-sm rounded-full transition-colors" data-icon="settings" href="settings.html">settings</a>
+</div>
+<img alt="Medical Practitioner Profile" class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="A professional portrait of a male doctor in his late 40s wearing a clean white lab coat and a stethoscope around his neck. He has a warm, confident expression and short salt-and-pepper hair. The background is a brightly lit, sterile clinical environment with soft bokeh effects, emphasizing a clean and high-end medical professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPPhS_59vJjcMh5EEWK66fKApCkCpDkCO-LuFdFQoxf-X4gSV_0T6yZtT5_0gEehU2heF1oHhxpx9fFcS43xf_ZlH9Zn_li6mjLF3Mw0fLv5UiIdH-vHGvtmRCWWxIbvgI3ow1tDiqpE8bzgjqwJRRgVb3INyXINz_sIcPzXoxVv_ctoTL1fRnqjZC-eFeRk11mnveQT5u_jAM87XEQvJFGxXY94AUDmxh6XCauOIN4bBfB2xDq09xFxXd3YIS6pmHH2zMu2iAV2aR"/>
+</div>
+</nav>
+<!-- SideNavBar (Inpatient Selection) -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-lg px-md gap-xs bg-surface dark:bg-inverse-surface border-r border-outline-variant dark:border-outline w-64 pt-20">
+<div class="mb-lg px-sm">
+<h2 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">SmartCare HIS</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Clinical Operations</p>
+</div>
+<nav class="flex-grow space-y-xs">
+<a class="text-on-surface-variant dark:text-surface-variant font-bold bg-primary-container dark:bg-primary-fixed-dim/20 rounded-lg flex items-center gap-md p-md cursor-pointer transition-transform scale-95 active:scale-100" href="inpatient_ward_visual_map.html">
+<span class="material-symbols-outlined" data-icon="bed">bed</span>
+<span class="font-label-md text-label-md">Inpatient</span>
+</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-lg flex items-center gap-md p-md cursor-pointer transition-transform scale-95 active:scale-100" href="clinic_dashboard_queue_management.html">
+<span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
+<span class="font-label-md text-label-md">Queue</span>
+</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-lg flex items-center gap-md p-md cursor-pointer transition-transform scale-95 active:scale-100" href="outpatient_emr_screen.html">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-label-md text-label-md">Outpatient</span>
+</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-lg flex items-center gap-md p-md cursor-pointer transition-transform scale-95 active:scale-100" href="e_prescription_interface.html">
+<span class="material-symbols-outlined" data-icon="prescriptions">prescriptions</span>
+<span class="font-label-md text-label-md">E-Prescription</span>
+</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-lg flex items-center gap-md p-md cursor-pointer transition-transform scale-95 active:scale-100" href="telemedicine_consultation.html">
+<span class="material-symbols-outlined" data-icon="videocam">videocam</span>
+<span class="font-label-md text-label-md">Telemedicine</span>
+</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-lg flex items-center gap-md p-md cursor-pointer transition-transform scale-95 active:scale-100" href="lab_imaging_results_entry.html">
+<span class="material-symbols-outlined" data-icon="biotech">biotech</span>
+<span class="font-label-md text-label-md">Lab/Imaging</span>
+</a>
+</nav>
+<div class="mt-auto pt-lg border-t border-outline-variant space-y-xs">
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-on-surface flex items-center gap-md p-md cursor-pointer" href="support.html">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-on-surface flex items-center gap-md p-md cursor-pointer" href="sign_out.html">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 p-margin pt-md">
+<!-- Header / Patient Summary -->
+<div class="flex justify-between items-end mb-lg">
+<div>
+<div class="flex items-center gap-sm mb-xs text-on-surface-variant">
+<span class="font-label-sm text-label-sm">Ward 4B / Bed 202</span>
+<span class="w-1 h-1 bg-outline rounded-full"></span>
+<span class="font-label-sm text-label-sm">ID: SC-982103</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg font-bold">Johnathan Aris, M.D. (Patient)</h1>
+</div>
+<div class="flex gap-md">
+<button class="bg-surface-container-lowest border border-primary text-primary px-lg py-sm rounded-lg font-label-md text-label-md flex items-center gap-sm hover:bg-primary-fixed-dim/10 transition-colors">
+<span class="material-symbols-outlined" data-icon="print">print</span> Print Charts
+                </button>
+<button class="bg-primary text-on-primary px-lg py-sm rounded-lg font-label-md text-label-md flex items-center gap-sm shadow-sm hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="add">add</span> Add Vitals
+                </button>
+</div>
+</div>
+<!-- Admission selector -->
+<div class="mb-lg flex items-center gap-md bg-surface-container-lowest p-md rounded-xl border border-outline-variant">
+  <span class="material-symbols-outlined text-primary">assignment_ind</span>
+  <label class="font-label-md text-label-md text-on-surface-variant">Ca nhập viện:</label>
+  <select id="admission-select" class="px-md py-sm border border-outline-variant rounded flex-1 max-w-lg"></select>
+</div>
+
+<!-- Latest vitals -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-gutter mb-xl" id="vitals-latest">
+  <div class="bg-white p-lg rounded-xl border border-outline-variant text-center"><p class="text-label-sm text-outline">Mạch (bpm)</p><p class="text-headline-md font-bold" id="v-pulse">—</p></div>
+  <div class="bg-white p-lg rounded-xl border border-outline-variant text-center"><p class="text-label-sm text-outline">Nhiệt độ (°C)</p><p class="text-headline-md font-bold" id="v-temp">—</p></div>
+  <div class="bg-white p-lg rounded-xl border border-outline-variant text-center"><p class="text-label-sm text-outline">Huyết áp</p><p class="text-headline-md font-bold" id="v-bp">—</p></div>
+  <div class="bg-white p-lg rounded-xl border border-outline-variant text-center"><p class="text-label-sm text-outline">Nhịp thở</p><p class="text-headline-md font-bold" id="v-rr">—</p></div>
+  <div class="bg-white p-lg rounded-xl border border-outline-variant text-center"><p class="text-label-sm text-outline">SpO₂ (%)</p><p class="text-headline-md font-bold" id="v-spo2">—</p></div>
+</div>
+
+<!-- Vitals entry (nurse) -->
+<div class="bg-white rounded-xl border border-outline-variant shadow-sm mb-xl p-lg" id="vitals-form-card">
+  <h2 class="font-headline-md text-headline-md mb-md flex items-center gap-sm"><span class="material-symbols-outlined text-primary">add_circle</span> Ghi chỉ số sinh tồn (Y tá)</h2>
+  <div class="grid grid-cols-2 md:grid-cols-6 gap-md">
+    <label class="flex flex-col gap-xs"><span class="text-label-sm text-outline">Mạch</span><input id="in-pulse" type="number" class="px-md py-sm border border-outline-variant rounded"/></label>
+    <label class="flex flex-col gap-xs"><span class="text-label-sm text-outline">Nhiệt độ</span><input id="in-temp" type="number" step="0.1" class="px-md py-sm border border-outline-variant rounded"/></label>
+    <label class="flex flex-col gap-xs"><span class="text-label-sm text-outline">HA tâm thu</span><input id="in-sys" type="number" class="px-md py-sm border border-outline-variant rounded"/></label>
+    <label class="flex flex-col gap-xs"><span class="text-label-sm text-outline">HA tâm trương</span><input id="in-dia" type="number" class="px-md py-sm border border-outline-variant rounded"/></label>
+    <label class="flex flex-col gap-xs"><span class="text-label-sm text-outline">Nhịp thở</span><input id="in-rr" type="number" class="px-md py-sm border border-outline-variant rounded"/></label>
+    <label class="flex flex-col gap-xs"><span class="text-label-sm text-outline">SpO₂</span><input id="in-spo2" type="number" class="px-md py-sm border border-outline-variant rounded"/></label>
+  </div>
+  <button class="mt-md bg-primary text-on-primary px-lg py-sm rounded font-label-md text-label-md hover:opacity-90" onclick="submitVitals()">Lưu chỉ số</button>
+</div>
+
+<!-- Care orders (doctor's daily orders sheet) -->
+<div class="bg-white rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+  <div class="px-lg py-md bg-surface-container-low border-b border-outline-variant flex justify-between items-center">
+    <h2 class="font-headline-md text-headline-md flex items-center gap-sm"><span class="material-symbols-outlined text-primary">assignment</span> Y lệnh chăm sóc hàng ngày</h2>
+    <label class="flex items-center gap-sm text-label-md text-on-surface-variant"><input type="checkbox" id="pending-only" onchange="loadCareOrders()"/> Chỉ chưa hoàn thành</label>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead><tr class="bg-surface-container-low text-label-sm text-on-surface-variant">
+        <th class="px-lg py-sm">Loại</th><th class="px-lg py-sm">Mô tả</th><th class="px-lg py-sm">Thời gian</th><th class="px-lg py-sm">Trạng thái</th><th class="px-lg py-sm text-right">Thao tác</th>
+      </tr></thead>
+      <tbody id="care-orders-body"><tr><td colspan="5" class="px-lg py-md text-on-surface-variant">Đang tải…</td></tr></tbody>
+    </table>
+  </div>
+  <div class="px-lg py-md border-t border-outline-variant bg-surface-container-lowest">
+    <h3 class="font-label-md text-label-md mb-sm">Thêm y lệnh (Bác sĩ)</h3>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-md items-end">
+      <label class="flex flex-col gap-xs"><span class="text-label-sm text-outline">Loại</span>
+        <select id="co-type" class="px-md py-sm border border-outline-variant rounded">
+          <option value="Medication">Thuốc</option><option value="Infusion">Truyền dịch</option>
+          <option value="Diet">Suất ăn</option><option value="Procedure">Thủ thuật</option><option value="Other">Khác</option>
+        </select></label>
+      <label class="flex flex-col gap-xs md:col-span-2"><span class="text-label-sm text-outline">Mô tả</span><input id="co-desc" class="px-md py-sm border border-outline-variant rounded" placeholder="VD: Paracetamol 500mg x2/ngày"/></label>
+      <label class="flex flex-col gap-xs"><span class="text-label-sm text-outline">Bác sĩ (StaffProfile GUID)</span><input id="co-staff" class="px-md py-sm border border-outline-variant rounded" placeholder="OrderedById"/></label>
+    </div>
+    <button class="mt-md bg-primary text-on-primary px-lg py-sm rounded font-label-md text-label-md hover:opacity-90" onclick="submitCareOrder()">Tạo y lệnh</button>
+  </div>
+</div>
+</main>
+<script src="assets/js/api.js"></script>
+<script>
+  Api.requireAuth();
+  const TYPE_LABEL = { Medication:'Thuốc', Infusion:'Truyền dịch', Diet:'Suất ăn', Procedure:'Thủ thuật', Other:'Khác' };
+  function admissionId(){ return document.getElementById('admission-select').value; }
+  function fmt(dt){ return dt ? new Date(dt).toLocaleString('vi-VN') : ''; }
+
+  async function loadAdmissions(){
+    try {
+      const list = await Api.getAdmissions();
+      const active = list.filter(a => a.status === 'Active');
+      const sel = document.getElementById('admission-select');
+      const rows = (active.length ? active : list);
+      sel.innerHTML = rows.map(a => `<option value="${a.id}">Ca ${a.id.slice(0,8)} · BN ${a.patientId.slice(0,8)} · ${a.status}</option>`).join('')
+        || '<option value="">(chưa có ca nhập viện)</option>';
+      if(sel.value) refresh();
+    } catch(e){ toast(e.message, 'error'); }
+  }
+
+  async function refresh(){ await Promise.all([loadVitals(), loadCareOrders()]); }
+
+  async function loadVitals(){
+    const id = admissionId(); if(!id) return;
+    try {
+      const list = await Api.getVitalSigns(id);
+      const v = list[0]; // newest first
+      document.getElementById('v-pulse').textContent = v && v.pulse != null ? v.pulse : '—';
+      document.getElementById('v-temp').textContent = v && v.temperatureC != null ? v.temperatureC : '—';
+      document.getElementById('v-bp').textContent = v && v.bloodPressureSystolic != null ? `${v.bloodPressureSystolic}/${v.bloodPressureDiastolic ?? '—'}` : '—';
+      document.getElementById('v-rr').textContent = v && v.respiratoryRate != null ? v.respiratoryRate : '—';
+      document.getElementById('v-spo2').textContent = v && v.spO2 != null ? v.spO2 : '—';
+    } catch(e){ toast(e.message, 'error'); }
+  }
+
+  function num(id){ const val = document.getElementById(id).value; return val === '' ? null : Number(val); }
+  async function submitVitals(){
+    const id = admissionId(); if(!id){ toast('Chọn ca nhập viện.', 'error'); return; }
+    const dto = { admissionId: id, recordedAt: new Date().toISOString(),
+      pulse: num('in-pulse'), temperatureC: num('in-temp'),
+      bloodPressureSystolic: num('in-sys'), bloodPressureDiastolic: num('in-dia'),
+      respiratoryRate: num('in-rr'), spO2: num('in-spo2') };
+    try { await Api.createVitalSign(dto); toast('Đã lưu chỉ số.', 'success');
+      ['in-pulse','in-temp','in-sys','in-dia','in-rr','in-spo2'].forEach(i=>document.getElementById(i).value='');
+      loadVitals(); }
+    catch(e){ toast(e.message, 'error'); }
+  }
+
+  async function loadCareOrders(){
+    const id = admissionId(); if(!id) return;
+    const pending = document.getElementById('pending-only').checked;
+    try {
+      const list = await Api.getCareOrders(id, pending ? { pending: true } : {});
+      const body = document.getElementById('care-orders-body');
+      body.innerHTML = list.length ? list.map(o => `
+        <tr class="border-t border-outline-variant ${o.isCompleted ? 'opacity-60' : ''}">
+          <td class="px-lg py-sm font-label-md">${TYPE_LABEL[o.orderType] || o.orderType}</td>
+          <td class="px-lg py-sm">${o.description}</td>
+          <td class="px-lg py-sm text-body-sm text-on-surface-variant">${fmt(o.orderedAt)}</td>
+          <td class="px-lg py-sm">${o.isCompleted ? '<span class="px-sm py-xs rounded bg-tertiary-container text-white text-label-sm">Hoàn thành</span>' : '<span class="px-sm py-xs rounded bg-surface-dim text-on-surface-variant text-label-sm">Chờ</span>'}</td>
+          <td class="px-lg py-sm text-right">${o.isCompleted ? '' : `<button class="text-primary hover:underline font-label-md" onclick="complete('${o.id}')">Hoàn thành</button>`}</td>
+        </tr>`).join('') : '<tr><td colspan="5" class="px-lg py-md text-on-surface-variant">Chưa có y lệnh.</td></tr>';
+    } catch(e){ toast(e.message, 'error'); }
+  }
+
+  async function complete(id){
+    try { await Api.completeCareOrder(id); toast('Đã hoàn thành y lệnh.', 'success'); loadCareOrders(); }
+    catch(e){ toast(e.message, 'error'); }
+  }
+
+  async function submitCareOrder(){
+    const id = admissionId(); if(!id){ toast('Chọn ca nhập viện.', 'error'); return; }
+    const dto = { admissionId: id, orderedById: document.getElementById('co-staff').value.trim(),
+      orderType: document.getElementById('co-type').value, description: document.getElementById('co-desc').value.trim(),
+      orderedAt: new Date().toISOString(), isCompleted: false };
+    if(!dto.orderedById || !dto.description){ toast('Cần mô tả và StaffProfile GUID của bác sĩ.', 'error'); return; }
+    try { await Api.createCareOrder(dto); toast('Đã tạo y lệnh.', 'success'); document.getElementById('co-desc').value=''; loadCareOrders(); }
+    catch(e){ toast(e.message, 'error'); }
+  }
+
+  document.getElementById('admission-select').addEventListener('change', refresh);
+  loadAdmissions();
+</script>
+</body></html>
