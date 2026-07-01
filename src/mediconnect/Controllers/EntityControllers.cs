@@ -2,6 +2,7 @@ using Mediconnect.Application.DTOs;
 using Mediconnect.Application.Interfaces;
 using Mediconnect.Application.Mapping;
 using Mediconnect.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Mediconnect.Api.Controllers;
@@ -89,16 +90,48 @@ public class BedsController : CrudController<Bed, BedReadDto, BedWriteDto>
 public class BedAssignmentsController : CrudController<BedAssignment, BedAssignmentReadDto, BedAssignmentWriteDto>
 {
     private readonly IRepository<BedAssignment> _repository;
+    private readonly IRepository<Bed> _bedRepository;
 
     public BedAssignmentsController(
         ICrudService<BedAssignment, BedAssignmentReadDto, BedAssignmentWriteDto> service,
-        IRepository<BedAssignment> repository)
+        IRepository<BedAssignment> repository,
+        IRepository<Bed> bedRepository)
         : base(service)
     {
         _repository = repository;
+        _bedRepository = bedRepository;
+    }
+
+    // Assigning a patient to a bed must keep the F1 bed map accurate: the target bed has to be
+    // available and is flipped to Occupied once the assignment is created.
+    [HttpPost]
+    [Authorize(Roles = "Nurse,Doctor,Admin")]
+    public override async Task<ActionResult<BedAssignmentReadDto>> Create(
+        [FromBody] BedAssignmentWriteDto dto,
+        CancellationToken cancellationToken)
+    {
+        var bed = await _bedRepository.GetByIdAsync(dto.BedId, cancellationToken);
+        if (bed is null)
+        {
+            return NotFound(new { message = "Bed not found." });
+        }
+
+        if (bed.Status != BedStatus.Available)
+        {
+            return BadRequest(new { message = $"Bed is not available (current status: {bed.Status})." });
+        }
+
+        var created = await base.Create(dto, cancellationToken);
+
+        bed.Status = BedStatus.Occupied;
+        _bedRepository.Update(bed);
+        await _bedRepository.SaveChangesAsync(cancellationToken);
+
+        return created;
     }
 
     [HttpPatch("{id:guid}/release")]
+    [Authorize(Roles = "Nurse,Doctor,Admin")]
     public async Task<IActionResult> Release(Guid id, CancellationToken cancellationToken)
     {
         var assignment = await _repository.GetByIdAsync(id, cancellationToken);
@@ -109,6 +142,15 @@ public class BedAssignmentsController : CrudController<BedAssignment, BedAssignm
 
         assignment.ReleasedAt = DateTime.UtcNow;
         _repository.Update(assignment);
+
+        // Free the bed and flag it for cleaning so the bed map reflects the release.
+        var bed = await _bedRepository.GetByIdAsync(assignment.BedId, cancellationToken);
+        if (bed is not null)
+        {
+            bed.Status = BedStatus.Cleaning;
+            _bedRepository.Update(bed);
+        }
+
         await _repository.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
@@ -193,7 +235,17 @@ public class CareOrdersController : CrudController<CareOrder, CareOrderReadDto, 
         _repository = repository;
     }
 
+    // F2: doctors (Bác sĩ) issue the daily care orders (medication, infusion, diet, procedure).
+    [HttpPost]
+    [Authorize(Roles = "Doctor,Admin")]
+    public override Task<ActionResult<CareOrderReadDto>> Create(
+        [FromBody] CareOrderWriteDto dto,
+        CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
+    // Nurses (or doctors) mark an order as carried out at the bedside.
     [HttpPatch("{id:guid}/complete")]
+    [Authorize(Roles = "Nurse,Doctor,Admin")]
     public async Task<IActionResult> Complete(Guid id, CancellationToken cancellationToken)
     {
         var order = await _repository.GetByIdAsync(id, cancellationToken);
@@ -287,6 +339,7 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
     }
 
     [HttpPatch("{id:guid}/status")]
+    [Authorize(Roles = "Nurse,Doctor,Admin")]
     public async Task<IActionResult> UpdateStatus(
         Guid id,
         StatusUpdateDto<AdmissionStatus> dto,
@@ -304,9 +357,60 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         return NoContent();
     }
 
+    // Admit a patient (optionally transferring in from an outpatient visit) and assign a bed in one step,
+    // keeping the F1 bed map accurate by flipping the bed to Occupied.
+    [HttpPost("admit")]
+    [Authorize(Roles = "Nurse,Doctor,Admin")]
+    public async Task<ActionResult<InpatientAdmissionReadDto>> Admit(
+        [FromBody] AdmitRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var bed = await _bedRepository.GetByIdAsync(request.BedId, cancellationToken);
+        if (bed is null)
+        {
+            return NotFound(new { message = "Bed not found." });
+        }
+
+        if (bed.Status != BedStatus.Available)
+        {
+            return BadRequest(new { message = $"Bed is not available (current status: {bed.Status})." });
+        }
+
+        var now = DateTime.UtcNow;
+
+        var admission = new InpatientAdmission
+        {
+            Id = Guid.NewGuid(),
+            PatientId = request.PatientId,
+            FromOutpatientVisitId = request.FromOutpatientVisitId,
+            DepartmentId = request.DepartmentId,
+            AdmissionDate = now,
+            Status = AdmissionStatus.Active
+        };
+        await _repository.AddAsync(admission, cancellationToken);
+
+        var assignment = new BedAssignment
+        {
+            Id = Guid.NewGuid(),
+            AdmissionId = admission.Id,
+            BedId = bed.Id,
+            AssignedAt = now
+        };
+        await _bedAssignmentRepository.AddAsync(assignment, cancellationToken);
+
+        bed.Status = BedStatus.Occupied;
+        _bedRepository.Update(bed);
+
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        var result = SimpleMapper.Map<InpatientAdmission, InpatientAdmissionReadDto>(admission);
+        return Ok(result);
+    }
+
     // Marks the patient discharged, releases beds, and aggregates bed/drug/procedure charges
     // into a Pending invoice handed off to the Billing subsystem.
     [HttpPost("{id:guid}/discharge")]
+    [Authorize(Roles = "Nurse,Doctor,Admin")]
     public async Task<ActionResult<DischargeResultDto>> Discharge(
         Guid id,
         [FromBody] DischargeRequestDto? request,
@@ -514,7 +618,10 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         return Ok(result);
     }
 
+    // Ward transfer (chuyển khoa): move the admission to another department, release the current bed
+    // (flagged Cleaning) and, when a target bed is supplied, assign it (flagged Occupied) - all atomically.
     [HttpPost("{id:guid}/transfer")]
+    [Authorize(Roles = "Nurse,Doctor,Admin")]
     public async Task<ActionResult<InpatientAdmissionReadDto>> Transfer(
         Guid id,
         TransferAdmissionDto dto,
@@ -526,9 +633,62 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
             return NotFound();
         }
 
+        var now = DateTime.UtcNow;
+
+        // Validate the target bed up front so we don't half-apply the transfer.
+        Bed? targetBed = null;
+        if (dto.BedId.HasValue)
+        {
+            targetBed = await _bedRepository.GetByIdAsync(dto.BedId.Value, cancellationToken);
+            if (targetBed is null)
+            {
+                return NotFound(new { message = "Target bed not found." });
+            }
+
+            if (targetBed.Status != BedStatus.Available)
+            {
+                return BadRequest(new { message = $"Target bed is not available (current status: {targetBed.Status})." });
+            }
+        }
+
+        // Release any still-open bed assignment for this admission and flag the bed for cleaning.
+        var assignments = await _bedAssignmentRepository.ListAsync(a => a.AdmissionId == id, cancellationToken);
+        foreach (var assignment in assignments)
+        {
+            if (assignment.ReleasedAt is null)
+            {
+                assignment.ReleasedAt = now;
+                _bedAssignmentRepository.Update(assignment);
+
+                var oldBed = await _bedRepository.GetByIdAsync(assignment.BedId, cancellationToken);
+                if (oldBed is not null)
+                {
+                    oldBed.Status = BedStatus.Cleaning;
+                    _bedRepository.Update(oldBed);
+                }
+            }
+        }
+
         admission.DepartmentId = dto.DepartmentId;
         admission.Status = AdmissionStatus.Active;
         _repository.Update(admission);
+
+        // Assign the new bed if one was provided.
+        if (targetBed is not null)
+        {
+            var newAssignment = new BedAssignment
+            {
+                Id = Guid.NewGuid(),
+                AdmissionId = admission.Id,
+                BedId = targetBed.Id,
+                AssignedAt = now
+            };
+            await _bedAssignmentRepository.AddAsync(newAssignment, cancellationToken);
+
+            targetBed.Status = BedStatus.Occupied;
+            _bedRepository.Update(targetBed);
+        }
+
         await _repository.SaveChangesAsync(cancellationToken);
 
         var result = SimpleMapper.Map<InpatientAdmission, InpatientAdmissionReadDto>(admission);
@@ -550,6 +710,14 @@ public class LabOrdersController : CrudController<LabOrder, LabOrderReadDto, Lab
         _repository = repository;
         _resultRepository = resultRepository;
     }
+
+    // F3: doctors (Bác sĩ) raise the lab / imaging order.
+    [HttpPost]
+    [Authorize(Roles = "Doctor,Admin")]
+    public override Task<ActionResult<LabOrderReadDto>> Create(
+        [FromBody] LabOrderWriteDto dto,
+        CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
 
     // Lab department receives incoming orders; ordering doctor polls their own results.
     [HttpGet("filter")]
@@ -577,7 +745,9 @@ public class LabOrdersController : CrudController<LabOrder, LabOrderReadDto, Lab
         return Ok(result);
     }
 
+    // Lab department (Bộ phận xét nghiệm) advances the order through its workflow.
     [HttpPatch("{id:guid}/status")]
+    [Authorize(Roles = "Lab,Admin")]
     public async Task<IActionResult> UpdateStatus(
         Guid id,
         StatusUpdateDto<LabOrderStatus> dto,
@@ -597,6 +767,7 @@ public class LabOrdersController : CrudController<LabOrder, LabOrderReadDto, Lab
 
     // Lab enters a result for an order; the order is auto-completed so it surfaces on the doctor's screen.
     [HttpPost("{id:guid}/result")]
+    [Authorize(Roles = "Lab,Admin")]
     public async Task<ActionResult<LabResultReadDto>> EnterResult(
         Guid id,
         LabResultEntryDto dto,
@@ -662,7 +833,9 @@ public class LabResultsController : CrudController<LabResult, LabResultReadDto, 
         _environment = environment;
     }
 
+    // F3: lab department uploads the scanned result image / PDF.
     [HttpPost("{id:guid}/file")]
+    [Authorize(Roles = "Lab,Admin")]
     public async Task<ActionResult<LabResultReadDto>> UploadFile(Guid id, IFormFile file, CancellationToken cancellationToken)
     {
         if (file is null || file.Length == 0)
@@ -872,4 +1045,12 @@ public class VitalSignsController : CrudController<VitalSign, VitalSignReadDto, 
         : base(service)
     {
     }
+
+    // F2: nurses (Y tá) record the patient's daily vital signs at the bedside.
+    [HttpPost]
+    [Authorize(Roles = "Nurse,Admin")]
+    public override Task<ActionResult<VitalSignReadDto>> Create(
+        [FromBody] VitalSignWriteDto dto,
+        CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
 }

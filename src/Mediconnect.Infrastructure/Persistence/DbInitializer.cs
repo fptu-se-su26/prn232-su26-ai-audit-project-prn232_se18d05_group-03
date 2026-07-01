@@ -96,6 +96,17 @@ public class DbInitializer
             PasswordHash = _passwordHasher.Hash("Nurse@123")
         };
 
+        var labUser = new UserAccount
+        {
+            Id = Guid.NewGuid(),
+            FullName = "Lab Tech Hoa Vo",
+            Email = "lab@mediconnect.local",
+            PhoneNumber = "0930000000",
+            Role = UserRole.Lab,
+            IsActive = true,
+            PasswordHash = _passwordHasher.Hash("Lab@123")
+        };
+
         var staffProfiles = new[]
         {
             new StaffProfile
@@ -145,7 +156,7 @@ public class DbInitializer
 
         await _context.Departments.AddRangeAsync(departments, cancellationToken);
         await _context.Clinics.AddRangeAsync(clinics, cancellationToken);
-        await _context.UserAccounts.AddRangeAsync(new[] { adminUser, doctorUser, nurseUser, patientUser }, cancellationToken);
+        await _context.UserAccounts.AddRangeAsync(new[] { adminUser, doctorUser, nurseUser, labUser, patientUser }, cancellationToken);
         await _context.StaffProfiles.AddRangeAsync(staffProfiles, cancellationToken);
         await _context.PatientProfiles.AddAsync(patientProfile, cancellationToken);
 

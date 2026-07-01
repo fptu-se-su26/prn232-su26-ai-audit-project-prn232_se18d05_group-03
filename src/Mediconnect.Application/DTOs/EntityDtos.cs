@@ -543,6 +543,19 @@ public class BedMapGroupDto
 public class TransferAdmissionDto
 {
     public Guid DepartmentId { get; set; }
+
+    // Optional target bed in the new department. When supplied the current bed is released
+    // (set to Cleaning) and this bed is assigned to the admission (set to Occupied).
+    public Guid? BedId { get; set; }
+}
+
+// Feature 1 - admit a patient (optionally from an outpatient visit) and assign a bed atomically.
+public class AdmitRequestDto
+{
+    public Guid PatientId { get; set; }
+    public Guid? FromOutpatientVisitId { get; set; }
+    public Guid DepartmentId { get; set; }
+    public Guid BedId { get; set; }
 }
 
 // Feature 3 - Lab / imaging results

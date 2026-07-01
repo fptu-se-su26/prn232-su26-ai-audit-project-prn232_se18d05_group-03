@@ -245,6 +245,9 @@ DD/MM/YYYY
 | 6 | Them endpoints GET /api/inpatient-admissions/{id}/vital-signs (loc theo ?date), GET /api/inpatient-admissions/{id}/care-orders (loc theo ?orderType, ?pending) cho Y lenh & cham soc hang ngay | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F2 - admission-scoped vital signs & care orders endpoints |
 | 7 | F3 Can lam sang: them GET /api/lab-orders/filter (theo status/bac si), PATCH /api/lab-orders/{id}/status, POST/GET /api/lab-orders/{id}/result, va luu file that (PDF/JPG/PNG) o POST /api/lab-results/{id}/file + bat UseStaticFiles | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs | feat(member3): F3 - lab orders queue, results & file upload |
 | 8 | F4 Xuat vien: nang cap POST /api/inpatient-admissions/{id}/discharge - tong hop tien giuong + thuoc + thu thuat thanh BillingInvoice (Pending) gui sang Thanh toan, tra ra DischargeResultDto | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F4 - discharge cost aggregation & billing handoff |
+| 9 | F1 Dong bo trang thai giuong: gan giuong (POST /api/bedassignments) kiem tra giuong Available roi chuyen Occupied; nha giuong (PATCH /api/bedassignments/{id}/release) chuyen giuong sang Cleaning | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed status lifecycle on assign/release |
+| 10 | F1 Chuyen khoa hoan chinh: POST /api/inpatient-admissions/{id}/transfer nha giuong cu (Cleaning), doi khoa va gan giuong moi (Occupied) neu co BedId; them POST /api/inpatient-admissions/admit tao ca nhap vien + gan giuong nguyen tu | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - complete ward transfer & atomic admit |
+| 11 | Phan quyen theo vai tro: Y ta ghi sinh ton, Bac si ra y lenh/chi dinh, Bo phan xet nghiem nhap ket qua/upload file; them vai tro Lab va tai khoan lab mau | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Controllers/CrudController.cs; src/Mediconnect.Domain/Entities/Enums.cs; src/Mediconnect.Infrastructure/Persistence/DbInitializer.cs | feat(member3): role-based authorization for inpatient/lab actions |
 
 ## AI có hỗ trợ không?
 
@@ -259,6 +262,8 @@ AI ho tro sinh code endpoints GET /api/beds/map (nhom giuong theo trang thai), G
 AI ho tro sinh code endpoints F2: GET vital-signs (chi so sinh ton theo ca nhap vien, loc theo ngay) va GET care-orders (y lenh theo loai va trang thai hoan thanh) theo dung pattern nested route.
 AI ho tro sinh code F3 (Can lam sang): endpoint tiep nhan chi dinh theo status, nhap ket qua va tu dong hoan thanh order de tra ve bac si, luu file ket qua that (PDF/JPG/PNG) co kiem tra dinh dang va dung luong.
 AI ho tro sinh code F4 (Xuat vien): logic tong hop chi phi luu giuong (theo so ngay) + thuoc + thu thuat thanh BillingInvoice trang thai Pending de gui sang phan he Thanh toan, dong thoi giai phong giuong va chuyen trang thai sang Cleaning.
+AI ho tro dong bo vong doi trang thai giuong (assign -> Occupied, release/transfer/discharge -> Cleaning) de ban do giuong F1 luon dung, hoan thien luong chuyen khoa co gan giuong dich va endpoint admit nguyen tu, kem validation giuong Available.
+AI ho tro them phan quyen theo vai tro (Nurse/Doctor/Lab/Admin) tren cac endpoint nghiep vu F2/F3/F4 va bo sung vai tro Lab + tai khoan mau de kiem thu.
 ```
 
 ## Commit/Screenshot minh chứng

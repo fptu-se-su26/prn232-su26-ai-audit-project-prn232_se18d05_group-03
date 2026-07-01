@@ -354,6 +354,65 @@ AI giúp hoàn thành nhanh 2 feature backend; phần cần tự đánh giá là
 
 ---
 
+### Lần sử dụng AI số 6
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 01/07/2026 |
+| Công cụ AI | Claude |
+| Mục đích sử dụng | Hoàn thiện các khoảng trống nghiệp vụ F1–F4: đồng bộ trạng thái giường, chuyển khoa, phân quyền theo vai trò |
+| Phần việc liên quan | Backend / Coding |
+| Mức độ sử dụng | Hỗ trợ sinh code |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Thành viên 3 – Vận hành Nội Trú & Điều phối Lâm sàng: coi phần nào chưa làm thì hoàn thành.
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+AI rà soát toàn bộ F1–F4 (đã có sẵn endpoint) và xác định các khoảng trống thực sự:
+- F1: gán/nhả giường không cập nhật BedStatus nên bản đồ giường (GET /api/beds/map) sai; chuyển khoa mới chỉ đổi DepartmentId.
+AI sinh code:
+- BedAssignmentsController: override Create kiểm tra giường Available rồi chuyển Occupied; Release chuyển giường sang Cleaning.
+- InpatientAdmissionsController: hoàn thiện transfer (nhả giường cũ -> Cleaning, gán giường mới -> Occupied theo BedId tùy chọn) và thêm POST /admit tạo ca nhập viện + gán giường nguyên tử.
+- Phân quyền [Authorize(Roles=...)]: Y tá ghi sinh tồn, Bác sĩ ra y lệnh & chỉ định lab, Bộ phận xét nghiệm nhập kết quả/upload file; thêm vai trò Lab và tài khoản lab mẫu.
+- Đưa các action method của CrudController thành virtual để override gắn thuộc tính vai trò.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng code vào EntityControllers.cs, CrudController.cs, Enums.cs, DbInitializer.cs và EntityDtos.cs (TransferAdmissionDto.BedId, AdmitRequestDto) sau khi review đúng pattern repository/mapper của dự án.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Build thành công 0 error/0 warning. Xác nhận thêm giá trị Lab vào enum UserRole là migration-free (EF lưu enum dạng int, không có converter). Kiểm tra JWT phát role qua ClaimTypes.Role nên [Authorize(Roles=...)] hoạt động ngay.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | feat(member3): bed status lifecycle, complete ward transfer/admit & role-based authorization |
+| File liên quan | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Controllers/CrudController.cs; src/Mediconnect.Domain/Entities/Enums.cs; src/Mediconnect.Infrastructure/Persistence/DbInitializer.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
+| Screenshot |  |
+| Kết quả chạy/test | dotnet build: 0 Error(s), 0 Warning(s) |
+| Link video demo |  |
+| Ghi chú khác |  |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Các feature đã có sẵn endpoint nhưng còn khoảng trống nghiệp vụ (trạng thái giường không nhất quán, chuyển khoa nửa vời, chưa phân quyền). Cần tự review để đảm bảo vòng đời trạng thái giường và luồng bàn giao đúng, và phân quyền khớp với vai trò đề bài.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.
