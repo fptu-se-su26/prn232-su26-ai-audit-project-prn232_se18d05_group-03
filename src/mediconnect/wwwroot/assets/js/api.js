@@ -98,7 +98,7 @@
 
     // shared
     getDepartments: () => get('departments'),
-    getPatients: () => get('patientprofiles'),
+    getStaff: () => get('staff'),
 
     // F1 - beds & admissions
     getBedMap: (departmentId) => get('beds/map' + qs({ departmentId })),

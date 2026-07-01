@@ -283,7 +283,7 @@
           <option value="Diet">Suất ăn</option><option value="Procedure">Thủ thuật</option><option value="Other">Khác</option>
         </select></label>
       <label class="flex flex-col gap-xs md:col-span-2"><span class="text-label-sm text-outline">Mô tả</span><input id="co-desc" class="px-md py-sm border border-outline-variant rounded" placeholder="VD: Paracetamol 500mg x2/ngày"/></label>
-      <label class="flex flex-col gap-xs"><span class="text-label-sm text-outline">Bác sĩ (StaffProfile GUID)</span><input id="co-staff" class="px-md py-sm border border-outline-variant rounded" placeholder="OrderedById"/></label>
+      <label class="flex flex-col gap-xs"><span class="text-label-sm text-outline">Bác sĩ ra y lệnh</span><select id="co-staff" class="px-md py-sm border border-outline-variant rounded"></select></label>
     </div>
     <button class="mt-md bg-primary text-on-primary px-lg py-sm rounded font-label-md text-label-md hover:opacity-90" onclick="submitCareOrder()">Tạo y lệnh</button>
   </div>
@@ -363,12 +363,21 @@
     const dto = { admissionId: id, orderedById: document.getElementById('co-staff').value.trim(),
       orderType: document.getElementById('co-type').value, description: document.getElementById('co-desc').value.trim(),
       orderedAt: new Date().toISOString(), isCompleted: false };
-    if(!dto.orderedById || !dto.description){ toast('Cần mô tả và StaffProfile GUID của bác sĩ.', 'error'); return; }
+    if(!dto.orderedById || !dto.description){ toast('Cần chọn bác sĩ và nhập mô tả.', 'error'); return; }
     try { await Api.createCareOrder(dto); toast('Đã tạo y lệnh.', 'success'); document.getElementById('co-desc').value=''; loadCareOrders(); }
     catch(e){ toast(e.message, 'error'); }
   }
 
   document.getElementById('admission-select').addEventListener('change', refresh);
+  async function loadStaff(){
+    try {
+      const staff = await Api.getStaff();
+      const docs = staff.filter(s => s.staffType === "Doctor");
+      const sel = document.getElementById("co-staff");
+      sel.innerHTML = docs.map(d => `<option value="${d.id}">${d.specialty || "Bác sĩ"} · ${d.degree || ""} (${d.id.slice(0,8)})</option>`).join("") || "<option value=\"\">(không có bác sĩ)</option>";
+    } catch(e){ /* staff list optional */ }
+  }
+  loadStaff();
   loadAdmissions();
 </script>
 </body></html>
