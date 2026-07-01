@@ -117,6 +117,8 @@ export interface Drug {
   stockQuantity: number;
   unitPrice: number;
   isActive: boolean;
+  maxDailyDose?: number | null;
+  maxDosePerKg?: number | null;
 }
 
 export interface DrugInteraction {
@@ -125,6 +127,56 @@ export interface DrugInteraction {
   interactingDrugId: string;
   severity?: string;
   description?: string;
+}
+
+export interface DoseCheckResult {
+  isOverDose: boolean;
+  message: string;
+  drugName: string;
+  unit?: string;
+  enteredDose?: number | null;
+  recommendedMaxDose?: number | null;
+  patientWeightKg?: number | null;
+  thresholdBasis: "per-kg" | "absolute" | "none";
+}
+
+export enum OtpChannel {
+  Email = 0,
+  Sms = 1,
+}
+
+export enum OtpStatus {
+  Pending = 0,
+  Verified = 1,
+  Expired = 2,
+  Failed = 3,
+}
+
+export interface OtpSetting {
+  isEnabled: boolean;
+  channel: OtpChannel;
+  codeLength: number;
+  expiryMinutes: number;
+  maxAttempts: number;
+  updatedAt: string;
+  emailConfigured: boolean;
+}
+
+export interface OtpCode {
+  id: string;
+  userAccountId: string;
+  userFullName: string;
+  userEmail: string;
+  code: string;
+  channel: OtpChannel;
+  purpose: string;
+  status: OtpStatus;
+  attemptCount: number;
+  delivered: boolean;
+  deliveryDetail: string;
+  createdAt: string;
+  expiresAt: string;
+  consumedAt?: string | null;
 }
 
 export enum ShiftType {

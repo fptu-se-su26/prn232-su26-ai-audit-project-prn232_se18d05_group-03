@@ -8,6 +8,7 @@ const ADMIN_LINKS = [
   { to: "/admin/staff", icon: "badge", label: "Quản lý nhân sự" },
   { to: "/admin/users", icon: "manage_accounts", label: "Quản lý tài khoản" },
   { to: "/admin/drug-interactions", icon: "medication", label: "Cảnh báo tương tác thuốc" },
+  { to: "/admin/otp-security", icon: "encrypted", label: "Cấu hình & bảo mật OTP" },
 ];
 
 function AdminDropdown() {

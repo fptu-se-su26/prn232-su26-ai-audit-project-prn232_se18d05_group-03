@@ -14,6 +14,7 @@ import OperationsReportPage from "./pages/OperationsReportPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import StaffManagementPage from "./pages/StaffManagementPage";
 import DrugInteractionPage from "./pages/DrugInteractionPage";
+import OtpSecurityPage from "./pages/OtpSecurityPage";
 import { UserRole } from "./types";
 
 import type { ReactNode } from "react";
@@ -136,6 +137,14 @@ export default function App() {
               element={
                 <RoleProtectedRoute allowedRoles={[UserRole.Admin]}>
                   <DrugInteractionPage />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/otp-security"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Admin]}>
+                  <OtpSecurityPage />
                 </RoleProtectedRoute>
               }
             />

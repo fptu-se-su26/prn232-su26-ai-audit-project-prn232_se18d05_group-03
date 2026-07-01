@@ -123,3 +123,17 @@ public enum BillingItemType
     Procedure,
     Other
 }
+
+public enum OtpChannel
+{
+    Email,
+    Sms
+}
+
+public enum OtpStatus
+{
+    Pending,
+    Verified,
+    Expired,
+    Failed
+}

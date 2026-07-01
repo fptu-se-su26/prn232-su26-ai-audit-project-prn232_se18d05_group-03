@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { drugApi, drugInteractionApi, cdssApi } from "../api/services";
-import type { Drug, DrugInteraction } from "../types";
+import { drugApi, drugInteractionApi, cdssApi, patientApi, userApi } from "../api/services";
+import type { Drug, DrugInteraction, DoseCheckResult, PatientProfile, UserAccount } from "../types";
 
-type Tab = "check" | "drugs" | "interactions";
+type Tab = "check" | "dose" | "drugs" | "interactions";
 
 const SEVERITY_STYLES: Record<string, string> = {
   high: "bg-error text-on-error",
@@ -24,8 +24,10 @@ interface DrugFormState {
   stockQuantity: number;
   unitPrice: number;
   isActive: boolean;
+  maxDailyDose: string;
+  maxDosePerKg: string;
 }
-const EMPTY_DRUG: DrugFormState = { name: "", code: "", unit: "", stockQuantity: 0, unitPrice: 0, isActive: true };
+const EMPTY_DRUG: DrugFormState = { name: "", code: "", unit: "", stockQuantity: 0, unitPrice: 0, isActive: true, maxDailyDose: "", maxDosePerKg: "" };
 
 interface InteractionFormState {
   drugId: string;
@@ -48,6 +50,13 @@ export default function DrugInteractionPage() {
   const [checkResult, setCheckResult] = useState<DrugInteraction[] | null>(null);
   const [checking, setChecking] = useState(false);
 
+  // Dose checker state (Screen 2.2)
+  const [patients, setPatients] = useState<PatientProfile[]>([]);
+  const [patientUsers, setPatientUsers] = useState<UserAccount[]>([]);
+  const [doseForm, setDoseForm] = useState({ patientId: "", drugId: "", doseAmount: "" });
+  const [doseResult, setDoseResult] = useState<DoseCheckResult | null>(null);
+  const [doseChecking, setDoseChecking] = useState(false);
+
   // Drug modal
   const [isDrugModalOpen, setIsDrugModalOpen] = useState(false);
   const [editingDrugId, setEditingDrugId] = useState<string | null>(null);
@@ -64,14 +73,21 @@ export default function DrugInteractionPage() {
   const loadAll = () => {
     setLoading(true);
     setError(null);
-    Promise.all([drugApi.getAll(), drugInteractionApi.getAll()])
-      .then(([d, i]) => {
+    Promise.all([drugApi.getAll(), drugInteractionApi.getAll(), patientApi.getAll(), userApi.getAll()])
+      .then(([d, i, p, u]) => {
         setDrugs(d.data);
         setInteractions(i.data);
+        setPatients(p.data);
+        setPatientUsers(u.data);
       })
       .catch(() => setError("Không thể tải dữ liệu thuốc."))
       .finally(() => setLoading(false));
   };
+
+  const patientNameById = useMemo(() => {
+    const userById = new Map(patientUsers.map(u => [u.id, u.fullName]));
+    return new Map(patients.map(p => [p.id, userById.get(p.userAccountId) ?? p.id]));
+  }, [patients, patientUsers]);
 
   useEffect(loadAll, []);
 
@@ -104,6 +120,28 @@ export default function DrugInteractionPage() {
     }
   };
 
+  // ── Dose checker (Screen 2.2) ────────────────────────────────────────────
+  const runDoseCheck = async () => {
+    if (!doseForm.patientId || !doseForm.drugId || doseForm.doseAmount === "") {
+      setError("Chọn bệnh nhân, thuốc và nhập liều lượng để kiểm tra.");
+      return;
+    }
+    setDoseChecking(true);
+    setError(null);
+    try {
+      const res = await cdssApi.checkDose({
+        patientId: doseForm.patientId,
+        drugId: doseForm.drugId,
+        doseAmount: Number(doseForm.doseAmount),
+      });
+      setDoseResult(res.data);
+    } catch {
+      setError("Không thể kiểm tra liều lượng.");
+    } finally {
+      setDoseChecking(false);
+    }
+  };
+
   // ── Drug CRUD ────────────────────────────────────────────────────────────
   const openCreateDrug = () => {
     setEditingDrugId(null);
@@ -112,7 +150,12 @@ export default function DrugInteractionPage() {
   };
   const openEditDrug = (d: Drug) => {
     setEditingDrugId(d.id);
-    setDrugForm({ name: d.name, code: d.code ?? "", unit: d.unit ?? "", stockQuantity: d.stockQuantity, unitPrice: d.unitPrice, isActive: d.isActive });
+    setDrugForm({
+      name: d.name, code: d.code ?? "", unit: d.unit ?? "",
+      stockQuantity: d.stockQuantity, unitPrice: d.unitPrice, isActive: d.isActive,
+      maxDailyDose: d.maxDailyDose != null ? String(d.maxDailyDose) : "",
+      maxDosePerKg: d.maxDosePerKg != null ? String(d.maxDosePerKg) : "",
+    });
     setIsDrugModalOpen(true);
   };
   const submitDrug = async () => {
@@ -130,6 +173,8 @@ export default function DrugInteractionPage() {
         stockQuantity: drugForm.stockQuantity,
         unitPrice: drugForm.unitPrice,
         isActive: drugForm.isActive,
+        maxDailyDose: drugForm.maxDailyDose === "" ? null : Number(drugForm.maxDailyDose),
+        maxDosePerKg: drugForm.maxDosePerKg === "" ? null : Number(drugForm.maxDosePerKg),
       };
       if (editingDrugId) {
         await drugApi.update(editingDrugId, payload);
@@ -226,6 +271,7 @@ export default function DrugInteractionPage() {
       <div className="flex gap-1 border-b border-outline-variant">
         {[
           { id: "check" as Tab, label: "Kiểm tra tương tác", icon: "fact_check" },
+          { id: "dose" as Tab, label: "Cảnh báo quá liều", icon: "vaccines" },
           { id: "drugs" as Tab, label: "Danh mục thuốc", icon: "medication" },
           { id: "interactions" as Tab, label: "Cặp tương tác", icon: "warning" },
         ].map(t => (
@@ -316,6 +362,115 @@ export default function DrugInteractionPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Tab: Dose overdose check (Screen 2.2) ──────────────────────── */}
+      {tab === "dose" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant space-y-3">
+            <div>
+              <h4 className="text-lg font-semibold text-on-surface mb-1">Kiểm tra liều lượng theo thể trạng</h4>
+              <p className="text-xs text-on-surface-variant">Đối chiếu liều nhập vào với ngưỡng an toàn tính theo cân nặng bệnh nhân.</p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-on-surface-variant">Bệnh nhân</label>
+              <select
+                value={doseForm.patientId}
+                onChange={e => { setDoseResult(null); setDoseForm(f => ({ ...f, patientId: e.target.value })); }}
+                className="w-full mt-1 border border-outline-variant rounded px-3 py-2 text-sm bg-surface"
+              >
+                <option value="">— Chọn bệnh nhân —</option>
+                {patients.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {patientNameById.get(p.id)}{p.weightKg ? ` — ${p.weightKg} kg` : " (chưa có cân nặng)"}
+                  </option>
+                ))}
+              </select>
+              {patients.length === 0 && (
+                <p className="text-xs text-on-surface-variant mt-1">Chưa có hồ sơ bệnh nhân nào trong hệ thống.</p>
+              )}
+            </div>
+            <div>
+              <label className="text-xs font-medium text-on-surface-variant">Thuốc</label>
+              <select
+                value={doseForm.drugId}
+                onChange={e => { setDoseResult(null); setDoseForm(f => ({ ...f, drugId: e.target.value })); }}
+                className="w-full mt-1 border border-outline-variant rounded px-3 py-2 text-sm bg-surface"
+              >
+                <option value="">— Chọn thuốc —</option>
+                {drugs.map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}{d.maxDosePerKg ? ` (≤ ${d.maxDosePerKg} ${d.unit ?? ""}/kg)` : d.maxDailyDose ? ` (≤ ${d.maxDailyDose} ${d.unit ?? ""})` : " (chưa có ngưỡng)"}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-on-surface-variant">Liều nhập vào ({drugs.find(d => d.id === doseForm.drugId)?.unit ?? "đơn vị"})</label>
+              <input
+                type="number"
+                min={0}
+                step="any"
+                value={doseForm.doseAmount}
+                onChange={e => { setDoseResult(null); setDoseForm(f => ({ ...f, doseAmount: e.target.value })); }}
+                placeholder="Ví dụ: 500"
+                className="w-full mt-1 border border-outline-variant rounded px-3 py-2 text-sm bg-surface"
+              />
+            </div>
+            <button
+              onClick={runDoseCheck}
+              disabled={doseChecking || !doseForm.patientId || !doseForm.drugId || doseForm.doseAmount === ""}
+              className="w-full bg-primary text-on-primary rounded px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all"
+            >
+              {doseChecking ? "Đang kiểm tra..." : "Kiểm tra liều"}
+            </button>
+          </div>
+
+          <div>
+            {doseResult === null ? (
+              <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant h-full flex flex-col items-center justify-center text-on-surface-variant gap-2">
+                <span className="material-symbols-outlined text-4xl">vaccines</span>
+                <p className="text-sm">Kết quả kiểm tra liều sẽ hiện ở đây</p>
+              </div>
+            ) : doseResult.isOverDose ? (
+              <div className="bg-error-container text-on-error-container p-6 rounded-xl border-2 border-error animate-pulse-slow space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-3xl">emergency</span>
+                  <h4 className="text-lg font-bold">Cảnh báo quá liều!</h4>
+                </div>
+                <p className="text-sm">{doseResult.message}</p>
+                <div className="bg-surface-container-lowest text-on-surface rounded-lg p-3 text-sm grid grid-cols-2 gap-y-1">
+                  <span className="text-on-surface-variant">Liều nhập</span>
+                  <span className="font-semibold text-right">{doseResult.enteredDose} {doseResult.unit}</span>
+                  <span className="text-on-surface-variant">Ngưỡng khuyến nghị</span>
+                  <span className="font-semibold text-right">{doseResult.recommendedMaxDose} {doseResult.unit}</span>
+                  {doseResult.patientWeightKg != null && (
+                    <>
+                      <span className="text-on-surface-variant">Cân nặng BN</span>
+                      <span className="font-semibold text-right">{doseResult.patientWeightKg} kg</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className={`p-6 rounded-xl border h-full flex flex-col justify-center gap-2 ${
+                doseResult.thresholdBasis === "none"
+                  ? "bg-surface-container-lowest border-outline-variant text-on-surface-variant"
+                  : "bg-tertiary-container text-on-tertiary-container border-outline-variant"
+              }`}>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-3xl">
+                    {doseResult.thresholdBasis === "none" ? "info" : "check_circle"}
+                  </span>
+                  <h4 className="font-semibold">
+                    {doseResult.thresholdBasis === "none" ? "Chưa thể đánh giá" : "Liều an toàn"}
+                  </h4>
+                </div>
+                <p className="text-sm">{doseResult.message}</p>
               </div>
             )}
           </div>
@@ -472,6 +627,17 @@ export default function DrugInteractionPage() {
                   <input type="number" min={0} value={drugForm.unitPrice} onChange={e => setDrugForm(f => ({ ...f, unitPrice: Number(e.target.value) }))} className="w-full mt-1 border border-outline-variant rounded px-3 py-2 text-sm bg-surface" />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-on-surface-variant">Liều tối đa/ngày</label>
+                  <input type="number" min={0} step="any" value={drugForm.maxDailyDose} onChange={e => setDrugForm(f => ({ ...f, maxDailyDose: e.target.value }))} placeholder="vd: 4000" className="w-full mt-1 border border-outline-variant rounded px-3 py-2 text-sm bg-surface" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-on-surface-variant">Liều tối đa/kg</label>
+                  <input type="number" min={0} step="any" value={drugForm.maxDosePerKg} onChange={e => setDrugForm(f => ({ ...f, maxDosePerKg: e.target.value }))} placeholder="vd: 15" className="w-full mt-1 border border-outline-variant rounded px-3 py-2 text-sm bg-surface" />
+                </div>
+              </div>
+              <p className="text-[11px] text-on-surface-variant -mt-1">Dùng cho cảnh báo quá liều (Screen 2.2). Ưu tiên liều/kg khi biết cân nặng bệnh nhân.</p>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={drugForm.isActive} onChange={e => setDrugForm(f => ({ ...f, isActive: e.target.checked }))} className="accent-primary" />
                 Đang sử dụng

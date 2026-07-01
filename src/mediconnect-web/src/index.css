@@ -47,3 +47,13 @@ body {
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
 }
+
+/* Blinking red alert for CDSS danger banners (Screen 2.1 interaction, 2.2 overdose) */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 1.2s ease-in-out infinite;
+}

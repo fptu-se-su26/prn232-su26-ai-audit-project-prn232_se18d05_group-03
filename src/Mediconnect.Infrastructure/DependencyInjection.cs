@@ -1,5 +1,6 @@
 using Mediconnect.Application.Interfaces;
 using Mediconnect.Infrastructure.Auth;
+using Mediconnect.Infrastructure.Notifications;
 using Mediconnect.Infrastructure.Persistence;
 using Mediconnect.Infrastructure.Repositories;
 using Mediconnect.Application.Services;
@@ -23,6 +24,9 @@ public static class DependencyInjection
         services.AddScoped<IReportQuery, ReportQuery>();
         services.AddScoped<IPasswordHasher, PasswordHasherService>();
         services.AddScoped<ITokenService, JwtTokenService>();
+
+        services.Configure<OtpEmailOptions>(configuration.GetSection(OtpEmailOptions.SectionName));
+        services.AddScoped<IOtpSender, SmtpOtpSender>();
 
         return services;
     }

@@ -24,6 +24,9 @@ import type {
   UserRole,
   Drug,
   DrugInteraction,
+  DoseCheckResult,
+  OtpSetting,
+  OtpCode,
 } from "../types";
 
 export const authApi = {
@@ -91,6 +94,7 @@ export const userApi = {
 };
 
 export const patientApi = {
+  getAll: () => api.get<PatientProfile[]>("/patients"),
   getMe: () => api.get<PatientProfile>("/patients/me"),
   create: (data: { userAccountId: string }) =>
     api.post<PatientProfile>("/patients", data),
@@ -213,5 +217,19 @@ export const drugInteractionApi = {
 export const cdssApi = {
   checkInteractions: (drugIds: string[]) =>
     api.post<{ interactions: DrugInteraction[] }>("/cdss/drug-interactions/check", { drugIds }),
+  checkDose: (data: { patientId: string; drugId: string; doseAmount: number }) =>
+    api.post<DoseCheckResult>("/cdss/dose-check", data),
+};
+
+export const otpApi = {
+  getSettings: () => api.get<OtpSetting>("/otp/settings"),
+  updateSettings: (data: Omit<OtpSetting, "updatedAt" | "emailConfigured">) =>
+    api.put<OtpSetting>("/otp/settings", data),
+  issue: (userAccountId: string, purpose = "AccountActivation") =>
+    api.post<OtpCode>("/otp/issue", { userAccountId, purpose }),
+  verify: (userAccountId: string, code: string) =>
+    api.post<{ success: boolean; message: string }>("/otp/verify", { userAccountId, code }),
+  getCodes: (userAccountId?: string) =>
+    api.get<OtpCode[]>("/otp/codes", { params: userAccountId ? { userAccountId } : {} }),
 };
 
