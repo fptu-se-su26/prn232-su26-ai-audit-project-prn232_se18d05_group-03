@@ -48,7 +48,7 @@ appsettings.Local.json
 appsettings.json
 secrets.json
 src/mediconnect/appsettings.json
-
+src/mediconnect/appsettings.Development.json
 # OS
 .DS_Store
 Thumbs.db
