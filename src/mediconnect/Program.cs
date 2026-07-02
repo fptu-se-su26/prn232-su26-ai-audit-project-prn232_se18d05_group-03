@@ -97,8 +97,7 @@ if (!string.IsNullOrWhiteSpace(httpsPort))
     app.UseHttpsRedirection();
 }
 
-app.UseStaticFiles();
-
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
