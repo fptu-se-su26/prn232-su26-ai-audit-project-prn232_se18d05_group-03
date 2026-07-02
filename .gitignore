@@ -47,6 +47,7 @@ appsettings.Development.json
 appsettings.Local.json
 appsettings.json
 secrets.json
+src/mediconnect/appsettings.json
 
 # OS
 .DS_Store
