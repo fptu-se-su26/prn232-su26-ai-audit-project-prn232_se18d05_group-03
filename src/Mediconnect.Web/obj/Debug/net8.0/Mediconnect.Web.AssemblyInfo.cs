@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Mediconnect.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e65d9eba4e2bf86acd6487cc94acd10e94145830")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7e7caa58e02a5e4c7e98d8cb4d00a76c8d9687db")]
 [assembly: System.Reflection.AssemblyProductAttribute("Mediconnect.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Mediconnect.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

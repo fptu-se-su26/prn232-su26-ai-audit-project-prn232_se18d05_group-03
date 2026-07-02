@@ -1,0 +1,90 @@
+@page "/"
+@attribute [Authorize]
+
+<PageTitle>Trang chủ – MediConnect</PageTitle>
+
+<!-- Hero greeting -->
+<div class="hm-hero mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="hm-hero-avatar">@(_userName.Length > 0 ? _userName[0].ToString().ToUpper() : "?")</div>
+        <div>
+            <div style="font-size:.8rem;color:var(--text-muted)">Xin chào,</div>
+            <h4 class="mb-0">@_userName <span class="badge ms-1" style="background:var(--brand-light);color:var(--brand);font-size:.7rem">@_role</span></h4>
+        </div>
+    </div>
+    <div style="font-size:.8rem;color:var(--text-muted);margin-top:.5rem">
+        @DateTime.Now.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))
+    </div>
+</div>
+
+<!-- Feature tiles -->
+<div class="row g-3">
+    <div class="col-md-6">
+        <a href="/beds" class="text-decoration-none">
+            <div class="hm-tile">
+                <div class="hm-tile-icon" style="background:#e8efff;color:var(--brand)">
+                    <span class="material-symbols-outlined">bed</span>
+                </div>
+                <div class="hm-tile-body">
+                    <div class="hm-tile-title">F1 · Sơ đồ giường bệnh</div>
+                    <div class="hm-tile-desc">Bản đồ 2D/3D khu – phòng – giường; nhập viện, chuyển giường theo thời gian thực.</div>
+                </div>
+                <span class="material-symbols-outlined hm-tile-arrow">chevron_right</span>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a href="/vitals" class="text-decoration-none">
+            <div class="hm-tile">
+                <div class="hm-tile-icon" style="background:#e0f2f1;color:var(--teal)">
+                    <span class="material-symbols-outlined">ecg_heart</span>
+                </div>
+                <div class="hm-tile-body">
+                    <div class="hm-tile-title">F2 · Y lệnh &amp; Sinh tồn</div>
+                    <div class="hm-tile-desc">Điều dưỡng nhập sinh tồn; bác sĩ ban hành và hoàn thành y lệnh hàng ngày.</div>
+                </div>
+                <span class="material-symbols-outlined hm-tile-arrow">chevron_right</span>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a href="/lab" class="text-decoration-none">
+            <div class="hm-tile">
+                <div class="hm-tile-icon" style="background:#fff8e1;color:#b45309">
+                    <span class="material-symbols-outlined">biotech</span>
+                </div>
+                <div class="hm-tile-body">
+                    <div class="hm-tile-title">F3 · Cận lâm sàng</div>
+                    <div class="hm-tile-desc">Nhận y lệnh xét nghiệm, nhập kết quả, tải file, trả kết quả cho bác sĩ.</div>
+                </div>
+                <span class="material-symbols-outlined hm-tile-arrow">chevron_right</span>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a href="/discharge" class="text-decoration-none">
+            <div class="hm-tile">
+                <div class="hm-tile-icon" style="background:#fef2f2;color:#b91c1c">
+                    <span class="material-symbols-outlined">receipt_long</span>
+                </div>
+                <div class="hm-tile-body">
+                    <div class="hm-tile-title">F4 · Quản lý xuất viện</div>
+                    <div class="hm-tile-desc">Xử lý xuất viện, tổng hợp chi phí nằm viện và tạo hoá đơn viện phí.</div>
+                </div>
+                <span class="material-symbols-outlined hm-tile-arrow">chevron_right</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+@code {
+    [Inject] private TokenState Token { get; set; } = default!;
+    private string _userName = "";
+    private string _role = "";
+
+    protected override void OnInitialized()
+    {
+        _userName = Token.User?.FullName ?? "";
+        _role     = Token.User?.Role.ToString() ?? "";
+    }
+}
