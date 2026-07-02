@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "Da4GezcWdb4=",
+  "success": true,
+  "projectFilePath": "/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Web/Mediconnect.Web.csproj",
+  "expectedPackageFiles": [
+    "/home/pjm/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.28/microsoft.aspnetcore.app.ref.8.0.28.nupkg.sha512",
+    "/home/pjm/.nuget/packages/microsoft.netcore.app.host.linux-x64/8.0.28/microsoft.netcore.app.host.linux-x64.8.0.28.nupkg.sha512"
+  ],
+  "logs": []
+}

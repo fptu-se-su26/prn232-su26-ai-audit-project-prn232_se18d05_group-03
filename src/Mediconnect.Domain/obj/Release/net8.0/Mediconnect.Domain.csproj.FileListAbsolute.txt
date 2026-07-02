@@ -1,0 +1,12 @@
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/bin/Release/net8.0/Mediconnect.Domain.deps.json
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/bin/Release/net8.0/Mediconnect.Domain.dll
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/bin/Release/net8.0/Mediconnect.Domain.pdb
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/obj/Release/net8.0/Mediconnect.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/obj/Release/net8.0/Mediconnect.Domain.AssemblyInfoInputs.cache
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/obj/Release/net8.0/Mediconnect.Domain.AssemblyInfo.cs
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/obj/Release/net8.0/Mediconnect.Domain.csproj.CoreCompileInputs.cache
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/obj/Release/net8.0/Mediconnect.Domain.sourcelink.json
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/obj/Release/net8.0/Mediconnect.Domain.dll
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/obj/Release/net8.0/refint/Mediconnect.Domain.dll
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/obj/Release/net8.0/Mediconnect.Domain.pdb
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Domain/obj/Release/net8.0/ref/Mediconnect.Domain.dll
