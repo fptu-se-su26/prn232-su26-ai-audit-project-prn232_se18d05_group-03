@@ -1,0 +1,44 @@
+.hm-hero {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+.hm-hero-avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--brand-light);
+    color: var(--brand);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700;
+}
+
+.hm-tile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow-sm);
+    transition: all .18s;
+    color: var(--text);
+}
+.hm-tile:hover {
+    box-shadow: var(--shadow);
+    border-color: var(--brand);
+    transform: translateY(-2px);
+}
+.hm-tile-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.5rem;
+}
+.hm-tile-body { flex: 1; }
+.hm-tile-title { font-weight: 600; font-size: .9rem; margin-bottom: .2rem; }
+.hm-tile-desc  { font-size: .78rem; color: var(--text-muted); line-height: 1.4; }
+.hm-tile-arrow { color: var(--text-muted); font-size: 1.2rem; }

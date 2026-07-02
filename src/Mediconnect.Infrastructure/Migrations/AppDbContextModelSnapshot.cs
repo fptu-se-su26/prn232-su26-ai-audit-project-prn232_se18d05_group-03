@@ -75,6 +75,15 @@ namespace Mediconnect.Infrastructure.Migrations
                     b.Property<Guid>("DepartmentId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Floor")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("PositionX")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("PositionY")
+                        .HasColumnType("float");
+
                     b.Property<string>("RoomNumber")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -810,15 +819,23 @@ namespace Mediconnect.Infrastructure.Migrations
                     b.Property<DateOnly>("ShiftDate")
                         .HasColumnType("date");
 
+                    b.Property<int>("ShiftType")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("StaffId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time");
 
+                    b.Property<string>("WorkRoom")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("StaffId");
+                    b.HasIndex("StaffId", "ShiftDate", "ShiftType")
+                        .IsUnique();
 
                     b.ToTable("StaffSchedules");
                 });

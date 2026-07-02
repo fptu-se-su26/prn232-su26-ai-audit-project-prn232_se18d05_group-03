@@ -1,0 +1,289 @@
+/* ============================================================
+   MediConnect – global design system (Inter + Bootstrap 5 override)
+   ============================================================ */
+
+/* ---- CSS tokens ------------------------------------------- */
+:root {
+    --brand:        #1250dc;
+    --brand-dark:   #0d3fa8;
+    --brand-light:  #e8efff;
+    --teal:         #00796b;
+    --teal-light:   #e0f2f1;
+    --surface:      #f5f7fb;
+    --surface-card: #ffffff;
+    --border:       #e0e6f0;
+    --text:         #1a1f36;
+    --text-muted:   #6b7280;
+    --radius:       12px;
+    --radius-sm:    8px;
+    --shadow-sm:    0 1px 4px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
+    --shadow:       0 2px 12px rgba(0,0,0,.08), 0 4px 24px rgba(0,0,0,.04);
+    --sidebar-bg:   #0d2461;
+    --sidebar-w:    240px;
+
+    /* bed status colours */
+    --st-available: #16a34a;
+    --st-available-bg: #dcfce7;
+    --st-occupied:  #dc2626;
+    --st-occupied-bg: #fee2e2;
+    --st-cleaning:  #d97706;
+    --st-cleaning-bg: #fef3c7;
+    --st-oos:       #6b7280;
+    --st-oos-bg:    #f3f4f6;
+}
+
+/* ---- Base -------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+a, .btn-link { color: var(--brand); }
+h1,h2,h3,h4,h5,h6 { font-weight: 600; }
+
+/* ---- Bootstrap card override ------------------------------ */
+.card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    background: var(--surface-card);
+}
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    padding: .75rem 1rem;
+}
+.card-body { padding: 1rem; }
+
+/* ---- Buttons ---------------------------------------------- */
+.btn {
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    font-size: .8125rem;
+    transition: all .15s;
+}
+.btn-primary {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+}
+.btn-primary:hover, .btn-primary:focus {
+    background: var(--brand-dark);
+    border-color: var(--brand-dark);
+}
+.btn-outline-primary {
+    color: var(--brand);
+    border-color: var(--brand);
+}
+.btn-outline-primary:hover {
+    background: var(--brand);
+    border-color: var(--brand);
+}
+.btn:focus, .btn:active:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(18,80,220,.18);
+}
+
+/* ---- Badges ----------------------------------------------- */
+.badge {
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: .7rem;
+    padding: .28em .6em;
+}
+
+/* ---- Tables ----------------------------------------------- */
+.table { font-size: .8125rem; }
+.table thead th {
+    background: var(--surface);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 2px solid var(--border);
+}
+.table tbody tr:hover { background: var(--surface); }
+
+/* ---- Form controls ---------------------------------------- */
+.form-control, .form-select {
+    border-radius: var(--radius-sm);
+    border-color: var(--border);
+    font-size: .8125rem;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(18,80,220,.12);
+}
+.form-label { font-weight: 500; font-size: .8125rem; color: var(--text-muted); margin-bottom: .3rem; }
+
+/* ---- KPI card helper -------------------------------------- */
+.kpi-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow-sm);
+}
+.kpi-card .kpi-value { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+.kpi-card .kpi-label { font-size: .75rem; color: var(--text-muted); margin-top: .25rem; }
+
+/* ---- Page header ------------------------------------------ */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+.page-header h4 { margin: 0; font-size: 1.1rem; }
+
+/* ---- Bed status helpers ----------------------------------- */
+.bed-tile {
+    position: absolute;
+    width: 52px;
+    height: 36px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: .6rem;
+    font-weight: 600;
+    transform: translate(-50%, -50%);
+    transition: all .2s;
+    user-select: none;
+}
+.bed-tile:hover { transform: translate(-50%,-50%) scale(1.12); z-index: 10; }
+.bed-tile.selected { outline: 3px solid var(--brand); z-index: 20; }
+
+.bed-available  { background: var(--st-available-bg); border-color: var(--st-available);  color: var(--st-available); }
+.bed-occupied   { background: var(--st-occupied-bg);  border-color: var(--st-occupied);   color: var(--st-occupied); }
+.bed-cleaning   { background: var(--st-cleaning-bg);  border-color: var(--st-cleaning);   color: var(--st-cleaning); }
+.bed-oos        { background: var(--st-oos-bg);        border-color: var(--st-oos);        color: var(--st-oos); }
+
+/* 3D isometric mode */
+.fp-stage-3d {
+    transform: perspective(900px) rotateX(42deg) rotateZ(-20deg) scale(0.85);
+    transform-origin: center center;
+}
+.fp-stage-3d .bed-tile {
+    box-shadow: 0 6px 0 rgba(0,0,0,.2), 0 8px 12px rgba(0,0,0,.15);
+    height: 44px;
+}
+.fp-stage-3d .fp-room-label {
+    transform: rotateX(-42deg) rotateZ(20deg);
+}
+
+/* Room outline */
+.fp-room {
+    position: absolute;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,.6);
+}
+.fp-room-label {
+    position: absolute;
+    top: 4px;
+    left: 8px;
+    font-size: .6rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* Draggable in edit mode */
+.fp-bed-dragging {
+    opacity: .5;
+    cursor: grabbing !important;
+}
+.fp-edit-mode .bed-tile { cursor: grab; }
+
+/* ---- Status dot for lists --------------------------------- */
+.status-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+.status-dot.available { background: var(--st-available); }
+.status-dot.occupied  { background: var(--st-occupied); }
+.status-dot.cleaning  { background: var(--st-cleaning); }
+.status-dot.oos       { background: var(--st-oos); }
+
+/* ---- Slide-over drawer ------------------------------------ */
+.side-drawer {
+    position: fixed;
+    top: 0; right: 0;
+    width: 320px; height: 100vh;
+    background: var(--surface-card);
+    box-shadow: -4px 0 24px rgba(0,0,0,.12);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform .25s ease;
+}
+.side-drawer.open { transform: translateX(0); }
+.side-drawer-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+}
+.side-drawer-body { flex: 1; overflow-y: auto; padding: 1.25rem; }
+
+/* ---- Alert/Toast ------------------------------------------ */
+.toast-error {
+    position: fixed;
+    bottom: 1.5rem; right: 1.5rem;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+    border-radius: var(--radius-sm);
+    padding: .75rem 1rem;
+    z-index: 9999;
+    max-width: 340px;
+    font-size: .8125rem;
+}
+
+/* ---- Validation ------------------------------------------- */
+.valid.modified:not([type=checkbox]) { border-color: var(--st-available); }
+.invalid { border-color: var(--st-occupied); }
+.validation-message { color: var(--st-occupied); font-size: .75rem; }
+
+/* ---- Blazor error boundary -------------------------------- */
+.blazor-error-boundary {
+    background: #fee2e2;
+    border-left: 4px solid var(--st-occupied);
+    padding: 1rem 1rem 1rem 1.5rem;
+    color: #b91c1c;
+    border-radius: var(--radius-sm);
+    margin: 1rem;
+}
+.blazor-error-boundary::after { content: "Đã xảy ra lỗi không mong muốn."; }
+
+#blazor-error-ui {
+    background: var(--st-cleaning-bg);
+    bottom: 0; left: 0;
+    box-shadow: 0 -2px 8px rgba(0,0,0,.1);
+    display: none;
+    padding: .6rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    font-size: .8125rem;
+}
+#blazor-error-ui .dismiss { cursor: pointer; float: right; }
+
+/* ---- Scrollbar (webkit) ----------------------------------- */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }

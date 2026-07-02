@@ -1,0 +1,16 @@
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/bin/Release/net8.0/Mediconnect.Application.deps.json
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/bin/Release/net8.0/Mediconnect.Application.dll
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/bin/Release/net8.0/Mediconnect.Application.pdb
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/bin/Release/net8.0/Mediconnect.Domain.dll
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/bin/Release/net8.0/Mediconnect.Domain.pdb
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/Mediconnect.Application.csproj.AssemblyReference.cache
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/Mediconnect.Application.GeneratedMSBuildEditorConfig.editorconfig
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/Mediconnect.Application.AssemblyInfoInputs.cache
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/Mediconnect.Application.AssemblyInfo.cs
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/Mediconnect.Application.csproj.CoreCompileInputs.cache
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/Mediconnect.Application.sourcelink.json
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/Mediconn.DEFA202B.Up2Date
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/Mediconnect.Application.dll
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/refint/Mediconnect.Application.dll
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/Mediconnect.Application.pdb
+/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Application/obj/Release/net8.0/ref/Mediconnect.Application.dll

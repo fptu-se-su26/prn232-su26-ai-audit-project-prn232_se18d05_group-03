@@ -17,6 +17,12 @@ public class DbInitializer
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
+        await SeedCoreAsync(cancellationToken);
+        await SeedBedsAsync(cancellationToken);
+    }
+
+    private async Task SeedCoreAsync(CancellationToken cancellationToken)
+    {
         if (await _context.Departments.AnyAsync(cancellationToken))
         {
             return;
@@ -96,6 +102,17 @@ public class DbInitializer
             PasswordHash = _passwordHasher.Hash("Nurse@123")
         };
 
+        var labUser = new UserAccount
+        {
+            Id = Guid.NewGuid(),
+            FullName = "Lab Tech Hoa Vo",
+            Email = "lab@mediconnect.local",
+            PhoneNumber = "0930000000",
+            Role = UserRole.Lab,
+            IsActive = true,
+            PasswordHash = _passwordHasher.Hash("Lab@123")
+        };
+
         var staffProfiles = new[]
         {
             new StaffProfile
@@ -146,9 +163,102 @@ public class DbInitializer
         await _context.Departments.AddRangeAsync(departments, cancellationToken);
         await _context.Clinics.AddRangeAsync(clinics, cancellationToken);
         await _context.UserAccounts.AddRangeAsync(new[] { adminUser, doctorUser, nurseUser, patientUser }, cancellationToken);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var staffSchedules = new[]
+        {
+            new StaffSchedule
+            {
+                Id = Guid.NewGuid(),
+                StaffId = staffProfiles[0].Id,
+                ShiftDate = today,
+                ShiftType = ShiftType.Morning,
+                StartTime = new TimeOnly(6, 0),
+                EndTime = new TimeOnly(12, 0),
+                WorkRoom = "B201"
+            },
+            new StaffSchedule
+            {
+                Id = Guid.NewGuid(),
+                StaffId = staffProfiles[0].Id,
+                ShiftDate = today.AddDays(1),
+                ShiftType = ShiftType.Afternoon,
+                StartTime = new TimeOnly(12, 0),
+                EndTime = new TimeOnly(18, 0),
+                WorkRoom = "B201"
+            },
+            new StaffSchedule
+            {
+                Id = Guid.NewGuid(),
+                StaffId = staffProfiles[1].Id,
+                ShiftDate = today,
+                ShiftType = ShiftType.Evening,
+                StartTime = new TimeOnly(18, 0),
+                EndTime = new TimeOnly(23, 59),
+                WorkRoom = "A101"
+            }
+        };
+
         await _context.StaffProfiles.AddRangeAsync(staffProfiles, cancellationToken);
+        await _context.StaffSchedules.AddRangeAsync(staffSchedules, cancellationToken);
         await _context.PatientProfiles.AddAsync(patientProfile, cancellationToken);
 
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SeedBedsAsync(CancellationToken cancellationToken)
+    {
+        if (await _context.Beds.AnyAsync(cancellationToken)) return;
+
+        var depts = await _context.Departments.ToListAsync(cancellationToken);
+        if (depts.Count < 2) return;
+
+        var beds = new List<Bed>();
+
+        // Multi-floor layout: each department spans 3 floors; each floor has 2 wards
+        // (Khu A / Khu B). Each ward has 4 rooms of mixed capacity [6, 3, 2, 1] beds so
+        // the UI can show room types (Phòng thường / 3 giường / đôi / VIP). No coordinates —
+        // the UI generates a realistic floor plan from the Ward → Room → Bed hierarchy.
+        var capacities = new[] { 6, 3, 2, 1 };
+        var statusCycle = new[]
+        {
+            BedStatus.Available, BedStatus.Occupied,     BedStatus.Available,
+            BedStatus.Cleaning,  BedStatus.Available,    BedStatus.Available,
+            BedStatus.Occupied,  BedStatus.OutOfService, BedStatus.Available
+        };
+
+        foreach (var dept in depts)
+        {
+            int deptOffset = dept == depts[0] ? 0 : 4;
+
+            for (int floor = 1; floor <= 3; floor++)
+            {
+                foreach (var (wardName, wardLetter) in new[] { ("Khu A", 'A'), ("Khu B", 'B') })
+                {
+                    for (int r = 0; r < capacities.Length; r++)
+                    {
+                        string room = $"{dept.Code}-{floor}{wardLetter}{r + 1:D2}";
+                        for (int b = 1; b <= capacities[r]; b++)
+                        {
+                            var status = statusCycle[(deptOffset + floor + r + b) % statusCycle.Length];
+                            beds.Add(new Bed
+                            {
+                                Id = Guid.NewGuid(),
+                                DepartmentId = dept.Id,
+                                Ward = wardName,
+                                RoomNumber = room,
+                                BedNumber = $"{b:D2}",
+                                Status = status,
+                                Floor = floor,
+                                PositionX = null,
+                                PositionY = null
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        await _context.Beds.AddRangeAsync(beds, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

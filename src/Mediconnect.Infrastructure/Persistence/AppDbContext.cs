@@ -34,6 +34,10 @@ public class AppDbContext : DbContext
         {
             foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
         }
+
+        modelBuilder.Entity<StaffSchedule>()
+            .HasIndex(s => new { s.StaffId, s.ShiftDate, s.ShiftType })
+            .IsUnique();
     }
 
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();

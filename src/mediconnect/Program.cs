@@ -1,6 +1,7 @@
 using System.Text;
 using Mediconnect.Application.DTOs;
 using Mediconnect.Application.Interfaces;
+using Mediconnect.Application.Options;
 using Mediconnect.Application.Services;
 using Mediconnect.Domain.Entities;
 using Mediconnect.Infrastructure;
@@ -12,7 +13,8 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -43,6 +45,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+var scheduleSettings = builder.Configuration.GetSection(ScheduleSettings.SectionName).Get<ScheduleSettings>()
+    ?? new ScheduleSettings();
+builder.Services.AddSingleton(scheduleSettings);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped(typeof(ICrudService<,,>), typeof(CrudService<,,>));
 builder.Services.AddScoped<ICrudService<UserAccount, UserAccountReadDto, UserAccountWriteDto>, UserAccountService>();

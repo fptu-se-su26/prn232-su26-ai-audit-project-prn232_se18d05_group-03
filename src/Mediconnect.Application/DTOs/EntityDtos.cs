@@ -33,6 +33,9 @@ public class BedReadDto
     public string? RoomNumber { get; set; }
     public string? BedNumber { get; set; }
     public BedStatus Status { get; set; }
+    public int Floor { get; set; }
+    public double? PositionX { get; set; }
+    public double? PositionY { get; set; }
 }
 
 public class BedWriteDto
@@ -42,6 +45,16 @@ public class BedWriteDto
     public string? RoomNumber { get; set; }
     public string? BedNumber { get; set; }
     public BedStatus Status { get; set; }
+    public int Floor { get; set; } = 1;
+    public double? PositionX { get; set; }
+    public double? PositionY { get; set; }
+}
+
+public class BedPositionDto
+{
+    public int Floor { get; set; } = 1;
+    public double? PositionX { get; set; }
+    public double? PositionY { get; set; }
 }
 
 public class BedAssignmentReadDto
@@ -451,16 +464,18 @@ public class StaffScheduleReadDto
     public Guid Id { get; set; }
     public Guid StaffId { get; set; }
     public DateOnly ShiftDate { get; set; }
+    public ShiftType ShiftType { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
+    public string? WorkRoom { get; set; }
 }
 
 public class StaffScheduleWriteDto
 {
     public Guid StaffId { get; set; }
     public DateOnly ShiftDate { get; set; }
-    public TimeOnly StartTime { get; set; }
-    public TimeOnly EndTime { get; set; }
+    public ShiftType ShiftType { get; set; }
+    public string? WorkRoom { get; set; }
 }
 
 public class TelemedicineSessionReadDto
@@ -543,4 +558,37 @@ public class BedMapGroupDto
 public class TransferAdmissionDto
 {
     public Guid DepartmentId { get; set; }
+
+    // Optional target bed in the new department. When supplied the current bed is released
+    // (set to Cleaning) and this bed is assigned to the admission (set to Occupied).
+    public Guid? BedId { get; set; }
+}
+
+// Feature 1 - admit a patient (optionally from an outpatient visit) and assign a bed atomically.
+public class AdmitRequestDto
+{
+    public Guid PatientId { get; set; }
+    public Guid? FromOutpatientVisitId { get; set; }
+    public Guid DepartmentId { get; set; }
+    public Guid BedId { get; set; }
+}
+
+// Feature 3 - Lab / imaging results
+public class LabResultEntryDto
+{
+    public string? ResultText { get; set; }
+}
+
+// Feature 4 - Discharge & aggregated billing
+public class DischargeRequestDto
+{
+    public string? Summary { get; set; }
+    public decimal InsuranceDeduction { get; set; }
+}
+
+public class DischargeResultDto
+{
+    public DischargeSummaryReadDto Summary { get; set; } = null!;
+    public BillingInvoiceReadDto Invoice { get; set; } = null!;
+    public IList<BillingItemReadDto> Items { get; set; } = new List<BillingItemReadDto>();
 }

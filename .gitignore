@@ -1,7 +1,9 @@
 # Build outputs
 bin/
 obj/
-
+# Ignore build artifacts
+[Bb]in/
+[Oo]bj/
 # Visual Studio
 .vs/
 *.user
@@ -45,8 +47,10 @@ dist/
 *.env
 appsettings.Development.json
 appsettings.Local.json
+appsettings.json
 secrets.json
-
+src/mediconnect/appsettings.json
+src/mediconnect/appsettings.Development.json
 # OS
 .DS_Store
 Thumbs.db
@@ -60,3 +64,4 @@ TestResults/
 # Logs
 *.log
 logs/
+

@@ -5,14 +5,23 @@ public enum UserRole
     Patient,
     Doctor,
     Nurse,
-    Admin
+    Admin,
+    Lab
 }
 
 public enum StaffType
 {
     Doctor,
     Nurse,
-    Admin
+    Admin,
+    Caregiver
+}
+
+public enum ShiftType
+{
+    Morning,
+    Afternoon,
+    Evening
 }
 
 public enum Gender

@@ -18,35 +18,35 @@ public abstract class CrudController<TEntity, TReadDto, TWriteDto> : ControllerB
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<TReadDto>>> GetAll(CancellationToken cancellationToken)
+    public virtual async Task<ActionResult<IReadOnlyList<TReadDto>>> GetAll(CancellationToken cancellationToken)
     {
         var items = await _service.GetAllAsync(cancellationToken);
         return Ok(items);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<TReadDto>> GetById(Guid id, CancellationToken cancellationToken)
+    public virtual async Task<ActionResult<TReadDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
         var item = await _service.GetByIdAsync(id, cancellationToken);
         return item is null ? NotFound() : Ok(item);
     }
 
     [HttpPost]
-    public async Task<ActionResult<TReadDto>> Create([FromBody] TWriteDto dto, CancellationToken cancellationToken)
+    public virtual async Task<ActionResult<TReadDto>> Create([FromBody] TWriteDto dto, CancellationToken cancellationToken)
     {
         var created = await _service.CreateAsync(dto, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = GetId(created) }, created);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] TWriteDto dto, CancellationToken cancellationToken)
+    public virtual async Task<IActionResult> Update(Guid id, [FromBody] TWriteDto dto, CancellationToken cancellationToken)
     {
         var updated = await _service.UpdateAsync(id, dto, cancellationToken);
         return updated ? NoContent() : NotFound();
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    public virtual async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var deleted = await _service.DeleteAsync(id, cancellationToken);
         return deleted ? NoContent() : NotFound();

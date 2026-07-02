@@ -1,0 +1,283 @@
+@page "/lab"
+@attribute [Authorize(Roles = "Lab,Admin")]
+
+<PageTitle>F3 · Cận lâm sàng – MediConnect</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h4><span class="material-symbols-outlined" style="vertical-align:middle;font-size:1.3rem;color:#b45309">biotech</span> Cận lâm sàng / Xét nghiệm</h4>
+        <small class="text-muted">Nhận y lệnh, nhập kết quả, tải file và trả kết quả</small>
+    </div>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-3" style="font-size:.82rem">@_error</div>
+}
+@if (_success is not null)
+{
+    <div class="alert alert-success mb-3" style="font-size:.82rem">@_success</div>
+}
+
+<div class="row g-3">
+    <!-- LEFT: order list -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">inbox</span> Hộp thư y lệnh</span>
+                    <select class="form-select form-select-sm" style="width:auto" @bind="_statusFilter" @bind:after="LoadOrders">
+                        <option value="">Tất cả</option>
+                        @foreach (var s in Enum.GetValues<LabOrderStatus>())
+                        {
+                            <option value="@s">@StatusLabel(s)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="list-group list-group-flush" style="max-height:600px;overflow-y:auto">
+                @if (_loading)
+                {
+                    <div class="list-group-item text-muted" style="font-size:.8rem">
+                        <span class="spinner-border spinner-border-sm me-2"></span>Đang tải...
+                    </div>
+                }
+                else if (_orders.Count == 0)
+                {
+                    <div class="list-group-item text-muted text-center py-4" style="font-size:.8rem">Không có y lệnh nào.</div>
+                }
+                else
+                {
+                    @foreach (var o in _orders)
+                    {
+                        <button class="list-group-item list-group-item-action lab-order-item @(_selected?.Id == o.Id ? "active" : "")"
+                                @onclick="() => SelectOrder(o)">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <strong style="font-size:.82rem">@o.TestName</strong>
+                                <span class="badge @StatusBadge(o.Status)" style="font-size:.65rem">@StatusLabel(o.Status)</span>
+                            </div>
+                            <div style="font-size:.72rem;color:inherit;opacity:.7;margin-top:2px">@o.OrderedAt.ToString("dd/MM/yyyy HH:mm") · @o.Notes</div>
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: order detail & result entry -->
+    <div class="col-md-7">
+        @if (_selected is null)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5 text-muted">
+                    <span class="material-symbols-outlined d-block mb-2" style="font-size:2.5rem;opacity:.3">lab_panel</span>
+                    Chọn y lệnh để xem chi tiết và nhập kết quả.
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><strong>@_selected.TestName</strong></span>
+                        <span class="badge @StatusBadge(_selected.Status)">@StatusLabel(_selected.Status)</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-2" style="font-size:.8rem">
+                        <dt class="col-4 text-muted">Y lệnh ID</dt><dd class="col-8 text-truncate">@_selected.Id</dd>
+                        <dt class="col-4 text-muted">Ghi chú</dt>   <dd class="col-8">@_selected.Notes</dd>
+                        <dt class="col-4 text-muted">Thời gian</dt> <dd class="col-8">@_selected.OrderedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                    </dl>
+
+                    @if (_selected.Status == LabOrderStatus.Ordered)
+                    {
+                        <button class="btn btn-sm btn-outline-primary" @onclick="MoveToInProgress" disabled="@_saving">
+                            <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">play_circle</span>
+                            Bắt đầu xử lý
+                        </button>
+                    }
+                </div>
+            </div>
+
+            @if (_selected.Status == LabOrderStatus.InProgress || _selected.Status == LabOrderStatus.Completed)
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">science</span> Nhập kết quả
+                    </div>
+                    <div class="card-body">
+                        @if (_resultError is not null) { <div class="alert alert-danger py-1 mb-2" style="font-size:.78rem">@_resultError</div> }
+                        <div class="mb-3">
+                            <label class="form-label">Kết quả xét nghiệm</label>
+                            <textarea class="form-control" rows="4" @bind="_resultText"
+                                      placeholder="Nhập kết quả chi tiết..."></textarea>
+                        </div>
+                        <button class="btn btn-success" @onclick="SubmitResult" disabled="@(_saving || string.IsNullOrWhiteSpace(_resultText))">
+                            <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">check_circle</span>
+                            @(_saving ? "Đang lưu..." : "Lưu kết quả")
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">attach_file</span> Tải file kết quả
+                    </div>
+                    <div class="card-body">
+                        @if (_fileError is not null) { <div class="alert alert-danger py-1 mb-2" style="font-size:.78rem">@_fileError</div> }
+                        @if (_results.Any())
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Gắn vào kết quả</label>
+                                <select class="form-select form-select-sm" @bind="_uploadResultId">
+                                    @foreach (var r in _results)
+                                    {
+                                        <option value="@r.Id">@(r.ResultedAt?.ToString("dd/MM HH:mm") ?? "?") – @(r.ResultText?[..Math.Min(40, r.ResultText?.Length ?? 0)])...</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        <div class="lab-dropzone">
+                            <span class="material-symbols-outlined mb-1" style="font-size:2rem;color:var(--brand)">cloud_upload</span>
+                            <div style="font-size:.8rem;color:var(--text-muted)">PDF, JPG, PNG (tối đa 10MB)</div>
+                            <InputFile OnChange="HandleFile" accept=".pdf,.jpg,.jpeg,.png" class="file-input" />
+                        </div>
+                        @if (_pendingFile is not null)
+                        {
+                            <div class="d-flex align-items-center gap-2 mt-2">
+                                <span class="material-symbols-outlined" style="font-size:1rem;color:var(--brand)">description</span>
+                                <span style="font-size:.8rem">@_pendingFile.Name (@(_pendingFile.Size / 1024) KB)</span>
+                                <button class="btn btn-sm btn-success ms-auto" @onclick="UploadFile" disabled="@_uploading">
+                                    @(_uploading ? "Đang tải..." : "Upload")
+                                </button>
+                            </div>
+                        }
+
+                        @if (_results.Any())
+                        {
+                            <hr />
+                            <div style="font-size:.78rem;font-weight:600;margin-bottom:.5rem">Kết quả đã lưu</div>
+                            @foreach (var r in _results)
+                            {
+                                <div class="result-row">
+                                    <span class="material-symbols-outlined" style="font-size:.9rem;color:var(--teal)">check_circle</span>
+                                    <span>@(r.ResultedAt?.ToString("dd/MM HH:mm") ?? "–")</span>
+                                    <span class="text-muted text-truncate" style="flex:1">@r.ResultText</span>
+                                    @if (!string.IsNullOrEmpty(r.ResultFileUrl))
+                                    {
+                                        <a href="@r.ResultFileUrl" target="_blank" class="btn btn-xs btn-outline-secondary btn-sm py-0">File</a>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+
+    private List<LabOrderReadDto> _orders = new();
+    private LabOrderReadDto? _selected;
+    private List<LabResultReadDto> _results = new();
+    private string _statusFilter = "Ordered";
+    private bool _loading, _saving, _uploading;
+    private string? _error, _success, _resultError, _fileError;
+    private string _resultText = "";
+    private Guid _uploadResultId;
+    private IBrowserFile? _pendingFile;
+
+    protected override async Task OnInitializedAsync() => await LoadOrders();
+
+    private async Task LoadOrders()
+    {
+        _loading = true; _error = null;
+        try
+        {
+            var status = string.IsNullOrEmpty(_statusFilter) ? (LabOrderStatus?)null : Enum.Parse<LabOrderStatus>(_statusFilter);
+            _orders = (await Api.FilterLabOrders(status)) ?? new();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+
+    private async Task SelectOrder(LabOrderReadDto o)
+    {
+        _selected = o; _results = new(); _resultText = ""; _resultError = null; _success = null; _pendingFile = null;
+        try
+        {
+            _results = (await Api.GetLabResults(o.Id)) ?? new();
+            _uploadResultId = _results.FirstOrDefault()?.Id ?? Guid.Empty;
+        }
+        catch { }
+    }
+
+    private async Task MoveToInProgress()
+    {
+        _saving = true;
+        try { await Api.UpdateLabOrderStatus(_selected!.Id, LabOrderStatus.InProgress); _selected.Status = LabOrderStatus.InProgress; }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private async Task SubmitResult()
+    {
+        _saving = true; _resultError = null;
+        try
+        {
+            var r = await Api.EnterLabResult(_selected!.Id, _resultText);
+            if (r is not null) { _results.Insert(0, r); _uploadResultId = r.Id; }
+            _selected.Status = LabOrderStatus.Completed;
+            _resultText = "";
+            _success = "Đã lưu kết quả xét nghiệm.";
+        }
+        catch (ApiClient.ApiException ex) { _resultError = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private void HandleFile(InputFileChangeEventArgs e) { _pendingFile = e.File; _fileError = null; }
+
+    private async Task UploadFile()
+    {
+        if (_pendingFile is null) return;
+        if (_pendingFile.Size > 10 * 1024 * 1024) { _fileError = "File không được vượt quá 10MB."; return; }
+        if (_uploadResultId == Guid.Empty) { _fileError = "Vui lòng chọn kết quả để gắn file."; return; }
+        _uploading = true; _fileError = null;
+        try
+        {
+            using var stream = _pendingFile.OpenReadStream(10 * 1024 * 1024);
+            var r = await Api.UploadLabFile(_uploadResultId, stream, _pendingFile.Name);
+            if (r is not null)
+            {
+                var idx = _results.FindIndex(x => x.Id == _uploadResultId);
+                if (idx >= 0) _results[idx] = r;
+            }
+            _pendingFile = null;
+            _success = "Đã tải file thành công.";
+        }
+        catch (ApiClient.ApiException ex) { _fileError = ex.Message; }
+        finally { _uploading = false; }
+    }
+
+    private static string StatusLabel(LabOrderStatus s) => s switch
+    {
+        LabOrderStatus.Ordered    => "Chờ xử lý",
+        LabOrderStatus.InProgress => "Đang xử lý",
+        LabOrderStatus.Completed  => "Hoàn thành",
+        LabOrderStatus.Cancelled  => "Đã huỷ",
+        _ => s.ToString()
+    };
+    private static string StatusBadge(LabOrderStatus s) => s switch
+    {
+        LabOrderStatus.Ordered    => "bg-primary",
+        LabOrderStatus.InProgress => "bg-warning text-dark",
+        LabOrderStatus.Completed  => "bg-success",
+        LabOrderStatus.Cancelled  => "bg-secondary",
+        _ => "bg-secondary"
+    };
+}
