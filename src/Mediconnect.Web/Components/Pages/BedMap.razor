@@ -1,0 +1,860 @@
+@page "/beds"
+@attribute [Authorize]
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+@using System.Globalization
+
+<PageTitle>F1 · Sơ đồ giường – MediConnect</PageTitle>
+
+<!-- Page header -->
+<div class="page-header">
+    <div>
+        <h4><span class="material-symbols-outlined" style="vertical-align:middle;font-size:1.3rem;color:var(--brand)">bed</span> Sơ đồ giường bệnh</h4>
+        <small class="text-muted">Chọn tầng → chọn phòng → chọn giường</small>
+    </div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <AuthorizeView Roles="Admin">
+            <button class="btn btn-outline-secondary btn-sm" @onclick="OpenAddBed" disabled="@string.IsNullOrEmpty(_selDept)">
+                <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">add</span> Thêm giường
+            </button>
+        </AuthorizeView>
+        <button class="btn @(_view3d ? "btn-primary" : "btn-outline-primary") btn-sm" @onclick="Toggle3D">
+            <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">view_in_ar</span>
+            @(_view3d ? "3D" : "2D")
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" @onclick="Reload">
+            <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">refresh</span>
+        </button>
+    </div>
+</div>
+
+@if (_error is not null)
+{
+    <div class="toast-error">@_error <button class="btn-close btn-close-sm float-end" style="font-size:.7rem" @onclick="() => _error = null"></button></div>
+}
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="d-flex gap-3 align-items-center flex-wrap">
+            <div class="d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined text-muted" style="font-size:1rem">domain</span>
+                <select class="form-select form-select-sm" style="width:200px" @bind="_selDept" @bind:after="OnDeptChanged">
+                    <option value="">-- Chọn khoa --</option>
+                    @foreach (var d in _depts)
+                    {
+                        <option value="@d.Id">@d.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined text-muted" style="font-size:1rem">stairs</span>
+                <select class="form-select form-select-sm" style="width:120px" @bind="_selFloor" @bind:after="OnFloorChanged">
+                    @foreach (var f in Floors)
+                    {
+                        <option value="@f">Tầng @f</option>
+                    }
+                </select>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined text-muted" style="font-size:1rem">filter_list</span>
+                <select class="form-select form-select-sm" style="width:140px" @bind="_selWard" @bind:after="OnWardChanged">
+                    <option value="">Tất cả khu</option>
+                    @foreach (var w in Wards)
+                    {
+                        <option value="@w">@w</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPI row (current floor) -->
+<div class="row g-2 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="kpi-card" style="border-left:4px solid var(--st-available)">
+            <div class="kpi-value" style="color:var(--st-available)">@CountByStatus(BedStatus.Available)</div>
+            <div class="kpi-label">Còn trống</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card" style="border-left:4px solid var(--st-occupied)">
+            <div class="kpi-value" style="color:var(--st-occupied)">@CountByStatus(BedStatus.Occupied)</div>
+            <div class="kpi-label">Đang có bệnh nhân</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card" style="border-left:4px solid var(--st-cleaning)">
+            <div class="kpi-value" style="color:var(--st-cleaning)">@CountByStatus(BedStatus.Cleaning)</div>
+            <div class="kpi-label">Đang dọn dẹp</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card" style="border-left:4px solid var(--st-oos)">
+            <div class="kpi-value" style="color:var(--st-oos)">@CountByStatus(BedStatus.OutOfService)</div>
+            <div class="kpi-label">Ngừng sử dụng</div>
+        </div>
+    </div>
+</div>
+
+<!-- Legend -->
+<div class="d-flex gap-3 mb-3 flex-wrap">
+    @foreach (var (label, cls) in new[]{ ("Còn trống","available"), ("Có bệnh nhân","occupied"), ("Đang dọn","cleaning"), ("Ngừng dùng","oos") })
+    {
+        <span class="d-flex align-items-center gap-1" style="font-size:.75rem">
+            <span class="status-dot @cls"></span>@label
+        </span>
+    }
+    @if (Wards.Any())
+    {
+        <span class="vr mx-1"></span>
+        @foreach (var w in Wards)
+        {
+            <span class="d-flex align-items-center gap-1" style="font-size:.75rem">
+                <span class="status-dot" style="background:@WardColor(w)"></span>@w
+            </span>
+        }
+    }
+</div>
+
+<!-- Floor plan stage -->
+@if (string.IsNullOrEmpty(_selDept))
+{
+    <div class="card">
+        <div class="card-body text-center py-5 text-muted">
+            <span class="material-symbols-outlined d-block mb-2" style="font-size:3rem;opacity:.3">apartment</span>
+            Vui lòng chọn khoa để xem sơ đồ tầng.
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body p-2">
+            @if (_loading)
+            {
+                <div class="text-center py-5 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2"></div>Đang tải...
+                </div>
+            }
+            else if (!VisibleBeds.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <span class="material-symbols-outlined d-block mb-2" style="font-size:2.5rem">bed</span>
+                    Tầng này chưa có giường nào.
+                </div>
+            }
+            else if (_view3d)
+            {
+                @* ─── 3D scene (Three.js) — drill-down handled inside the canvas ─── *@
+                <div class="fp-3d-wrap">
+                    <div class="fp-3d-canvas" @ref="_canvasRef"></div>
+                    <div class="fp-title-block">
+                        SƠ ĐỒ 3D · TẦNG @_selFloor @(SelectedDeptName is not null ? $"— {SelectedDeptName}" : "")
+                    </div>
+                    @if (_selRoom is null)
+                    {
+                        <div class="fp-3d-hint">Kéo để xoay · lăn chuột để phóng · bấm vào phòng để xem giường</div>
+                    }
+                    else
+                    {
+                        <button class="fp-back-btn" @onclick="CloseRoom">
+                            <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">arrow_back</span>
+                            Về sơ đồ tầng · Phòng @_selRoom
+                        </button>
+                    }
+                </div>
+            }
+            else if (_selRoom is not null)
+            {
+                @* ─── 2D room detail: beds in this room ─── *@
+                <div class="fp-room-detail">
+                    <div class="fp-room-detail-head">
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="CloseRoom">
+                            <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">arrow_back</span> Về sơ đồ tầng
+                        </button>
+                        <div class="fp-room-detail-title">
+                            <span class="fp-room-chip" style="--ward-color:@WardColor(RoomWard(_selRoom))"></span>
+                            Phòng <b>@_selRoom</b> · @RoomTypeName(RoomBeds(_selRoom).Count) · @RoomWard(_selRoom) · Tầng @_selFloor
+                        </div>
+                        <span class="fp-wc-chip" title="Buồng vệ sinh trong phòng">
+                            <span class="material-symbols-outlined" style="font-size:.85rem;vertical-align:middle">wc</span> WC
+                        </span>
+                    </div>
+                    <div class="fp-bed-grid">
+                        @foreach (var bed in RoomBeds(_selRoom))
+                        {
+                            <div class="bed-tile @BedCls(bed.Status) @(_selBed?.Id == bed.Id ? "selected" : "")"
+                                 title="@bed.BedNumber – @StatusLabel(bed.Status)"
+                                 @onclick="() => SelectBed(bed)">
+                                <div class="bed-headboard"><div class="bed-pillow"></div></div>
+                                <div class="bed-body">@bed.BedNumber</div>
+                                <div class="bed-foot"></div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="fp-stage-wrapper @(_zoom > 1 ? "fp-pannable" : "")" @ref="_wrapperRef">
+                    <div class="fp-stage" style="@StageTransform" @ref="_stageRef">
+                        @{ var lay = ComputeFloorLayout(); }
+
+                        <div class="fp-corridor-h"
+                             style="left:@Fmt(lay.Corridor.X)%;top:@Fmt(lay.Corridor.Y)%;width:@Fmt(lay.Corridor.W)%;height:@Fmt(lay.Corridor.H)%">
+                            <span class="fp-corridor-label-h">HÀNH LANG</span>
+                        </div>
+                        <div class="fp-nurse-station-h"
+                             style="left:@Fmt(lay.Nurse.X)%;top:@Fmt(lay.Nurse.Y)%;width:@Fmt(lay.Nurse.W)%;height:@Fmt(lay.Nurse.H)%">
+                            Trạm Y tá
+                        </div>
+                        <div class="fp-stairs"
+                             style="left:@Fmt(lay.Stairs.X)%;top:@Fmt(lay.Stairs.Y)%;width:@Fmt(lay.Stairs.W)%;height:@Fmt(lay.Stairs.H)%">
+                            <span class="material-symbols-outlined">elevator</span>
+                        </div>
+
+                        @foreach (var room in lay.Rooms)
+                        {
+                            <div class="fp-room fp-room-click"
+                                 style="left:@Fmt(room.X)%;top:@Fmt(room.Y)%;width:@Fmt(room.W)%;height:@Fmt(room.H)%;--ward-color:@WardColor(room.Ward)"
+                                 @onclick="() => OpenRoom(room.Room)"
+                                 title="Phòng @room.Room — @room.Occupied/@room.Total giường có bệnh nhân">
+                                <span class="fp-room-label">@room.Room</span>
+                                <span class="fp-room-occ @OccCls(room)">@room.Occupied/@room.Total</span>
+                                <span class="fp-room-sub">@RoomTypeName(room.Total)</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="fp-title-block">
+                        SƠ ĐỒ TẦNG @_selFloor @(SelectedDeptName is not null ? $"— {SelectedDeptName}" : "")
+                    </div>
+
+                    <div class="fp-zoom-controls">
+                        <button class="fp-zoom-btn" @onclick="ZoomIn" disabled="@(_zoom >= 3.0)" title="Phóng to">
+                            <span class="material-symbols-outlined">add</span>
+                        </button>
+                        <button class="fp-zoom-pct" @onclick="ResetZoom" title="Đặt lại zoom">@((_zoom * 100).ToString("F0"))%</button>
+                        <button class="fp-zoom-btn" @onclick="ZoomOut" disabled="@(_zoom <= 0.5)" title="Thu nhỏ">
+                            <span class="material-symbols-outlined">remove</span>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- Right drawer: bed detail -->
+<div class="side-drawer @(_selBed is not null ? "open" : "")">
+    @if (_selBed is not null)
+    {
+        <div class="side-drawer-header">
+            <span>Chi tiết giường @_selBed.BedNumber</span>
+            <button class="btn-close" @onclick="() => _selBed = null"></button>
+        </div>
+        <div class="side-drawer-body">
+            <dl class="row mb-3" style="font-size:.8rem">
+                <dt class="col-5 text-muted">Số giường</dt><dd class="col-7">@_selBed.BedNumber</dd>
+                <dt class="col-5 text-muted">Phòng</dt>    <dd class="col-7">@_selBed.RoomNumber</dd>
+                <dt class="col-5 text-muted">Khu</dt>      <dd class="col-7">@_selBed.Ward</dd>
+                <dt class="col-5 text-muted">Tầng</dt>     <dd class="col-7">@_selBed.Floor</dd>
+                <dt class="col-5 text-muted">Trạng thái</dt>
+                <dd class="col-7"><span class="badge @StatusBadge(_selBed.Status)">@StatusLabel(_selBed.Status)</span></dd>
+            </dl>
+
+            <hr />
+
+            <AuthorizeView Roles="Admin,Nurse">
+                <div class="mb-3">
+                    <label class="form-label">Đổi trạng thái</label>
+                    <div class="d-flex gap-1 flex-wrap">
+                        @foreach (BedStatus s in Enum.GetValues<BedStatus>())
+                        {
+                            <button class="btn btn-sm @(s == _selBed.Status ? StatusBtnActive(s) : "btn-outline-secondary")"
+                                    @onclick="() => QuickSetStatus(s)">
+                                @StatusLabel(s)
+                            </button>
+                        }
+                    </div>
+                </div>
+            </AuthorizeView>
+
+            @if (_selBed.Status == BedStatus.Available)
+            {
+                <button class="btn btn-primary w-100 mb-2" @onclick="() => { _admitBedId = _selBed.Id; _admitDto = new(); _admitError = null; _showAdmit = true; }">
+                    <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">person_add</span> Nhập viện
+                </button>
+            }
+            @if (_selBed.Status == BedStatus.Occupied)
+            {
+                <button class="btn btn-outline-primary w-100 mb-2" @onclick="OpenTransfer">
+                    <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">swap_horiz</span> Chuyển giường / khoa
+                </button>
+            }
+
+            <AuthorizeView Roles="Admin">
+                <hr />
+                <button class="btn btn-sm btn-outline-danger w-100" @onclick="DeleteSelectedBed">
+                    <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">delete</span> Xoá giường này
+                </button>
+            </AuthorizeView>
+        </div>
+    }
+</div>
+
+<!-- Admit modal -->
+@if (_showAdmit)
+{
+    <div class="modal d-block" style="background:rgba(0,0,0,.45)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:var(--radius)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-600">Nhập viện bệnh nhân</h5>
+                    <button class="btn-close" @onclick="() => _showAdmit = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (_admitError is not null) { <div class="alert alert-danger py-2 mb-3">@_admitError</div> }
+                    <div class="mb-3">
+                        <label class="form-label">Bệnh nhân</label>
+                        <select class="form-select" @bind="_admitDto.PatientId">
+                            <option value="">-- Chọn bệnh nhân --</option>
+                            @foreach (var p in _patients)
+                            {
+                                <option value="@p.Id">@p.FullName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary" @onclick="() => _showAdmit = false">Huỷ</button>
+                    <button class="btn btn-primary" @onclick="DoAdmit" disabled="@_saving">
+                        @(_saving ? "Đang xử lý..." : "Xác nhận nhập viện")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Transfer modal -->
+@if (_showTransfer)
+{
+    <div class="modal d-block" style="background:rgba(0,0,0,.45)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:var(--radius)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-600">Chuyển giường / khoa</h5>
+                    <button class="btn-close" @onclick="() => _showTransfer = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (_admitError is not null) { <div class="alert alert-danger py-2 mb-3">@_admitError</div> }
+                    <div class="mb-3">
+                        <label class="form-label">Mã nhập viện (Admission ID)</label>
+                        <input class="form-control" @bind="_transferAdmissionId" placeholder="xxxxxxxx-xxxx-..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Khoa mới</label>
+                        <select class="form-select" @bind="_transferDto.DepartmentId" @bind:after="LoadTransferBeds">
+                            <option value="">-- Chọn khoa --</option>
+                            @foreach (var d in _depts) { <option value="@d.Id">@d.Name</option> }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Giường mới (tùy chọn)</label>
+                        <select class="form-select" @bind="_transferDto.BedId">
+                            <option value="">-- Không chỉ định --</option>
+                            @foreach (var b in _transferBeds) { <option value="@b.Id">@b.RoomNumber – @b.BedNumber</option> }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary" @onclick="() => _showTransfer = false">Huỷ</button>
+                    <button class="btn btn-primary" @onclick="DoTransfer" disabled="@_saving">
+                        @(_saving ? "Đang xử lý..." : "Xác nhận chuyển")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Add bed modal (Admin) -->
+@if (_showAddBed)
+{
+    <div class="modal d-block" style="background:rgba(0,0,0,.45)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:var(--radius)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-600">Thêm giường mới</h5>
+                    <button class="btn-close" @onclick="() => _showAddBed = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (_admitError is not null) { <div class="alert alert-danger py-2 mb-3">@_admitError</div> }
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">Khu (Ward)</label>
+                            <input class="form-control" @bind="_newBed.Ward" placeholder="Khu A" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Phòng</label>
+                            <input class="form-control" @bind="_newBed.RoomNumber" placeholder="ICU-101" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Số giường</label>
+                            <input class="form-control" @bind="_newBed.BedNumber" placeholder="01" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Tầng</label>
+                            <input type="number" class="form-control" @bind="_newBed.Floor" min="1" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary" @onclick="() => _showAddBed = false">Huỷ</button>
+                    <button class="btn btn-primary" @onclick="DoAddBed" disabled="@_saving">
+                        @(_saving ? "Đang lưu..." : "Thêm giường")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+
+    private List<DepartmentReadDto> _depts = new();
+    private List<UserAccountReadDto> _patients = new();
+    private List<BedReadDto> _allBeds = new();
+
+    private string _selDept = "";
+    private int _selFloor = 1;
+    private string _selWard = "";
+    private bool _loading, _saving;
+    private bool _view3d;
+    private double _zoom = 1.0;
+    private string? _error, _admitError;
+
+    private BedReadDto? _selBed;
+    private string? _selRoom;   // null = floor overview; set = room detail (drill-down)
+
+    private bool _showAdmit, _showTransfer, _showAddBed;
+    private Guid _admitBedId;
+    private AdmitRequestDto _admitDto = new();
+    private string _transferAdmissionId = "";
+    private TransferAdmissionDto _transferDto = new();
+    private List<BedReadDto> _transferBeds = new();
+    private BedWriteDto _newBed = new();
+
+    private ElementReference _stageRef;
+    private ElementReference _wrapperRef;
+    private ElementReference _canvasRef;
+    private DotNetObjectReference<BedMap>? _dotNetRef;
+    private double _panX, _panY;
+    private bool _panInitialized;
+
+    // 3D (Three.js) scene state
+    private IJSObjectReference? _mod3d;
+    private string? _last3dSig;
+
+    private static string Fmt(double v) => v.ToString("F1", CultureInfo.InvariantCulture);
+
+    private IEnumerable<int> Floors => _allBeds.Select(b => b.Floor).Distinct().OrderBy(f => f);
+    private IEnumerable<string> Wards => _allBeds.Where(b => b.Floor == _selFloor && b.Ward is not null)
+                                                 .Select(b => b.Ward!).Distinct().OrderBy(w => w);
+
+    private IEnumerable<BedReadDto> FloorBeds => _allBeds.Where(b => b.Floor == _selFloor);
+    private IEnumerable<BedReadDto> VisibleBeds => _allBeds
+        .Where(b => b.Floor == _selFloor)
+        .Where(b => string.IsNullOrEmpty(_selWard) || b.Ward == _selWard)
+        .Where(b => b.RoomNumber is not null);
+
+    // Stable soft color per ward — echoes a CAD legend (cyan/violet/amber/green/orange/blue…)
+    private static readonly string[] WardPalette =
+        { "#06b6d4", "#8b5cf6", "#f59e0b", "#22c55e", "#f97316", "#3b82f6", "#ec4899", "#14b8a6" };
+
+    private string WardColor(string? ward)
+    {
+        if (string.IsNullOrEmpty(ward)) return "#94a3b8";
+        var list = Wards.ToList();
+        var idx = list.IndexOf(ward);
+        return WardPalette[(idx < 0 ? 0 : idx) % WardPalette.Length];
+    }
+
+    private string? SelectedDeptName =>
+        _depts.FirstOrDefault(d => d.Id.ToString() == _selDept)?.Name;
+
+    // ── Shared floor-plan layout engine (feeds both 2D and 3D) ──
+    // Rooms are arranged as a realistic double-loaded corridor: a top row and a
+    // bottom row of rooms flanking a central horizontal corridor, with a nurse
+    // station and a stairs/lift block. Grouped by ward so each wing reads clearly.
+    private record RoomRect(string Room, string? Ward, double X, double Y, double W, double H, int Total, int Occupied);
+    private sealed record FloorLayout(
+        List<RoomRect> Rooms,
+        (double X, double Y, double W, double H) Corridor,
+        (double X, double Y, double W, double H) Nurse,
+        (double X, double Y, double W, double H) Stairs);
+
+    private List<(string Room, string? Ward, List<BedReadDto> Beds)> FloorRooms =>
+        VisibleBeds.GroupBy(b => b.RoomNumber!)
+            .OrderBy(g => g.First().Ward).ThenBy(g => g.Key, StringComparer.Ordinal)
+            .Select(g => (g.Key, g.First().Ward, g.ToList()))
+            .ToList();
+
+    private FloorLayout ComputeFloorLayout()
+    {
+        var rooms = FloorRooms;
+        const double mX = 3, mYtop = 4, mYbot = 4, gap = 2.5;
+        const double corTop = 45, corBot = 55;           // central corridor band
+
+        int n = rooms.Count;
+        int topCount = (n + 1) / 2;
+        var result = new List<RoomRect>();
+
+        void PlaceRow(int start, int count, bool top)
+        {
+            if (count <= 0) return;
+            double usable = 100 - 2 * mX - gap * (count - 1);
+            // width proportional to capacity (weight clamped so a 1-bed room isn't tiny)
+            double totalWeight = 0;
+            for (int i = 0; i < count; i++)
+                totalWeight += Math.Clamp(rooms[start + i].Beds.Count, 2, 6);
+
+            // depth by beds-per-wall (rooms anchor to the corridor; small rooms are shallower)
+            double maxH = top ? corTop - mYtop : 100 - mYbot - corBot;
+            double x = mX;
+            for (int i = 0; i < count; i++)
+            {
+                var (room, ward, beds) = rooms[start + i];
+                double w = usable * Math.Clamp(beds.Count, 2, 6) / totalWeight;
+                int perWall = Math.Max(1, (int)Math.Ceiling(beds.Count / 2.0));
+                double h = Math.Min(maxH, 14 + 8.5 * perWall);
+                double y = top ? corTop - h : corBot;
+                int occ = beds.Count(b => b.Status == BedStatus.Occupied);
+                result.Add(new RoomRect(room, ward, x, y, w, h, beds.Count, occ));
+                x += w + gap;
+            }
+        }
+        PlaceRow(0, topCount, true);
+        PlaceRow(topCount, n - topCount, false);
+
+        var corridor = (mX, corTop, 100 - 2 * mX, corBot - corTop);
+        double nsW = 12, nsH = corBot - corTop - 2;
+        var nurse = (50 - nsW / 2, corTop + 1, nsW, nsH);
+        double stW = 7;
+        var stairs = (100 - mX - stW, corTop + 1, stW, nsH);
+        return new FloorLayout(result, corridor, nurse, stairs);
+    }
+
+    private List<BedReadDto> RoomBeds(string room) =>
+        VisibleBeds.Where(b => b.RoomNumber == room).OrderBy(b => b.BedNumber, StringComparer.Ordinal).ToList();
+    private string? RoomWard(string room) =>
+        VisibleBeds.FirstOrDefault(b => b.RoomNumber == room)?.Ward;
+
+    private static string OccCls(RoomRect r) =>
+        r.Total > 0 && r.Occupied >= r.Total ? "occ-full"
+        : r.Occupied == 0 ? "occ-free" : "occ-partial";
+
+    // Room type name derived from bed count (no DB field)
+    private static string RoomTypeName(int beds) => beds switch
+    {
+        <= 1 => "Phòng đơn (VIP)",
+        2    => "Phòng đôi",
+        3    => "Phòng 3 giường",
+        4 or 5 => $"Phòng {beds} giường",
+        _    => $"Phòng thường ({beds} giường)"
+    };
+
+    // Membership signature (floor set) — excludes status; status recolors via updateBed, no rebuild
+    private string Scene3dSignature => string.Join("|",
+        _selDept, _selFloor, _selWard,
+        string.Join(",", VisibleBeds.Select(b => b.Id.ToString())));
+
+    private object Build3dPayload()
+    {
+        var layout = ComputeFloorLayout();
+        return new
+        {
+            rooms = layout.Rooms.Select(r => new
+            {
+                room = r.Room, ward = r.Ward, type = RoomTypeName(r.Total),
+                x = r.X, y = r.Y, w = r.W, h = r.H,
+                color = WardColor(r.Ward), total = r.Total, occupied = r.Occupied,
+                beds = RoomBeds(r.Room).Select(b => new
+                {
+                    id = b.Id.ToString(), status = b.Status.ToString(), label = b.BedNumber
+                })
+            }),
+            corridor = new { x = layout.Corridor.X, y = layout.Corridor.Y, w = layout.Corridor.W, h = layout.Corridor.H },
+            nurse    = new { x = layout.Nurse.X,    y = layout.Nurse.Y,    w = layout.Nurse.W,    h = layout.Nurse.H },
+            stairs   = new { x = layout.Stairs.X,   y = layout.Stairs.Y,   w = layout.Stairs.W,   h = layout.Stairs.H }
+        };
+    }
+
+    private string StageTransform
+    {
+        get
+        {
+            var ic = CultureInfo.InvariantCulture;
+            return $"transform:translate({_panX.ToString("F1", ic)}px,{_panY.ToString("F1", ic)}px) scale({_zoom.ToString("F2", ic)});transform-origin:center center";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dotNetRef = DotNetObjectReference.Create(this);
+        var deptsTask = Api.GetDepartments();
+        var patsTask  = Api.GetUserAccounts();
+        _depts    = (await deptsTask) ?? new();
+        _patients = ((await patsTask) ?? new()).Where(u => u.Role == UserRole.Patient).ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Pan/zoom for the 2D floor overview (wrapper only rendered there)
+        if (!_panInitialized && _wrapperRef.Id is not null && !_view3d && _selRoom is null)
+        {
+            _panInitialized = true;
+            try { await JS.InvokeVoidAsync("floorplan.initPan", _dotNetRef, _wrapperRef, _stageRef); } catch { }
+        }
+
+        // ── 3D scene lifecycle ──
+        var want3d = _view3d && !_loading && VisibleBeds.Any();
+        if (want3d && _canvasRef.Id is not null)
+        {
+            var sig = Scene3dSignature;
+            if (_last3dSig != sig)
+            {
+                _last3dSig = sig;
+                _selRoom = null;   // fresh floor scene starts at overview
+                try
+                {
+                    // ?v= busts browser cache when the scene module changes — bump on JS edits
+                    _mod3d ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/floorplan3d.js?v=7");
+                    await _mod3d.InvokeVoidAsync("render", _canvasRef, Build3dPayload(), _dotNetRef);
+                }
+                catch (Exception ex) { _error = "Không tải được chế độ 3D: " + ex.Message; _last3dSig = null; StateHasChanged(); }
+            }
+        }
+        else if (!want3d && _last3dSig is not null)
+        {
+            _last3dSig = null;
+            if (_mod3d is not null) { try { await _mod3d.InvokeVoidAsync("dispose"); } catch { } }
+        }
+    }
+
+    [JSInvokable]
+    public void SetPan(double x, double y)
+    {
+        _panX = x; _panY = y;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task SelectRoomFromJs(string room)
+    {
+        _selRoom = room; _selBed = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task SelectBedFromJs(string bedId)
+    {
+        if (!Guid.TryParse(bedId, out var id)) return;
+        var bed = _allBeds.FirstOrDefault(b => b.Id == id);
+        if (bed is null) return;
+        SelectBed(bed);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnDeptChanged()
+    {
+        ResetView();
+        await Reload();
+    }
+
+    private void OnFloorChanged() { ResetView(); }
+    private void OnWardChanged()  { _selRoom = null; _selBed = null; }
+
+    private void ResetView()
+    {
+        _selBed = null; _selRoom = null;
+        _zoom = 1.0; _panX = 0; _panY = 0; _panInitialized = false;
+        _last3dSig = null;   // force 3D rebuild for the new floor/dept
+    }
+
+    private async Task Reload()
+    {
+        if (string.IsNullOrEmpty(_selDept)) return;
+        _loading = true; _error = null;
+        try
+        {
+            var groups = await Api.GetBedMap(Guid.Parse(_selDept));
+            _allBeds = (groups ?? new()).SelectMany(g => g.Beds).ToList();
+            var floors = Floors.ToList();
+            if (!floors.Contains(_selFloor)) _selFloor = floors.FirstOrDefault(1);
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+
+    private void Toggle3D()
+    {
+        _view3d = !_view3d;
+        _selRoom = null; _selBed = null;
+        _zoom = 1.0; _panX = 0; _panY = 0; _panInitialized = false;
+    }
+
+    private void ZoomIn()    => _zoom = Math.Min(3.0, Math.Round(_zoom + 0.25, 2));
+    private void ZoomOut()   => _zoom = Math.Max(0.5, Math.Round(_zoom - 0.25, 2));
+    private void ResetZoom() { _zoom = 1.0; _panX = 0; _panY = 0; }
+
+    private void OpenRoom(string room) { _selRoom = room; _selBed = null; }
+
+    private async Task CloseRoom()
+    {
+        _selRoom = null; _selBed = null;
+        _panInitialized = false;   // overview remounts → re-init pan
+        if (_view3d && _mod3d is not null)
+        {
+            try { await _mod3d.InvokeVoidAsync("exitRoom"); } catch { }
+        }
+    }
+
+    private void SelectBed(BedReadDto bed) => _selBed = bed;
+
+    private void OpenTransfer() { _showTransfer = true; _admitError = null; _transferAdmissionId = ""; _transferDto = new(); _transferBeds = new(); }
+    private void OpenAddBed()
+    {
+        _showAddBed = true; _admitError = null;
+        _newBed = new() { DepartmentId = Guid.Parse(_selDept), Floor = _selFloor };
+    }
+
+    private async Task QuickSetStatus(BedStatus status)
+    {
+        if (_selBed is null) return;
+        try
+        {
+            await Api.SetBedStatus(_selBed.Id, status);
+            var bedId = _selBed.Id;
+            var idx = _allBeds.FindIndex(b => b.Id == bedId);
+            if (idx >= 0)
+            {
+                var b = _allBeds[idx];
+                _allBeds[idx] = new BedReadDto { Id=b.Id, DepartmentId=b.DepartmentId, Ward=b.Ward, RoomNumber=b.RoomNumber, BedNumber=b.BedNumber, Floor=b.Floor, PositionX=b.PositionX, PositionY=b.PositionY, Status=status };
+                _selBed = _allBeds[idx];
+            }
+            if (_view3d && _mod3d is not null)
+            {
+                try { await _mod3d.InvokeVoidAsync("updateBed", bedId.ToString(), status.ToString()); } catch { }
+            }
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+    }
+
+    private async Task DeleteSelectedBed()
+    {
+        if (_selBed is null) return;
+        try
+        {
+            await Api.DeleteBed(_selBed.Id);
+            _allBeds.RemoveAll(b => b.Id == _selBed.Id);
+            _selBed = null;
+            _last3dSig = null;   // rebuild 3D scene without the deleted bed
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+    }
+
+    private async Task DoAdmit()
+    {
+        _admitDto.BedId = _admitBedId;
+        _admitDto.DepartmentId = Guid.Parse(_selDept);
+        if (_admitDto.PatientId == Guid.Empty) { _admitError = "Vui lòng chọn bệnh nhân."; return; }
+        _saving = true; _admitError = null;
+        try { await Api.Admit(_admitDto); _showAdmit = false; await Reload(); _selBed = null; _last3dSig = null; }
+        catch (ApiClient.ApiException ex) { _admitError = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private async Task LoadTransferBeds()
+    {
+        if (_transferDto.DepartmentId == Guid.Empty) { _transferBeds = new(); return; }
+        try
+        {
+            var groups = await Api.GetBedMap(_transferDto.DepartmentId);
+            _transferBeds = (groups ?? new()).Where(g => g.Status == BedStatus.Available).SelectMany(g => g.Beds).ToList();
+        }
+        catch { _transferBeds = new(); }
+    }
+
+    private async Task DoTransfer()
+    {
+        if (!Guid.TryParse(_transferAdmissionId, out var admId)) { _admitError = "ID nhập viện không hợp lệ."; return; }
+        if (_transferDto.DepartmentId == Guid.Empty) { _admitError = "Vui lòng chọn khoa."; return; }
+        _saving = true; _admitError = null;
+        try { await Api.Transfer(admId, _transferDto); _showTransfer = false; await Reload(); _selBed = null; _last3dSig = null; }
+        catch (ApiClient.ApiException ex) { _admitError = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private async Task DoAddBed()
+    {
+        _saving = true; _admitError = null;
+        try
+        {
+            var created = await Api.CreateBed(_newBed);
+            if (created is not null) { _allBeds.Add(created); _last3dSig = null; }
+            _showAddBed = false;
+        }
+        catch (ApiClient.ApiException ex) { _admitError = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private int CountByStatus(BedStatus s) => FloorBeds.Count(b => b.Status == s);
+
+    private static string BedCls(BedStatus s) => s switch
+    {
+        BedStatus.Available    => "bed-available",
+        BedStatus.Occupied     => "bed-occupied",
+        BedStatus.Cleaning     => "bed-cleaning",
+        BedStatus.OutOfService => "bed-oos",
+        _ => ""
+    };
+    private static string StatusLabel(BedStatus s) => s switch
+    {
+        BedStatus.Available    => "Còn trống",
+        BedStatus.Occupied     => "Có BN",
+        BedStatus.Cleaning     => "Đang dọn",
+        BedStatus.OutOfService => "Ngừng dùng",
+        _ => s.ToString()
+    };
+    private static string StatusBadge(BedStatus s) => s switch
+    {
+        BedStatus.Available    => "bg-success",
+        BedStatus.Occupied     => "bg-danger",
+        BedStatus.Cleaning     => "bg-warning text-dark",
+        BedStatus.OutOfService => "bg-secondary",
+        _ => "bg-secondary"
+    };
+    private static string StatusBtnActive(BedStatus s) => s switch
+    {
+        BedStatus.Available    => "btn-success",
+        BedStatus.Occupied     => "btn-danger",
+        BedStatus.Cleaning     => "btn-warning",
+        BedStatus.OutOfService => "btn-secondary",
+        _ => "btn-secondary"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_mod3d is not null)
+        {
+            try { await _mod3d.InvokeVoidAsync("dispose"); } catch { }
+            try { await _mod3d.DisposeAsync(); } catch { }
+        }
+        _dotNetRef?.Dispose();
+    }
+}

@@ -1,0 +1,522 @@
+/* ═══════════════════════════════════════════════
+   FLOOR PLAN STAGE
+═══════════════════════════════════════════════ */
+.fp-stage-wrapper {
+    width: 100%;
+    position: relative;
+    padding-bottom: 60%;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 4px solid #2d2d2d;          /* outer building wall */
+    box-shadow: inset 0 0 0 2px #fff,
+                0 8px 32px rgba(0,0,0,.18);
+    background: #b0a898;                /* site / exterior */
+}
+
+.fp-stage {
+    position: absolute;
+    inset: 0;
+    background: #f5f0e8;                /* architectural drawing paper */
+    /* fine + major graph-paper grid, blueprint style */
+    background-image:
+        linear-gradient(rgba(58,50,40,.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(58,50,40,.07) 1px, transparent 1px),
+        linear-gradient(rgba(58,50,40,.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(58,50,40,.15) 1px, transparent 1px);
+    background-size: 2% 2%, 2% 2%, 10% 10%, 10% 10%;
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    will-change: transform;
+}
+
+.fp-edit-mode {
+    background-image:
+        linear-gradient(rgba(18,80,220,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18,80,220,.08) 1px, transparent 1px) !important;
+    background-size: 10% 10% !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   STRUCTURAL: corridor + nurse station
+═══════════════════════════════════════════════ */
+.fp-corridor {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background:
+        repeating-linear-gradient(45deg, rgba(160,152,128,.30) 0 2px, transparent 2px 11px),
+        rgba(195,188,175,.45);
+    border-left:  2px dashed #a09880;
+    border-right: 2px dashed #a09880;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    z-index: 1;
+}
+
+.fp-corridor-label {
+    font-size: .46rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    color: #7a7060;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    white-space: nowrap;
+}
+
+.fp-nurse-station {
+    background: #dbeafe;
+    border: 2px solid #1d4ed8;
+    border-radius: 3px;
+    padding: 3px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: .42rem;
+    font-weight: 800;
+    color: #1d4ed8;
+    letter-spacing: .06em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    width: 70%;
+}
+
+/* ═══════════════════════════════════════════════
+   ROOM OUTLINES  (architectural wall style)
+═══════════════════════════════════════════════ */
+.fp-room {
+    position: absolute;
+    /* soft ward-colored tint so each zone reads as a distinct room-colored area */
+    background: color-mix(in srgb, var(--ward-color, #94a3b8) 14%, #fffdf8);
+    border: 3px solid #3a3a3a;
+    /* inset second line ≈ double-wall CAD convention */
+    outline: 1px solid #3a3a3a;
+    outline-offset: -6px;
+    box-sizing: border-box;
+    z-index: 2;
+}
+
+/* door gap arc at bottom-left */
+.fp-room::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: -2px;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #3a3a3a;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    border-radius: 0 14px 0 0;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+.fp-room-label {
+    position: absolute;
+    top: 3px;
+    left: 5px;
+    font-size: .50rem;
+    font-weight: 800;
+    color: #3a3a3a;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    line-height: 1;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* ward zone header — thin strip above first room in ward */
+.fp-ward-label {
+    position: absolute;
+    font-size: .48rem;
+    font-weight: 700;
+    color: #6b5e4e;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 3;
+    background: rgba(245,240,232,.85);
+    padding: 1px 5px 1px 6px;
+    border-left: 3px solid var(--ward-color, #94a3b8);
+    border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════════
+   TITLE BLOCK  (CAD-style floor/department label)
+═══════════════════════════════════════════════ */
+.fp-title-block {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 20;
+    background: rgba(255,253,248,.92);
+    border: 2px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 3px 9px;
+    font-size: .55rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    color: #3a3a3a;
+    text-transform: uppercase;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+
+/* ═══════════════════════════════════════════════
+   BED TILES  (hospital-bed technical drawing)
+═══════════════════════════════════════════════ */
+.bed-tile {
+    position: absolute;
+    width: 52px;
+    height: 34px;
+    transform: translate(-50%, -50%);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,.2), inset 0 0 0 1px rgba(255,255,255,.4);
+    z-index: 4;
+}
+
+.bed-tile:hover {
+    transform: translate(-50%, -50%) scale(1.18);
+    box-shadow: 0 5px 16px rgba(0,0,0,.3);
+    z-index: 10;
+}
+
+.bed-tile.selected {
+    box-shadow: 0 0 0 3px #2563eb, 0 5px 16px rgba(0,0,0,.3);
+    z-index: 11;
+    transform: translate(-50%, -50%) scale(1.12);
+}
+
+/* headboard strip */
+.bed-headboard {
+    height: 9px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bed-pillow {
+    width: 20px;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,.55);
+}
+
+/* mattress body */
+.bed-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .48rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+}
+
+/* foot-board */
+.bed-foot {
+    height: 4px;
+    flex-shrink: 0;
+    opacity: .35;
+}
+
+/* ── Available (green) ── */
+.bed-available              { background: #f0fdf4; border-color: #16a34a; }
+.bed-available .bed-headboard { background: #16a34a; }
+.bed-available .bed-body      { color: #15803d; }
+.bed-available .bed-foot      { background: #16a34a; }
+
+/* ── Occupied (red) ── */
+.bed-occupied               { background: #fef2f2; border-color: #dc2626; }
+.bed-occupied .bed-headboard  { background: #dc2626; }
+.bed-occupied .bed-body       { color: #b91c1c; }
+.bed-occupied .bed-foot       { background: #dc2626; }
+
+/* ── Cleaning (amber) ── */
+.bed-cleaning               { background: #fffbeb; border-color: #d97706; }
+.bed-cleaning .bed-headboard  { background: #d97706; }
+.bed-cleaning .bed-body       { color: #92400e; }
+.bed-cleaning .bed-foot       { background: #d97706; }
+
+/* ── Out-of-service (gray) ── */
+.bed-oos                    { background: #f9fafb; border-color: #9ca3af; }
+.bed-oos .bed-headboard       { background: #9ca3af; }
+.bed-oos .bed-body            { color: #6b7280; }
+.bed-oos .bed-foot            { background: #9ca3af; }
+
+
+/* ═══════════════════════════════════════════════
+   PAN CURSOR
+═══════════════════════════════════════════════ */
+.fp-pannable { cursor: grab; }
+
+/* ═══════════════════════════════════════════════
+   ZOOM OVERLAY  (inside stage-wrapper, above stage)
+═══════════════════════════════════════════════ */
+.fp-zoom-controls {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid #c8c2b8;
+    border-radius: 8px;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+
+.fp-zoom-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #3a3a3a;
+    transition: background .12s;
+    padding: 0;
+}
+.fp-zoom-btn:hover:not(:disabled) { background: #e8e3da; }
+.fp-zoom-btn:disabled { opacity: .35; cursor: default; }
+.fp-zoom-btn .material-symbols-outlined { font-size: 1.1rem; }
+
+.fp-zoom-pct {
+    width: 28px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    font-size: .6rem;
+    font-weight: 700;
+    color: #5a5040;
+    letter-spacing: -.02em;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 0;
+    transition: background .12s;
+}
+.fp-zoom-pct:hover { background: #e8e3da; }
+
+/* ═══════════════════════════════════════════════
+   3D CANVAS  (Three.js WebGL scene)
+═══════════════════════════════════════════════ */
+.fp-3d-wrap {
+    width: 100%;
+    position: relative;
+    padding-bottom: 60%;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 4px solid #2d2d2d;
+    box-shadow: inset 0 0 0 2px #fff, 0 8px 32px rgba(0,0,0,.18);
+    background: #eef1f5;
+}
+
+.fp-3d-canvas {
+    position: absolute;
+    inset: 0;
+    cursor: grab;
+}
+.fp-3d-canvas:active { cursor: grabbing; }
+.fp-3d-canvas canvas { display: block; }
+
+.fp-3d-hint {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    z-index: 20;
+    background: rgba(255,253,248,.9);
+    border: 1px solid #c8c2b8;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: .55rem;
+    font-weight: 600;
+    color: #5a5040;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+}
+
+/* ═══════════════════════════════════════════════
+   FLOOR OVERVIEW — clickable rooms, corridor, station, stairs
+═══════════════════════════════════════════════ */
+.fp-room-click {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+.fp-room-click:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 18px rgba(0,0,0,.18);
+    z-index: 6;
+}
+
+.fp-room-occ {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1;
+}
+.fp-room-occ.occ-free    { color: #16a34a; }
+.fp-room-occ.occ-partial { color: #d97706; }
+.fp-room-occ.occ-full    { color: #dc2626; }
+
+.fp-room-sub {
+    font-size: .48rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+/* central horizontal corridor */
+.fp-corridor-h {
+    position: absolute;
+    background:
+        repeating-linear-gradient(45deg, rgba(160,152,128,.30) 0 2px, transparent 2px 11px),
+        rgba(195,188,175,.45);
+    border-top: 2px dashed #a09880;
+    border-bottom: 2px dashed #a09880;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    pointer-events: none;
+}
+.fp-corridor-label-h {
+    font-size: .5rem;
+    font-weight: 700;
+    letter-spacing: .3em;
+    color: #7a7060;
+    text-transform: uppercase;
+}
+
+.fp-nurse-station-h {
+    position: absolute;
+    background: #dbeafe;
+    border: 2px solid #1d4ed8;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: .5rem;
+    font-weight: 800;
+    color: #1d4ed8;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    z-index: 3;
+}
+
+.fp-stairs {
+    position: absolute;
+    background: #ece7f4;
+    border: 2px solid #7c6f9c;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5b4d7a;
+    z-index: 3;
+}
+.fp-stairs .material-symbols-outlined { font-size: 1rem; }
+
+/* ═══════════════════════════════════════════════
+   ROOM DETAIL — beds in the selected room
+═══════════════════════════════════════════════ */
+.fp-room-detail { padding: 6px 4px; min-height: 340px; }
+.fp-room-detail-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.fp-room-detail-title { font-size: .95rem; color: #334155; }
+.fp-wc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #7dd3fc;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: .72rem;
+    font-weight: 700;
+}
+.fp-room-chip {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    background: var(--ward-color, #94a3b8);
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.fp-bed-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 22px;
+    background: #f5f0e8;
+    background-image:
+        linear-gradient(rgba(58,50,40,.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(58,50,40,.07) 1px, transparent 1px);
+    background-size: 24px 24px;
+    border: 3px solid #3a3a3a;
+    border-radius: 8px;
+}
+
+/* larger, static bed tiles inside the room-detail grid */
+.fp-bed-grid .bed-tile {
+    position: relative;
+    transform: none;
+    width: 104px;
+    height: 68px;
+}
+.fp-bed-grid .bed-tile:hover  { transform: scale(1.05); }
+.fp-bed-grid .bed-tile.selected { transform: scale(1.03); }
+.fp-bed-grid .bed-headboard   { height: 16px; }
+.fp-bed-grid .bed-pillow      { width: 38px; height: 9px; }
+.fp-bed-grid .bed-body        { font-size: 1rem; }
+.fp-bed-grid .bed-foot        { height: 7px; }
+
+/* 3D drill-down back button */
+.fp-back-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 20;
+    background: rgba(255,255,255,.94);
+    border: 1px solid #c8c2b8;
+    border-radius: 8px;
+    padding: 5px 11px;
+    font-size: .7rem;
+    font-weight: 600;
+    color: #3a3a3a;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.fp-back-btn:hover { background: #eef0f2; }

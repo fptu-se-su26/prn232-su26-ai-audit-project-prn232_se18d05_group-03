@@ -48,7 +48,18 @@ public class BedsController : CrudController<Bed, BedReadDto, BedWriteDto>
         _repository = repository;
     }
 
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public override Task<ActionResult<BedReadDto>> Create([FromBody] BedWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        => base.Delete(id, cancellationToken);
+
     [HttpPatch("{id:guid}/status")]
+    [Authorize(Roles = "Admin,Nurse")]
     public async Task<IActionResult> UpdateStatus(Guid id, StatusUpdateDto<BedStatus> dto, CancellationToken cancellationToken)
     {
         var bed = await _repository.GetByIdAsync(id, cancellationToken);
@@ -58,6 +69,20 @@ public class BedsController : CrudController<Bed, BedReadDto, BedWriteDto>
         }
 
         bed.Status = dto.Status;
+        _repository.Update(bed);
+        await _repository.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPatch("{id:guid}/position")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdatePosition(Guid id, [FromBody] BedPositionDto dto, CancellationToken cancellationToken)
+    {
+        var bed = await _repository.GetByIdAsync(id, cancellationToken);
+        if (bed is null) return NotFound();
+        bed.Floor = dto.Floor;
+        bed.PositionX = dto.PositionX;
+        bed.PositionY = dto.PositionY;
         _repository.Update(bed);
         await _repository.SaveChangesAsync(cancellationToken);
         return NoContent();
@@ -315,6 +340,7 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
     private readonly IRepository<Bed> _bedRepository;
     private readonly IRepository<BillingInvoice> _invoiceRepository;
     private readonly IRepository<BillingItem> _billingItemRepository;
+    private readonly IRepository<PatientProfile> _patientProfileRepository;
 
     public InpatientAdmissionsController(
         ICrudService<InpatientAdmission, InpatientAdmissionReadDto, InpatientAdmissionWriteDto> service,
@@ -325,7 +351,8 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         IRepository<CareOrder> careOrderRepository,
         IRepository<Bed> bedRepository,
         IRepository<BillingInvoice> invoiceRepository,
-        IRepository<BillingItem> billingItemRepository)
+        IRepository<BillingItem> billingItemRepository,
+        IRepository<PatientProfile> patientProfileRepository)
         : base(service)
     {
         _repository = repository;
@@ -336,6 +363,7 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         _bedRepository = bedRepository;
         _invoiceRepository = invoiceRepository;
         _billingItemRepository = billingItemRepository;
+        _patientProfileRepository = patientProfileRepository;
     }
 
     [HttpPatch("{id:guid}/status")]
@@ -376,12 +404,21 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
             return BadRequest(new { message = $"Bed is not available (current status: {bed.Status})." });
         }
 
+        // PatientId may arrive as a PatientProfile id or a UserAccount id (the UI patient
+        // dropdown lists accounts) — resolve to the profile the admission FK requires.
+        var profile = await _patientProfileRepository.FirstOrDefaultAsync(
+            p => p.Id == request.PatientId || p.UserAccountId == request.PatientId, cancellationToken);
+        if (profile is null)
+        {
+            return NotFound(new { message = "Patient profile not found." });
+        }
+
         var now = DateTime.UtcNow;
 
         var admission = new InpatientAdmission
         {
             Id = Guid.NewGuid(),
-            PatientId = request.PatientId,
+            PatientId = profile.Id,
             FromOutpatientVisitId = request.FromOutpatientVisitId,
             DepartmentId = request.DepartmentId,
             AdmissionDate = now,

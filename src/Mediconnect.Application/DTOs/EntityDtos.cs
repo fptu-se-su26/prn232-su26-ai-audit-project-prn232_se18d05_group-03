@@ -33,6 +33,9 @@ public class BedReadDto
     public string? RoomNumber { get; set; }
     public string? BedNumber { get; set; }
     public BedStatus Status { get; set; }
+    public int Floor { get; set; }
+    public double? PositionX { get; set; }
+    public double? PositionY { get; set; }
 }
 
 public class BedWriteDto
@@ -42,6 +45,16 @@ public class BedWriteDto
     public string? RoomNumber { get; set; }
     public string? BedNumber { get; set; }
     public BedStatus Status { get; set; }
+    public int Floor { get; set; } = 1;
+    public double? PositionX { get; set; }
+    public double? PositionY { get; set; }
+}
+
+public class BedPositionDto
+{
+    public int Floor { get; set; } = 1;
+    public double? PositionX { get; set; }
+    public double? PositionY { get; set; }
 }
 
 public class BedAssignmentReadDto
