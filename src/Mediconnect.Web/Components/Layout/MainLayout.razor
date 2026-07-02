@@ -1,0 +1,59 @@
+@inherits LayoutComponentBase
+
+<div class="hc-layout">
+    <aside class="hc-sidebar">
+        <NavMenu />
+    </aside>
+
+    <div class="hc-body">
+        <header class="hc-topbar">
+            <div class="hc-topbar-brand d-md-none">
+                <span class="material-symbols-outlined" style="color:var(--brand)">local_hospital</span>
+                <span class="fw-700 ms-1" style="font-size:.9rem">MediConnect</span>
+            </div>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="hc-avatar">
+                                @(context.User.Identity?.Name?.Substring(0,1).ToUpper() ?? "?")
+                            </div>
+                            <div class="d-none d-sm-block">
+                                <div style="font-size:.8rem;font-weight:600;line-height:1.2">@context.User.Identity?.Name</div>
+                                <div style="font-size:.7rem;color:var(--text-muted)">@context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="Logout">
+                            <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">logout</span>
+                            <span class="d-none d-sm-inline ms-1">Đăng xuất</span>
+                        </button>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="login" class="btn btn-sm btn-primary">Đăng nhập</a>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+        </header>
+
+        <main class="hc-main">
+            @Body
+        </main>
+    </div>
+</div>
+
+<div id="blazor-error-ui">
+    Đã xảy ra lỗi.
+    <a href="" class="reload">Tải lại</a>
+    <span class="dismiss">✕</span>
+</div>
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private void Logout()
+    {
+        Api.Logout();
+        Nav.NavigateTo("/login");
+    }
+}

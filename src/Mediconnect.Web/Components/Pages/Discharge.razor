@@ -1,0 +1,213 @@
+@page "/discharge"
+@attribute [Authorize]
+
+<PageTitle>F4 · Xuất viện – MediConnect</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h4><span class="material-symbols-outlined" style="vertical-align:middle;font-size:1.3rem;color:#b91c1c">receipt_long</span> Quản lý xuất viện &amp; hoá đơn</h4>
+        <small class="text-muted">Xử lý xuất viện và tạo hoá đơn viện phí tự động</small>
+    </div>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-3" style="font-size:.82rem">@_error</div>
+}
+
+<div class="row g-3">
+    <!-- LEFT: active admissions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">groups</span> Bệnh nhân đang nằm viện</span>
+                    <button class="btn btn-outline-secondary btn-sm" style="padding:.2rem .5rem" @onclick="LoadAdmissions">
+                        <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">refresh</span>
+                    </button>
+                </div>
+            </div>
+            <div class="list-group list-group-flush" style="max-height:600px;overflow-y:auto">
+                @if (_loading)
+                {
+                    <div class="list-group-item text-muted" style="font-size:.8rem">
+                        <span class="spinner-border spinner-border-sm me-2"></span>Đang tải...
+                    </div>
+                }
+                else if (_admissions.Count == 0)
+                {
+                    <div class="list-group-item text-center text-muted py-4" style="font-size:.8rem">
+                        Không có bệnh nhân nào đang nằm viện.
+                    </div>
+                }
+                else
+                {
+                    @foreach (var a in _admissions)
+                    {
+                        <button class="list-group-item list-group-item-action dc-admission-item @(_selected?.Id == a.Id ? "active" : "")"
+                                @onclick="() => SelectAdmission(a)">
+                            <div style="font-weight:600;font-size:.82rem">ID: @a.Id.ToString()[..8]…</div>
+                            <div style="font-size:.72rem;opacity:.8;margin-top:2px">
+                                Nhập: @a.AdmissionDate.ToString("dd/MM/yyyy")
+                            </div>
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: discharge form or invoice -->
+    <div class="col-md-8">
+        @if (_selected is null)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5 text-muted">
+                    <span class="material-symbols-outlined d-block mb-2" style="font-size:3rem;opacity:.3">assignment_return</span>
+                    Chọn bệnh nhân để tiến hành xuất viện.
+                </div>
+            </div>
+        }
+        else if (_result is null)
+        {
+            <div class="card">
+                <div class="card-header">
+                    <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">edit_document</span>
+                    Xuất viện: <strong>@_selected.Id.ToString()[..8]…</strong>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tóm tắt xuất viện</label>
+                        <textarea class="form-control" rows="5"
+                                  placeholder="Tóm tắt quá trình điều trị, hướng dẫn sau xuất viện..."
+                                  @bind="_dischargeDto.Summary"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Khấu trừ bảo hiểm (VND)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" min="0" step="1000" @bind="_dischargeDto.InsuranceDeduction" />
+                            <span class="input-group-text">đ</span>
+                        </div>
+                        <div class="form-text">Nhập 0 nếu không có bảo hiểm.</div>
+                    </div>
+                    <button class="btn btn-danger" @onclick="DoDischarge" disabled="@_saving">
+                        <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">logout</span>
+                        @(_saving ? "Đang xử lý..." : "Xác nhận xuất viện &amp; tạo hoá đơn")
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card mb-3" style="border-color:var(--st-available)">
+                <div class="card-header" style="background:var(--st-available);color:#fff">
+                    <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">check_circle</span>
+                    Xuất viện thành công
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div style="font-size:.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.4rem">Tóm tắt</div>
+                        <div style="font-size:.85rem;background:var(--surface);border-radius:8px;padding:.75rem;border:1px solid var(--border)">@_result.Summary.Summary</div>
+                        <div style="font-size:.72rem;color:var(--text-muted);margin-top:.3rem">
+                            Ngày xuất viện: @_result.Summary.DischargeDate.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="font-size:.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">Hoá đơn viện phí</div>
+                        <div class="dc-invoice">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Khoản mục</th>
+                                        <th>Loại</th>
+                                        <th class="text-end">SL</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in _result.Items)
+                                    {
+                                        <tr>
+                                            <td>@item.Description</td>
+                                            <td><span class="badge bg-secondary">@item.ItemType</span></td>
+                                            <td class="text-end">@item.Quantity</td>
+                                            <td class="text-end">@item.UnitPrice.ToString("N0") đ</td>
+                                            <td class="text-end">@item.Amount.ToString("N0") đ</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-600">Tạm tính:</td>
+                                        <td class="text-end fw-600">@_result.Invoice.Subtotal.ToString("N0") đ</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" class="text-end" style="color:var(--st-occupied)">Khấu trừ BH:</td>
+                                        <td class="text-end" style="color:var(--st-occupied)">- @_result.Invoice.InsuranceDeduction.ToString("N0") đ</td>
+                                    </tr>
+                                    <tr style="font-size:1rem">
+                                        <td colspan="4" class="text-end fw-700" style="color:var(--st-available)">Tổng cộng:</td>
+                                        <td class="text-end fw-700" style="color:var(--st-available)">@_result.Invoice.TotalAmount.ToString("N0") đ</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline-primary mt-3" @onclick="Reset">
+                        <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">add</span>
+                        Xuất viện bệnh nhân khác
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+
+    private List<InpatientAdmissionReadDto> _admissions = new();
+    private InpatientAdmissionReadDto? _selected;
+    private DischargeResultDto? _result;
+    private DischargeRequestDto _dischargeDto = new();
+
+    private bool _loading, _saving;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync() => await LoadAdmissions();
+
+    private async Task LoadAdmissions()
+    {
+        _loading = true; _error = null;
+        try
+        {
+            _admissions = ((await Api.GetAdmissions()) ?? new())
+                .Where(a => a.Status == AdmissionStatus.Active).ToList();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+
+    private void SelectAdmission(InpatientAdmissionReadDto a)
+    {
+        _selected = a; _result = null; _dischargeDto = new(); _error = null;
+    }
+
+    private async Task DoDischarge()
+    {
+        _saving = true; _error = null;
+        try
+        {
+            _result = await Api.Discharge(_selected!.Id, _dischargeDto);
+            _admissions.Remove(_selected!);
+            _selected.Status = AdmissionStatus.Discharged;
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private void Reset() { _selected = null; _result = null; _dischargeDto = new(); }
+}
