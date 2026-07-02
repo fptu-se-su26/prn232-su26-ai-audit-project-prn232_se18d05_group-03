@@ -464,16 +464,18 @@ public class StaffScheduleReadDto
     public Guid Id { get; set; }
     public Guid StaffId { get; set; }
     public DateOnly ShiftDate { get; set; }
+    public ShiftType ShiftType { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
+    public string? WorkRoom { get; set; }
 }
 
 public class StaffScheduleWriteDto
 {
     public Guid StaffId { get; set; }
     public DateOnly ShiftDate { get; set; }
-    public TimeOnly StartTime { get; set; }
-    public TimeOnly EndTime { get; set; }
+    public ShiftType ShiftType { get; set; }
+    public string? WorkRoom { get; set; }
 }
 
 public class TelemedicineSessionReadDto

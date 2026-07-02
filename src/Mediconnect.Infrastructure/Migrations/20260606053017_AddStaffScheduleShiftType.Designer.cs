@@ -4,6 +4,7 @@ using Mediconnect.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Mediconnect.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260606053017_AddStaffScheduleShiftType")]
+    partial class AddStaffScheduleShiftType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -74,15 +77,6 @@ namespace Mediconnect.Infrastructure.Migrations
 
                     b.Property<Guid>("DepartmentId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Floor")
-                        .HasColumnType("int");
-
-                    b.Property<double?>("PositionX")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("PositionY")
-                        .HasColumnType("float");
 
                     b.Property<string>("RoomNumber")
                         .HasMaxLength(50)

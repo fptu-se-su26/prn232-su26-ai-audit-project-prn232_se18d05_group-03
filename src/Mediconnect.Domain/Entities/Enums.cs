@@ -13,7 +13,15 @@ public enum StaffType
 {
     Doctor,
     Nurse,
-    Admin
+    Admin,
+    Caregiver
+}
+
+public enum ShiftType
+{
+    Morning,
+    Afternoon,
+    Evening
 }
 
 public enum Gender

@@ -17,32 +17,32 @@ Nguyên tắc ghi changelog:
 
 ## 2. Thông tin project
 
-| Thông tin | Nội dung |
-|---|---|
-| Môn học |  |
-| Mã môn học |  |
-| Lớp |  |
-| Học kỳ |  |
-| Tên bài tập / Project |  |
-| Tên sinh viên / Nhóm |  |
-| MSSV / Danh sách MSSV |  |
-| Giảng viên hướng dẫn |  |
-| Repository URL |  |
-| Ngày bắt đầu |  |
-| Ngày hoàn thành |  |
+| Thông tin             | Nội dung                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| Môn học               | Building Cross-Platform Back-End Application with .NET                               |
+| Mã môn học            | PRN232                                                                               |
+| Lớp                   | SE18D05                                                                              |
+| Học kỳ                | SU26                                                                                 |
+| Tên bài tập / Project | MEDICONNECT – Hệ thống Quản lý Bệnh viện Thông minh                                  |
+| Tên sinh viên / Nhóm  | Nhóm 3                                                                               |
+| MSSV / Danh sách MSSV | DE180522, DE180526, DE190580, DE190123                                               |
+| Giảng viên hướng dẫn  |                                                                                      |
+| Repository URL        | https://github.com/fptu-se-su26/prn232-su26-ai-audit-project-prn232_se18d05_group-03 |
+| Ngày bắt đầu          | 17/05/2026                                                                           |
+| Ngày hoàn thành       | Đang thực hiện                                                                       |
 
 ---
 
 ## 3. Tổng quan các phiên bản/giai đoạn
 
-| Phiên bản/Giai đoạn | Thời gian | Nội dung chính | Trạng thái |
-|---|---|---|---|
-| Phase 01 |  | Khởi tạo project | Not Started / In Progress / Completed |
-| Phase 02 |  | Phân tích yêu cầu | Not Started / In Progress / Completed |
-| Phase 03 |  | Thiết kế hệ thống | Not Started / In Progress / Completed |
-| Phase 04 |  | Implementation | Not Started / In Progress / Completed |
-| Phase 05 |  | Testing & Debug | Not Started / In Progress / Completed |
-| Phase 06 |  | Hoàn thiện báo cáo và demo | Not Started / In Progress / Completed |
+| Phiên bản/Giai đoạn | Thời gian               | Nội dung chính             | Trạng thái  |
+| ------------------- | ----------------------- | -------------------------- | ----------- |
+| Phase 01            | 17/05/2026              | Khởi tạo project           | Completed   |
+| Phase 02            | 17/05/2026              | Phân tích yêu cầu          | Completed   |
+| Phase 03            | 05/06/2026              | Thiết kế hệ thống          | Completed   |
+| Phase 04            | 06/06/2026 – 10/06/2026 | Implementation             | Completed   |
+| Phase 05            | 10/06/2026              | Testing & Debug            | Completed   |
+| Phase 06            |                         | Hoàn thiện báo cáo và demo | In Progress |
 
 ---
 
@@ -70,12 +70,12 @@ Nguyên tắc ghi changelog:
 
 ## Thay đổi chi tiết
 
-| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 | Ghi nhận prompt ve phan chia thanh vien, nhac quy trinh audit, va dinh huong models |  | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |  |
-| 2 | Ghi nhan yeu cau thiet ke models code-first cho .NET SQL Server |  | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |  |
-| 3 | Tao project .NET Web API mediconnect va them cau hinh code-first co ban |  | src/mediconnect |  |
-| 4 | Tao file solution cho du an mediconnect |  | mediconnect.sln |  |
+| STT | Nội dung thay đổi                                                                   | Người thực hiện | File/Module liên quan                                    | Minh chứng |
+| --: | ----------------------------------------------------------------------------------- | --------------- | -------------------------------------------------------- | ---------- |
+|   1 | Ghi nhận prompt ve phan chia thanh vien, nhac quy trinh audit, va dinh huong models |                 | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |            |
+|   2 | Ghi nhan yeu cau thiet ke models code-first cho .NET SQL Server                     |                 | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |            |
+|   3 | Tao project .NET Web API mediconnect va them cau hinh code-first co ban             |                 | src/mediconnect                                          |            |
+|   4 | Tao file solution cho du an mediconnect                                             |                 | mediconnect.sln                                          |            |
 
 ## AI có hỗ trợ không?
 
@@ -126,10 +126,10 @@ Viết tại đây...
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| --: | ----------------- | --------------- | --------------------- | ---------- |
+|   1 |                   |                 |                       |            |
+|   2 |                   |                 |                       |            |
+|   3 |                   |                 |                       |            |
 
 ## AI có hỗ trợ không?
 
@@ -161,51 +161,56 @@ Viết tại đây...
 ## Ngày thực hiện
 
 ```text
-DD/MM/YYYY
+05/06/2026
 ```
 
 ## Đã hoàn thành
 
-- [ ] Thiết kế kiến trúc tổng quan
-- [ ] Thiết kế database/ERD
-- [ ] Thiết kế API
-- [ ] Thiết kế giao diện/wireframe
-- [ ] Thiết kế flow xử lý
+- [x] Thiết kế kiến trúc tổng quan (Clean Architecture: Domain / Application / Infrastructure / API)
+- [x] Thiết kế database/ERD (StaffSchedule, StaffProfile, UserAccount, Department)
+- [x] Thiết kế API (5 Schedule endpoints + 1 Staff directory endpoint)
+- [x] Thiết kế giao diện/wireframe (dựa theo base-html: hr_shift_scheduling_matrix.html)
+- [x] Thiết kế flow xử lý (validate → save → flat projection → response)
 - [ ] Thiết kế class diagram
 - [ ] Thiết kế sequence diagram
-- [ ] Thiết kế security/authorization flow
-- [ ] Review thiết kế
-- [ ] Chỉnh sửa thiết kế sau feedback
+- [x] Thiết kế security/authorization flow (JWT Bearer, [Authorize] trên tất cả controller)
+- [x] Review thiết kế
 
 ## Thay đổi chi tiết
 
-| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| STT | Nội dung thay đổi                                                                                                                        | Người thực hiện | File/Module liên quan                          | Minh chứng     |
+| --: | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ---------------------------------------------- | -------------- |
+|   1 | Thiết kế entity StaffSchedule với các field: StaffId, ShiftDate, ShiftType, StartTime, EndTime, WorkRoom                                 | DE180522        | `Mediconnect.Domain/Entities/StaffSchedule.cs` | commit 912b0cf |
+|   2 | Thiết kế enum ShiftType (Morning/Afternoon/Evening), StaffType (Doctor/Nurse/Admin/Caregiver)                                            | DE180522        | `Mediconnect.Domain/Entities/Enums.cs`         | commit 912b0cf |
+|   3 | Thiết kế interface IStaffScheduleService (create/update/delete với validation), IStaffScheduleQuery (flat read, paged filter, directory) | DE180522        | `Mediconnect.Application/Interfaces/`          | commit 912b0cf |
+|   4 | Thiết kế DTO phẳng ScheduleFlatReadDto (join StaffProfile + UserAccount + Department)                                                    | DE180522        | `Mediconnect.Application/DTOs/ScheduleDtos.cs` | commit 912b0cf |
+|   5 | Thiết kế giao diện Gantt chart (staff rows × date columns) theo base-html                                                                | DE180522        | `base-html/hr_shift_scheduling_matrix.html`    | —              |
 
 ## AI có hỗ trợ không?
 
-- [ ] Có
+- [x] Có
 - [ ] Không
 
 Nếu có, mô tả AI đã hỗ trợ phần nào:
 
 ```text
-Viết tại đây...
+AI hỗ trợ thiết kế cấu trúc DTO phẳng (flat projection) để tránh N+1 query khi join
+StaffSchedule → StaffProfile → UserAccount → Department. AI cũng đề xuất pattern
+IStaffScheduleQuery tách biệt read-side khỏi write-side (CQRS lite).
 ```
 
 ## Commit/Screenshot minh chứng
 
 ```text
-Dán link commit, screenshot hoặc mô tả minh chứng tại đây...
+Branch: feature/de180522-HumanResourcesandSchedulingManagement
+Commit: 912b0cf [DE180522] feat: add HR & Staff Schedule Management (Gantt chart)
 ```
 
 ## Ghi chú
 
 ```text
-Viết tại đây...
+Kiến trúc chọn flat projection (.Select) thay vì .Include() để EF Core sinh SQL tối ưu hơn,
+tránh circular reference khi serialize JSON.
 ```
 
 ---
@@ -215,7 +220,7 @@ Viết tại đây...
 ## Ngày thực hiện
 
 ```text
-DD/MM/YYYY
+06/06/2026 – 10/06/2026
 ```
 
 ## Đã hoàn thành
@@ -229,38 +234,38 @@ DD/MM/YYYY
 - [ ] Xử lý validation
 - [ ] Tích hợp API
 - [ ] Xử lý upload/download file
-- [ ] Xử lý lỗi
-- [ ] Tối ưu giao diện
-- [ ] Cập nhật README hướng dẫn chạy
+- [x] Xử lý lỗi
+- [x] Tối ưu giao diện
+- [x] Cập nhật README hướng dẫn chạy
 
 ## Thay đổi chi tiết
 
-| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 | Tao DbContext va bo Models cho HIS & Telemedicine |  | src/mediconnect/Models; src/mediconnect/Data |  |
-| 2 | Them EF Core packages va connection string SQL Server |  | src/mediconnect/mediconnect.csproj; src/mediconnect/appsettings.json; src/mediconnect/Program.cs |  |
-| 3 | Cap nhat README huong dan chay project |  | README.md |  |
-| 4 | Them endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST /api/inpatient-admissions/{id}/transfer | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed map & transfer |
-| 5 | Them DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - bed map & transfer |
-| 6 | Them endpoints GET /api/inpatient-admissions/{id}/vital-signs (loc theo ?date), GET /api/inpatient-admissions/{id}/care-orders (loc theo ?orderType, ?pending) cho Y lenh & cham soc hang ngay | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F2 - admission-scoped vital signs & care orders endpoints |
-| 7 | F3 Can lam sang: them GET /api/lab-orders/filter (theo status/bac si), PATCH /api/lab-orders/{id}/status, POST/GET /api/lab-orders/{id}/result, va luu file that (PDF/JPG/PNG) o POST /api/lab-results/{id}/file + bat UseStaticFiles | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs | feat(member3): F3 - lab orders queue, results & file upload |
-| 8 | F4 Xuat vien: nang cap POST /api/inpatient-admissions/{id}/discharge - tong hop tien giuong + thuoc + thu thuat thanh BillingInvoice (Pending) gui sang Thanh toan, tra ra DischargeResultDto | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F4 - discharge cost aggregation & billing handoff |
-| 9 | F1 Dong bo trang thai giuong: gan giuong (POST /api/bedassignments) kiem tra giuong Available roi chuyen Occupied; nha giuong (PATCH /api/bedassignments/{id}/release) chuyen giuong sang Cleaning | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed status lifecycle on assign/release |
-| 10 | F1 Chuyen khoa hoan chinh: POST /api/inpatient-admissions/{id}/transfer nha giuong cu (Cleaning), doi khoa va gan giuong moi (Occupied) neu co BedId; them POST /api/inpatient-admissions/admit tao ca nhap vien + gan giuong nguyen tu | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - complete ward transfer & atomic admit |
-| 11 | Phan quyen theo vai tro: Y ta ghi sinh ton, Bac si ra y lenh/chi dinh, Bo phan xet nghiem nhap ket qua/upload file; them vai tro Lab va tai khoan lab mau | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Controllers/CrudController.cs; src/Mediconnect.Domain/Entities/Enums.cs; src/Mediconnect.Infrastructure/Persistence/DbInitializer.cs | feat(member3): role-based authorization for inpatient/lab actions |
-| 12 | Giao dien 4 trang F1-F4 (bed map, vitals/care orders, lab results, discharge) dua vao wwwroot, phuc vu same-origin; them trang dang nhap that + trang chu; API client api.js (JWT + goi endpoint F1-F4) | Park Jea Minh | src/mediconnect/wwwroot/**; src/mediconnect/wwwroot/assets/js/api.js | feat(member3): wire inpatient/clinical UI pages to real API |
-| 13 | Bat JsonStringEnumConverter (enum tra ve dang chuoi cho UI) va UseDefaultFiles phuc vu index.html | Park Jea Minh | src/mediconnect/Program.cs | feat(member3): serialize enums as strings & serve static UI |
-| 14 | Thay the UI tinh HTML bang Blazor Server project rieng (src/Mediconnect.Web): TokenState + ApiAuthStateProvider + ApiClient typed HTTP; trang Login, Home, F1 BedMap, F2 Vitals, F3 Lab, F4 Discharge; AuthorizeView an/hien UI theo role | Park Jea Minh | src/Mediconnect.Web/** | feat(member3): Blazor Server UI for F1-F4 |
-| 15 | Them Floor, PositionX, PositionY vao Bed entity + DTO + EF migration AddBedSpatialFields; PATCH /api/beds/{id}/position (Admin); JsonStringEnumConverter tren API; Seed 36 giuong voi toa do cho 2 khoa | Park Jea Minh | Bed.cs, EntityDtos.cs, EntityControllers.cs, DbInitializer.cs, Program.cs (API) | feat(member3): spatial bed data model + seed |
-| 16 | Redesign toan bo UI Blazor: design system CSS (Inter font, brand blue, CSS vars, card/btn/table override); sidebar toi navy voi Material Symbols; F1 ban do san 2D/3D isometric toggle, keo tha via floorplan.js, room outline, drawer chi tiet + doi trang thai + them/xoa giuong (Admin); Home/Login/F2/F3/F4 lam dep hien dai | Park Jea Minh | app.css, MainLayout, NavMenu, BedMap, Home, Login, Vitals, Lab, Discharge | feat(member3): modern UI overhaul – 2D/3D floor plan & full redesign |
-| 17 | F1 zoom/pan + 2D kieu CAD: nut phong to/thu nho/reset overlay, keo tay di chuyen (floorplan.js initPan + SetPan); phong tuong doi net + to mau theo khu (WardColor palette), hanh lang hatch, title block, legend chip mau khu, nen luoi graph-paper | Park Jea Minh | BedMap.razor, BedMap.razor.css, wwwroot/js/floorplan.js | feat(member3): F1 zoom/pan + CAD-style 2D floor plan |
-| 18 | F1 ban do 3D that bang Three.js: vendor three@0.160.1 + OrbitControls + import map (khong build step); floorplan3d.js dung scene khoi phong/giuong dun noi + anh sang do bong + orbit/zoom/pan; nap qua Blazor JS isolation, click giuong -> SelectBedFromJs mo drawer, doi trang thai -> updateBed recolor live, DisposeAsync don WebGL | Park Jea Minh | BedMap.razor, App.razor, wwwroot/js/floorplan3d.js, wwwroot/lib/three/** | feat(member3): F1 real 3D floor plan with Three.js |
-| 19 | F1 floor thuc + drill-down Tang->Phong->Giuong: seed da tang (moi khoa 3 tang, PositionX/Y=NULL) o DbInitializer + seed_hospital.sql; layout engine C# ComputeFloorLayout() tu sinh so do (hanh lang giua, phong 2 ben, tram y ta, thang may) dung chung 2D+3D; 2D overview hien phong (badge so giuong) -> bam phong -> grid giuong -> bam giuong; 3D focusRoom/exitRoom bay camera vao phong; bo editor keo-tha toa do (giu zoom/pan, them/xoa, status, admit, transfer) | Park Jea Minh | DbInitializer.cs, docs/seed_hospital.sql, BedMap.razor(.css), wwwroot/js/floorplan3d.js, wwwroot/js/floorplan.js | feat(member3): real per-floor layout + room→bed drill-down (2D & 3D) |
-| 20 | Nang cap 3D realistic: vendor them addon three (RoomEnvironment, RoundedBoxGeometry, CSS2DRenderer, EffectComposer + SSAO/UnrealBloom/OutlinePass/OutputPass + shaders); floorplan3d.js viet lai — ACESFilmic tone mapping + IBL (PMREM/RoomEnvironment), phong khoi bo goc, tuong kinh mo (thay giuong ben trong), giuong chi tiet (khung/nem/chan theo trang thai/goi/dau giuong), nhan HTML CSS2D, SSAO+bloom+outline hover/chon, tu xoay o overview, camera bay vao phong; guard fallback ve render thuong | Park Jea Minh | wwwroot/lib/three/addons/**, wwwroot/js/floorplan3d.js | feat(member3): realistic 3D floor plan (IBL + SSAO/bloom + glass rooms) |
-| 21 | Noi that phong 3D thuc te: giuong xep sat tuong ngoai (dau ap tuong, gan nhau, xoay theo huong tuong); rem ngan rieng tu moi giuong (ray + tam vai ban trong suot); thiet bi y te canh giuong (monitor phat sang + gia truyen dich IV + tu dau giuong); buong ve sinh trong goc phong (vach ngan + rem cua + bon cau/lavabo + nhan WC); them chip WC o room-detail 2D | Park Jea Minh | wwwroot/js/floorplan3d.js, BedMap.razor(.css) | feat(member3): realistic 3D room interiors (wall-lined beds, curtains, equipment, WC) |
-| 22 | Loai phong theo suc chua: seed moi khu 4 phong [6,3,2,1] giuong (DbInitializer + seed_hospital.sql ~864 giuong); RoomTypeName() dat ten theo so giuong (Phong don VIP/doi/3 giuong/thuong); layout 2D chieu rong phong ti le suc chua; hien ten loai o card 2D + room-detail + tag 3D; 3D giuong xep doc HAI tuong trai/phai dau ap tuong chan vao loi di giua, phong lon 3+3; trang tri phong: cua+bang ten, cua so tuong ngoai, den tran + bang ten dau giuong, tham san + cay canh | Park Jea Minh | DbInitializer.cs, docs/seed_hospital.sql, BedMap.razor(.css), wwwroot/js/floorplan3d.js | feat(member3): room types by capacity + named rooms + ward-style 3D interiors |
-| 23 | Toi uu ti le phong: chieu sau phong theo so giuong moi tuong (14 + 8.5×perWall, neo vao hanh lang — phong don nong, phong 6 giuong sau); giuong 3D phong to (bd cap 6.5, bw cap 5.5) can voi phong; cache-busting ?v cho floorplan3d.js/floorplan.js | Park Jea Minh | BedMap.razor, wwwroot/js/floorplan3d.js, App.razor | fix(member3): proportional room sizing + bigger beds + JS cache busting |
-| 24 | Sua bug Nhap vien 500: InpatientAdmission.PatientId FK toi PatientProfiles nhung UI gui UserAccount.Id (seed SQL tao profile bang NEWID nen 2 Id khong trung -> FK violation). Fix trong endpoint admit (member3): resolve PatientId theo PatientProfile.Id HOAC UserAccountId truoc khi tao admission; profile khong ton tai -> 404 ro rang. Khong doi DTO/route/schema — khong anh huong thanh vien khac. Verify: admit 200 + giuong Occupied, transfer doi khoa (giuong cu Cleaning/moi Occupied), discharge tao invoice + giuong Cleaning, admit tu UI het loi | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | fix(member3): resolve patient profile in admit (accept UserAccount.Id) |
+| STT | Nội dung thay đổi                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Người thực hiện | File/Module liên quan                                                                                                                                                                                  | Minh chứng                                                                            |
+| --: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+|   1 | Tao DbContext va bo Models cho HIS & Telemedicine                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |                 | src/mediconnect/Models; src/mediconnect/Data                                                                                                                                                           |                                                                                       |
+|   2 | Them EF Core packages va connection string SQL Server                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |                 | src/mediconnect/mediconnect.csproj; src/mediconnect/appsettings.json; src/mediconnect/Program.cs                                                                                                       |                                                                                       |
+|   3 | Cap nhat README huong dan chay project                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |                 | README.md                                                                                                                                                                                              |                                                                                       |
+|   4 | Them endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST /api/inpatient-admissions/{id}/transfer                                                                                                                                                                                                                                                                                                                                                                                                                                 | Park Jea Minh   | src/mediconnect/Controllers/EntityControllers.cs                                                                                                                                                       | feat(member3): F1 - bed map & transfer                                                |
+|   5 | Them DTOs BedMapGroupDto, TransferAdmissionDto                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Park Jea Minh   | src/Mediconnect.Application/DTOs/EntityDtos.cs                                                                                                                                                         | feat(member3): F1 - bed map & transfer                                                |
+|   6 | Them endpoints GET /api/inpatient-admissions/{id}/vital-signs (loc theo ?date), GET /api/inpatient-admissions/{id}/care-orders (loc theo ?orderType, ?pending) cho Y lenh & cham soc hang ngay                                                                                                                                                                                                                                                                                                                                                                     | Park Jea Minh   | src/mediconnect/Controllers/EntityControllers.cs                                                                                                                                                       | feat(member3): F2 - admission-scoped vital signs & care orders endpoints              |
+|   7 | F3 Can lam sang: them GET /api/lab-orders/filter (theo status/bac si), PATCH /api/lab-orders/{id}/status, POST/GET /api/lab-orders/{id}/result, va luu file that (PDF/JPG/PNG) o POST /api/lab-results/{id}/file + bat UseStaticFiles                                                                                                                                                                                                                                                                                                                              | Park Jea Minh   | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs                                                                                                                           | feat(member3): F3 - lab orders queue, results & file upload                           |
+|   8 | F4 Xuat vien: nang cap POST /api/inpatient-admissions/{id}/discharge - tong hop tien giuong + thuoc + thu thuat thanh BillingInvoice (Pending) gui sang Thanh toan, tra ra DischargeResultDto                                                                                                                                                                                                                                                                                                                                                                      | Park Jea Minh   | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs                                                                                                       | feat(member3): F4 - discharge cost aggregation & billing handoff                      |
+|   9 | F1 Dong bo trang thai giuong: gan giuong (POST /api/bedassignments) kiem tra giuong Available roi chuyen Occupied; nha giuong (PATCH /api/bedassignments/{id}/release) chuyen giuong sang Cleaning                                                                                                                                                                                                                                                                                                                                                                 | Park Jea Minh   | src/mediconnect/Controllers/EntityControllers.cs                                                                                                                                                       | feat(member3): F1 - bed status lifecycle on assign/release                            |
+|  10 | F1 Chuyen khoa hoan chinh: POST /api/inpatient-admissions/{id}/transfer nha giuong cu (Cleaning), doi khoa va gan giuong moi (Occupied) neu co BedId; them POST /api/inpatient-admissions/admit tao ca nhap vien + gan giuong nguyen tu                                                                                                                                                                                                                                                                                                                            | Park Jea Minh   | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs                                                                                                       | feat(member3): F1 - complete ward transfer & atomic admit                             |
+|  11 | Phan quyen theo vai tro: Y ta ghi sinh ton, Bac si ra y lenh/chi dinh, Bo phan xet nghiem nhap ket qua/upload file; them vai tro Lab va tai khoan lab mau                                                                                                                                                                                                                                                                                                                                                                                                          | Park Jea Minh   | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Controllers/CrudController.cs; src/Mediconnect.Domain/Entities/Enums.cs; src/Mediconnect.Infrastructure/Persistence/DbInitializer.cs | feat(member3): role-based authorization for inpatient/lab actions                     |
+|  12 | Giao dien 4 trang F1-F4 (bed map, vitals/care orders, lab results, discharge) dua vao wwwroot, phuc vu same-origin; them trang dang nhap that + trang chu; API client api.js (JWT + goi endpoint F1-F4)                                                                                                                                                                                                                                                                                                                                                            | Park Jea Minh   | src/mediconnect/wwwroot/\*\*; src/mediconnect/wwwroot/assets/js/api.js                                                                                                                                 | feat(member3): wire inpatient/clinical UI pages to real API                           |
+|  13 | Bat JsonStringEnumConverter (enum tra ve dang chuoi cho UI) va UseDefaultFiles phuc vu index.html                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Park Jea Minh   | src/mediconnect/Program.cs                                                                                                                                                                             | feat(member3): serialize enums as strings & serve static UI                           |
+|  14 | Thay the UI tinh HTML bang Blazor Server project rieng (src/Mediconnect.Web): TokenState + ApiAuthStateProvider + ApiClient typed HTTP; trang Login, Home, F1 BedMap, F2 Vitals, F3 Lab, F4 Discharge; AuthorizeView an/hien UI theo role                                                                                                                                                                                                                                                                                                                          | Park Jea Minh   | src/Mediconnect.Web/\*\*                                                                                                                                                                               | feat(member3): Blazor Server UI for F1-F4                                             |
+|  15 | Them Floor, PositionX, PositionY vao Bed entity + DTO + EF migration AddBedSpatialFields; PATCH /api/beds/{id}/position (Admin); JsonStringEnumConverter tren API; Seed 36 giuong voi toa do cho 2 khoa                                                                                                                                                                                                                                                                                                                                                            | Park Jea Minh   | Bed.cs, EntityDtos.cs, EntityControllers.cs, DbInitializer.cs, Program.cs (API)                                                                                                                        | feat(member3): spatial bed data model + seed                                          |
+|  16 | Redesign toan bo UI Blazor: design system CSS (Inter font, brand blue, CSS vars, card/btn/table override); sidebar toi navy voi Material Symbols; F1 ban do san 2D/3D isometric toggle, keo tha via floorplan.js, room outline, drawer chi tiet + doi trang thai + them/xoa giuong (Admin); Home/Login/F2/F3/F4 lam dep hien dai                                                                                                                                                                                                                                   | Park Jea Minh   | app.css, MainLayout, NavMenu, BedMap, Home, Login, Vitals, Lab, Discharge                                                                                                                              | feat(member3): modern UI overhaul – 2D/3D floor plan & full redesign                  |
+|  17 | F1 zoom/pan + 2D kieu CAD: nut phong to/thu nho/reset overlay, keo tay di chuyen (floorplan.js initPan + SetPan); phong tuong doi net + to mau theo khu (WardColor palette), hanh lang hatch, title block, legend chip mau khu, nen luoi graph-paper                                                                                                                                                                                                                                                                                                               | Park Jea Minh   | BedMap.razor, BedMap.razor.css, wwwroot/js/floorplan.js                                                                                                                                                | feat(member3): F1 zoom/pan + CAD-style 2D floor plan                                  |
+|  18 | F1 ban do 3D that bang Three.js: vendor three@0.160.1 + OrbitControls + import map (khong build step); floorplan3d.js dung scene khoi phong/giuong dun noi + anh sang do bong + orbit/zoom/pan; nap qua Blazor JS isolation, click giuong -> SelectBedFromJs mo drawer, doi trang thai -> updateBed recolor live, DisposeAsync don WebGL                                                                                                                                                                                                                           | Park Jea Minh   | BedMap.razor, App.razor, wwwroot/js/floorplan3d.js, wwwroot/lib/three/\*\*                                                                                                                             | feat(member3): F1 real 3D floor plan with Three.js                                    |
+|  19 | F1 floor thuc + drill-down Tang->Phong->Giuong: seed da tang (moi khoa 3 tang, PositionX/Y=NULL) o DbInitializer + seed_hospital.sql; layout engine C# ComputeFloorLayout() tu sinh so do (hanh lang giua, phong 2 ben, tram y ta, thang may) dung chung 2D+3D; 2D overview hien phong (badge so giuong) -> bam phong -> grid giuong -> bam giuong; 3D focusRoom/exitRoom bay camera vao phong; bo editor keo-tha toa do (giu zoom/pan, them/xoa, status, admit, transfer)                                                                                         | Park Jea Minh   | DbInitializer.cs, docs/seed_hospital.sql, BedMap.razor(.css), wwwroot/js/floorplan3d.js, wwwroot/js/floorplan.js                                                                                       | feat(member3): real per-floor layout + room→bed drill-down (2D & 3D)                  |
+|  20 | Nang cap 3D realistic: vendor them addon three (RoomEnvironment, RoundedBoxGeometry, CSS2DRenderer, EffectComposer + SSAO/UnrealBloom/OutlinePass/OutputPass + shaders); floorplan3d.js viet lai — ACESFilmic tone mapping + IBL (PMREM/RoomEnvironment), phong khoi bo goc, tuong kinh mo (thay giuong ben trong), giuong chi tiet (khung/nem/chan theo trang thai/goi/dau giuong), nhan HTML CSS2D, SSAO+bloom+outline hover/chon, tu xoay o overview, camera bay vao phong; guard fallback ve render thuong                                                     | Park Jea Minh   | wwwroot/lib/three/addons/\*\*, wwwroot/js/floorplan3d.js                                                                                                                                               | feat(member3): realistic 3D floor plan (IBL + SSAO/bloom + glass rooms)               |
+|  21 | Noi that phong 3D thuc te: giuong xep sat tuong ngoai (dau ap tuong, gan nhau, xoay theo huong tuong); rem ngan rieng tu moi giuong (ray + tam vai ban trong suot); thiet bi y te canh giuong (monitor phat sang + gia truyen dich IV + tu dau giuong); buong ve sinh trong goc phong (vach ngan + rem cua + bon cau/lavabo + nhan WC); them chip WC o room-detail 2D                                                                                                                                                                                              | Park Jea Minh   | wwwroot/js/floorplan3d.js, BedMap.razor(.css)                                                                                                                                                          | feat(member3): realistic 3D room interiors (wall-lined beds, curtains, equipment, WC) |
+|  22 | Loai phong theo suc chua: seed moi khu 4 phong [6,3,2,1] giuong (DbInitializer + seed_hospital.sql ~864 giuong); RoomTypeName() dat ten theo so giuong (Phong don VIP/doi/3 giuong/thuong); layout 2D chieu rong phong ti le suc chua; hien ten loai o card 2D + room-detail + tag 3D; 3D giuong xep doc HAI tuong trai/phai dau ap tuong chan vao loi di giua, phong lon 3+3; trang tri phong: cua+bang ten, cua so tuong ngoai, den tran + bang ten dau giuong, tham san + cay canh                                                                              | Park Jea Minh   | DbInitializer.cs, docs/seed_hospital.sql, BedMap.razor(.css), wwwroot/js/floorplan3d.js                                                                                                                | feat(member3): room types by capacity + named rooms + ward-style 3D interiors         |
+|  23 | Toi uu ti le phong: chieu sau phong theo so giuong moi tuong (14 + 8.5×perWall, neo vao hanh lang — phong don nong, phong 6 giuong sau); giuong 3D phong to (bd cap 6.5, bw cap 5.5) can voi phong; cache-busting ?v cho floorplan3d.js/floorplan.js                                                                                                                                                                                                                                                                                                               | Park Jea Minh   | BedMap.razor, wwwroot/js/floorplan3d.js, App.razor                                                                                                                                                     | fix(member3): proportional room sizing + bigger beds + JS cache busting               |
+|  24 | Sua bug Nhap vien 500: InpatientAdmission.PatientId FK toi PatientProfiles nhung UI gui UserAccount.Id (seed SQL tao profile bang NEWID nen 2 Id khong trung -> FK violation). Fix trong endpoint admit (member3): resolve PatientId theo PatientProfile.Id HOAC UserAccountId truoc khi tao admission; profile khong ton tai -> 404 ro rang. Khong doi DTO/route/schema — khong anh huong thanh vien khac. Verify: admit 200 + giuong Occupied, transfer doi khoa (giuong cu Cleaning/moi Occupied), discharge tao invoice + giuong Cleaning, admit tu UI het loi | Park Jea Minh   | src/mediconnect/Controllers/EntityControllers.cs                                                                                                                                                       | fix(member3): resolve patient profile in admit (accept UserAccount.Id)                |
 
 ## AI có hỗ trợ không?
 
@@ -283,13 +288,19 @@ AI ho tro tao toan bo project Blazor Server (src/Mediconnect.Web): cau hinh DI, 
 ## Commit/Screenshot minh chứng
 
 ```text
-Cap nhat ma nguon: src/mediconnect
+Branch: feature/de180522-HumanResourcesandSchedulingManagement
+Commit DE180522: 912b0cf [DE180522] feat: add HR & Staff Schedule Management (Gantt chart)
+Commit DE180526: 8c5e747 [DE180526] feat: add React TypeScript frontend and fix backend API integration
+Commit DE180526: e74ba55 [DE180526] feat: add smart queue service and clinic/service management endpoints
+Commit Park Jea Minh: 9c8929b feat(member3): F1 - bed map, bed-assignments & transfer endpoints
 ```
 
 ## Ghi chú
 
 ```text
-Viết tại đây...
+- ScheduleManagementPage sử dụng Vite proxy (port 5173 → 5079) để tránh CORS.
+- JWT token lưu trong localStorage, Axios interceptor tự đính vào header Authorization.
+- EF Core dùng .Select() thay .Include() để EF sinh SQL tối ưu, không circular reference.
 ```
 
 ---
@@ -299,7 +310,7 @@ Viết tại đây...
 ## Ngày thực hiện
 
 ```text
-DD/MM/YYYY
+10/06/2026
 ```
 
 ## Đã hoàn thành
@@ -312,31 +323,31 @@ DD/MM/YYYY
 - [ ] Kiểm tra lỗi database
 - [ ] Kiểm tra phân quyền
 - [ ] Kiểm tra bảo mật cơ bản
-- [ ] Fix bug
-- [ ] Chạy lại sau khi fix bug
-- [ ] Ghi nhận kết quả test
+- [x] Fix bug
+- [x] Chạy lại sau khi fix bug
+- [x] Ghi nhận kết quả test
 
 ## Danh sách lỗi đã xử lý
 
-| STT | Lỗi phát hiện | Nguyên nhân | Cách xử lý | Trạng thái |
-|---:|---|---|---|---|
-| 1 |  |  |  | Open / Fixed / Pending |
-| 2 |  |  |  | Open / Fixed / Pending |
-| 3 |  |  |  | Open / Fixed / Pending |
-| 4 |  |  |  | Open / Fixed / Pending |
-| 5 |  |  |  | Open / Fixed / Pending |
+| STT | Lỗi phát hiện | Nguyên nhân | Cách xử lý | Trạng thái             |
+| --: | ------------- | ----------- | ---------- | ---------------------- |
+|   1 |               |             |            | Open / Fixed / Pending |
+|   2 |               |             |            | Open / Fixed / Pending |
+|   3 |               |             |            | Open / Fixed / Pending |
+|   4 |               |             |            | Open / Fixed / Pending |
+|   5 |               |             |            | Open / Fixed / Pending |
 
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| --: | ----------------- | --------------- | --------------------- | ---------- |
+|   1 |                   |                 |                       |            |
+|   2 |                   |                 |                       |            |
+|   3 |                   |                 |                       |            |
 
 ## AI có hỗ trợ không?
 
-- [ ] Có
+- [x] Có
 - [ ] Không
 
 Nếu có, mô tả AI đã hỗ trợ phần nào:
@@ -348,13 +359,16 @@ Viết tại đây...
 ## Commit/Screenshot minh chứng
 
 ```text
-Dán link commit, screenshot hoặc mô tả minh chứng tại đây...
+Smoke test chạy trực tiếp qua PowerShell, tất cả 10/10 test PASS.
+Vite proxy (5173 → 5079) hoạt động sau khi backend khởi động.
+tsc --noEmit → 0 errors.
 ```
 
 ## Ghi chú
 
 ```text
-Viết tại đây...
+Test thực hiện manual (smoke test) qua PowerShell Invoke-RestMethod, không có automated test suite.
+Các test case cover: CRUD đầy đủ, business rule duplicate, proxy Vite.
 ```
 
 ---
@@ -383,10 +397,10 @@ DD/MM/YYYY
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| --: | ----------------- | --------------- | --------------------- | ---------- |
+|   1 |                   |                 |                       |            |
+|   2 |                   |                 |                       |            |
+|   3 |                   |                 |                       |            |
 
 ## AI có hỗ trợ không?
 
@@ -417,38 +431,43 @@ Viết tại đây...
 
 ## 4.1. Các chức năng đã hoàn thành
 
-| STT | Chức năng | Trạng thái | Minh chứng | Ghi chú |
-|---:|---|---|---|---|
-| 1 |  | Completed / Partial / Not Completed |  |  |
-| 2 |  | Completed / Partial / Not Completed |  |  |
-| 3 |  | Completed / Partial / Not Completed |  |  |
-| 4 |  | Completed / Partial / Not Completed |  |  |
-| 5 |  | Completed / Partial / Not Completed |  |  |
+| STT | Chức năng                                                                    | Trạng thái | Minh chứng                                                                  | Ghi chú                |
+| --: | ---------------------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------- | ---------------------- |
+|   1 | Authentication (JWT): đăng ký, đăng nhập                                     | Completed  | `AuthController.cs`, `LoginPage.tsx`                                        | Token lưu localStorage |
+|   2 | Booking flow: chọn chuyên khoa → bác sĩ → ngày giờ → xác nhận                | Completed  | `BookingPage.tsx`, `AppointmentsPage.tsx`                                   | DE180526               |
+|   3 | Smart Queue: check-in, xếp hàng theo phòng khám                              | Completed  | `SmartQueueController.cs`, `QueueService.cs`                                | DE180526               |
+|   4 | Bed Management: bản đồ giường, lịch sử phân bổ, chuyển khoa                  | Completed  | `EntityControllers.cs`                                                      | Park Jea Minh          |
+|   5 | HR & Staff Schedule Management: CRUD lịch trực, business rules               | Completed  | `ScheduleController.cs`, `StaffScheduleService.cs`                          | DE180522               |
+|   6 | Staff Directory API: danh sách nhân viên với tên, email, khoa                | Completed  | `StaffController.GetDirectory`, `StaffScheduleQuery.GetStaffDirectoryAsync` | DE180522               |
+|   7 | Gantt chart tuần (staff × date, clickable shift blocks)                      | Completed  | `ScheduleManagementPage.tsx` – Week view                                    | DE180522               |
+|   8 | Gantt chart ngày (24h timeline, shift bars định vị theo giờ thực)            | Completed  | `ScheduleManagementPage.tsx` – Day view                                     | DE180522               |
+|   9 | KPI stats bar (tổng nhân viên, đang trực, ca tuần, tỷ lệ phủ)                | Completed  | `ScheduleManagementPage.tsx` – KPI section                                  | DE180522               |
+|  10 | Staff Profiles Grid (card trạng thái Đang trực/Nghỉ, liên kết Xem lịch trực) | Completed  | `ScheduleManagementPage.tsx` – Staff section                                | DE180522               |
 
 ---
 
 ## 4.2. Các chức năng chưa hoàn thành
 
 | STT | Chức năng | Lý do chưa hoàn thành | Hướng cải thiện |
-|---:|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
+| --: | --------- | --------------------- | --------------- |
+|   1 |           |                       |                 |
+|   2 |           |                       |                 |
+|   3 |           |                       |                 |
 
 ---
 
 ## 4.3. Tổng hợp AI hỗ trợ trong project
 
-| Hạng mục | AI có hỗ trợ không? | Mức độ hỗ trợ | Ghi chú |
-|---|---|---|---|
-| Requirement | Có / Không | Ít / Trung bình / Nhiều |  |
-| Design | Có / Không | Ít / Trung bình / Nhiều |  |
-| Database | Có / Không | Ít / Trung bình / Nhiều |  |
-| Coding | Có / Không | Ít / Trung bình / Nhiều |  |
-| Debug | Có / Không | Ít / Trung bình / Nhiều |  |
-| Testing | Có / Không | Ít / Trung bình / Nhiều |  |
-| Report | Có / Không | Ít / Trung bình / Nhiều |  |
-| Presentation | Có / Không | Ít / Trung bình / Nhiều |  |
+| Hạng mục     | AI có hỗ trợ không? | Mức độ hỗ trợ | Ghi chú                                                                              |
+| ------------ | ------------------- | ------------- | ------------------------------------------------------------------------------------ |
+| Requirement  | Có                  | Ít            | Hỗ trợ phân tích yêu cầu từ base-html design                                         |
+| Design       | Có                  | Trung bình    | Đề xuất flat projection pattern, CQRS lite interface                                 |
+| Database     | Có                  | Nhiều         | Scaffold entities, migrations, DbContext, seed data                                  |
+| Coding       | Có                  | Nhiều         | StaffScheduleService, StaffScheduleQuery, ScheduleController, toàn bộ frontend Gantt |
+| Debug        | Có                  | Nhiều         | Phát hiện và fix 5 bugs (React.FormEvent, connection string, DTO rename, ...)        |
+| Testing      | Có                  | Trung bình    | Viết smoke test script PowerShell 10 scenarios                                       |
+| Report       | Có                  | Trung bình    | Hỗ trợ điền CHANGELOG, README                                                        |
+| Presentation | Không               | —             | —                                                                                    |
 
 ---
 
@@ -473,5 +492,5 @@ Viết tại đây...
 Sinh viên/nhóm cam kết rằng nội dung changelog phản ánh đúng các thay đổi đã thực hiện trong quá trình làm bài tập/project.
 
 | Đại diện sinh viên/nhóm | Ngày xác nhận |
-|---|---|
-|  |  |
+| ----------------------- | ------------- |
+|                         |               |
