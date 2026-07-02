@@ -67,6 +67,8 @@ Sinh viên/nhóm cần ghi lại:
 | 11 | 14/06/2026 | GitHub Copilot | Debug duplicate PatientProfile creation | Avoid duplicate PatientProfile by checking existing profile before create (GET /api/patients/me) | Added getMe() check and fallback create in OutpatientRecordPage.tsx to prevent DB unique index error | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
 | 12 | 28/06/2026 | Antigravity | Tích hợp NLM ICD-10 API thay thế `Icd10Catalog` chưa định nghĩa | `tim hieu ve du an... tiep tuc hoan thien sua doi tim kiem ICD-10 dua theo nlm api` + test E11/Hypertension | Sinh `SearchICD10Async()` inject HttpClient, URL NLM, parse `root[3]`, DTO `ICD10ResultDto`, đăng ký `AddHttpClient()` | Có | `src/Mediconnect.Application/Services/MedicalRecordService.cs`; `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs`; `src/mediconnect/Program.cs` |
 | 13 | 28/06/2026 | Antigravity | Sửa lỗi tên walk-in mất khi navigate sang OutpatientRecord | Cùng session với prompt 12; AI phân tích `QueueTicket` thiếu `PatientName` cột | Sinh `navigate('/outpatient-record', { state: { ticket, clinicId } })` và `useLocation` + `loc.state?.ticket` | Có | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx` |
+| 14 | 29/06/2026 | Claude (claude.ai) | Implement E-Prescription feature: drug autocomplete (GET /api/drugs), allergy validation, pharmacy stock filter, send flow POST /api/prescriptions | Feature 3 E-Prescription: drug autocomplete debounced 250ms, allergy check [Penicillin/Peanuts/Sulfa Drugs], stock filter via GET /api/clinics/active, disabled add khi stock=0, send flow POST /api/prescriptions + /api/prescriptionitems | Sinh EPrescriptionPanel.tsx, EPrescriptionPage.tsx, update OutpatientRecordPage.tsx + services.ts + types/index.ts | Có | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
+| 15 | 29/06/2026 | Claude (claude.ai) | Sidebar UI: nâng E-Prescription lên top-level section, visual parity với Outpatient Records, route /e-prescription | Promote E-Prescription: standalone top-level nav link "Đơn thuốc điện tử", order Queue → Outpatient Records → E-Prescription → Telemedicine, route /e-prescription với RoleProtectedRoute | Sinh Header.tsx nav link (desktop + mobile, isStaff block), App.tsx route với RoleProtectedRoute (Doctor, Nurse) | Có | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` |
 
 ---
 
@@ -711,6 +713,170 @@ Hiển thị tên ưu tiên fullName > patientName (line 414).
 | File liên quan | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/types/index.ts` (`QueueTicketDetail.patientName`) |
 | Kết quả chạy/test | Tên walk-in hiển thị đúng trên OutpatientRecord. Không cần DB migration. |
 | Ghi chú khác | Workaround dùng React Router state (ephemeral trong SPA session). Known limitation: tên mất nếu reload. |
+
+---
+
+### Prompt số 13
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 29/06/2026 |
+| Công cụ AI | Claude (claude.ai) |
+| Mục đích | Implement Feature 3 – E-Prescription: drug autocomplete, allergy conflict validation, pharmacy stock filter |
+| Phần việc liên quan | Frontend / Feature / Coding |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+## Objective
+Feature 3 – Quản lý đơn thuốc ngoại trú (E-Prescription)
+
+Target state (sau khi bác sĩ save OutpatientRecord):
+1. Drug autocomplete từ live pharmacy inventory (GET /api/drugs, filter client-side)
+2. Allergy conflict warning: kiểm tra thuốc chọn với known allergies [Penicillin, Peanuts, Sulfa Drugs]
+3. Pharmacy stock filter: chỉ hiển thị thuốc có stockQuantity > 0 khi chọn pharmacy
+4. Nút "Add to Prescription" disabled khi stock = 0
+5. Active prescription list hiển thị thuốc đã thêm
+6. Send to pharmacy: POST /api/prescriptions → POST /api/prescriptionitems per item
+
+Constraints: không thêm DB migration, không thêm endpoint mới nếu có thể dùng endpoint hiện có.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Cần implement tính năng kê đơn thuốc ngoại trú cho bác sĩ trong trang OutpatientRecord.
+Yêu cầu: drug name autocomplete kết nối pharmacy inventory API, kiểm tra dị ứng phía client,
+lọc thuốc theo kho của pharmacy được chọn, và disable nút thêm khi hết hàng.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+- Sinh E-Prescription component với drug autocomplete input gọi live pharmacy inventory API.
+- Sinh allergy validation: so sánh drug được chọn với known allergy list [Penicillin, Peanuts, Sulfa Drugs];
+  hiển thị cảnh báo conflict nếu trùng.
+- Sinh pharmacy stock filter: dropdown chọn pharmacy → autocomplete drug scoped to pharmacy's stock.
+- Logic disable: nút "Add to Prescription" disabled khi stock quantity = 0.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ:
+- EPrescriptionPanel.tsx (mới): drug autocomplete debounced 250ms, allergy check, stock filter, disabled state khi stock=0, send flow POST /api/prescriptions + /api/prescriptionitems
+- EPrescriptionPage.tsx (mới): standalone page, Visit ID input, staffProfileId resolution via staffApi.getDirectory()
+- OutpatientRecordPage.tsx: thêm import EPrescriptionPanel, savedVisitId state, render EPrescriptionPanel sau save thành công
+- api/services.ts: thêm drugApi.getAll(), prescriptionApi.create(), prescriptionApi.addItem()
+- types/index.ts: thêm DrugResult, ActivePrescriptionItem interfaces
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Không có Pharmacy entity trong DB → dùng GET /api/clinics/active (Clinic[]) làm pharmacy selector; stock filter global (stockQuantity > 0), không per-pharmacy
+- PatientProfile không có AllergyInfo field → DEMO_ALLERGIES = ["Penicillin", "Peanuts", "Sulfa"] hardcoded constant
+- Dùng GET /api/drugs (fetch all, filter client-side) thay vì thêm endpoint /drugs/search mới
+- PrescriptionWriteDto.IssuedAt bắt buộc → truyền new Date().toISOString()
+- UI redesign đồng bộ ClinicDashboard: rounded-2xl, material-symbols-outlined, emerald/rose color scheme
+- Kiểm tra: npx tsc --noEmit → 0 errors (3 lần)
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Cần hỏi lại AI nhiều lần
+- [x] Cần tự kiểm tra và chỉnh sửa nhiều (adapt vì không có Pharmacy entity / AllergyInfo field trong schema)
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Chưa commit tại thời điểm ghi log (files untracked/modified trên nhánh main) |
+| File liên quan | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
+| Kết quả chạy/test | `npx tsc --noEmit`: 0 errors. Drug autocomplete hoạt động. Allergy warning hiển thị đúng. Stock=0 → nút Add disabled. Send flow → POST /api/prescriptions thành công. |
+| Ghi chú khác | Allergy list cứng phía client (Penicillin, Peanuts, Sulfa Drugs) — không query DB. Pharmacy selector dùng Clinic entity thay thế. |
+
+---
+
+### Prompt số 14
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 29/06/2026 |
+| Công cụ AI | Claude (claude.ai) |
+| Mục đích | Sidebar UI: nâng E-Prescription từ sub-nav item lên standalone top-level section, visual parity với Outpatient Records |
+| Phần việc liên quan | Frontend / UI / Routing |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+## Objective
+Promote E-Prescription from a child nav item into a standalone top-level section.
+
+Requirements:
+- Visual parity với Outpatient Records (same icon size, label size, active/hover state, padding)
+- Thứ tự nav: Queue → Outpatient Records → E-Prescription → Telemedicine
+- Trang standalone /e-prescription với EPrescriptionPage component
+- Route /e-prescription trong App.tsx với RoleProtectedRoute (Doctor, Nurse)
+- Nav link "Đơn thuốc điện tử" trong cả desktop và mobile nav (inside isStaff block)
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+E-Prescription được promote lên feature đầy đủ ngang hàng Outpatient Records.
+Cần cập nhật sidebar để phản ánh đúng: E-Prescription là top-level nav item,
+không còn là sub-item ẩn dưới nhóm khác. Thứ tự mong muốn: Queue → Outpatient Records → E-Prescription → Telemedicine.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+- Sinh sidebar/nav component update: E-Prescription entry ở top level với cùng icon size, label size,
+  active/hover state, padding như Outpatient Records.
+- Cập nhật thứ tự: Queue → Outpatient Records → E-Prescription → Telemedicine.
+- Sinh route /e-prescription trong App.tsx với RoleProtectedRoute allowedRoles={[UserRole.Doctor, UserRole.Nurse]} wrapping EPrescriptionPage.
+- Nav link dùng text-on-surface-variant hover:text-primary transition-colors font-medium (match Outpatient Records style).
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ:
+- Header.tsx: thêm <Link to="/e-prescription" className="text-on-surface-variant hover:text-primary transition-colors font-medium">Đơn thuốc điện tử</Link>
+  trong cả desktop nav và mobile nav (bên trong isStaff conditional block)
+- App.tsx: thêm import EPrescriptionPage, thêm route /e-prescription với RoleProtectedRoute allowedRoles={[UserRole.Doctor, UserRole.Nurse]}
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Dùng text-on-surface-variant + hover:text-primary cho nav link style (match Outpatient Records link — kiểm tra trong Header.tsx hiện có)
+- Icon "medication" (material-symbols-outlined) được chọn làm page icon trong EPrescriptionPage header — nhất quán với tên feature
+- RoleProtectedRoute scoped Doctor + Nurse (không bao gồm Admin)
+- npx tsc --noEmit → 0 errors sau khi thêm route và import
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Chưa commit tại thời điểm ghi log (files modified trên nhánh main) |
+| File liên quan | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` |
+| Kết quả chạy/test | `npx tsc --noEmit`: 0 errors. Nav link "Đơn thuốc điện tử" hiển thị đúng trong desktop và mobile nav. Route /e-prescription hoạt động với RoleProtectedRoute. |
 
 ---
 

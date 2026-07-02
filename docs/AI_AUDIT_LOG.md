@@ -586,6 +586,95 @@ Cần lưu ý đây là workaround; nếu cần persistence lâu dài thì phả
 
 ---
 
+### Lần sử dụng AI số 10
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 29/06/2026 |
+| Công cụ AI | Claude (claude.ai) |
+| Mục đích sử dụng | Implement Feature 3 – E-Prescription (Quản lý đơn thuốc ngoại trú): drug autocomplete, allergy conflict validation, pharmacy stock filter; đồng thời nâng cấp sidebar UI để E-Prescription thành section top-level |
+| Phần việc liên quan | Frontend / UI / Feature / Coding |
+| Mức độ sử dụng | AI sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+## Objective
+Feature 3 – Quản lý đơn thuốc ngoại trú (E-Prescription)
+
+Target state (sau khi bác sĩ save OutpatientRecord):
+1. Drug autocomplete từ live pharmacy inventory (GET /api/drugs, filter client-side)
+2. Allergy conflict warning: kiểm tra thuốc chọn với known allergies [Penicillin, Peanuts, Sulfa Drugs]
+3. Pharmacy stock filter: chỉ hiển thị thuốc có stockQuantity > 0 khi chọn pharmacy
+4. Nút "Add to Prescription" disabled khi stock = 0
+5. Active prescription list hiển thị thuốc đã thêm
+6. Send to pharmacy: POST /api/prescriptions → POST /api/prescriptionitems per item
+
+Sau đó: Promote E-Prescription lên standalone top-level nav section, visual parity với Outpatient Records.
+Thứ tự: Queue → Outpatient Records → E-Prescription → Telemedicine.
+Route /e-prescription trong App.tsx với RoleProtectedRoute (Doctor, Nurse).
+
+Constraints: không thêm DB migration, không thêm endpoint mới nếu có thể dùng endpoint hiện có.
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+- Sinh UI E-Prescription với drug name autocomplete kết nối live pharmacy inventory API.
+- Sinh client-side allergy conflict validation: kiểm tra drug chọn với danh sách known allergies
+  (Penicillin, Peanuts, Sulfa Drugs); cảnh báo nếu conflict.
+- Sinh pharmacy stock filter: autocomplete scoped to selected pharmacy's stock.
+- Disable nút "Add to Prescription" khi stock = 0.
+- Nâng cấp sidebar: E-Prescription từ sub-nav item lên standalone top-level section,
+  visual parity với Outpatient Records (cùng icon size, label size, active/hover state, padding).
+  Thứ tự sidebar: Queue → Outpatient Records → E-Prescription → Telemedicine.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+- Toàn bộ E-Prescription component (EPrescriptionPanel.tsx): drug autocomplete debounced 250ms, allergy validation logic, stock filter, disabled state khi stock = 0, send-to-pharmacy flow (POST /api/prescriptions + /api/prescriptionitems).
+- EPrescriptionPage.tsx: standalone page với Visit ID input, staffProfileId resolution via staffApi.getDirectory().
+- OutpatientRecordPage.tsx: thêm import EPrescriptionPanel, savedVisitId state, render panel sau khi save thành công.
+- api/services.ts: drugApi.getAll(), prescriptionApi.create(), prescriptionApi.addItem().
+- types/index.ts: DrugResult, ActivePrescriptionItem interfaces.
+- Header.tsx: nav link "Đơn thuốc điện tử" trong cả desktop và mobile nav (inside isStaff block).
+- App.tsx: route /e-prescription với RoleProtectedRoute (Doctor, Nurse).
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Không có Pharmacy entity trong DB → dùng GET /api/clinics/active (Clinic[]) làm pharmacy selector thay thế; stock filter là global (stockQuantity > 0), không per-pharmacy.
+- PatientProfile không có AllergyInfo field → DEMO_ALLERGIES = ["Penicillin", "Peanuts", "Sulfa"] hardcoded constant phía client; prop knownAllergies? cho phép override sau.
+- visitId chỉ biết sau khi save → capture payload.visitId vào savedVisitId state sau save thành công; EPrescriptionPanel render conditional khi savedVisitId && staffProfileId.
+- Drug search không cần endpoint mới → fetch all GET /api/drugs on mount, filter client-side (tránh thêm GET /api/drugs/search).
+- PrescriptionWriteDto.IssuedAt bắt buộc → truyền new Date().toISOString().
+- EPrescriptionPage.tsx dùng "Bệnh nhân" hardcoded cho patientName vì không resolve được từ visitId.
+- UI redesign đồng bộ ClinicDashboard: rounded-2xl cards, material-symbols-outlined icons, emerald/rose toasts.
+- TypeScript type-check: npx tsc --noEmit → 0 errors (3 lần kiểm tra).
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Chưa commit tại thời điểm ghi log — files ở trạng thái untracked/modified trên nhánh main |
+| File liên quan | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
+| Kết quả chạy/test | `npx tsc --noEmit`: 0 errors. Drug autocomplete hoạt động. Allergy warning hiển thị đúng khi chọn thuốc có tên trùng danh sách dị ứng. Stock = 0 → nút Add disabled. Send flow → POST /api/prescriptions thành công. |
+| Ghi chú khác | Drug allergy list cứng (Penicillin, Peanuts, Sulfa Drugs) — client-side only, không query DB. Pharmacy selector dùng Clinic entity thay thế do không có Pharmacy entity trong schema. |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+AI sinh toàn bộ E-Prescription feature trong một session, bao gồm cả UI redesign đồng bộ ClinicDashboard.
+Cần tự xác định các constraint của project (không có Pharmacy entity, không có AllergyInfo field, visitId chỉ biết sau save)
+và điều chỉnh giải pháp cho phù hợp với schema hiện có — không phải AI tự nhận ra.
+TypeScript type-checking (npx tsc --noEmit) là bước kiểm chứng quan trọng nhất trước khi xác nhận feature hoàn thành.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.
@@ -596,9 +685,9 @@ Cần lưu ý đây là workaround; nếu cần persistence lâu dài thì phả
 | Viết user story/use case |  |  |  |  |  |
 | Thiết kế database |  |  |  |  |  |
 | Thiết kế kiến trúc hệ thống |  |  |  |  |  |
-| Thiết kế giao diện |  |  |  |  |  |
-| Code frontend |  |  |  |  |  |
-| Code backend |  |  |  |  |  |
+| Thiết kế giao diện |  |  | x |  | Sidebar promotion (Entry 10) |
+| Code frontend |  |  |  | x | E-Prescription UI, allergy validation, stock filter, sidebar (Entry 10) |
+| Code backend |  |  | x |  | NLM ICD-10 API integration (Entry 8) |
 | Debug lỗi |  |  |  |  |  |
 | Viết test case |  |  |  |  |  |
 | Kiểm thử sản phẩm |  |  |  |  |  |

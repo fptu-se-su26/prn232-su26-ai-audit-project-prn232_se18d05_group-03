@@ -253,6 +253,8 @@ tránh circular reference khi serialize JSON.
 | 9 | Implement Outpatient Record (doctor) feature and robust diagnose/save flow | DE190123 | mediconnect-web/src/pages/OutpatientRecordPage.tsx; mediconnect-web/src/components/layout/Header.tsx; Mediconnect.Application/Services/MedicalRecordService.cs; mediconnect/Modules/SmartClinic/OutpatientRecordController.cs | feat(outpatient): UI + save flow; added fallback create visit and lab order creation |
 | 10 | Tích hợp NLM ClinicalTables API cho tìm kiếm ICD-10 (thay thế `Icd10Catalog` chưa định nghĩa gây build lỗi) | DE190123 | `src/Mediconnect.Application/Services/MedicalRecordService.cs` (`SearchICD10Async`); `src/Mediconnect.Application/Interfaces/IMedicalRecordService.cs`; `src/Mediconnect.Application/DTOs/MedicalRecordDtos.cs` (`ICD10ResultDto`); `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs` (`GET icd10/search`); `src/mediconnect/Program.cs` (`AddHttpClient()`); `src/mediconnect-web/src/api/services.ts` (`searchIcd10`); `src/mediconnect-web/src/types/index.ts` (`Icd10Result`) | `472681e feat(outpatient): add ICD-10 diagnosis lookup via NLM API` — URL: `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms={query}&sf=code,name&df=code,name`; parse `root[3]` (displayStrings array) |
 | 11 | Sửa lỗi tên bệnh nhân vãng lai bị mất khi điều hướng sang OutpatientRecord (walk-in patient name persistence) | DE190123 | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx` (navigate với `state: { ticket, clinicId }`); `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx` (`useLocation` + `loc.state?.ticket`); `src/mediconnect-web/src/types/index.ts` (`QueueTicketDetail.patientName`) | `472681e feat(outpatient): fix walk-in patient data persistence` — Root cause: `QueueTicket` entity không có cột `PatientName`; workaround: truyền qua React Router state |
+| 12 | Implement Feature 3 – E-Prescription: drug name autocomplete (live pharmacy inventory API via GET /api/drugs, client-side filter), client-side allergy conflict validation (Penicillin / Peanuts / Sulfa Drugs, DEMO_ALLERGIES constant), pharmacy stock filter (GET /api/clinics/active dùng thay Pharmacy entity), "Add to Prescription" disabled khi stock = 0, send flow POST /api/prescriptions + /api/prescriptionitems | DE190123 | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/api/services.ts` (drugApi, prescriptionApi); `src/mediconnect-web/src/types/index.ts` (DrugResult, ActivePrescriptionItem) | Chưa commit tại thời điểm ghi log — files untracked/modified trên nhánh main |
+| 13 | Sidebar UI: nâng cấp E-Prescription từ sub-nav item lên standalone top-level section; visual parity với Outpatient Records (text-on-surface-variant, hover:text-primary, font-medium); thứ tự: Queue → Outpatient Records → E-Prescription → Telemedicine; route /e-prescription với RoleProtectedRoute (Doctor, Nurse) | DE190123 | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` | Chưa commit tại thời điểm ghi log |
 
 ## AI có hỗ trợ không?
 
@@ -273,6 +275,8 @@ AI (Claude Code) hỗ trợ:
     Week Gantt (staff × date), Day Gantt (24h timeline với shift bars định vị theo giờ thực)
 - Fix lỗi React 19 deprecation: React.FormEvent → inline e.preventDefault()
 - Fix connection string: bỏ Trusted_Connection=True xung đột với SQL auth
+- Claude (claude.ai, 29/06/2026): sinh toàn bộ E-Prescription feature (drug autocomplete, allergy validation,
+  stock filter, disabled state) và sidebar promotion lên top-level section (DE190123)
 ```
 
 ## Commit/Screenshot minh chứng
@@ -284,6 +288,7 @@ Commit DE180526: 8c5e747 [DE180526] feat: add React TypeScript frontend and fix 
 Commit DE180526: e74ba55 [DE180526] feat: add smart queue service and clinic/service management endpoints
 Commit Park Jea Minh: 9c8929b feat(member3): F1 - bed map, bed-assignments & transfer endpoints
 Commit DE190123: 00ea032 feat: Smart Clinic Dashboard & Service Management
+Commit DE190123: feat(eprescription): E-Prescription feature + sidebar promotion — chưa commit tại thời điểm ghi log (xem git status: EPrescriptionPanel.tsx, EPrescriptionPage.tsx untracked; Header.tsx, App.tsx, services.ts, types/index.ts, OutpatientRecordPage.tsx modified)
 ```
 
 ## Ghi chú
@@ -438,6 +443,8 @@ Viết tại đây...
 | 12 | Outpatient Record: doctor UI, diagnose/save flow, auto-create visit/patient, lab orders | Completed | `mediconnect-web/src/pages/OutpatientRecordPage.tsx`, `mediconnect-web/src/components/layout/Header.tsx`, `Mediconnect.Application/Services/MedicalRecordService.cs` | DE190123 |
 | 13 | ICD-10 diagnosis lookup via NLM ClinicalTables API (`GET /api/medical-records/icd10/search?query=`): dropdown tìm theo mã (E11) và tên (Hypertension), parse `root[3]` của response 4-element array | Completed | `Mediconnect.Application/Services/MedicalRecordService.cs` (`SearchICD10Async`); `OutpatientRecordController.cs` (`SearchICD10`); `mediconnect-web/src/api/services.ts` (`searchIcd10`); `Program.cs` (`AddHttpClient()`) | DE190123 |
 | 14 | Walk-in patient name persistence qua React Router state: `ClinicDashboardPage` navigate với `{ ticket, clinicId }`, `OutpatientRecordPage` đọc từ `useLocation().state.ticket.patientName` | Completed | `mediconnect-web/src/pages/ClinicDashboardPage.tsx` (line 384); `mediconnect-web/src/pages/OutpatientRecordPage.tsx` (lines 66–73, 414) | DE190123 |
+| 15 | E-Prescription (Feature 3): drug autocomplete (GET /api/drugs, debounced 250ms, client-side filter), allergy conflict validation (DEMO_ALLERGIES = [Penicillin, Peanuts, Sulfa], client-side), pharmacy stock filter (GET /api/clinics/active), disabled add button khi stock = 0, send flow POST /api/prescriptions + /api/prescriptionitems | Completed | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` | DE190123 |
+| 16 | Sidebar UI promotion: E-Prescription lên top-level nav section (Link to="/e-prescription"); visual parity với Outpatient Records (text-on-surface-variant, hover:text-primary, font-medium); thứ tự Queue → Outpatient Records → E-Prescription → Telemedicine; route /e-prescription với RoleProtectedRoute (Doctor, Nurse) | Completed | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` | DE190123 |
 
 ---
 

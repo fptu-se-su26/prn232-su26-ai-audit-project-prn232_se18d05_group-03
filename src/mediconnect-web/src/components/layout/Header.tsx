@@ -62,6 +62,12 @@ export default function Header() {
                     >
                       Hồ sơ ngoại trú
                     </Link>
+                    <Link
+                      to="/e-prescription"
+                      className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    >
+                      Đơn thuốc điện tử
+                    </Link>
                   </>
                 )}
                 {isAdmin && (
@@ -163,6 +169,13 @@ export default function Header() {
                       onClick={() => setMenuOpen(false)}
                     >
                       Hồ sơ ngoại trú
+                    </Link>
+                    <Link
+                      to="/e-prescription"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Đơn thuốc điện tử
                     </Link>
                   </>
                 )}

@@ -19,7 +19,7 @@ import type {
   MedicalService,
   Icd10Result,
   PatientDiagnosisHistory,
-
+  DrugResult,
 } from "../types";
 
 export const authApi = {
@@ -140,6 +140,27 @@ export const medicalRecordApi = {
     api.get<Icd10Result[]>("/medical-records/icd10/search", { params: { query } }),
   getDiagnosisHistory: (patientId: string) =>
     api.get<PatientDiagnosisHistory[]>(`/medical-records/patients/${patientId}/diagnosis-history`),
+};
+
+export const drugApi = {
+  getAll: () => api.get<DrugResult[]>("/drugs"),
+};
+
+export const prescriptionApi = {
+  create: (data: {
+    outpatientVisitId: string;
+    doctorId: string;
+    issuedAt: string;
+    notes?: string;
+  }) => api.post<{ id: string; outpatientVisitId: string; doctorId: string; issuedAt: string; notes?: string }>("/prescriptions", data),
+  addItem: (data: {
+    prescriptionId: string;
+    drugId: string;
+    dose?: string;
+    frequency?: string;
+    durationDays: number;
+    quantity: number;
+  }) => api.post("/prescriptionitems", data),
 };
 
 export const clinicManagementApi = {

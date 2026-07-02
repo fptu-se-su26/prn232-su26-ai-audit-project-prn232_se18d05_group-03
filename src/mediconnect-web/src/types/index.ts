@@ -217,3 +217,25 @@ export interface PatientDiagnosisHistory {
   visitDate: string;
 }
 
+export interface DrugResult {
+  id: string;
+  name: string;
+  code?: string;
+  unit?: string;
+  stockQuantity: number;
+  unitPrice: number;
+  isActive: boolean;
+}
+
+export interface ActivePrescriptionItem {
+  drugId: string;
+  drugName: string;
+  dose: string;
+  route: string;
+  frequency: string;
+  durationDays: number;
+  quantity: number;
+  unitPrice: number;
+  stockQuantity: number;
+}
+
