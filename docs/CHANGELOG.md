@@ -251,8 +251,13 @@ DD/MM/YYYY
 | 12 | Thêm patientApi.getHistory và phrApi (4 methods) vào services.ts | DE180526 | src/mediconnect-web/src/api/services.ts | chưa commit |
 | 13 | Tạo PHRPage.tsx — giao diện Hồ sơ sức khỏe 3 tab, 7 API calls song song, enrichment client-side | DE180526 | src/mediconnect-web/src/pages/PHRPage.tsx | chưa commit |
 | 14 | Thêm route /health-records (Patient only) vào App.tsx | DE180526 | src/mediconnect-web/src/App.tsx | chưa commit |
-| 15 | Thêm BillingService, IBillingService, BillingDtos - gom phí khám/xét nghiệm/thuốc thành phiếu thu, tính khấu trừ BHYT | DE180526 | src/Mediconnect.Application/Services/BillingService.cs; Interfaces/IBillingService.cs; DTOs/BillingDtos.cs | chưa commit |
-| 16 | Thêm endpoint POST /api/billing-invoices/generate, sửa lại /calculate-insurance dùng BillingService | DE180526 | src/mediconnect/Controllers/EntityControllers.cs; Program.cs | dotnet build: 0 lỗi |
+| 15 | Thêm BillingService, IBillingService, BillingDtos - gom phí khám/xét nghiệm/thuốc thành phiếu thu, tính khấu trừ BHYT | DE180526 | src/Mediconnect.Application/Services/BillingService.cs; Interfaces/IBillingService.cs; DTOs/BillingDtos.cs | 8181dd8 |
+| 16 | Thêm endpoint POST /api/billing-invoices/generate, sửa lại /calculate-insurance dùng BillingService | DE180526 | src/mediconnect/Controllers/EntityControllers.cs; Program.cs | 8181dd8 |
+| 17 | Fix bug BillingService: bỏ Update() thừa sau AddAsync (EF Core hiểu nhầm Added thành Modified, gây DbUpdateConcurrencyException khi generate invoice) | DE180526 | src/Mediconnect.Application/Services/BillingService.cs | Phát hiện khi test API thật qua curl |
+| 18 | Thêm entity ServiceRating + migration AddServiceRating - Feature 4 đánh giá dịch vụ | DE180526 | src/Mediconnect.Domain/Entities/ServiceRating.cs; src/Mediconnect.Infrastructure/Migrations/20260702005148_AddServiceRating.cs | dotnet ef database update thành công |
+| 19 | Thêm ServiceRatingsController (CRUD + GET doctor rating summary) | DE180526 | src/mediconnect/Controllers/EntityControllers.cs | Test qua curl: tạo rating 201, điểm sai 400, summary đúng |
+| 20 | Thêm IPaymentGatewayService, VnPaySettings, MomoSettings - sinh link thanh toán VNPay/Momo và xác thực callback | DE180526 | src/Mediconnect.Infrastructure/Payments/ | Test qua curl: sinh link, giả lập callback hợp lệ/không hợp lệ |
+| 21 | Thêm endpoint POST /api/payments/{id}/vnpay-url, /momo-url, GET /vnpay-return vào PaymentsController | DE180526 | src/mediconnect/Controllers/EntityControllers.cs; appsettings.json | Payment chuyển Paid sau callback hợp lệ, bị từ chối nếu chữ ký sai |
 
 
 ## AI có hỗ trợ không?
@@ -269,6 +274,8 @@ AI sinh toàn bộ giao diện PHRPage.tsx (Feature 2) với 3 tab + logic enric
 Backend API cho Feature 2 đã hoàn thiện từ trước (PatientsController + EntityControllers); session PHR chỉ làm frontend.
 AI gợi ý cấu trúc BillingService cho Feature 3 (gom phí + tính BHYT); tự quyết cách map giá xét nghiệm
 vì LabOrder không lưu giá sẵn, và bỏ code stub cũ thay vì giữ song song.
+AI gợi ý cấu trúc ServiceRating + IPaymentGatewayService cho Feature 4 (đánh giá dịch vụ, thanh toán
+VNPay/Momo); test API thật và phát hiện + sửa bug DbUpdateConcurrencyException ở BillingService.
 ```
 
 ## Commit/Screenshot minh chứng
@@ -280,7 +287,8 @@ Cap nhat ma nguon: src/mediconnect
 ## Ghi chú
 
 ```text
-Viết tại đây...
+Frontend (src/mediconnect-web) đã được xóa chủ đích để làm lại — các feature từ Phase 04 trở đi
+chỉ còn backend, chưa có giao diện cho Feature 3 và Feature 4.
 ```
 
 ---

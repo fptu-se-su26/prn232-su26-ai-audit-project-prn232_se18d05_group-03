@@ -466,7 +466,7 @@ chỉ cần thêm logic tính toán.
 
 | Loại minh chứng | Nội dung |
 |---|---|
-| Link commit | chưa commit |
+| Link commit | 8181dd8 |
 | File liên quan | src/Mediconnect.Application/Services/BillingService.cs; src/Mediconnect.Application/Interfaces/IBillingService.cs; src/Mediconnect.Application/DTOs/BillingDtos.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |
 | Kết quả chạy/test | dotnet build: 0 Warning, 0 Error |
 
@@ -476,6 +476,66 @@ chỉ cần thêm logic tính toán.
 ```text
 Phần khó nhất là tính phí xét nghiệm vì LabOrder không lưu giá - phải tự quyết định cách map sang
 MedicalService theo tên, AI chỉ gợi ý hướng còn cách làm cụ thể tự viết lại cho phù hợp dữ liệu hiện có.
+```
+
+---
+
+### Lần sử dụng AI số 8
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 02/07/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Viết backend Feature 4: Thanh toán trực tuyến (VNPay/Momo) & đánh giá dịch vụ |
+| Phần việc liên quan | Backend / Coding / Testing |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Kiểm tra lại Feature 1, 2, 3 .
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+AI đề xuất: entity ServiceRating mới (điểm 1-5 gắn với lần khám), IPaymentGatewayService sinh link
+thanh toán VNPay (ký HMACSHA512 theo chuẩn sandbox VNPay) và Momo (ký HMACSHA256, mô phỏng vì
+không gọi API thật của Momo), thêm endpoint callback /vnpay-return để xác thực chữ ký và cập nhật
+trạng thái Payment.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Dùng cấu trúc entity/DTO/service/endpoint AI đề xuất, áp dụng vào ServiceRatingsController và
+PaymentsController.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Chạy thử API thật (dotnet run + curl) : phát hiện bug ở BillingService
+  (Feature 3 cũ) — gọi Update() ngay sau AddAsync làm EF Core hiểu nhầm trạng thái Added thành
+  Modified, gây lỗi DbUpdateConcurrencyException khi generate invoice. Đã sửa bằng cách bỏ dòng
+  Update() thừa.
+- Test end-to-end: đăng nhập, tạo visit thật, generate invoice, tạo Payment, gọi vnpay-url/momo-url,
+- Tạo migration AddServiceRating bằng dotnet ef và áp dụng vào DB thật, không chỉ code suông.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | chưa commit |
+| File liên quan | src/Mediconnect.Domain/Entities/ServiceRating.cs; src/Mediconnect.Application/DTOs/ServiceRatingDtos.cs; src/Mediconnect.Application/DTOs/PaymentGatewayDtos.cs; src/Mediconnect.Application/Interfaces/IPaymentGatewayService.cs; src/Mediconnect.Infrastructure/Payments/; src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Infrastructure/Migrations/20260702005148_AddServiceRating.cs |
+| Kết quả chạy/test | dotnet build: 0 lỗi; test thủ công qua curl: tạo rating (201), rating điểm sai (400), tạo invoice, tạo payment, sinh link VNPay/Momo, giả lập callback hợp lệ (payment chuyển Paid) và callback giả mạo chữ ký (bị từ chối) |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Việc chạy thử API phát hiện một bug thật từ Feature 3 mà lúc review code
+không thấy — cần luôn test end-to-end với dữ liệu thật.
 ```
 
 ---

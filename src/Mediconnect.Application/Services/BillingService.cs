@@ -108,7 +108,6 @@ public class BillingService : IBillingService
         }
 
         invoice.Subtotal = items.Sum(i => i.Amount);
-        _invoiceRepository.Update(invoice);
         await _invoiceRepository.SaveChangesAsync(cancellationToken);
 
         var insuranceNumber = string.IsNullOrWhiteSpace(dto.InsuranceNumber) ? patient.InsuranceNumber : dto.InsuranceNumber;

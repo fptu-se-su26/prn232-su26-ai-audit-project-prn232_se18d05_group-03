@@ -65,6 +65,7 @@ Sinh viên/nhóm cần ghi lại:
 | 9 | 06/06/2026 | Antigravity | Sửa lỗi mất session / đăng nhập lặp | toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap | Phát hiện login redirect loop về /booking và sửa đổi LoginPage/AuthContext | Có | src/mediconnect-web/src/pages/LoginPage.tsx |
 | 10 | 10/06/2026 | Claude (Claude Code) | Xây dựng frontend Feature 2: Hồ sơ sức khỏe điện tử | Làm chức năng PHR cho bệnh nhân: xem lịch sử khám, đơn thuốc, kết quả xét nghiệm, tải file | Tạo PHRPage.tsx với 3 tab + 7 API calls + enrichment dữ liệu client-side | Có | src/mediconnect-web/src/pages/PHRPage.tsx |
 | 11 | 21/06/2026 | Claude (Claude Code) | Viết backend Feature 3: Quản lý viện phí & BHYT | Gom phí khám/xét nghiệm/thuốc thành phiếu thu tổng, nhập mã BHYT tự tính khấu trừ | Tạo BillingService với GenerateInvoiceAsync + CalculateInsuranceAsync, thêm endpoint POST /generate | Có | src/Mediconnect.Application/Services/BillingService.cs |
+| 12 | 02/07/2026 | Claude (Claude Code) | Check lại Feature 1/2/3, viết backend Feature 4: Thanh toán VNPay/Momo & đánh giá dịch vụ | Tích hợp cổng thanh toán, cho phép bệnh nhân rating chất lượng khám | Tạo ServiceRating + IPaymentGatewayService, phát hiện và sửa bug DbUpdateConcurrencyException ở Feature 3 khi test thật | Có | src/Mediconnect.Infrastructure/Payments/; src/Mediconnect.Domain/Entities/ServiceRating.cs |
 
 ---
 
@@ -608,10 +609,73 @@ Dùng cấu trúc service + endpoint AI đề xuất, áp dụng trực tiếp v
 
 | Loại minh chứng | Nội dung |
 |---|---|
-| Link commit | chưa commit |
+| Link commit | 8181dd8 |
 | File liên quan | src/Mediconnect.Application/Services/BillingService.cs; src/mediconnect/Controllers/EntityControllers.cs |
 | Kết quả chạy/test | dotnet build: 0 Warning, 0 Error |
 | Ghi chú khác | Không yêu cầu frontend cho feature này |
+
+---
+
+### Prompt số 12
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 02/07/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích | Kiểm tra lại Feature 1/2/3|
+| Phần việc liên quan | Backend / Coding / Testing |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+check lại feature 1,2,3
+```
+
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+frontend src/mediconnect-web xóa để làm lại.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI đề xuất ServiceRating entity + IPaymentGatewayService (VNPay ký HMACSHA512, Momo ký HMACSHA256
+mô phỏng), endpoint tạo link thanh toán và callback xác thực chữ ký.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ cấu trúc AI đề xuất, tạo migration và chạy thử API thật bằng curl để xác nhận đúng.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Test thật thay vì chỉ đọc code: gọi API sinh invoice và phát hiện bug DbUpdateConcurrencyException
+  từ Feature 3 cũ (Update() gọi thừa sau AddAsync), tự sửa bằng cách bỏ dòng thừa.
+  chữ ký hợp lệ và giả mạo đều xử lý đúng.
+- Chạy dotnet ef database update để áp dụng migration vào DB thật, không chỉ dừng ở code.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [x] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | chưa commit |
+| File liên quan | src/Mediconnect.Domain/Entities/ServiceRating.cs; src/Mediconnect.Infrastructure/Payments/; src/mediconnect/Controllers/EntityControllers.cs |
+| Kết quả chạy/test | Test curl end-to-end: rating, invoice, payment, VNPay/Momo url, callback hợp lệ/giả mạo đều đúng |
+| Ghi chú khác | Prompt ban đầu không nói rõ frontend đã bị xóa; phải tự phát hiện qua git status trước khi hỏi lại người dùng |
 
 ---
 
