@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { clinicDashboardApi, clinicManagementApi, appointmentApi, userApi } from "../api/services";
+import { useAuth } from "../context/AuthContext";
 import type { ClinicQueueSummary, ClinicQueue, QueueTicketDetail, AppointmentRead, UserAccount } from "../types";
 import { QueueStatus, AppointmentStatus } from "../types";
 
@@ -26,6 +28,8 @@ export default function ClinicDashboardPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Load dashboard overview and helper data
   const loadOverview = async (showLoading = true) => {
@@ -373,6 +377,16 @@ export default function ClinicDashboardPage() {
                             >
                               <span className="material-symbols-outlined text-sm">move_down</span>
                               Chuyển phòng
+                            </button>
+                            <button
+                              onClick={() => {
+                                // open outpatient record page for this patient
+                                navigate('/outpatient-record', { state: { ticket: currentPatient, clinicId: selectedClinicId } });
+                              }}
+                              className="px-4 py-2 text-sm font-semibold border border-slate-200 hover:border-slate-350 bg-primary text-on-primary rounded-xl transition-colors shadow-sm flex items-center gap-1"
+                            >
+                              <span className="material-symbols-outlined text-sm">medical_services</span>
+                              Ghi khám
                             </button>
                           </div>
                         </div>
