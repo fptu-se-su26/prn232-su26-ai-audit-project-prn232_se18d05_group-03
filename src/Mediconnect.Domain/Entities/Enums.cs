@@ -5,7 +5,8 @@ public enum UserRole
     Patient,
     Doctor,
     Nurse,
-    Admin
+    Admin,
+    Lab
 }
 
 public enum StaffType

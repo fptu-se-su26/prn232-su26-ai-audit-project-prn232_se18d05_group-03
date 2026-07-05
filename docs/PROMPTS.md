@@ -37,11 +37,11 @@ Sinh viên/nhóm cần ghi lại:
 Đánh dấu các công cụ AI đã sử dụng.
 
 - [ ] ChatGPT
-- [x] Gemini
-- [x] Claude
+- [ ] Gemini
+- [ ] Claude
 - [ ] GitHub Copilot
 - [ ] Cursor
-- [x] Antigravity
+- [ ] Antigravity
 - [ ] Microsoft Copilot
 - [ ] Perplexity
 - [ ] Công cụ khác: ....................................
@@ -230,202 +230,152 @@ Viết tại đây...
 
 ---
 
-
 ### Prompt số 3
 
 | Nội dung | Thông tin |
 |---|---|
-| Ngày sử dụng | 03/06/2026 |
-| Công cụ AI | Claude (Claude Code) |
-| Mục đích | Tham khảo cách tổ chức interface và service pattern cho tính năng smart queue |
-| Phần việc liên quan | Design / Backend |
-| Mức độ sử dụng | Hỏi ý tưởng |
+| Ngày sử dụng | 14/06/2026 |
+| Công cụ AI | Claude |
+| Mục đích | Sinh code Feature 2 – Quản lý Y lệnh và Chăm sóc hàng ngày |
+| Phần việc liên quan | Backend / Coding |
+| Mức độ sử dụng | Hỏi sinh code |
 
 #### 5.1. Prompt nguyên văn
 
 ```text
-Tôi cần thiết kế interface và service pattern cho tính năng quản lý hàng đợi phòng khám
-trong .NET Clean Architecture. Có thể gợi ý cách tổ chức không?
+Thành viên 3 – Vận hành Nội Trú & Điều phối Lâm sàng
+Feature 2: Quản lý Y lệnh và Chăm sóc hàng ngày
+- Y tá cập nhật chỉ số sinh tồn hàng ngày (mạch, nhiệt độ) của bệnh nhân tại giường.
+- Bác sĩ cập nhật y lệnh hàng ngày (thuốc tiêm, truyền dịch, chỉ định suất ăn).
 ```
 
 #### 5.2. Bối cảnh khi viết prompt
 
 ```text
-Đã có sẵn entity Clinic, MedicalService, QueueTicket và basic CRUD.
-Cần tham khảo thêm về cách đặt tên interface và tổ chức service layer cho hàng đợi thông minh.
+Cac entity VitalSign, CareOrder va controller CRUD da co san. Can bo sung endpoint lay du lieu theo tung ca nhap vien (admission) de y ta/bac si xem tai giuong, thay vi tra ve toan bo benh nhan.
 ```
 
 #### 5.3. Kết quả AI trả về
 
 ```text
-AI gợi ý tổ chức interface IQueueService ở Application layer với khoảng 3 method chính
-(CheckIn, GetQueue, CallNext), sử dụng lại repository pattern đã có.
-Không cung cấp implementation cụ thể.
+AI phan tich codebase, xac dinh khoang trong la thieu endpoint scoped theo admission va sinh code:
+- GET /api/inpatient-admissions/{id}/vital-signs: chi so sinh ton theo ca nhap vien, sap xep moi nhat truoc, loc tuy chon theo ?date.
+- GET /api/inpatient-admissions/{id}/care-orders: y lenh theo ca nhap vien, loc tuy chon theo ?orderType (Medication/Infusion/Diet...) va ?pending.
+Tai su dung IRepository.ListAsync + SimpleMapper theo dung pattern cua F1 (GetBedAssignments).
 ```
 
 #### 5.4. Kết quả đã áp dụng vào bài
 
 ```text
-Tham khảo tên 3 method: CheckInAsync, GetClinicQueueAsync, CallNextAsync
-và cách tổ chức interface theo layer.
+Ap dung toan bo code sinh ra vao InpatientAdmissionsController trong EntityControllers.cs sau khi review dung pattern.
 ```
 
 #### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
 
 ```text
-- Thiết kế DTO phù hợp với domain HIS: CheckInRequestDto, QueueTicketDetailDto,
-  ClinicQueueDto, ClinicWithServicesDto, PriceUpdateDto
-- Điều chỉnh logic phát số: max(số trong ngày) + 1, bắt đầu từ 1 nếu chưa có vé
-- Dùng date-range (todayStart/todayEnd) thay vì .Date để EF Core dịch đúng sang SQL Server
-- Thiết kế luồng CallNext: hoàn tất InProgress trước, lấy Waiting có số nhỏ nhất
-- Thêm kiểm tra clinic.IsActive trước khi phát số
-- Bổ sung endpoint GET /active, GET /{id}/services cho ClinicsController
-- Bổ sung endpoint PATCH /{id}/price cho MedicalServicesController
-- Sửa duplicate using trong Program.cs
-- Xác nhận route {id:guid} không conflict với /active
+Kiem tra build thanh cong (0 error, 0 warning). Xac nhan tao/ghi chi so va y lenh dung qua POST /api/vital-signs, POST /api/care-orders va PATCH /api/care-orders/{id}/complete co san.
 ```
 
 #### 5.6. Đánh giá chất lượng prompt
 
 - [x] Prompt rõ ràng
-- [ ] Prompt có đủ bối cảnh
-- [x] Prompt còn thiếu thông tin
-- [ ] Prompt tạo ra kết quả tốt
-- [x] Prompt tạo ra kết quả chưa phù hợp
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
 - [ ] Cần hỏi lại AI nhiều lần
-- [x] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
 - [ ] Kết quả AI có lỗi hoặc chưa chính xác
 
 #### 5.7. Minh chứng liên quan
 
 | Loại minh chứng | Nội dung |
 |---|---|
-| Link commit |  |
-| File liên quan | src/Mediconnect.Application/Interfaces/IQueueService.cs |
+| Link commit | feat(member3): F2 - admission-scoped vital signs & care orders endpoints |
+| File liên quan | src/mediconnect/Controllers/EntityControllers.cs |
 | Screenshot |  |
-| Kết quả chạy/test |  |
+| Kết quả chạy/test | dotnet build: 0 Error(s) |
 | Link tài liệu/báo cáo |  |
 | Ghi chú khác |  |
 
 #### 5.8. Ghi chú thêm
 
 ```text
-AI gợi ý tên method ở mức cao. DTO, logic nghiệp vụ và tích hợp vào project
-được điều chỉnh theo yêu cầu cụ thể của dự án.
+Khong can EF migration vi khong thay doi schema; chi them endpoint doc du lieu.
 ```
 
 ---
 
-### Prompt số 7
+### Prompt số 4
 
 | Nội dung | Thông tin |
 |---|---|
-| Ngày sử dụng | 06/06/2026 |
-| Công cụ AI | Antigravity |
-| Mục đích | Viết backend modular riêng biệt cho smart clinic |
-| Phần việc liên quan | Backend / Coding / Design |
+| Ngày sử dụng | 16/06/2026 |
+| Công cụ AI | Claude |
+| Mục đích | Sinh code Feature 3 (Cận lâm sàng) và Feature 4 (Xuất viện) cùng lúc |
+| Phần việc liên quan | Backend / Coding |
 | Mức độ sử dụng | Hỏi sinh code |
 
 #### 5.1. Prompt nguyên văn
 
 ```text
-viet backend o folder module rieng biet
+làm hai phần
+(F3: Quản lý Cận lâm sàng - tiếp nhận chỉ định, nhập kết quả, upload file ảnh/PDF, trả kết quả về bác sĩ;
+ F4: Quản lý xuất viện - tổng hợp chi phí lưu giường, tiền thuốc, thủ thuật gửi sang Thanh toán)
 ```
 
 #### 5.2. Bối cảnh khi viết prompt
 
 ```text
-Cần triển khai backend cho các tính năng của Feature 1 tách biệt hẳn so với các controller Entity CRUD cũ để đảm bảo tính modular.
+Sau khi hoan thanh F1, F2, can lam not 2 feature con lai cua thanh vien 3. Entity Lab/Billing/Discharge da co san nhung phan upload file con la stub va discharge moi chi tao summary rong.
 ```
 
 #### 5.3. Kết quả AI trả về
 
 ```text
-AI đề xuất tạo thư mục Modules/SmartClinic/ trong API project và sinh ra hai controller riêng biệt:
-1. ClinicDashboardController.cs: Quản lý hàng đợi thời gian thực.
-2. ClinicManagementController.cs: Cung cấp CRUD nâng cao cho khoa, phòng và dịch vụ.
+F3: them GET /api/lab-orders/filter (loc theo status/bac si), PATCH .../status, POST .../result (nhap ket qua + tu dong Completed), GET .../result; nang cap POST /api/lab-results/{id}/file luu file that (kiem tra .pdf/.jpg/.png, gioi han 10MB) va bat app.UseStaticFiles().
+F4: nang cap POST .../discharge - tinh so ngay giuong tu BedAssignment x don gia, liet ke care order (thuoc/thu thuat) thanh BillingItem, tao BillingInvoice trang thai Pending gui sang Thanh toan, giai phong giuong sang Cleaning, luu TotalCost vao DischargeSummary; tra ve DischargeResultDto.
 ```
 
 #### 5.4. Kết quả đã áp dụng vào bài
 
 ```text
-Áp dụng hai controller mới vào dự án, đồng thời cập nhật DTO và Service tương ứng.
+Ap dung toan bo vao EntityControllers.cs, Program.cs (UseStaticFiles) va them DTO (LabResultEntryDto, DischargeRequestDto, DischargeResultDto) trong EntityDtos.cs.
 ```
 
 #### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
 
 ```text
-Kiểm tra DI container tự động đăng ký, không cần sửa đổi file Program.cs.
+Build thanh cong 0 error/0 warning. Luu y: Bed khong co truong gia nen dung hang so don gia giuong (BedDailyRate); CareOrder la text tu do nen tien thuoc/thu thuat duoc liet ke thanh line item de bo phan Thanh toan dien gia.
 ```
 
 #### 5.6. Đánh giá chất lượng prompt
 
 - [x] Prompt rõ ràng
-- [ ] Prompt có đủ bối cảnh
+- [x] Prompt có đủ bối cảnh
 - [ ] Prompt còn thiếu thông tin
 - [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
 
 #### 5.7. Minh chứng liên quan
 
 | Loại minh chứng | Nội dung |
 |---|---|
-| Link commit | |
-| File liên quan | src/mediconnect/Modules/SmartClinic/ClinicDashboardController.cs |
+| Link commit | feat(member3): F3 - lab orders queue, results & file upload; feat(member3): F4 - discharge cost aggregation & billing handoff |
+| File liên quan | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
+| Screenshot |  |
+| Kết quả chạy/test | dotnet build: 0 Error(s) |
+| Link tài liệu/báo cáo |  |
+| Ghi chú khác |  |
 
----
-
-### Prompt số 8
-
-| Nội dung | Thông tin |
-|---|---|
-| Ngày sử dụng | 06/06/2026 |
-| Công cụ AI | Antigravity |
-| Mục đích | Kiểm tra lỗi kết nối cơ sở dữ liệu |
-| Phần việc liên quan | Database / Testing |
-| Mức độ sử dụng | Hỏi xử lý lỗi |
-
-#### 5.1. Prompt nguyên văn
+#### 5.8. Ghi chú thêm
 
 ```text
-check for database error
+Han che mo hinh du lieu: Bed thieu don gia, CareOrder khong gan Drug/gia -> chi phi thuoc/thu thuat liet ke line item gia 0 cho Thanh toan dien.
 ```
-
-#### 5.2. Bối cảnh khi viết prompt
-
-```text
-Cần đảm bảo cơ sở dữ liệu SQL Server cục bộ hoạt động đúng trước khi tích hợp chạy frontend.
-```
-
-#### 5.3. Kết quả AI trả về
-
-```text
-AI đề xuất chạy `dotnet ef database update`. Phát hiện lỗi tệp tin DLL bị khóa bởi tiến trình IIS/dotnet đang chạy ngầm và đưa ra lệnh kill tiến trình thích hợp.
-```
-
-#### 5.4. Kết quả đã áp dụng vào bài
-
-```text
-Tắt tiến trình bị treo, giải phóng DLL, và thực hiện thành công việc kiểm tra trạng thái database up-to-date.
-```
-
-#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
-
-```text
-Kiểm tra trực tiếp cổng 5079 bằng lệnh Get-NetTCPConnection để đảm bảo cổng được giải phóng trước khi restart.
-```
-
-#### 5.6. Đánh giá chất lượng prompt
-
-- [x] Prompt rõ ràng
-- [ ] Prompt có đủ bối cảnh
-- [x] Prompt tạo ra kết quả tốt
-
-#### 5.7. Minh chứng liên quan
-
-| Loại minh chứng | Nội dung |
-|---|---|
-| Link commit |  |
-| File liên quan | dotnet ef database update log |
 
 ---
 

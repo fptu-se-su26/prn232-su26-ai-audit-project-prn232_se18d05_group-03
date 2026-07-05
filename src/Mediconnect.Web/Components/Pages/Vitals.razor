@@ -1,0 +1,292 @@
+@page "/vitals"
+@attribute [Authorize]
+
+<PageTitle>F2 · Sinh tồn &amp; Y lệnh – MediConnect</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h4><span class="material-symbols-outlined" style="vertical-align:middle;font-size:1.3rem;color:var(--teal)">ecg_heart</span> Sinh tồn &amp; Y lệnh chăm sóc</h4>
+        <small class="text-muted">Ghi nhận sinh tồn theo ca và quản lý y lệnh hàng ngày</small>
+    </div>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-3" style="font-size:.82rem">@_error</div>
+}
+
+<!-- Admission selector -->
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span class="material-symbols-outlined text-muted" style="font-size:1rem">person</span>
+            <select class="form-select form-select-sm" style="max-width:420px" @bind="_selectedAdmissionId" @bind:after="LoadAdmissionData">
+                <option value="">-- Chọn bệnh nhân nội trú --</option>
+                @foreach (var a in _admissions)
+                {
+                    <option value="@a.Id">ID:@a.Id.ToString()[..8]… · Nhập @a.AdmissionDate.ToString("dd/MM/yyyy")</option>
+                }
+            </select>
+            <button class="btn btn-outline-secondary btn-sm" @onclick="LoadAdmissions">
+                <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">refresh</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(_selectedAdmissionId))
+{
+    <div class="row g-3">
+        <!-- LEFT: Vital signs -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle;color:var(--teal)">monitor_heart</span> Chỉ số sinh tồn</span>
+                        <AuthorizeView Roles="Nurse,Admin">
+                            <button class="btn btn-sm @(_showVitalForm ? "btn-outline-secondary" : "btn-outline-success")" @onclick="() => _showVitalForm = !_showVitalForm">
+                                @(_showVitalForm ? "Đóng" : "+ Thêm sinh tồn")
+                            </button>
+                        </AuthorizeView>
+                    </div>
+                </div>
+                <div class="card-body p-2">
+                    @if (_showVitalForm)
+                    {
+                        <div class="vital-form mb-3">
+                            @if (_vitalError is not null) { <div class="alert alert-danger py-1 mb-2" style="font-size:.78rem">@_vitalError</div> }
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label">Mạch (bpm)</label>
+                                    <InputNumber class="form-control form-control-sm" @bind-Value="_vitalDto.Pulse" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Nhiệt độ (°C)</label>
+                                    <InputNumber class="form-control form-control-sm" @bind-Value="_vitalDto.TemperatureC" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">HA tâm thu</label>
+                                    <InputNumber class="form-control form-control-sm" @bind-Value="_vitalDto.BloodPressureSystolic" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">HA tâm trương</label>
+                                    <InputNumber class="form-control form-control-sm" @bind-Value="_vitalDto.BloodPressureDiastolic" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Nhịp thở (/phút)</label>
+                                    <InputNumber class="form-control form-control-sm" @bind-Value="_vitalDto.RespiratoryRate" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">SpO₂ (%)</label>
+                                    <InputNumber class="form-control form-control-sm" @bind-Value="_vitalDto.SpO2" />
+                                </div>
+                            </div>
+                            <button class="btn btn-success btn-sm mt-2 w-100" @onclick="SaveVital" disabled="@_saving">
+                                @(_saving ? "Đang lưu..." : "Lưu sinh tồn")
+                            </button>
+                        </div>
+                    }
+
+                    @if (_vitals.Count == 0)
+                    {
+                        <div class="text-center py-4 text-muted" style="font-size:.8rem">Chưa có chỉ số sinh tồn nào.</div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Thời gian</th>
+                                        <th>Mạch</th>
+                                        <th>Nhiệt</th>
+                                        <th>HA</th>
+                                        <th>SpO₂</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var v in _vitals.OrderByDescending(x => x.RecordedAt))
+                                    {
+                                        <tr>
+                                            <td>@v.RecordedAt.ToString("dd/MM HH:mm")</td>
+                                            <td>@v.Pulse</td>
+                                            <td>@v.TemperatureC °C</td>
+                                            <td>@v.BloodPressureSystolic/@v.BloodPressureDiastolic</td>
+                                            <td>@v.SpO2%</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Care orders -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle;color:var(--brand)">assignment</span> Y lệnh chăm sóc</span>
+                        <AuthorizeView Roles="Doctor,Admin">
+                            <button class="btn btn-sm @(_showOrderForm ? "btn-outline-secondary" : "btn-outline-primary")" @onclick="() => _showOrderForm = !_showOrderForm">
+                                @(_showOrderForm ? "Đóng" : "+ Thêm y lệnh")
+                            </button>
+                        </AuthorizeView>
+                    </div>
+                </div>
+                <div class="card-body p-2">
+                    @if (_showOrderForm)
+                    {
+                        <div class="vital-form mb-3">
+                            @if (_orderError is not null) { <div class="alert alert-danger py-1 mb-2" style="font-size:.78rem">@_orderError</div> }
+                            <div class="mb-2">
+                                <label class="form-label">Loại y lệnh</label>
+                                <InputSelect class="form-select form-select-sm" @bind-Value="_orderDto.OrderType">
+                                    @foreach (var t in Enum.GetValues<CareOrderType>())
+                                    {
+                                        <option value="@t">@t</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Mô tả</label>
+                                <InputTextArea class="form-control form-control-sm" rows="2" @bind-Value="_orderDto.Description" />
+                            </div>
+                            <button class="btn btn-primary btn-sm w-100" @onclick="SaveOrder" disabled="@_saving">
+                                @(_saving ? "Đang lưu..." : "Ban hành y lệnh")
+                            </button>
+                        </div>
+                    }
+
+                    @if (_orders.Count == 0)
+                    {
+                        <div class="text-center py-4 text-muted" style="font-size:.8rem">Chưa có y lệnh nào.</div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Loại</th>
+                                        <th>Mô tả</th>
+                                        <th>Trạng thái</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var o in _orders.OrderBy(x => x.IsCompleted).ThenByDescending(x => x.OrderedAt))
+                                    {
+                                        <tr>
+                                            <td><span class="badge bg-secondary">@o.OrderType</span></td>
+                                            <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">@o.Description</td>
+                                            <td>
+                                                @if (o.IsCompleted)
+                                                {
+                                                    <span class="badge bg-success">Hoàn thành</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning text-dark">Chờ xử lý</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!o.IsCompleted)
+                                                {
+                                                    <button class="btn btn-sm btn-outline-success py-0" @onclick="() => CompleteOrder(o.Id)">✓</button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private TokenState Token { get; set; } = default!;
+
+    private List<InpatientAdmissionReadDto> _admissions = new();
+    private List<VitalSignReadDto> _vitals = new();
+    private List<CareOrderReadDto> _orders = new();
+    private string _selectedAdmissionId = "";
+    private string? _error, _vitalError, _orderError;
+    private bool _saving, _showVitalForm, _showOrderForm;
+
+    private VitalSignWriteDto _vitalDto = new() { RecordedAt = DateTime.Now };
+    private CareOrderWriteDto _orderDto = new() { OrderedAt = DateTime.Now };
+
+    protected override async Task OnInitializedAsync() => await LoadAdmissions();
+
+    private async Task LoadAdmissions()
+    {
+        try { _admissions = ((await Api.GetAdmissions()) ?? new()).Where(a => a.Status == AdmissionStatus.Active).ToList(); }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+    }
+
+    private async Task LoadAdmissionData()
+    {
+        if (string.IsNullOrEmpty(_selectedAdmissionId)) return;
+        var admId = Guid.Parse(_selectedAdmissionId);
+        _vitalDto = new() { AdmissionId = admId, RecordedAt = DateTime.Now };
+        _orderDto = new() { AdmissionId = admId, OrderedAt = DateTime.Now };
+        try
+        {
+            var vTask = Api.GetVitalSigns(admId);
+            var oTask = Api.GetCareOrders(admId);
+            _vitals = (await vTask) ?? new();
+            _orders = (await oTask) ?? new();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+    }
+
+    private async Task SaveVital()
+    {
+        _saving = true; _vitalError = null;
+        try
+        {
+            var result = await Api.CreateVitalSign(_vitalDto);
+            if (result is not null) _vitals.Insert(0, result);
+            _showVitalForm = false;
+            _vitalDto = new() { AdmissionId = Guid.Parse(_selectedAdmissionId), RecordedAt = DateTime.Now };
+        }
+        catch (ApiClient.ApiException ex) { _vitalError = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private async Task SaveOrder()
+    {
+        if (string.IsNullOrWhiteSpace(_orderDto.Description)) { _orderError = "Vui lòng nhập mô tả y lệnh."; return; }
+        _saving = true; _orderError = null;
+        try
+        {
+            _orderDto.OrderedById = Token.User?.Id ?? Guid.Empty;
+            _orderDto.OrderedAt = DateTime.Now;
+            var result = await Api.CreateCareOrder(_orderDto);
+            if (result is not null) _orders.Insert(0, result);
+            _showOrderForm = false;
+            _orderDto = new() { AdmissionId = Guid.Parse(_selectedAdmissionId), OrderedAt = DateTime.Now };
+        }
+        catch (ApiClient.ApiException ex) { _orderError = ex.Message; }
+        finally { _saving = false; }
+    }
+
+    private async Task CompleteOrder(Guid orderId)
+    {
+        try
+        {
+            await Api.CompleteCareOrder(orderId);
+            var o = _orders.FirstOrDefault(x => x.Id == orderId);
+            if (o is not null) { o.IsCompleted = true; o.CompletedAt = DateTime.Now; }
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+    }
+}

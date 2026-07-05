@@ -24,4 +24,8 @@ public class Bed
     public string? BedNumber { get; set; }
 
     public BedStatus Status { get; set; } = BedStatus.Available;
+
+    public int Floor { get; set; } = 1;
+    public double? PositionX { get; set; }
+    public double? PositionY { get; set; }
 }

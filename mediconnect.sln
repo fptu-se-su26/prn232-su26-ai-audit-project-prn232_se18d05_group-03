@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mediconnect.Application", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mediconnect.Infrastructure", "src\Mediconnect.Infrastructure\Mediconnect.Infrastructure.csproj", "{AE3707AC-B034-4230-A8F4-E84C4BA8E96E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mediconnect.Web", "src\Mediconnect.Web\Mediconnect.Web.csproj", "{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,18 @@ Global
 		{AE3707AC-B034-4230-A8F4-E84C4BA8E96E}.Release|x64.Build.0 = Release|Any CPU
 		{AE3707AC-B034-4230-A8F4-E84C4BA8E96E}.Release|x86.ActiveCfg = Release|Any CPU
 		{AE3707AC-B034-4230-A8F4-E84C4BA8E96E}.Release|x86.Build.0 = Release|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Debug|x64.Build.0 = Debug|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Debug|x86.Build.0 = Debug|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Release|x64.ActiveCfg = Release|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Release|x64.Build.0 = Release|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Release|x86.ActiveCfg = Release|Any CPU
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,5 +94,6 @@ Global
 		{F3A72667-6053-477A-AEE1-1EBC8436450E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{47E60B8A-7FEC-45FB-BEB6-BB4D4721B429} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{AE3707AC-B034-4230-A8F4-E84C4BA8E96E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{77DC47F6-C48E-45E5-90AD-AFDD43BCCA67} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

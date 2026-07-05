@@ -17,32 +17,32 @@ Nguyên tắc ghi changelog:
 
 ## 2. Thông tin project
 
-| Thông tin | Nội dung |
-|---|---|
-| Môn học | Building Cross-Platform Back-End Application with .NET |
-| Mã môn học | PRN232 |
-| Lớp | SE18D05 |
-| Học kỳ | SU26 |
-| Tên bài tập / Project | MEDICONNECT – Hệ thống Quản lý Bệnh viện Thông minh |
-| Tên sinh viên / Nhóm | Nhóm 3 |
-| MSSV / Danh sách MSSV | DE180522, DE180526, DE190580, DE190123 |
-| Giảng viên hướng dẫn |  |
-| Repository URL | https://github.com/fptu-se-su26/prn232-su26-ai-audit-project-prn232_se18d05_group-03 |
-| Ngày bắt đầu | 17/05/2026 |
-| Ngày hoàn thành | Đang thực hiện |
+| Thông tin             | Nội dung                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| Môn học               | Building Cross-Platform Back-End Application with .NET                               |
+| Mã môn học            | PRN232                                                                               |
+| Lớp                   | SE18D05                                                                              |
+| Học kỳ                | SU26                                                                                 |
+| Tên bài tập / Project | MEDICONNECT – Hệ thống Quản lý Bệnh viện Thông minh                                  |
+| Tên sinh viên / Nhóm  | Nhóm 3                                                                               |
+| MSSV / Danh sách MSSV | DE180522, DE180526, DE190580, DE190123                                               |
+| Giảng viên hướng dẫn  |                                                                                      |
+| Repository URL        | https://github.com/fptu-se-su26/prn232-su26-ai-audit-project-prn232_se18d05_group-03 |
+| Ngày bắt đầu          | 17/05/2026                                                                           |
+| Ngày hoàn thành       | Đang thực hiện                                                                       |
 
 ---
 
 ## 3. Tổng quan các phiên bản/giai đoạn
 
-| Phiên bản/Giai đoạn | Thời gian | Nội dung chính | Trạng thái |
-|---|---|---|---|
-| Phase 01 | 17/05/2026 | Khởi tạo project | Completed |
-| Phase 02 | 17/05/2026 | Phân tích yêu cầu | Completed |
-| Phase 03 | 05/06/2026 | Thiết kế hệ thống | Completed |
-| Phase 04 | 06/06/2026 – 10/06/2026 | Implementation | Completed |
-| Phase 05 | 10/06/2026 | Testing & Debug | Completed |
-| Phase 06 |  | Hoàn thiện báo cáo và demo | In Progress |
+| Phiên bản/Giai đoạn | Thời gian               | Nội dung chính             | Trạng thái  |
+| ------------------- | ----------------------- | -------------------------- | ----------- |
+| Phase 01            | 17/05/2026              | Khởi tạo project           | Completed   |
+| Phase 02            | 17/05/2026              | Phân tích yêu cầu          | Completed   |
+| Phase 03            | 05/06/2026              | Thiết kế hệ thống          | Completed   |
+| Phase 04            | 06/06/2026 – 10/06/2026 | Implementation             | Completed   |
+| Phase 05            | 10/06/2026              | Testing & Debug            | Completed   |
+| Phase 06            |                         | Hoàn thiện báo cáo và demo | In Progress |
 
 ---
 
@@ -70,12 +70,12 @@ Nguyên tắc ghi changelog:
 
 ## Thay đổi chi tiết
 
-| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 | Ghi nhận prompt ve phan chia thanh vien, nhac quy trinh audit, va dinh huong models |  | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |  |
-| 2 | Ghi nhan yeu cau thiet ke models code-first cho .NET SQL Server |  | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |  |
-| 3 | Tao project .NET Web API mediconnect va them cau hinh code-first co ban |  | src/mediconnect |  |
-| 4 | Tao file solution cho du an mediconnect |  | mediconnect.sln |  |
+| STT | Nội dung thay đổi                                                                   | Người thực hiện | File/Module liên quan                                    | Minh chứng |
+| --: | ----------------------------------------------------------------------------------- | --------------- | -------------------------------------------------------- | ---------- |
+|   1 | Ghi nhận prompt ve phan chia thanh vien, nhac quy trinh audit, va dinh huong models |                 | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |            |
+|   2 | Ghi nhan yeu cau thiet ke models code-first cho .NET SQL Server                     |                 | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |            |
+|   3 | Tao project .NET Web API mediconnect va them cau hinh code-first co ban             |                 | src/mediconnect                                          |            |
+|   4 | Tao file solution cho du an mediconnect                                             |                 | mediconnect.sln                                          |            |
 
 ## AI có hỗ trợ không?
 
@@ -126,10 +126,10 @@ Viết tại đây...
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| --: | ----------------- | --------------- | --------------------- | ---------- |
+|   1 |                   |                 |                       |            |
+|   2 |                   |                 |                       |            |
+|   3 |                   |                 |                       |            |
 
 ## AI có hỗ trợ không?
 
@@ -178,13 +178,13 @@ Viết tại đây...
 
 ## Thay đổi chi tiết
 
-| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 | Thiết kế entity StaffSchedule với các field: StaffId, ShiftDate, ShiftType, StartTime, EndTime, WorkRoom | DE180522 | `Mediconnect.Domain/Entities/StaffSchedule.cs` | commit 912b0cf |
-| 2 | Thiết kế enum ShiftType (Morning/Afternoon/Evening), StaffType (Doctor/Nurse/Admin/Caregiver) | DE180522 | `Mediconnect.Domain/Entities/Enums.cs` | commit 912b0cf |
-| 3 | Thiết kế interface IStaffScheduleService (create/update/delete với validation), IStaffScheduleQuery (flat read, paged filter, directory) | DE180522 | `Mediconnect.Application/Interfaces/` | commit 912b0cf |
-| 4 | Thiết kế DTO phẳng ScheduleFlatReadDto (join StaffProfile + UserAccount + Department) | DE180522 | `Mediconnect.Application/DTOs/ScheduleDtos.cs` | commit 912b0cf |
-| 5 | Thiết kế giao diện Gantt chart (staff rows × date columns) theo base-html | DE180522 | `base-html/hr_shift_scheduling_matrix.html` | — |
+| STT | Nội dung thay đổi                                                                                                                        | Người thực hiện | File/Module liên quan                          | Minh chứng     |
+| --: | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ---------------------------------------------- | -------------- |
+|   1 | Thiết kế entity StaffSchedule với các field: StaffId, ShiftDate, ShiftType, StartTime, EndTime, WorkRoom                                 | DE180522        | `Mediconnect.Domain/Entities/StaffSchedule.cs` | commit 912b0cf |
+|   2 | Thiết kế enum ShiftType (Morning/Afternoon/Evening), StaffType (Doctor/Nurse/Admin/Caregiver)                                            | DE180522        | `Mediconnect.Domain/Entities/Enums.cs`         | commit 912b0cf |
+|   3 | Thiết kế interface IStaffScheduleService (create/update/delete với validation), IStaffScheduleQuery (flat read, paged filter, directory) | DE180522        | `Mediconnect.Application/Interfaces/`          | commit 912b0cf |
+|   4 | Thiết kế DTO phẳng ScheduleFlatReadDto (join StaffProfile + UserAccount + Department)                                                    | DE180522        | `Mediconnect.Application/DTOs/ScheduleDtos.cs` | commit 912b0cf |
+|   5 | Thiết kế giao diện Gantt chart (staff rows × date columns) theo base-html                                                                | DE180522        | `base-html/hr_shift_scheduling_matrix.html`    | —              |
 
 ## AI có hỗ trợ không?
 
@@ -325,21 +325,21 @@ Commit DE190123: feat(eprescription): E-Prescription feature + sidebar promotion
 
 ## Danh sách lỗi đã xử lý
 
-| STT | Lỗi phát hiện | Nguyên nhân | Cách xử lý | Trạng thái |
-|---:|---|---|---|---|
-| 1 |  |  |  | Open / Fixed / Pending |
-| 2 |  |  |  | Open / Fixed / Pending |
-| 3 |  |  |  | Open / Fixed / Pending |
-| 4 |  |  |  | Open / Fixed / Pending |
-| 5 |  |  |  | Open / Fixed / Pending |
+| STT | Lỗi phát hiện | Nguyên nhân | Cách xử lý | Trạng thái             |
+| --: | ------------- | ----------- | ---------- | ---------------------- |
+|   1 |               |             |            | Open / Fixed / Pending |
+|   2 |               |             |            | Open / Fixed / Pending |
+|   3 |               |             |            | Open / Fixed / Pending |
+|   4 |               |             |            | Open / Fixed / Pending |
+|   5 |               |             |            | Open / Fixed / Pending |
 
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| --: | ----------------- | --------------- | --------------------- | ---------- |
+|   1 |                   |                 |                       |            |
+|   2 |                   |                 |                       |            |
+|   3 |                   |                 |                       |            |
 
 ## AI có hỗ trợ không?
 
@@ -393,10 +393,10 @@ DD/MM/YYYY
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| --: | ----------------- | --------------- | --------------------- | ---------- |
+|   1 |                   |                 |                       |            |
+|   2 |                   |                 |                       |            |
+|   3 |                   |                 |                       |            |
 
 ## AI có hỗ trợ không?
 
@@ -451,25 +451,25 @@ Viết tại đây...
 ## 4.2. Các chức năng chưa hoàn thành
 
 | STT | Chức năng | Lý do chưa hoàn thành | Hướng cải thiện |
-|---:|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
+| --: | --------- | --------------------- | --------------- |
+|   1 |           |                       |                 |
+|   2 |           |                       |                 |
+|   3 |           |                       |                 |
 
 ---
 
 ## 4.3. Tổng hợp AI hỗ trợ trong project
 
-| Hạng mục | AI có hỗ trợ không? | Mức độ hỗ trợ | Ghi chú |
-|---|---|---|---|
-| Requirement | Có | Ít | Hỗ trợ phân tích yêu cầu từ base-html design |
-| Design | Có | Trung bình | Đề xuất flat projection pattern, CQRS lite interface |
-| Database | Có | Nhiều | Scaffold entities, migrations, DbContext, seed data |
-| Coding | Có | Nhiều | StaffScheduleService, StaffScheduleQuery, ScheduleController, toàn bộ frontend Gantt |
-| Debug | Có | Nhiều | Phát hiện và fix 5 bugs (React.FormEvent, connection string, DTO rename, ...) |
-| Testing | Có | Trung bình | Viết smoke test script PowerShell 10 scenarios |
-| Report | Có | Trung bình | Hỗ trợ điền CHANGELOG, README |
-| Presentation | Không | — | — |
+| Hạng mục     | AI có hỗ trợ không? | Mức độ hỗ trợ | Ghi chú                                                                              |
+| ------------ | ------------------- | ------------- | ------------------------------------------------------------------------------------ |
+| Requirement  | Có                  | Ít            | Hỗ trợ phân tích yêu cầu từ base-html design                                         |
+| Design       | Có                  | Trung bình    | Đề xuất flat projection pattern, CQRS lite interface                                 |
+| Database     | Có                  | Nhiều         | Scaffold entities, migrations, DbContext, seed data                                  |
+| Coding       | Có                  | Nhiều         | StaffScheduleService, StaffScheduleQuery, ScheduleController, toàn bộ frontend Gantt |
+| Debug        | Có                  | Nhiều         | Phát hiện và fix 5 bugs (React.FormEvent, connection string, DTO rename, ...)        |
+| Testing      | Có                  | Trung bình    | Viết smoke test script PowerShell 10 scenarios                                       |
+| Report       | Có                  | Trung bình    | Hỗ trợ điền CHANGELOG, README                                                        |
+| Presentation | Không               | —             | —                                                                                    |
 
 ---
 
@@ -494,5 +494,5 @@ Viết tại đây...
 Sinh viên/nhóm cam kết rằng nội dung changelog phản ánh đúng các thay đổi đã thực hiện trong quá trình làm bài tập/project.
 
 | Đại diện sinh viên/nhóm | Ngày xác nhận |
-|---|---|
-|  |  |
+| ----------------------- | ------------- |
+|                         |               |
