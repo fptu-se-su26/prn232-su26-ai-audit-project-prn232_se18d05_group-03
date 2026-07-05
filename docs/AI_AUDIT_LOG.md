@@ -1311,6 +1311,57 @@ Lưu ý vận hành: dotnet watch hot-reload không áp được thay đổi con
 
 ---
 
+### Lần sử dụng AI số 16
+
+| Nội dung            | Thông tin                                                              |
+| ------------------- | --------------------------------------------------------------------- |
+| Ngày sử dụng        | 05/07/2026                                                           |
+| Công cụ AI          | Claude Code (claude-opus-4-8)                                        |
+| Mục đích sử dụng    | Khôi phục frontend Member 2 sau merge + làm giao diện F3/F4          |
+| Phần việc liên quan | Member 2 – Patient/PHR/Billing frontend                             |
+| Mức độ sử dụng      | Khôi phục file + sinh code UI + tự kiểm thử                          |
+
+#### 16.1. Prompt đã sử dụng
+
+```text
+Kiểm tra các chức năng, làm cho tôi giao diện ở trong folder src/mediconnect-web
+(4 feature của Member 2: Đặt lịch, PHR, Viện phí & BHYT, Thanh toán & Đánh giá).
+```
+
+#### 16.2. Kết quả AI gợi ý & phần tự làm
+
+```text
+1. Phát hiện sau khi merge develop: các file frontend + config của Member 2 (BookingPage,
+   PHRPage, AppLayout, AuthContext, package.json, vite.config...) đã bị xóa khỏi đĩa,
+   nhưng App.tsx (bản merge) vẫn import chúng → app không build được. Khôi phục đúng các
+   file còn thiếu từ commit trước lần xóa (06ca0a7^), giữ nguyên file shared bản merge.
+
+2. Reconcile: bản merge đổi tên/bỏ type PHR (OutpatientVisit→OutpatientVisitItem...) và bỏ
+   phrApi/getHistory → thêm lại type + service cho Feature 2 mà không phá code thành viên khác.
+
+3. Làm mới UI: BillingPage.tsx (F3 – gom phí, nhập BHYT tính khấu trừ, + F4 thanh toán
+   VNPay/Momo), ReviewsPage.tsx (F4 – đánh giá sao bác sĩ theo lần khám). Thêm route +
+   nav Header.
+
+4. Bug quan trọng tự tìm ra khi test thật: backend (sau merge) serialize enum thành STRING
+   (JsonStringEnumConverter) nhưng frontend đang so sánh enum kiểu số → routing theo role và
+   mọi badge trạng thái sai. Sửa: giữ UserRole số + normalize chuỗi→số ở AuthContext (không
+   đụng page thành viên khác); các enum dữ liệu (VisitStatus, InvoiceStatus, PaymentMethod...)
+   chuyển sang string-enum khớp tên backend.
+
+5. Kiểm thử: tsc + vite build 0 lỗi; chạy backend + vite, test qua proxy toàn bộ luồng
+   login → hồ sơ → tạo phiếu thu → BHYT → thanh toán VNPay/Momo → đánh giá; dọn dữ liệu test.
+```
+
+#### 16.3. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| File liên quan     | src/mediconnect-web/src/pages/BillingPage.tsx, ReviewsPage.tsx, PHRPage.tsx; api/services.ts; types/index.ts; context/AuthContext.tsx; App.tsx; components/layout/Header.tsx |
+| Kết quả chạy/test | npm build (tsc + vite) 0 lỗi; smoke test API end-to-end qua proxy 5173→5079 đều 200/201     |
+
+---
+
 ## 10. Cam kết học thuật
 
 Sinh viên/nhóm cam kết rằng:

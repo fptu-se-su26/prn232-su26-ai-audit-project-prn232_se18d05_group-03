@@ -1,11 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Da4GezcWdb4=",
+  "dgSpecHash": "bm2+XT/8V6Q=",
   "success": true,
-  "projectFilePath": "/home/pjm/development/fpt/project_FPT/PRN232/src/Mediconnect.Web/Mediconnect.Web.csproj",
-  "expectedPackageFiles": [
-    "/home/pjm/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.28/microsoft.aspnetcore.app.ref.8.0.28.nupkg.sha512",
-    "/home/pjm/.nuget/packages/microsoft.netcore.app.host.linux-x64/8.0.28/microsoft.netcore.app.host.linux-x64.8.0.28.nupkg.sha512"
-  ],
+  "projectFilePath": "D:\\FPTU2026\\PRN232\\prn232-su26-ai-audit-project-prn232_se18d05_group-03\\src\\Mediconnect.Web\\Mediconnect.Web.csproj",
+  "expectedPackageFiles": [],
   "logs": []
 }

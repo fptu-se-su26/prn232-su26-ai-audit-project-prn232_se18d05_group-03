@@ -95,6 +95,24 @@ export default function Header() {
                     >
                       Lịch hẹn của tôi
                     </Link>
+                    <Link
+                      to="/health-records"
+                      className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    >
+                      Hồ sơ sức khỏe
+                    </Link>
+                    <Link
+                      to="/billing"
+                      className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    >
+                      Viện phí
+                    </Link>
+                    <Link
+                      to="/my-reviews"
+                      className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    >
+                      Đánh giá
+                    </Link>
                   </>
                 )}
                 {isStaff && (
@@ -211,6 +229,27 @@ export default function Header() {
                       onClick={() => setMenuOpen(false)}
                     >
                       Lịch hẹn của tôi
+                    </Link>
+                    <Link
+                      to="/health-records"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Hồ sơ sức khỏe
+                    </Link>
+                    <Link
+                      to="/billing"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Viện phí
+                    </Link>
+                    <Link
+                      to="/my-reviews"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Đánh giá
                     </Link>
                   </>
                 )}
