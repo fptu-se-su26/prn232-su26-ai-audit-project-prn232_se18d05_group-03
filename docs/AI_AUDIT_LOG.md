@@ -513,6 +513,149 @@ Tránh được việc báo cáo sai tiến độ hoàn thành.
 
 ---
 
+### Lần sử dụng AI số 8
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 01/07/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Hoàn thiện 2 Screen còn thiếu của Thành viên 4: Banner cảnh báo quá liều (2.2) và Cấu hình/bảo mật OTP (4.2) |
+| Phần việc liên quan | Backend / Frontend / Database / Coding / Testing |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+tìm hiểu dự án còn thiếu các screen nào trong các screen này rồi làm cho tôi
+[kèm toàn bộ đặc tả Thành viên 4 dán trong prompt]
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+- Tự đối chiếu lại toàn bộ 8 Screen của Thành viên 4 với source code, xác nhận 2 Screen còn
+  thiếu hoàn toàn: 2.2 (Banner cảnh báo quá liều) và 4.2 (Cấu hình & bảo mật OTP).
+- Screen 2.2: thêm cột MaxDailyDose/MaxDosePerKg vào Drug; implement thật CdssController.DoseCheck
+  (ưu tiên ngưỡng theo cân nặng bệnh nhân, fallback ngưỡng tuyệt đối); thêm GET /api/patients;
+  tab "Cảnh báo quá liều" trong DrugInteractionPage.tsx với banner đỏ nhấp nháy (thêm keyframe
+  CSS animate-pulse-slow vì trước đó class này được dùng nhưng chưa từng được định nghĩa).
+- Screen 4.2: entity OtpSetting/OtpCode, enum OtpChannel/OtpStatus, OtpController (settings
+  get/put, issue sinh mã bằng RandomNumberGenerator, verify có đếm số lần thử/hết hạn/kích hoạt
+  VerifiedAt), trang OtpSecurityPage.tsx (cấu hình + workflow issue/verify + nhật ký).
+- Tự tạo migration EF (AddDoseThresholdsAndOtp), tự áp lên database, tự kiểm thử bằng Playwright
+  (15/15 pass: cả đường quá liều lẫn issue/verify OTP), tự chụp screenshot minh chứng.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ backend (entity, DTO, controller, migration) và frontend (tab dose-check +
+trang OTP mới) sau khi xác nhận build sạch, migration áp thành công, và test Playwright pass.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Yêu cầu AI kiểm chứng cả đường "quá liều" lẫn đường "an toàn" (không chỉ test happy path)
+  để đảm bảo logic so sánh ngưỡng đúng ở cả 2 chiều.
+- Yêu cầu AI test cả nhánh theo cân nặng (per-kg) lẫn nhánh ngưỡng tuyệt đối (absolute) riêng,
+  vì đây là 2 công thức tính khác nhau trong cùng 1 endpoint.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | 2f9833b (gộp chung với Lần số 9) |
+| File liên quan | `Mediconnect.Domain/Entities/Drug.cs`, `OtpCode.cs`, `OtpSetting.cs`; `src/mediconnect/Controllers/CdssController.cs`, `OtpController.cs`; `src/mediconnect-web/src/pages/DrugInteractionPage.tsx`, `OtpSecurityPage.tsx` |
+| Screenshot | new_dose_overdose.png, new_otp.png |
+| Kết quả chạy/test | dotnet build: 0 Error(s); tsc --noEmit: 0 errors; Playwright test_new_screens.mjs: 15/15 PASS, console errors: NONE; test riêng per-kg: liều 37.5 > 27.5 (0.5đv/kg×55kg) → overdose đúng |
+| Link video demo |  |
+| Ghi chú khác | Migration 20260701082055_AddDoseThresholdsAndOtp chỉ thêm cột nullable + bảng mới, không đụng dữ liệu cũ |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+AI phát hiện ra 1 lỗi có sẵn từ trước (class CSS animate-pulse-slow được dùng ở Screen 2.1
+nhưng chưa từng được định nghĩa trong index.css, nên banner tương tác thuốc trước đó không hề
+nhấp nháy như đặc tả yêu cầu) trong lúc làm Screen 2.2 — tiện thể sửa luôn cho cả 2 banner.
+```
+
+---
+
+### Lần sử dụng AI số 9
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 01/07/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Tích hợp gửi OTP thật qua Email (SMTP) dùng chung cho Gmail App Password và SendGrid |
+| Phần việc liên quan | Backend / Coding / Testing |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+mình muốn dùng otp thật hãy làm cho mình tích hợp send grid với google app passwords
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+- Nhận diện Gmail App Password và SendGrid đều dùng chung chuẩn SMTP, chỉ khác host/credential
+  -> thiết kế 1 abstraction IOtpSender + 1 implementation SmtpOtpSender (MailKit) dùng chung
+  cho cả 2, thay vì viết 2 sender riêng.
+- SmtpOtpSender: kết nối SMTP (587 STARTTLS hoặc 465 SSL), bắt mọi lỗi transport và trả về
+  OtpSendResult.Delivered=false thay vì throw, để không chặn luồng issue OTP khi gửi thất bại.
+- Thêm cột OtpCode.Delivered; khi gửi thật thành công thì che mã khỏi API response và nhật ký
+  (chỉ hiện dấu ***), khi gửi mô phỏng (delivered=false) thì vẫn hiện mã để demo/test.
+- Thêm mục cấu hình OtpEmail (Enabled/SmtpHost/Port/Username/Password/FromEmail) vào
+  appsettings.json với hướng dẫn ghi sẵn trong _comment, thực tế credential đặt ở
+  appsettings.Development.json (đã gitignore).
+- Tự kiểm chứng đường thật: trỏ tạm SmtpHost sang 1 host không tồn tại, xác nhận MailKit thực
+  sự cố gắng kết nối (lỗi DNS thật "No such host is known"), fallback êm về mô phỏng, verify
+  vẫn hoạt động — chứng minh code gửi thật có chạy chứ không phải chỉ code chết.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ (IOtpSender, SmtpOtpSender, OtpEmailOptions, migration Delivered, cập nhật
+OtpController + OtpSecurityPage.tsx) sau khi xác nhận cả đường mô phỏng (15/15 pass) và đường
+SMTP thật (fallback đúng khi lỗi DNS) đều hoạt động.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Yêu cầu AI xác nhận rõ credential không bị lộ lên git: kiểm tra appsettings.Development.json
+  đã nằm trong .gitignore trước khi commit, và cảnh báo về việc file này thực ra vẫn đang được
+  git track sẵn từ trước (git update-index --skip-worktree được đề xuất làm bước tiếp theo).
+- Tự phục hồi config test (host giả) về placeholder rỗng an toàn sau khi kiểm chứng xong,
+  tránh để lại cấu hình rác trong repo.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | 2f9833b |
+| File liên quan | `Mediconnect.Application/Interfaces/IOtpSender.cs`; `Mediconnect.Infrastructure/Notifications/SmtpOtpSender.cs`, `OtpEmailOptions.cs`; `src/mediconnect/appsettings.json` |
+| Screenshot |  |
+| Kết quả chạy/test | test_smtp_path.mjs: emailConfigured=true, delivered=false với lỗi "No such host is known" (đúng như kỳ vọng khi host giả), verify vẫn thành công qua mã fallback |
+| Link video demo |  |
+| Ghi chú khác | Migration 20260701090510_AddOtpDeliveredFlag chỉ thêm 1 cột bool |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Thay vì làm 2 implementation riêng cho Gmail và SendGrid như yêu cầu ban đầu, AI nhận ra điểm
+chung kỹ thuật (cùng SMTP) để gộp lại thành 1 sender cấu hình được — giảm trùng lặp code và
+dễ bảo trì hơn, đúng tinh thần không over-engineer nhưng vẫn đáp ứng đủ yêu cầu.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.
@@ -521,14 +664,14 @@ Tránh được việc báo cáo sai tiến độ hoàn thành.
 |---|:---:|:---:|:---:|:---:|---|
 | Phân tích yêu cầu |  |  | x |  | Đối chiếu checkfile.md với codebase để xác định Screen Admin thiếu/đủ |
 | Viết user story/use case |  |  |  |  |  |
-| Thiết kế database |  |  | x |  | Report module dùng entity có sẵn, không thêm bảng mới |
-| Thiết kế kiến trúc hệ thống |  | x |  |  | Tái dùng pattern Clean Architecture đã có (IReportQuery tương tự IStaffScheduleQuery) |
-| Thiết kế giao diện |  |  |  | x | 5 trang mới (2 dashboard + 3 admin) dựng từ đầu theo base-html/spec |
-| Code frontend |  |  |  | x | RevenueDashboardPage, OperationsReportPage, StaffManagementPage, UserManagementPage, DrugInteractionPage, 3 chart SVG component |
-| Code backend |  |  |  | x | ReportDtos, IReportQuery, ReportQuery, ReportsController |
-| Debug lỗi |  |  |  | x | Tự phát hiện & fix 2 bug (timezone frontend, endDate inclusive backend) qua test thực tế |
-| Viết test case |  |  |  | x | Playwright script (login thật, click, screenshot, verify API persist) |
-| Kiểm thử sản phẩm |  |  |  | x | Chạy Playwright headless cho tất cả 5 trang mới, xác nhận console error = 0 |
+| Thiết kế database |  |  | x |  | Report module dùng entity có sẵn; riêng OTP/dose-check có thêm entity/migration mới (OtpSetting, OtpCode, cột dose threshold) |
+| Thiết kế kiến trúc hệ thống |  | x |  |  | Tái dùng pattern Clean Architecture đã có (IReportQuery tương tự IStaffScheduleQuery); IOtpSender abstraction dùng chung Gmail/SendGrid |
+| Thiết kế giao diện |  |  |  | x | 7 trang mới (2 dashboard + 3 admin + dose-check tab + OTP) dựng từ đầu theo base-html/spec |
+| Code frontend |  |  |  | x | RevenueDashboardPage, OperationsReportPage, StaffManagementPage, UserManagementPage, DrugInteractionPage (+ tab dose-check), OtpSecurityPage, 3 chart SVG component |
+| Code backend |  |  |  | x | ReportDtos/Query/Controller; CdssController.DoseCheck thật; OtpController + SmtpOtpSender (MailKit) |
+| Debug lỗi |  |  |  | x | Tự phát hiện & fix 2 bug report (timezone frontend, endDate inclusive backend); phát hiện class CSS animate-pulse-slow chưa từng định nghĩa khiến banner CDSS không nhấp nháy như spec |
+| Viết test case |  |  |  | x | Playwright script (login thật, click, screenshot, verify API persist); test riêng đường SMTP thật bằng host giả để xác nhận fallback |
+| Kiểm thử sản phẩm |  |  |  | x | Chạy Playwright headless cho tất cả 7 trang mới, xác nhận console error = 0; test cả 2 công thức dose (per-kg/absolute) |
 | Tối ưu code |  | x |  |  | Tách shared components/utils tránh trùng code giữa 2 trang report |
 | Viết báo cáo |  |  | x |  | Hỗ trợ điền CHANGELOG.md, AI_AUDIT_LOG.md, PROMPTS.md |
 | Làm slide thuyết trình |  |  |  |  |  |

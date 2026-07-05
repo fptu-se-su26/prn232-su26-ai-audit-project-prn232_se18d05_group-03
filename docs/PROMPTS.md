@@ -67,6 +67,8 @@ Sinh viên/nhóm cần ghi lại:
 | 11 | 20/06/2026 | Claude (Claude Code) | Sinh code Screen 3.1 (Dashboard Doanh thu) và Screen 3.2 (Dashboard Vận hành) từ backend đến frontend theo đặc tả chính xác | Dashboard Thống kê & Báo cáo... Screen 3.1: Dashboard Doanh thu tài chính... Screen 3.2: Dashboard Báo cáo vận hành... hãy làm theo 2 màn hình như này từ backend đến frontend | Sinh DTO/Interface/Query/Controller cho Report module theo pattern CQRS-lite có sẵn; sinh 2 trang React riêng biệt dùng SVG chart tự viết (Bar/Line/Pie), filter theo kỳ và khoa phòng, export CSV | Có | src/Mediconnect.Application/DTOs/ReportDtos.cs; src/mediconnect-web/src/pages/RevenueDashboardPage.tsx; src/mediconnect-web/src/pages/OperationsReportPage.tsx |
 | 12 | 20/06/2026 | Claude (Claude Code) | Đọc checkfile.md để đối chiếu các screen của Admin (Thành viên 4) đã có/chưa có trong project | hãy đọc file này và tổng hợp các screen nào là của admin mà cái nào đã có trong project và cái nào chưa có | Liệt kê 6 screen thuộc Thành viên 4, xác định 3 đã có backend nhưng chưa có UI (Quản lý nhân sự, Cảnh báo tương tác thuốc, Quản lý tài khoản) và 2 chưa làm (Banner cảnh báo quá liều, Cấu hình OTP) | Có | docs (đối chiếu nội bộ, không tạo file mới) |
 | 13 | 20/06/2026 | Claude (Claude Code) | Hoàn thiện frontend cho 3 trang Admin còn thiếu UI: Quản lý nhân sự, Cảnh báo tương tác thuốc (CDSS), Quản lý tài khoản | hãy hoàn thiện các trang đang nửa vời | Sinh 3 trang React đầy đủ CRUD + kiểm thử bằng Playwright (gọi API thật qua fetch để xác nhận persist), phát hiện 1 bug trong chính script test (chọn nhầm nút do selector trùng text) chứ không phải bug ứng dụng | Có | src/mediconnect-web/src/pages/StaffManagementPage.tsx; src/mediconnect-web/src/pages/UserManagementPage.tsx; src/mediconnect-web/src/pages/DrugInteractionPage.tsx |
+| 14 | 01/07/2026 | Claude (Claude Code) | Hoàn thiện 2 Screen còn thiếu của Thành viên 4: Banner cảnh báo quá liều (2.2) và Cấu hình/bảo mật OTP (4.2) | tìm hiểu dự án còn thiếu các screen nào trong các screen này rồi làm cho tôi [kèm đặc tả Thành viên 4] | Xác nhận đúng 2 screen còn thiếu; sinh backend (Drug dose threshold, CdssController.DoseCheck thật, OtpSetting/OtpCode/OtpController) và frontend (tab dose-check + trang OtpSecurityPage); tự tạo migration và test Playwright 15/15 pass | Có | src/mediconnect/Controllers/CdssController.cs; OtpController.cs; src/mediconnect-web/src/pages/OtpSecurityPage.tsx |
+| 15 | 01/07/2026 | Claude (Claude Code) | Tích hợp gửi OTP thật qua Email (SMTP) dùng chung cho Gmail App Password và SendGrid | mình muốn dùng otp thật hãy làm cho mình tích hợp send grid với google app passwords | Thiết kế 1 abstraction IOtpSender + SmtpOtpSender (MailKit) dùng chung cho cả 2 provider vì cùng chuẩn SMTP; che mã khi gửi thật, fallback mô phỏng khi lỗi/chưa cấu hình; tự kiểm chứng bằng host giả để xác nhận code gửi thật có chạy | Có | src/Mediconnect.Infrastructure/Notifications/SmtpOtpSender.cs; src/mediconnect/appsettings.json |
 
 ---
 
@@ -820,6 +822,177 @@ yêu cầu sinh code hàng loạt.
 
 ---
 
+### Prompt số 14
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 01/07/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích | Hoàn thiện 2 Screen còn thiếu của Thành viên 4: Banner cảnh báo quá liều (2.2) và Cấu hình/bảo mật OTP (4.2) |
+| Phần việc liên quan | Requirement / Backend / Frontend / Database / Testing |
+| Mức độ sử dụng | Hỏi sinh code |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+tìm hiểu dự án còn thiếu các screen nào trong các screen này rồi làm cho tôi
+[kèm toàn bộ đặc tả Thành viên 4: Feature 1-4, 8 Screen, User Flows]
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Sau khi đã hoàn thiện 6/8 screen của Thành viên 4 ở các phase trước, cần rà soát lại
+toàn bộ đặc tả một lần nữa để xác nhận chính xác 2 screen còn thiếu trước khi code tiếp,
+tránh làm trùng hoặc bỏ sót.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI tự đối chiếu lại 8 Screen với source code hiện tại, xác nhận đúng 2 Screen còn thiếu
+hoàn toàn: Screen 2.2 (Banner cảnh báo quá liều) và Screen 4.2 (Cấu hình & bảo mật OTP).
+Sau đó tự thiết kế và sinh toàn bộ:
+- Backend Screen 2.2: cột MaxDailyDose/MaxDosePerKg trên Drug, logic DoseCheck thật (ưu
+  tiên ngưỡng theo cân nặng bệnh nhân, fallback ngưỡng tuyệt đối), endpoint GET /api/patients.
+- Backend Screen 4.2: entity OtpSetting/OtpCode, OtpController (settings, issue, verify,
+  nhật ký), sinh mã bằng RandomNumberGenerator (crypto-random).
+- Frontend: tab "Cảnh báo quá liều" trong DrugInteractionPage.tsx, trang OtpSecurityPage.tsx
+  mới, thêm route + link điều hướng.
+- Tự tạo và áp dụng EF migration, tự kiểm thử toàn bộ bằng Playwright (15/15 pass).
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ backend (entity, DTO, controller, migration) và frontend (tab dose-check
++ trang OTP mới) vào project sau khi xác nhận build sạch và test Playwright pass.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu AI kiểm chứng cả 2 công thức tính ngưỡng liều (theo cân nặng và tuyệt đối) bằng
+2 kịch bản test riêng biệt, thay vì chỉ test 1 nhánh rồi coi như xong cả 2.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | 2f9833b |
+| File liên quan | src/mediconnect/Controllers/CdssController.cs; OtpController.cs; src/mediconnect-web/src/pages/OtpSecurityPage.tsx |
+| Screenshot | C:/tmp/pwtest/new_dose_overdose.png; C:/tmp/pwtest/new_otp.png |
+| Kết quả chạy/test | C:/tmp/pwtest/test_new_screens.mjs — 15/15 PASS |
+| Link tài liệu/báo cáo |  |
+| Ghi chú khác |  |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Phát hiện phụ: class CSS animate-pulse-slow được dùng ở banner cảnh báo tương tác thuốc
+(Screen 2.1) từ trước nhưng chưa từng được định nghĩa trong index.css, nên banner đó
+chưa từng thực sự nhấp nháy như đặc tả yêu cầu — đã sửa luôn cho cả 2 banner (2.1 và 2.2).
+```
+
+---
+
+### Prompt số 15
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 01/07/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích | Tích hợp gửi OTP thật qua Email (SMTP) dùng chung cho Gmail App Password và SendGrid |
+| Phần việc liên quan | Backend / Coding / Testing |
+| Mức độ sử dụng | Hỏi sinh code |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+mình muốn dùng otp thật hãy làm cho mình tích hợp send grid với google app passwords
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Screen 4.2 (Cấu hình & bảo mật OTP) ở Prompt số 14 mới chỉ gửi OTP mô phỏng (hiện mã
+trên UI để demo). Cần nâng cấp thành gửi email thật, hỗ trợ cả 2 lựa chọn phổ biến:
+Gmail App Password (miễn phí, có sẵn tài khoản) và SendGrid (dịch vụ email chuyên dụng).
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI nhận ra Gmail App Password và SendGrid đều dùng chung chuẩn SMTP, chỉ khác host/
+credential, nên thiết kế 1 abstraction IOtpSender + 1 implementation SmtpOtpSender
+(dùng MailKit) phục vụ cả 2, thay vì viết 2 sender riêng biệt. Cơ chế: khi gửi thật
+thành công thì che mã khỏi API response/nhật ký (bảo mật); khi lỗi/chưa cấu hình thì
+tự fallback về mô phỏng (không chặn luồng issue OTP). Credential đặt trong
+appsettings.Development.json (đã gitignore), appsettings.json chỉ chứa placeholder
+rỗng kèm hướng dẫn điền. Tự kiểm chứng đường thật bằng cách trỏ tạm SmtpHost sang host
+không tồn tại, xác nhận MailKit thực sự cố gắng kết nối (lỗi DNS thật), fallback êm.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ IOtpSender, SmtpOtpSender, OtpEmailOptions, migration cột Delivered,
+cập nhật OtpController + OtpSecurityPage.tsx sau khi xác nhận cả đường mô phỏng
+(15/15 pass) và đường SMTP thật (fallback đúng khi lỗi DNS) đều hoạt động.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu AI xác nhận rõ credential không bị lộ lên git trước khi commit, và được AI chủ
+động cảnh báo rằng appsettings.Development.json thực ra đã được git track từ trước
+(dù có tên trong .gitignore) — đề xuất dùng git update-index --skip-worktree để tránh
+commit nhầm credential thật sau này.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | 2f9833b |
+| File liên quan | src/Mediconnect.Infrastructure/Notifications/SmtpOtpSender.cs; src/mediconnect/appsettings.json |
+| Screenshot |  |
+| Kết quả chạy/test | C:/tmp/pwtest/test_smtp_path.mjs — emailConfigured=true, delivered=false với lỗi DNS thật, verify vẫn thành công qua mã fallback |
+| Link tài liệu/báo cáo |  |
+| Ghi chú khác |  |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Prompt không nêu rõ "dùng chung 1 sender hay 2 sender riêng" nhưng AI tự suy luận được
+điểm chung kỹ thuật (cùng SMTP) để chọn phương án gộp — giảm trùng lặp code mà vẫn đáp
+ứng đủ yêu cầu, không cần hỏi lại.
+```
+
+---
+
 ## 6. Prompt quan trọng nhất
 
 Chọn một prompt có ảnh hưởng lớn nhất đến bài tập/project.
@@ -942,11 +1115,11 @@ Viết tại đây...
 
 | Loại prompt | Số lượng | Ví dụ prompt tiêu biểu |
 |---|---:|---|
-| Prompt phân tích yêu cầu | 2 | Prompt số 1, Prompt số 12 |
+| Prompt phân tích yêu cầu | 3 | Prompt số 1, Prompt số 12, Prompt số 14 |
 | Prompt giải thích kiến thức |  |  |
 | Prompt thiết kế giải pháp | 1 | Prompt số 5 |
 | Prompt thiết kế database | 1 | Prompt số 2 |
-| Prompt sinh code mẫu | 4 | Prompt số 6, 7, 11, 13 |
+| Prompt sinh code mẫu | 6 | Prompt số 6, 7, 11, 13, 14, 15 |
 | Prompt debug lỗi | 3 | Prompt số 8, 9, 10 |
 | Prompt viết test case |  |  |
 | Prompt review code |  |  |
