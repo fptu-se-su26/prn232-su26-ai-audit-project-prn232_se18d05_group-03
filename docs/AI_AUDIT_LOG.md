@@ -363,160 +363,223 @@ Hỏi AI để thiết kế các trang giao diện phức tạp và phân tích 
 ```
 
 ---
----
+
 ### Lần sử dụng AI số 6
 
 | Nội dung | Thông tin |
 |---|---|
-| Ngày sử dụng | 14/06/2026 |
-| Công cụ AI | GitHub Copilot, Claude |
-| Mục đích sử dụng | Implement Outpatient Record feature (frontend) and wire to backend diagnose flow; add UI, search, and navigation integration |
-| Phần việc liên quan | Frontend UI, API integration, routing, UX polish |
-| Mức độ sử dụng | AI-assisted coding and debugging |
+| Ngày sử dụng | 11/06/2026 – 20/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Xây dựng Dashboard Thống kê & Báo cáo (Screen 3.1, 3.2 – Thành viên 4) từ backend đến frontend |
+| Phần việc liên quan | Backend / Frontend / Coding / Testing |
+| Mức độ sử dụng | Sinh code chính |
 
 #### 4.1. Prompt đã sử dụng
 
 ```text
-Implement an Outpatient Record page for doctors: waiting list, patient overview, consultation form. Add logic to call POST /api/medical-records/diagnose. If visit not found, create OutpatientVisit then retry. Add local waiting-list search and top-level search, and add link in header. Ensure doctorId matches StaffProfile.Id.
+đọc nhánh base-html xem các trang nào là report và làm kết nối api cho tôi, sau đó test và fix hết bug
+
+Dashboard Thống kê & Báo cáo
+Screen 3.1: Dashboard Doanh thu tài chính - Các biểu đồ cột, biểu đồ đường thể hiện doanh thu
+theo ngày, tháng và lọc theo từng khoa phòng.
+Screen 3.2: Dashboard Báo cáo vận hành - Biểu đồ tròn và bảng số liệu phân tích công suất giường
+bệnh nội trú, biểu đồ đường thể hiện số lượt khám ngoại trú.
+hãy làm theo 2 màn hình như này từ backend đến frontend
 ```
 
 #### 4.2. Kết quả AI gợi ý
 
 ```text
-Generated TypeScript React code for OutpatientRecordPage.tsx, header navigation modifications, and client-side API usage patterns. Suggested flow: diagnose -> if missing visit -> create visit -> retry diagnose. Recommended resolving staffProfileId from staff directory and creating or reusing PatientProfile if missing.
+- Đọc file hospital_analytics_reports.html (branch base-html) để xác định layout cần dựng.
+- Sinh toàn bộ backend Report module: ReportDtos.cs, IReportQuery, ReportQuery (LINQ projection,
+  AsNoTracking, GroupBy server-side cho bed-occupancy), ReportsController (4 endpoint có validate).
+- Sinh trang StatisticsReportPage.tsx gộp ban đầu, sau đó tách thành 2 trang riêng theo đúng yêu
+  cầu spec: RevenueDashboardPage.tsx (bar+line chart, lọc khoa) và OperationsReportPage.tsx
+  (pie chart + data table + line chart outpatient).
+- Tự viết 3 chart component SVG thuần (BarChart/LineChart/PieChart) không phụ thuộc thư viện ngoài.
+- Tự kiểm thử bằng Playwright thật (đăng nhập admin thật, click filter, chụp screenshot) và
+  PHÁT HIỆN 2 BUG thực tế qua test, không chỉ đọc code suy luận:
+  1) Bug timezone frontend: toDateStr() dùng toISOString() (UTC) trên Date local -> ở UTC+7,
+     "đầu tháng 6" bị lệch thành 2026-05-31 thay vì 2026-06-01.
+  2) Bug backend: endDate trong GetRevenueAsync/GetOutpatientVisitsAsync không inclusive cả
+     ngày cuối -> custom range Jun5-9 bị thiếu dữ liệu Jun 9.
+- Tự fix cả 2 bug, rebuild backend, re-test xác nhận đã đúng.
 ```
 
 #### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
 
 ```text
-Applied generated code and patterns after review: created OutpatientRecordPage UI, added top/local search, added header link, and wired ClinicDashboard "Ghi khám" button to navigate with ticket state.
+Áp dụng toàn bộ code backend (Report module) và frontend (2 trang dashboard + shared chart
+components) vào project sau khi xác nhận build/tsc sạch và test Playwright pass.
 ```
 
 #### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
 
 ```text
-Reviewed and adjusted API payload shapes, added defensive checks (resolve staffProfileId, fetch/create patient profile), added console debug and error handling. Adjusted styles to match project theme.
+- Yêu cầu AI seed thêm dữ liệu test (4 khoa, 24 giường, 15 invoice, 58 lượt khám) để biểu đồ có
+  dữ liệu thực tế thay vì chỉ 1-2 điểm dữ liệu ban đầu.
+- Yêu cầu tách 1 trang gộp thành đúng 2 màn hình riêng biệt theo đúng đặc tả Screen 3.1/3.2 thay
+  vì giữ nguyên 1 dashboard tổng hợp.
 ```
 
 #### 4.5. Minh chứng
 
 | Loại minh chứng | Nội dung |
 |---|---|
-| Link commit | Commits on branch feature/de190123-outpatientRecords |
-| File liên quan | mediconnect-web/src/pages/OutpatientRecordPage.tsx; mediconnect-web/src/components/layout/Header.tsx; mediconnect-web/src/pages/ClinicDashboardPage.tsx |
+| Link commit | Chưa commit (branch feature/de180522-statisticalreport) |
+| File liên quan | `Mediconnect.Application/DTOs/ReportDtos.cs`; `Mediconnect.Infrastructure/Repositories/ReportQuery.cs`; `src/mediconnect/Controllers/ReportsController.cs`; `src/mediconnect-web/src/pages/RevenueDashboardPage.tsx`; `src/mediconnect-web/src/pages/OperationsReportPage.tsx`; `src/mediconnect-web/src/components/charts/*` |
+| Screenshot | report_loaded.png, report_today.png, report_dept.png, report_v2.png, screen31_revenue.png, screen32_operations.png |
+| Kết quả chạy/test | tsc --noEmit: 0 errors; dotnet build: 0 Error(s); Playwright: console errors = NONE trên cả 2 trang |
+| Link video demo |  |
+| Ghi chú khác | Custom range Jun5-9 trước fix: $120M/4 bars → sau fix: $183M/5 bars (đúng) |
 
 #### 4.6. Nhận xét cá nhân/nhóm
 
 ```text
-AI accelerated UI scaffold and error-handling patterns. Human review required to align IDs and DB FK expectations.
+AI không chỉ sinh code mà còn tự kiểm thử bằng cách thật (đăng nhập, click, screenshot) và phát
+hiện 2 bug thực tế (timezone + endDate inclusive) mà nếu chỉ review code tĩnh sẽ khó nhận ra ngay.
+Đây là điểm khác biệt so với việc chỉ "đọc code rồi đoán đúng/sai".
 ```
+
+---
 
 ### Lần sử dụng AI số 7
 
 | Nội dung | Thông tin |
 |---|---|
-| Ngày sử dụng | 14/06/2026 |
-| Công cụ AI | GitHub Copilot |
-| Mục đích sử dụng | Debug and fix duplicate PatientProfile creation (DB unique index violation) |
-| Phần việc liên quan | Frontend error handling and API usage |
-| Mức độ sử dụng | AI-assisted debugging and code edits |
+| Ngày sử dụng | 20/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Đối chiếu đặc tả 4 thành viên (checkfile.md) với code hiện có để xác định Screen Admin còn thiếu, sau đó hoàn thiện các trang "nửa vời" |
+| Phần việc liên quan | Requirement / Backend / Frontend / Coding |
+| Mức độ sử dụng | Sinh code chính |
 
 #### 4.1. Prompt đã sử dụng
 
 ```text
-Database throws unique index error when creating PatientProfile: IX_PatientProfiles_UserAccountId duplicate key. How to avoid duplicate creation in client-side flow that auto-creates patient profile?
+hãy đọc file này và tổng hợp các screen nào là của admin mà cái nào đã có trong project và cái
+nào chưa có
+
+hãy hoàn thiện các trang đang nửa vời
 ```
 
 #### 4.2. Kết quả AI gợi ý
 
 ```text
-Recommended to call GET /api/patients/me (or an endpoint to fetch patient profile by userAccountId) before attempting create; only call create if not found. Add robust error handling for 409/duplicate and surface clear messages to user.
+- Đọc toàn bộ checkfile.md (đặc tả 16 Feature / 32 Screen của 4 thành viên), lọc ra các Screen
+  thuộc vai trò Admin (chủ yếu ở Thành viên 4: System/Staff/CDSS).
+- Đối chiếu với codebase thực tế (Controllers, Pages, App.tsx routes) để phân loại từng Screen:
+  Đã có / Nửa vời (có backend, thiếu frontend) / Chưa có gì.
+- Kết quả: 4/9 đã có, 3/9 nửa vời (Hồ sơ nhân sự, Cảnh báo tương tác thuốc, User Management),
+  2/9 chưa có gì (Banner quá liều, OTP).
+- Khi được yêu cầu hoàn thiện 3 trang nửa vời: sinh StaffManagementPage.tsx,
+  DrugInteractionPage.tsx, UserManagementPage.tsx — toàn bộ dựa trên API/DTO backend đã có sẵn
+  (StaffController, UsersController, DrugsController, DrugInteractionsController, CdssController),
+  không cần sửa backend.
 ```
 
 #### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
 
 ```text
-Implemented getMe() check in OutpatientRecordPage.tsx and fallback to create only when profile is missing or GET returns 404. Added logs and error handling to avoid duplicate insert attempts.
+Áp dụng toàn bộ 3 trang frontend mới + mở rộng services.ts/types.ts + cập nhật Header dropdown
+"Quản trị" sau khi xác nhận build sạch và test Playwright pass cho cả 3 trang.
 ```
 
 #### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
 
 ```text
-Handled edge cases: if GET fails with non-404 error, surface it to user; throw and stop flow on unexpected server errors. Recommended backend change: validate and return 400/409 instead of 500 for business validation.
+- Yêu cầu AI seed dữ liệu thuốc thật (Warfarin + Aspirin có tương tác High) để verify popup cảnh
+  báo đỏ hiển thị đúng, sau đó dọn dẹp dữ liệu test khỏi DB.
+- Yêu cầu verify các hành động ghi dữ liệu (khóa tài khoản, đổi role, xóa) thật sự persist vào
+  backend (gọi lại API kiểm tra) chứ không chỉ tin vào việc UI hiển thị đúng.
 ```
 
 #### 4.5. Minh chứng
 
 | Loại minh chứng | Nội dung |
 |---|---|
-| Link commit | Commits on branch feature/de190123-outpatientRecords |
-| File liên quan | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+| Link commit | Chưa commit (branch feature/de180522-statisticalreport) |
+| File liên quan | `src/mediconnect-web/src/pages/StaffManagementPage.tsx`; `src/mediconnect-web/src/pages/DrugInteractionPage.tsx`; `src/mediconnect-web/src/pages/UserManagementPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/components/layout/Header.tsx` |
+| Screenshot | admin_users.png, admin_staff.png, cdss_check_fixed.png |
+| Kết quả chạy/test | tsc --noEmit: 0 errors; Playwright: tạo/khóa/đổi role/xóa tài khoản đều verify đúng qua API; CDSS check phát hiện đúng 1 cặp tương tác Warfarin↔Aspirin (severity High) |
+| Link video demo |  |
+| Ghi chú khác | 2 Screen còn lại (Banner quá liều, OTP) chưa làm vì cần thiết kế logic nghiệp vụ mới ở backend, không chỉ là thiếu UI |
 
 #### 4.6. Nhận xét cá nhân/nhóm
 
 ```text
-AI provided a practical, standard approach to avoid duplicate FK errors. Human verification of API endpoints (GET /patients/me) was required to ensure compatibility.
+Việc đọc lại đặc tả gốc (checkfile.md) và đối chiếu với code thực tế giúp phát hiện chính xác
+phần nào "tưởng đã xong" (có backend) nhưng thực ra người dùng chưa thể dùng được (thiếu UI).
+Tránh được việc báo cáo sai tiến độ hoàn thành.
 ```
+
 ---
 
 ### Lần sử dụng AI số 8
 
 | Nội dung | Thông tin |
 |---|---|
-| Ngày sử dụng | 28/06/2026 |
-| Công cụ AI | Antigravity |
-| Mục đích sử dụng | Implement tìm kiếm ICD-10 bằng NLM ClinicalTables API thay thế `Icd10Catalog` chưa khai báo gây build lỗi |
-| Phần việc liên quan | Backend / API integration / Debug |
-| Mức độ sử dụng | AI sinh code chính |
+| Ngày sử dụng | 01/07/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Hoàn thiện 2 Screen còn thiếu của Thành viên 4: Banner cảnh báo quá liều (2.2) và Cấu hình/bảo mật OTP (4.2) |
+| Phần việc liên quan | Backend / Frontend / Database / Coding / Testing |
+| Mức độ sử dụng | Sinh code chính |
 
 #### 4.1. Prompt đã sử dụng
 
 ```text
-tim hieu ve du an, chuc nang cua thanh vien "DE190123", tiep tuc hoan thien sua doi tim kiem "ICD-10" dua theo nlm api
-Test kịch bản 1 (Tìm theo mã): Gõ thử chữ E11 xem dropdown có hiển thị các bệnh liên quan đến tiểu đường kèm mô tả tiếng Anh không.
-Test kịch bản 2 (Tìm theo tên): Gõ thử chữ Hypertension xem hệ thống có hiển thị mã code I10 tương ứng không.
-Test lưu trữ: Chọn 1 kết quả, tiến hành Save form và kiểm tra trực tiếp trong cơ sở dữ liệu.
+tìm hiểu dự án còn thiếu các screen nào trong các screen này rồi làm cho tôi
+[kèm toàn bộ đặc tả Thành viên 4 dán trong prompt]
 ```
 
 #### 4.2. Kết quả AI gợi ý
 
 ```text
-- Phân tích codebase, xác định lỗi build: `Icd10Catalog.Search()` được gọi trong MedicalRecordService.cs nhưng class này không được định nghĩa ở bất kỳ đâu trong project.
-- Đề xuất thay thế bằng HttpClient gọi NLM ClinicalTables API:
-  URL: https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms={query}&sf=code,name&df=code,name
-- Sinh code SearchICD10Async(): inject HttpClient, gọi API, parse JSON (mảng 4 phần tử: [count, codes, fields, displayStrings]), trả về List<Icd10Result>.
-- Hướng dẫn đăng ký `builder.Services.AddHttpClient()` (generic, không typed) trong Program.cs để DI inject `HttpClient` trực tiếp vào constructor của `MedicalRecordService`.
+- Tự đối chiếu lại toàn bộ 8 Screen của Thành viên 4 với source code, xác nhận 2 Screen còn
+  thiếu hoàn toàn: 2.2 (Banner cảnh báo quá liều) và 4.2 (Cấu hình & bảo mật OTP).
+- Screen 2.2: thêm cột MaxDailyDose/MaxDosePerKg vào Drug; implement thật CdssController.DoseCheck
+  (ưu tiên ngưỡng theo cân nặng bệnh nhân, fallback ngưỡng tuyệt đối); thêm GET /api/patients;
+  tab "Cảnh báo quá liều" trong DrugInteractionPage.tsx với banner đỏ nhấp nháy (thêm keyframe
+  CSS animate-pulse-slow vì trước đó class này được dùng nhưng chưa từng được định nghĩa).
+- Screen 4.2: entity OtpSetting/OtpCode, enum OtpChannel/OtpStatus, OtpController (settings
+  get/put, issue sinh mã bằng RandomNumberGenerator, verify có đếm số lần thử/hết hạn/kích hoạt
+  VerifiedAt), trang OtpSecurityPage.tsx (cấu hình + workflow issue/verify + nhật ký).
+- Tự tạo migration EF (AddDoseThresholdsAndOtp), tự áp lên database, tự kiểm thử bằng Playwright
+  (15/15 pass: cả đường quá liều lẫn issue/verify OTP), tự chụp screenshot minh chứng.
 ```
 
 #### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
 
 ```text
-- Toàn bộ implementation SearchICD10Async() trong MedicalRecordService.cs với HttpClient và System.Text.Json.
-- Cú pháp đăng ký HttpClient trong Program.cs.
+Áp dụng toàn bộ backend (entity, DTO, controller, migration) và frontend (tab dose-check +
+trang OTP mới) sau khi xác nhận build sạch, migration áp thành công, và test Playwright pass.
 ```
 
 #### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
 
 ```text
-- Xác minh kết quả build thành công (0 Error, 0 Warning) trước khi áp dụng.
-- Test tay 2 kịch bản: gõ "E11" (diabetes) và "Hypertension" (I10) qua dropdown ICD-10 trên giao diện bác sĩ.
-- Xác nhận endpoint /api/medical-records/icd10/search trả về JSON đúng format Icd10Result[].
+- Yêu cầu AI kiểm chứng cả đường "quá liều" lẫn đường "an toàn" (không chỉ test happy path)
+  để đảm bảo logic so sánh ngưỡng đúng ở cả 2 chiều.
+- Yêu cầu AI test cả nhánh theo cân nặng (per-kg) lẫn nhánh ngưỡng tuyệt đối (absolute) riêng,
+  vì đây là 2 công thức tính khác nhau trong cùng 1 endpoint.
 ```
 
 #### 4.5. Minh chứng
 
 | Loại minh chứng | Nội dung |
 |---|---|
-| Link commit | branch: feature/de190123-outpatientRecords |
-| File liên quan | `src/Mediconnect.Application/Services/MedicalRecordService.cs`; `src/Mediconnect.Application/Interfaces/IMedicalRecordService.cs`; `src/Mediconnect.Application/DTOs/MedicalRecordDtos.cs`; `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs`; `src/mediconnect/Program.cs`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
-| Kết quả chạy/test | `dotnet build`: 0 Error(s), 0 Warning(s). Backend khởi động thành công tại http://localhost:5079. Test kịch bản "E11" → dropdown hiển thị Diabetes mellitus; "Hypertension" → mã I10. |
-| Ghi chú khác | NLM ClinicalTables API miễn phí, không cần API key, hỗ trợ tìm theo mã (E11) và tên (Hypertension) |
+| Link commit | 2f9833b (gộp chung với Lần số 9) |
+| File liên quan | `Mediconnect.Domain/Entities/Drug.cs`, `OtpCode.cs`, `OtpSetting.cs`; `src/mediconnect/Controllers/CdssController.cs`, `OtpController.cs`; `src/mediconnect-web/src/pages/DrugInteractionPage.tsx`, `OtpSecurityPage.tsx` |
+| Screenshot | new_dose_overdose.png, new_otp.png |
+| Kết quả chạy/test | dotnet build: 0 Error(s); tsc --noEmit: 0 errors; Playwright test_new_screens.mjs: 15/15 PASS, console errors: NONE; test riêng per-kg: liều 37.5 > 27.5 (0.5đv/kg×55kg) → overdose đúng |
+| Link video demo |  |
+| Ghi chú khác | Migration 20260701082055_AddDoseThresholdsAndOtp chỉ thêm cột nullable + bảng mới, không đụng dữ liệu cũ |
 
 #### 4.6. Nhận xét cá nhân/nhóm
 
 ```text
-Việc dùng API ngoài (NLM) giúp tránh phải tự duy trì bộ dữ liệu ICD-10 cục bộ và luôn có dữ liệu cập nhật.
-AI giúp phát hiện nhanh lỗi class chưa định nghĩa và sinh code tích hợp API thực tế chỉ trong một bước.
+AI phát hiện ra 1 lỗi có sẵn từ trước (class CSS animate-pulse-slow được dùng ở Screen 2.1
+nhưng chưa từng được định nghĩa trong index.css, nên banner tương tác thuốc trước đó không hề
+nhấp nháy như đặc tả yêu cầu) trong lúc làm Screen 2.2 — tiện thể sửa luôn cho cả 2 banner.
 ```
 
 ---
@@ -525,153 +588,71 @@ AI giúp phát hiện nhanh lỗi class chưa định nghĩa và sinh code tích
 
 | Nội dung | Thông tin |
 |---|---|
-| Ngày sử dụng | 28/06/2026 |
-| Công cụ AI | Antigravity |
-| Mục đích sử dụng | Sửa lỗi tên bệnh nhân vãng lai bị mất khi điều hướng sang trang OutpatientRecord |
-| Phần việc liên quan | Frontend / Routing / Data persistence |
-| Mức độ sử dụng | AI sinh code chính |
+| Ngày sử dụng | 01/07/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Tích hợp gửi OTP thật qua Email (SMTP) dùng chung cho Gmail App Password và SendGrid |
+| Phần việc liên quan | Backend / Coding / Testing |
+| Mức độ sử dụng | Sinh code chính |
 
 #### 4.1. Prompt đã sử dụng
 
 ```text
-tim hieu ve du an, chuc nang cua thanh vien "DE190123", tiep tuc hoan thien sua doi tim kiem "ICD-10" dua theo nlm api
-Test kịch bản 1 (Tìm theo mã): Gõ thử chữ E11 xem dropdown có hiển thị các bệnh liên quan đến tiểu đường kèm mô tả tiếng Anh không.
-Test kịch bản 2 (Tìm theo tên): Gõ thử chữ Hypertension xem hệ thống có hiển thị mã code I10 tương ứng không.
-Test lưu trữ: Chọn 1 kết quả, tiến hành Save form và kiểm tra trực tiếp trong cơ sở dữ liệu.
+mình muốn dùng otp thật hãy làm cho mình tích hợp send grid với google app passwords
 ```
 
 #### 4.2. Kết quả AI gợi ý
 
 ```text
-- Phân tích: entity QueueTicket trong DB không có cột PatientName (chỉ lưu ClinicId, AppointmentId, Number, IssuedAt, Status).
-  Khi doctor điều hướng sang /outpatient-record, tên bệnh nhân vãng lai bị mất vì không có nguồn dữ liệu để resolve lại.
-- Đề xuất: truyền toàn bộ object QueueTicketDetail (đã có trường patientName) qua React Router state khi navigate,
-  thay vì chỉ truyền ticketId và gọi lại API (sẽ trả về null cho walk-in).
-- Sinh code: navigate('/outpatient-record', { state: { ticket: currentPatient, clinicId: selectedClinicId } })
-  trong ClinicDashboardPage.tsx; đọc lại bằng useLocation() + loc.state?.ticket trong OutpatientRecordPage.tsx.
-- Hiển thị ưu tiên: patient?.fullName || selectedTicket?.patientName || 'Bệnh nhân'.
+- Nhận diện Gmail App Password và SendGrid đều dùng chung chuẩn SMTP, chỉ khác host/credential
+  -> thiết kế 1 abstraction IOtpSender + 1 implementation SmtpOtpSender (MailKit) dùng chung
+  cho cả 2, thay vì viết 2 sender riêng.
+- SmtpOtpSender: kết nối SMTP (587 STARTTLS hoặc 465 SSL), bắt mọi lỗi transport và trả về
+  OtpSendResult.Delivered=false thay vì throw, để không chặn luồng issue OTP khi gửi thất bại.
+- Thêm cột OtpCode.Delivered; khi gửi thật thành công thì che mã khỏi API response và nhật ký
+  (chỉ hiện dấu ***), khi gửi mô phỏng (delivered=false) thì vẫn hiện mã để demo/test.
+- Thêm mục cấu hình OtpEmail (Enabled/SmtpHost/Port/Username/Password/FromEmail) vào
+  appsettings.json với hướng dẫn ghi sẵn trong _comment, thực tế credential đặt ở
+  appsettings.Development.json (đã gitignore).
+- Tự kiểm chứng đường thật: trỏ tạm SmtpHost sang 1 host không tồn tại, xác nhận MailKit thực
+  sự cố gắng kết nối (lỗi DNS thật "No such host is known"), fallback êm về mô phỏng, verify
+  vẫn hoạt động — chứng minh code gửi thật có chạy chứ không phải chỉ code chết.
 ```
 
 #### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
 
 ```text
-- Toàn bộ cơ chế navigate({ state: { ticket, clinicId } }) trong ClinicDashboardPage.tsx (line 384).
-- Logic đọc loc.state?.ticket và setSelectedTicket() trong OutpatientRecordPage.tsx (lines 66–73).
-- Pattern hiển thị tên ưu tiên patient?.fullName || selectedTicket?.patientName.
+Áp dụng toàn bộ (IOtpSender, SmtpOtpSender, OtpEmailOptions, migration Delivered, cập nhật
+OtpController + OtpSecurityPage.tsx) sau khi xác nhận cả đường mô phỏng (15/15 pass) và đường
+SMTP thật (fallback đúng khi lỗi DNS) đều hoạt động.
 ```
 
 #### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
 
 ```text
-- Xác nhận entity QueueTicket.cs không có PatientName → không cần migration, giải pháp client-side là đủ.
-- Kiểm tra auto-select ticket từ searchQuery (loc.state?.searchQuery) vẫn hoạt động song song với ticket state.
-- Test thực tế: check-in walk-in "Nguyễn Văn A" → gọi khám → nhấn "Ghi khám" → tên hiển thị đúng trên OutpatientRecord.
+- Yêu cầu AI xác nhận rõ credential không bị lộ lên git: kiểm tra appsettings.Development.json
+  đã nằm trong .gitignore trước khi commit, và cảnh báo về việc file này thực ra vẫn đang được
+  git track sẵn từ trước (git update-index --skip-worktree được đề xuất làm bước tiếp theo).
+- Tự phục hồi config test (host giả) về placeholder rỗng an toàn sau khi kiểm chứng xong,
+  tránh để lại cấu hình rác trong repo.
 ```
 
 #### 4.5. Minh chứng
 
 | Loại minh chứng | Nội dung |
 |---|---|
-| Link commit | `472681e feat(outpatient): add ICD-10 diagnosis lookup via NLM API and fix walk-in patient data persistence` |
-| File liên quan | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/types/index.ts` |
-| Kết quả chạy/test | Tên walk-in hiển thị đúng trên OutpatientRecord sau navigate. Không cần DB migration. |
-| Ghi chú khác | Giải pháp dùng React Router state (ephemeral, trong session SPA). Tên sẽ mất nếu user reload trang — đây là giới hạn đã biết do schema DB không lưu PatientName. |
+| Link commit | 2f9833b |
+| File liên quan | `Mediconnect.Application/Interfaces/IOtpSender.cs`; `Mediconnect.Infrastructure/Notifications/SmtpOtpSender.cs`, `OtpEmailOptions.cs`; `src/mediconnect/appsettings.json` |
+| Screenshot |  |
+| Kết quả chạy/test | test_smtp_path.mjs: emailConfigured=true, delivered=false với lỗi "No such host is known" (đúng như kỳ vọng khi host giả), verify vẫn thành công qua mã fallback |
+| Link video demo |  |
+| Ghi chú khác | Migration 20260701090510_AddOtpDeliveredFlag chỉ thêm 1 cột bool |
 
 #### 4.6. Nhận xét cá nhân/nhóm
 
 ```text
-AI xác định đúng root cause: DB entity thiếu cột PatientName nên không thể resolve lại sau navigate.
-Giải pháp React Router state là pragmatic và không cần thay đổi schema — phù hợp với scope hiện tại.
-Cần lưu ý đây là workaround; nếu cần persistence lâu dài thì phải thêm cột PatientName vào QueueTicket.
-```
-
----
-
-### Lần sử dụng AI số 10
-
-| Nội dung | Thông tin |
-|---|---|
-| Ngày sử dụng | 29/06/2026 |
-| Công cụ AI | Claude (claude.ai) |
-| Mục đích sử dụng | Implement Feature 3 – E-Prescription (Quản lý đơn thuốc ngoại trú): drug autocomplete, allergy conflict validation, pharmacy stock filter; đồng thời nâng cấp sidebar UI để E-Prescription thành section top-level |
-| Phần việc liên quan | Frontend / UI / Feature / Coding |
-| Mức độ sử dụng | AI sinh code chính |
-
-#### 4.1. Prompt đã sử dụng
-
-```text
-## Objective
-Feature 3 – Quản lý đơn thuốc ngoại trú (E-Prescription)
-
-Target state (sau khi bác sĩ save OutpatientRecord):
-1. Drug autocomplete từ live pharmacy inventory (GET /api/drugs, filter client-side)
-2. Allergy conflict warning: kiểm tra thuốc chọn với known allergies [Penicillin, Peanuts, Sulfa Drugs]
-3. Pharmacy stock filter: chỉ hiển thị thuốc có stockQuantity > 0 khi chọn pharmacy
-4. Nút "Add to Prescription" disabled khi stock = 0
-5. Active prescription list hiển thị thuốc đã thêm
-6. Send to pharmacy: POST /api/prescriptions → POST /api/prescriptionitems per item
-
-Sau đó: Promote E-Prescription lên standalone top-level nav section, visual parity với Outpatient Records.
-Thứ tự: Queue → Outpatient Records → E-Prescription → Telemedicine.
-Route /e-prescription trong App.tsx với RoleProtectedRoute (Doctor, Nurse).
-
-Constraints: không thêm DB migration, không thêm endpoint mới nếu có thể dùng endpoint hiện có.
-```
-
-#### 4.2. Kết quả AI gợi ý
-
-```text
-- Sinh UI E-Prescription với drug name autocomplete kết nối live pharmacy inventory API.
-- Sinh client-side allergy conflict validation: kiểm tra drug chọn với danh sách known allergies
-  (Penicillin, Peanuts, Sulfa Drugs); cảnh báo nếu conflict.
-- Sinh pharmacy stock filter: autocomplete scoped to selected pharmacy's stock.
-- Disable nút "Add to Prescription" khi stock = 0.
-- Nâng cấp sidebar: E-Prescription từ sub-nav item lên standalone top-level section,
-  visual parity với Outpatient Records (cùng icon size, label size, active/hover state, padding).
-  Thứ tự sidebar: Queue → Outpatient Records → E-Prescription → Telemedicine.
-```
-
-#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
-
-```text
-- Toàn bộ E-Prescription component (EPrescriptionPanel.tsx): drug autocomplete debounced 250ms, allergy validation logic, stock filter, disabled state khi stock = 0, send-to-pharmacy flow (POST /api/prescriptions + /api/prescriptionitems).
-- EPrescriptionPage.tsx: standalone page với Visit ID input, staffProfileId resolution via staffApi.getDirectory().
-- OutpatientRecordPage.tsx: thêm import EPrescriptionPanel, savedVisitId state, render panel sau khi save thành công.
-- api/services.ts: drugApi.getAll(), prescriptionApi.create(), prescriptionApi.addItem().
-- types/index.ts: DrugResult, ActivePrescriptionItem interfaces.
-- Header.tsx: nav link "Đơn thuốc điện tử" trong cả desktop và mobile nav (inside isStaff block).
-- App.tsx: route /e-prescription với RoleProtectedRoute (Doctor, Nurse).
-```
-
-#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
-
-```text
-- Không có Pharmacy entity trong DB → dùng GET /api/clinics/active (Clinic[]) làm pharmacy selector thay thế; stock filter là global (stockQuantity > 0), không per-pharmacy.
-- PatientProfile không có AllergyInfo field → DEMO_ALLERGIES = ["Penicillin", "Peanuts", "Sulfa"] hardcoded constant phía client; prop knownAllergies? cho phép override sau.
-- visitId chỉ biết sau khi save → capture payload.visitId vào savedVisitId state sau save thành công; EPrescriptionPanel render conditional khi savedVisitId && staffProfileId.
-- Drug search không cần endpoint mới → fetch all GET /api/drugs on mount, filter client-side (tránh thêm GET /api/drugs/search).
-- PrescriptionWriteDto.IssuedAt bắt buộc → truyền new Date().toISOString().
-- EPrescriptionPage.tsx dùng "Bệnh nhân" hardcoded cho patientName vì không resolve được từ visitId.
-- UI redesign đồng bộ ClinicDashboard: rounded-2xl cards, material-symbols-outlined icons, emerald/rose toasts.
-- TypeScript type-check: npx tsc --noEmit → 0 errors (3 lần kiểm tra).
-```
-
-#### 4.5. Minh chứng
-
-| Loại minh chứng | Nội dung |
-|---|---|
-| Link commit | Chưa commit tại thời điểm ghi log — files ở trạng thái untracked/modified trên nhánh main |
-| File liên quan | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
-| Kết quả chạy/test | `npx tsc --noEmit`: 0 errors. Drug autocomplete hoạt động. Allergy warning hiển thị đúng khi chọn thuốc có tên trùng danh sách dị ứng. Stock = 0 → nút Add disabled. Send flow → POST /api/prescriptions thành công. |
-| Ghi chú khác | Drug allergy list cứng (Penicillin, Peanuts, Sulfa Drugs) — client-side only, không query DB. Pharmacy selector dùng Clinic entity thay thế do không có Pharmacy entity trong schema. |
-
-#### 4.6. Nhận xét cá nhân/nhóm
-
-```text
-AI sinh toàn bộ E-Prescription feature trong một session, bao gồm cả UI redesign đồng bộ ClinicDashboard.
-Cần tự xác định các constraint của project (không có Pharmacy entity, không có AllergyInfo field, visitId chỉ biết sau save)
-và điều chỉnh giải pháp cho phù hợp với schema hiện có — không phải AI tự nhận ra.
-TypeScript type-checking (npx tsc --noEmit) là bước kiểm chứng quan trọng nhất trước khi xác nhận feature hoàn thành.
+Thay vì làm 2 implementation riêng cho Gmail và SendGrid như yêu cầu ban đầu, AI nhận ra điểm
+chung kỹ thuật (cùng SMTP) để gộp lại thành 1 sender cấu hình được — giảm trùng lặp code và
+dễ bảo trì hơn, đúng tinh thần không over-engineer nhưng vẫn đáp ứng đủ yêu cầu.
 ```
 
 ---
@@ -888,17 +869,18 @@ không thấy — cần luôn test end-to-end với dữ liệu thật.
 | Viết báo cáo                |               |              |                 |               |         |
 | Làm slide thuyết trình      |               |              |                 |               |         |
 | Phân tích yêu cầu |  |  |  |  |  |
+| Phân tích yêu cầu |  |  | x |  | Đối chiếu checkfile.md với codebase để xác định Screen Admin thiếu/đủ |
 | Viết user story/use case |  |  |  |  |  |
-| Thiết kế database |  |  |  |  |  |
-| Thiết kế kiến trúc hệ thống |  |  |  |  |  |
-| Thiết kế giao diện |  |  | x |  | Sidebar promotion (Entry 10) |
-| Code frontend |  |  |  | x | E-Prescription UI, allergy validation, stock filter, sidebar (Entry 10) |
-| Code backend |  |  | x |  | NLM ICD-10 API integration (Entry 8) |
-| Debug lỗi |  |  |  |  |  |
-| Viết test case |  |  |  |  |  |
-| Kiểm thử sản phẩm |  |  |  |  |  |
-| Tối ưu code |  |  |  |  |  |
-| Viết báo cáo |  |  |  |  |  |
+| Thiết kế database |  |  | x |  | Report module dùng entity có sẵn; riêng OTP/dose-check có thêm entity/migration mới (OtpSetting, OtpCode, cột dose threshold) |
+| Thiết kế kiến trúc hệ thống |  | x |  |  | Tái dùng pattern Clean Architecture đã có (IReportQuery tương tự IStaffScheduleQuery); IOtpSender abstraction dùng chung Gmail/SendGrid |
+| Thiết kế giao diện |  |  |  | x | 7 trang mới (2 dashboard + 3 admin + dose-check tab + OTP) dựng từ đầu theo base-html/spec |
+| Code frontend |  |  |  | x | RevenueDashboardPage, OperationsReportPage, StaffManagementPage, UserManagementPage, DrugInteractionPage (+ tab dose-check), OtpSecurityPage, 3 chart SVG component |
+| Code backend |  |  |  | x | ReportDtos/Query/Controller; CdssController.DoseCheck thật; OtpController + SmtpOtpSender (MailKit) |
+| Debug lỗi |  |  |  | x | Tự phát hiện & fix 2 bug report (timezone frontend, endDate inclusive backend); phát hiện class CSS animate-pulse-slow chưa từng định nghĩa khiến banner CDSS không nhấp nháy như spec |
+| Viết test case |  |  |  | x | Playwright script (login thật, click, screenshot, verify API persist); test riêng đường SMTP thật bằng host giả để xác nhận fallback |
+| Kiểm thử sản phẩm |  |  |  | x | Chạy Playwright headless cho tất cả 7 trang mới, xác nhận console error = 0; test cả 2 công thức dose (per-kg/absolute) |
+| Tối ưu code |  | x |  |  | Tách shared components/utils tránh trùng code giữa 2 trang report |
+| Viết báo cáo |  |  | x |  | Hỗ trợ điền CHANGELOG.md, AI_AUDIT_LOG.md, PROMPTS.md |
 | Làm slide thuyết trình |  |  |  |  |  |
 
 ---

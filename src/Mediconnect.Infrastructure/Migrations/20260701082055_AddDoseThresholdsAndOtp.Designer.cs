@@ -4,6 +4,7 @@ using Mediconnect.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Mediconnect.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260701082055_AddDoseThresholdsAndOtp")]
+    partial class AddDoseThresholdsAndOtp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -74,15 +77,6 @@ namespace Mediconnect.Infrastructure.Migrations
 
                     b.Property<Guid>("DepartmentId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Floor")
-                        .HasColumnType("int");
-
-                    b.Property<double?>("PositionX")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("PositionY")
-                        .HasColumnType("float");
 
                     b.Property<string>("RoomNumber")
                         .HasMaxLength(50)
@@ -540,9 +534,6 @@ namespace Mediconnect.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("Delivered")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("datetime2");
 
@@ -815,42 +806,6 @@ namespace Mediconnect.Infrastructure.Migrations
                     b.HasIndex("ClinicId");
 
                     b.ToTable("QueueTickets");
-                });
-
-            modelBuilder.Entity("Mediconnect.Domain.Entities.ServiceRating", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("DoctorId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("OutpatientVisitId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PatientId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Score")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DoctorId");
-
-                    b.HasIndex("OutpatientVisitId");
-
-                    b.HasIndex("PatientId");
-
-                    b.ToTable("ServiceRatings");
                 });
 
             modelBuilder.Entity("Mediconnect.Domain.Entities.StaffProfile", b =>
@@ -1358,33 +1313,6 @@ namespace Mediconnect.Infrastructure.Migrations
                     b.Navigation("Appointment");
 
                     b.Navigation("Clinic");
-                });
-
-            modelBuilder.Entity("Mediconnect.Domain.Entities.ServiceRating", b =>
-                {
-                    b.HasOne("Mediconnect.Domain.Entities.StaffProfile", "Doctor")
-                        .WithMany()
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Mediconnect.Domain.Entities.OutpatientVisit", "OutpatientVisit")
-                        .WithMany()
-                        .HasForeignKey("OutpatientVisitId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Mediconnect.Domain.Entities.PatientProfile", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Doctor");
-
-                    b.Navigation("OutpatientVisit");
-
-                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("Mediconnect.Domain.Entities.StaffProfile", b =>

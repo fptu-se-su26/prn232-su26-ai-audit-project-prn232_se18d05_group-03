@@ -21,4 +21,12 @@ public class Drug
     public decimal UnitPrice { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    // ── CDSS dose-safety thresholds (Screen 2.2) ─────────────────────────────
+    // Absolute recommended maximum dose per administration/day (in the drug's Unit).
+    public decimal? MaxDailyDose { get; set; }
+
+    // Weight-based recommended maximum (Unit per kg of body weight). When set and
+    // the patient's weight is known, this takes precedence over MaxDailyDose.
+    public decimal? MaxDosePerKg { get; set; }
 }

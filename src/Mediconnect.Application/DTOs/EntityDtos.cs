@@ -199,6 +199,8 @@ public class DrugReadDto
     public int StockQuantity { get; set; }
     public decimal UnitPrice { get; set; }
     public bool IsActive { get; set; }
+    public decimal? MaxDailyDose { get; set; }
+    public decimal? MaxDosePerKg { get; set; }
 }
 
 public class DrugWriteDto
@@ -209,6 +211,8 @@ public class DrugWriteDto
     public int StockQuantity { get; set; }
     public decimal UnitPrice { get; set; }
     public bool IsActive { get; set; }
+    public decimal? MaxDailyDose { get; set; }
+    public decimal? MaxDosePerKg { get; set; }
 }
 
 public class DrugInteractionReadDto

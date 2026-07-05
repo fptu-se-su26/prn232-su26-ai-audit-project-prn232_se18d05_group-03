@@ -107,6 +107,78 @@ export interface StaffDirectory {
   degree?: string;
 }
 
+// ── CDSS: Drugs & Drug Interactions ───────────────────────────────────────────
+
+export interface Drug {
+  id: string;
+  name: string;
+  code?: string;
+  unit?: string;
+  stockQuantity: number;
+  unitPrice: number;
+  isActive: boolean;
+  maxDailyDose?: number | null;
+  maxDosePerKg?: number | null;
+}
+
+export interface DrugInteraction {
+  id: string;
+  drugId: string;
+  interactingDrugId: string;
+  severity?: string;
+  description?: string;
+}
+
+export interface DoseCheckResult {
+  isOverDose: boolean;
+  message: string;
+  drugName: string;
+  unit?: string;
+  enteredDose?: number | null;
+  recommendedMaxDose?: number | null;
+  patientWeightKg?: number | null;
+  thresholdBasis: "per-kg" | "absolute" | "none";
+}
+
+export enum OtpChannel {
+  Email = 0,
+  Sms = 1,
+}
+
+export enum OtpStatus {
+  Pending = 0,
+  Verified = 1,
+  Expired = 2,
+  Failed = 3,
+}
+
+export interface OtpSetting {
+  isEnabled: boolean;
+  channel: OtpChannel;
+  codeLength: number;
+  expiryMinutes: number;
+  maxAttempts: number;
+  updatedAt: string;
+  emailConfigured: boolean;
+}
+
+export interface OtpCode {
+  id: string;
+  userAccountId: string;
+  userFullName: string;
+  userEmail: string;
+  code: string;
+  channel: OtpChannel;
+  purpose: string;
+  status: OtpStatus;
+  attemptCount: number;
+  delivered: boolean;
+  deliveryDetail: string;
+  createdAt: string;
+  expiresAt: string;
+  consumedAt?: string | null;
+}
+
 export enum ShiftType {
   Morning = 0,
   Afternoon = 1,
@@ -239,3 +311,37 @@ export interface ActivePrescriptionItem {
   stockQuantity: number;
 }
 
+// ── Report DTOs ──────────────────────────────────────────────────────────────
+
+export interface SummaryReport {
+  totalRevenue: number;
+  bedOccupancyRate: number;
+  totalOutpatientVisits: number;
+  activeInpatients: number;
+}
+
+export interface RevenueItem {
+  timePeriod: string;
+  department: string;
+  revenue: number;
+}
+
+export interface BedDeptBreakdown {
+  department: string;
+  total: number;
+  occupied: number;
+  percentage: number;
+}
+
+export interface BedOccupancyReport {
+  totalBeds: number;
+  occupiedBeds: number;
+  availableBeds: number;
+  occupancyPercentage: number;
+  byDepartmentBreakdown: BedDeptBreakdown[];
+}
+
+export interface OutpatientVisitItem {
+  timePeriod: string;
+  visitCount: number;
+}

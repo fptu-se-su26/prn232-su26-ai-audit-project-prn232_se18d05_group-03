@@ -17,9 +17,18 @@ import type {
   ClinicQueueSummary,
   ClinicQueue,
   MedicalService,
+  SummaryReport,
+  RevenueItem,
+  BedOccupancyReport,
+  OutpatientVisitItem,
+  UserRole,
+  Drug,
+  DrugInteraction,
+  DoseCheckResult,
+  OtpSetting,
+  OtpCode,
   Icd10Result,
   PatientDiagnosisHistory,
-  DrugResult,
 } from "../types";
 
 export const authApi = {
@@ -75,9 +84,19 @@ export const scheduleApi = {
 export const userApi = {
   getAll: () => api.get<UserAccount[]>("/users"),
   getById: (id: string) => api.get<UserAccount>(`/users/${id}`),
+  create: (data: { fullName: string; email: string; phoneNumber?: string; password?: string; role: UserRole; isActive: boolean }) =>
+    api.post<UserAccount>("/users", data),
+  update: (id: string, data: { fullName: string; email: string; phoneNumber?: string; password?: string; role: UserRole; isActive: boolean }) =>
+    api.put(`/users/${id}`, data),
+  delete: (id: string) => api.delete(`/users/${id}`),
+  updateStatus: (id: string, isActive: boolean) =>
+    api.patch(`/users/${id}/status`, { isActive }),
+  updateRole: (id: string, role: UserRole) =>
+    api.patch(`/users/${id}/role`, { role }),
 };
 
 export const patientApi = {
+  getAll: () => api.get<PatientProfile[]>("/patients"),
   getMe: () => api.get<PatientProfile>("/patients/me"),
   create: (data: { userAccountId: string }) =>
     api.post<PatientProfile>("/patients", data),
@@ -142,10 +161,6 @@ export const medicalRecordApi = {
     api.get<PatientDiagnosisHistory[]>(`/medical-records/patients/${patientId}/diagnosis-history`),
 };
 
-export const drugApi = {
-  getAll: () => api.get<DrugResult[]>("/drugs"),
-};
-
 export const prescriptionApi = {
   create: (data: {
     outpatientVisitId: string;
@@ -207,5 +222,62 @@ export const clinicManagementApi = {
     api.patch<{ id: string; isActive: boolean }>(`/clinic-management/services/${id}/toggle-active`),
   deleteService: (id: string) =>
     api.delete(`/clinic-management/services/${id}`),
+};
+
+export const reportApi = {
+  getSummary: (period: "today" | "this-month") =>
+    api.get<SummaryReport>("/reports/summary", { params: { period } }),
+
+  getRevenue: (params: {
+    startDate?: string;
+    endDate?: string;
+    groupBy?: "day" | "month";
+    department?: string;
+  }) => api.get<RevenueItem[]>("/reports/revenue", { params }),
+
+  getBedOccupancy: (department?: string) =>
+    api.get<BedOccupancyReport>("/reports/bed-occupancy", {
+      params: department ? { department } : {},
+    }),
+
+  getOutpatientVisits: (params: {
+    startDate: string;
+    endDate: string;
+    groupBy?: "day" | "month";
+  }) => api.get<OutpatientVisitItem[]>("/reports/outpatient-visits", { params }),
+};
+
+export const drugApi = {
+  getAll: () => api.get<Drug[]>("/drugs"),
+  getById: (id: string) => api.get<Drug>(`/drugs/${id}`),
+  create: (data: Omit<Drug, "id">) => api.post<Drug>("/drugs", data),
+  update: (id: string, data: Omit<Drug, "id">) => api.put(`/drugs/${id}`, data),
+  delete: (id: string) => api.delete(`/drugs/${id}`),
+};
+
+export const drugInteractionApi = {
+  getAll: () => api.get<DrugInteraction[]>("/druginteractions"),
+  create: (data: Omit<DrugInteraction, "id">) => api.post<DrugInteraction>("/druginteractions", data),
+  update: (id: string, data: Omit<DrugInteraction, "id">) => api.put(`/druginteractions/${id}`, data),
+  delete: (id: string) => api.delete(`/druginteractions/${id}`),
+};
+
+export const cdssApi = {
+  checkInteractions: (drugIds: string[]) =>
+    api.post<{ interactions: DrugInteraction[] }>("/cdss/drug-interactions/check", { drugIds }),
+  checkDose: (data: { patientId: string; drugId: string; doseAmount: number }) =>
+    api.post<DoseCheckResult>("/cdss/dose-check", data),
+};
+
+export const otpApi = {
+  getSettings: () => api.get<OtpSetting>("/otp/settings"),
+  updateSettings: (data: Omit<OtpSetting, "updatedAt" | "emailConfigured">) =>
+    api.put<OtpSetting>("/otp/settings", data),
+  issue: (userAccountId: string, purpose = "AccountActivation") =>
+    api.post<OtpCode>("/otp/issue", { userAccountId, purpose }),
+  verify: (userAccountId: string, code: string) =>
+    api.post<{ success: boolean; message: string }>("/otp/verify", { userAccountId, code }),
+  getCodes: (userAccountId?: string) =>
+    api.get<OtpCode[]>("/otp/codes", { params: userAccountId ? { userAccountId } : {} }),
 };
 

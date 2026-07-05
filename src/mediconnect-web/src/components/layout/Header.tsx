@@ -1,7 +1,56 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { UserRole } from "../../types";
+
+const ADMIN_LINKS = [
+  { to: "/manage-services", icon: "storefront", label: "Quản lý dịch vụ" },
+  { to: "/admin/staff", icon: "badge", label: "Quản lý nhân sự" },
+  { to: "/admin/users", icon: "manage_accounts", label: "Quản lý tài khoản" },
+  { to: "/admin/drug-interactions", icon: "medication", label: "Cảnh báo tương tác thuốc" },
+  { to: "/admin/otp-security", icon: "encrypted", label: "Cấu hình & bảo mật OTP" },
+];
+
+function AdminDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("click", onClickOutside);
+    return () => document.removeEventListener("click", onClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="text-on-surface-variant hover:text-primary transition-colors font-medium flex items-center gap-1"
+      >
+        <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+        Quản trị
+        <span className="material-symbols-outlined text-[18px]">{open ? "expand_less" : "expand_more"}</span>
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg border border-outline-variant shadow-lg py-1 z-50">
+          {ADMIN_LINKS.map(link => (
+            <Link
+              key={link.to}
+              to={link.to}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]">{link.icon}</span>
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -72,12 +121,23 @@ export default function Header() {
                 )}
                 {isAdmin && (
                   <Link
-                    to="/manage-services"
-                    className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    to="/reports/revenue"
+                    className="text-on-surface-variant hover:text-primary transition-colors font-medium flex items-center gap-1"
                   >
-                    Quản lý dịch vụ
+                    <span className="material-symbols-outlined text-[18px]">payments</span>
+                    Doanh thu
                   </Link>
                 )}
+                {isAdmin && (
+                  <Link
+                    to="/reports/operations"
+                    className="text-on-surface-variant hover:text-primary transition-colors font-medium flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">monitoring</span>
+                    Vận hành
+                  </Link>
+                )}
+                {isAdmin && <AdminDropdown />}
 
               </>
             )}
@@ -180,13 +240,33 @@ export default function Header() {
                   </>
                 )}
                 {isAdmin && (
-                  <Link
-                    to="/manage-services"
-                    className="px-3 py-2 text-on-surface-variant hover:text-primary"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Quản lý dịch vụ
-                  </Link>
+                  <>
+                    <Link
+                      to="/reports/revenue"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Doanh thu
+                    </Link>
+                    <Link
+                      to="/reports/operations"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Vận hành
+                    </Link>
+                    <p className="px-3 pt-2 text-xs font-semibold text-on-surface-variant uppercase">Quản trị</p>
+                    {ADMIN_LINKS.map(link => (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </>
                 )}
 
                 <button
