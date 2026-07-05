@@ -29,6 +29,17 @@ import type {
   OtpCode,
   Icd10Result,
   PatientDiagnosisHistory,
+  PatientHistoryDto,
+  LabOrder,
+  PrescriptionItem,
+  BillingInvoice,
+  BillingItem,
+  Payment,
+  PaymentUrlResult,
+  ServiceRating,
+  DoctorRatingSummary,
+  PaymentMethod,
+  PaymentStatus,
 } from "../types";
 
 export const authApi = {
@@ -100,6 +111,65 @@ export const patientApi = {
   getMe: () => api.get<PatientProfile>("/patients/me"),
   create: (data: { userAccountId: string }) =>
     api.post<PatientProfile>("/patients", data),
+  update: (id: string, data: Partial<PatientProfile>) =>
+    api.put(`/patients/${id}`, data),
+  getHistory: (id: string) =>
+    api.get<PatientHistoryDto>(`/patients/${id}/history`),
+};
+
+// ── Feature 2: PHR supporting lookups ────────────────────────────────────────
+export const phrApi = {
+  getAllLabOrders: () => api.get<LabOrder[]>("/LabOrders"),
+  getAllPrescriptionItems: () => api.get<PrescriptionItem[]>("/PrescriptionItems"),
+  getAllDrugs: () => api.get<Drug[]>("/drugs"),
+  getAllClinics: () => api.get<Clinic[]>("/clinics"),
+};
+
+// ── Feature 3: Hospital Fee & BHYT ───────────────────────────────────────────
+export const billingApi = {
+  getAll: () => api.get<BillingInvoice[]>("/BillingInvoices"),
+  getById: (id: string) => api.get<BillingInvoice>(`/BillingInvoices/${id}`),
+  getItems: (id: string) =>
+    api.get<BillingItem[]>(`/BillingInvoices/${id}/items`),
+  generate: (data: {
+    outpatientVisitId: string;
+    examServiceId?: string;
+    insuranceNumber?: string;
+  }) => api.post<BillingInvoice>("/BillingInvoices/generate", data),
+  calculateInsurance: (id: string, insuranceNumber?: string) =>
+    api.post<BillingInvoice>(`/BillingInvoices/${id}/calculate-insurance`, {
+      insuranceNumber,
+    }),
+};
+
+// ── Feature 4: Online payment (VNPay/Momo) & service rating ──────────────────
+export const paymentApi = {
+  getAll: () => api.get<Payment[]>("/Payments"),
+  getById: (id: string) => api.get<Payment>(`/Payments/${id}`),
+  create: (data: {
+    billingInvoiceId: string;
+    method: PaymentMethod | number;
+    amount: number;
+    status?: PaymentStatus | number;
+  }) => api.post<Payment>("/Payments", data),
+  createVnPayUrl: (id: string) =>
+    api.post<PaymentUrlResult>(`/Payments/${id}/vnpay-url`),
+  createMomoUrl: (id: string) =>
+    api.post<PaymentUrlResult>(`/Payments/${id}/momo-url`),
+  confirm: (id: string) => api.post(`/Payments/${id}/confirm`),
+};
+
+export const ratingApi = {
+  getAll: () => api.get<ServiceRating[]>("/ServiceRatings"),
+  create: (data: {
+    patientId: string;
+    doctorId: string;
+    outpatientVisitId: string;
+    score: number;
+    comment?: string;
+  }) => api.post<ServiceRating>("/ServiceRatings", data),
+  getDoctorSummary: (doctorId: string) =>
+    api.get<DoctorRatingSummary>(`/ServiceRatings/doctor/${doctorId}/summary`),
 };
 
 export const outpatientApi = {

@@ -183,17 +183,36 @@ public class BedAssignmentsController : CrudController<BedAssignment, BedAssignm
 
 public class BillingInvoicesController : CrudController<BillingInvoice, BillingInvoiceReadDto, BillingInvoiceWriteDto>
 {
-    private readonly IRepository<BillingInvoice> _invoiceRepository;
     private readonly IRepository<BillingItem> _billingItemRepository;
+    private readonly IBillingService _billingService;
 
     public BillingInvoicesController(
         ICrudService<BillingInvoice, BillingInvoiceReadDto, BillingInvoiceWriteDto> service,
-        IRepository<BillingInvoice> invoiceRepository,
-        IRepository<BillingItem> billingItemRepository)
+        IRepository<BillingItem> billingItemRepository,
+        IBillingService billingService)
         : base(service)
     {
-        _invoiceRepository = invoiceRepository;
         _billingItemRepository = billingItemRepository;
+        _billingService = billingService;
+    }
+
+    /// <summary>
+    /// Tự động gom chi phí khám + xét nghiệm + thuốc của một lần khám thành phiếu thu tổng.
+    /// </summary>
+    [HttpPost("generate")]
+    public async Task<ActionResult<BillingInvoiceDetailDto>> Generate(
+        GenerateInvoiceRequestDto dto,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _billingService.GenerateInvoiceAsync(dto, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("{id:guid}/items")]
@@ -220,23 +239,24 @@ public class BillingInvoicesController : CrudController<BillingInvoice, BillingI
         return CreatedAtAction(nameof(GetItems), new { id }, result);
     }
 
+    /// <summary>
+    /// Nhập/cập nhật mã thẻ BHYT và tính lại mức khấu trừ bảo hiểm cho phiếu thu.
+    /// </summary>
     [HttpPost("{id:guid}/calculate-insurance")]
-    public async Task<ActionResult<BillingInvoiceReadDto>> CalculateInsurance(
+    public async Task<ActionResult<BillingInvoiceDetailDto>> CalculateInsurance(
         Guid id,
+        InsuranceCalculationRequestDto dto,
         CancellationToken cancellationToken)
     {
-        var invoice = await _invoiceRepository.GetByIdAsync(id, cancellationToken);
-        if (invoice is null)
+        try
         {
-            return NotFound();
+            var result = await _billingService.CalculateInsuranceAsync(id, dto.InsuranceNumber, cancellationToken);
+            return Ok(result);
         }
-
-        invoice.InsuranceDeduction = 0m;
-        invoice.TotalAmount = invoice.Subtotal - invoice.InsuranceDeduction;
-        _invoiceRepository.Update(invoice);
-        await _invoiceRepository.SaveChangesAsync(cancellationToken);
-
-        return Ok(SimpleMapper.Map<BillingInvoice, BillingInvoiceReadDto>(invoice));
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
     }
 }
 
@@ -1034,11 +1054,16 @@ public class OutpatientVisitsController : CrudController<OutpatientVisit, Outpat
 public class PaymentsController : CrudController<Payment, PaymentReadDto, PaymentWriteDto>
 {
     private readonly IRepository<Payment> _repository;
+    private readonly IPaymentGatewayService _gateway;
 
-    public PaymentsController(ICrudService<Payment, PaymentReadDto, PaymentWriteDto> service, IRepository<Payment> repository)
+    public PaymentsController(
+        ICrudService<Payment, PaymentReadDto, PaymentWriteDto> service,
+        IRepository<Payment> repository,
+        IPaymentGatewayService gateway)
         : base(service)
     {
         _repository = repository;
+        _gateway = gateway;
     }
 
     [HttpPost("{id:guid}/confirm")]
@@ -1055,6 +1080,74 @@ public class PaymentsController : CrudController<Payment, PaymentReadDto, Paymen
         _repository.Update(payment);
         await _repository.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+
+    /// <summary>Tạo link thanh toán VNPay cho một Payment đã tồn tại (Method = VnPay).</summary>
+    [HttpPost("{id:guid}/vnpay-url")]
+    public async Task<ActionResult<PaymentUrlResultDto>> CreateVnPayUrl(Guid id, CancellationToken cancellationToken)
+    {
+        var payment = await _repository.GetByIdAsync(id, cancellationToken);
+        if (payment is null)
+        {
+            return NotFound();
+        }
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var url = _gateway.CreateVnPayUrl(payment, ip);
+        return Ok(new PaymentUrlResultDto { PaymentId = payment.Id, PaymentUrl = url });
+    }
+
+    /// <summary>Tạo link thanh toán Momo cho một Payment đã tồn tại (Method = Momo).</summary>
+    [HttpPost("{id:guid}/momo-url")]
+    public async Task<ActionResult<PaymentUrlResultDto>> CreateMomoUrl(Guid id, CancellationToken cancellationToken)
+    {
+        var payment = await _repository.GetByIdAsync(id, cancellationToken);
+        if (payment is null)
+        {
+            return NotFound();
+        }
+
+        var url = _gateway.CreateMomoUrl(payment);
+        return Ok(new PaymentUrlResultDto { PaymentId = payment.Id, PaymentUrl = url });
+    }
+
+    /// <summary>
+    /// VNPay redirect trình duyệt về endpoint này sau khi thanh toán (không có Bearer token).
+    /// Xác thực chữ ký, cập nhật trạng thái Payment tương ứng.
+    /// </summary>
+    [HttpGet("vnpay-return")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VnPayReturn(CancellationToken cancellationToken)
+    {
+        var queryParams = Request.Query.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+        var result = _gateway.ValidateVnPayReturn(queryParams);
+
+        if (!result.IsValidSignature)
+        {
+            return BadRequest(new { message = result.Message });
+        }
+
+        if (!Guid.TryParse(result.TxnRef, out var paymentId))
+        {
+            return BadRequest(new { message = "Invalid vnp_TxnRef" });
+        }
+
+        var payment = await _repository.GetByIdAsync(paymentId, cancellationToken);
+        if (payment is null)
+        {
+            return NotFound();
+        }
+
+        payment.Status = result.IsSuccess ? PaymentStatus.Paid : PaymentStatus.Failed;
+        payment.TransactionRef = result.TransactionNo;
+        if (result.IsSuccess)
+        {
+            payment.PaidAt = DateTime.UtcNow;
+        }
+        _repository.Update(payment);
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        return Ok(new { message = result.Message, paymentId = payment.Id, status = payment.Status });
     }
 }
 
@@ -1102,6 +1195,33 @@ public class QueueTicketsController : CrudController<QueueTicket, QueueTicketRea
         _repository.Update(ticket);
         await _repository.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+}
+
+public class ServiceRatingsController : CrudController<ServiceRating, ServiceRatingReadDto, ServiceRatingWriteDto>
+{
+    private readonly IRepository<ServiceRating> _repository;
+
+    public ServiceRatingsController(
+        ICrudService<ServiceRating, ServiceRatingReadDto, ServiceRatingWriteDto> service,
+        IRepository<ServiceRating> repository)
+        : base(service)
+    {
+        _repository = repository;
+    }
+
+    /// <summary>Điểm đánh giá trung bình và tổng số lượt đánh giá của một bác sĩ.</summary>
+    [HttpGet("doctor/{doctorId:guid}/summary")]
+    public async Task<ActionResult<DoctorRatingSummaryDto>> GetDoctorSummary(Guid doctorId, CancellationToken cancellationToken)
+    {
+        var ratings = await _repository.ListAsync(r => r.DoctorId == doctorId, cancellationToken);
+
+        return Ok(new DoctorRatingSummaryDto
+        {
+            DoctorId = doctorId,
+            TotalRatings = ratings.Count,
+            AverageScore = ratings.Count == 0 ? 0 : Math.Round(ratings.Average(r => r.Score), 2)
+        });
     }
 }
 

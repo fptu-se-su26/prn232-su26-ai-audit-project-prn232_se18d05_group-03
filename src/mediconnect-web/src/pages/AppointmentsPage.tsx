@@ -6,7 +6,7 @@ import type { AppointmentRead } from "../types";
 import { AppointmentStatus } from "../types";
 
 const STATUS_CONFIG: Record<
-  number,
+  AppointmentStatus,
   { label: string; color: string; icon: string }
 > = {
   [AppointmentStatus.Requested]: {
@@ -120,7 +120,7 @@ export default function AppointmentsPage() {
       ) : (
         <div className="space-y-3">
           {appointments.map((apt) => {
-            const status = STATUS_CONFIG[apt.status] ?? STATUS_CONFIG[0];
+            const status = STATUS_CONFIG[apt.status] ?? STATUS_CONFIG[AppointmentStatus.Requested];
             return (
               <div
                 key={apt.id}

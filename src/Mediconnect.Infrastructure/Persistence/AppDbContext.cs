@@ -68,6 +68,7 @@ public class AppDbContext : DbContext
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<TelemedicineSession> TelemedicineSessions => Set<TelemedicineSession>();
     public DbSet<StaffSchedule> StaffSchedules => Set<StaffSchedule>();
+    public DbSet<ServiceRating> ServiceRatings => Set<ServiceRating>();
     public DbSet<OtpSetting> OtpSettings => Set<OtpSetting>();
     public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
 }

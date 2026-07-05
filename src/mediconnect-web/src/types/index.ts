@@ -1,3 +1,6 @@
+// UserRole stays numeric app-wide; the API returns it as a PascalCase string,
+// which AuthContext normalizes back to this enum on login. Other enums below are
+// string enums that match the API's JsonStringEnumConverter output directly.
 export enum UserRole {
   Patient = 0,
   Doctor = 1,
@@ -6,11 +9,11 @@ export enum UserRole {
 }
 
 export enum AppointmentStatus {
-  Requested = 0,
-  Confirmed = 1,
-  CheckedIn = 2,
-  Completed = 3,
-  Cancelled = 4,
+  Requested = "Requested",
+  Confirmed = "Confirmed",
+  CheckedIn = "CheckedIn",
+  Completed = "Completed",
+  Cancelled = "Cancelled",
 }
 
 export enum QueueStatus {
@@ -344,4 +347,167 @@ export interface BedOccupancyReport {
 export interface OutpatientVisitItem {
   timePeriod: string;
   visitCount: number;
+}
+
+// ── PHR / Feature 2: Electronic Health Record (member 2) ─────────────────────
+export enum VisitStatus {
+  Waiting = "Waiting",
+  InProgress = "InProgress",
+  Completed = "Completed",
+  Cancelled = "Cancelled",
+}
+
+export enum LabOrderStatus {
+  Ordered = "Ordered",
+  InProgress = "InProgress",
+  Completed = "Completed",
+  Cancelled = "Cancelled",
+}
+
+export enum Gender {
+  Unknown = "Unknown",
+  Male = "Male",
+  Female = "Female",
+  Other = "Other",
+}
+
+export interface OutpatientVisit {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  clinicId: string;
+  queueTicketId?: string;
+  visitDate: string;
+  chiefComplaint?: string;
+  diagnosisCode?: string;
+  diagnosisDescription?: string;
+  status: VisitStatus;
+  notes?: string;
+}
+
+export interface LabOrder {
+  id: string;
+  outpatientVisitId: string;
+  orderedById: string;
+  testName: string;
+  status: LabOrderStatus;
+  orderedAt: string;
+  notes?: string;
+}
+
+export interface LabResult {
+  id: string;
+  labOrderId: string;
+  resultText?: string;
+  resultFileUrl?: string;
+  resultedAt?: string;
+}
+
+export interface Prescription {
+  id: string;
+  outpatientVisitId: string;
+  doctorId: string;
+  issuedAt: string;
+  notes?: string;
+}
+
+export interface PrescriptionItem {
+  id: string;
+  prescriptionId: string;
+  drugId: string;
+  dose?: string;
+  frequency?: string;
+  durationDays: number;
+  quantity: number;
+}
+
+export interface PatientHistoryDto {
+  visits: OutpatientVisit[];
+  labResults: LabResult[];
+  prescriptions: Prescription[];
+}
+
+// ── Billing / Feature 3: Hospital Fee & BHYT (member 2) ──────────────────────
+export enum InvoiceStatus {
+  Draft = "Draft",
+  Pending = "Pending",
+  Paid = "Paid",
+  Cancelled = "Cancelled",
+}
+
+export enum BillingItemType {
+  Service = "Service",
+  Lab = "Lab",
+  Drug = "Drug",
+  Bed = "Bed",
+  Procedure = "Procedure",
+  Other = "Other",
+}
+
+export interface BillingItem {
+  id: string;
+  billingInvoiceId: string;
+  itemType: BillingItemType;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+}
+
+export interface BillingInvoice {
+  id: string;
+  patientId: string;
+  createdAt: string;
+  status: InvoiceStatus;
+  subtotal: number;
+  insuranceDeduction: number;
+  totalAmount: number;
+  insuranceNumber?: string;
+  items: BillingItem[];
+}
+
+// ── Payment & Rating / Feature 4 (member 2) ──────────────────────────────────
+export enum PaymentMethod {
+  Cash = "Cash",
+  VnPay = "VnPay",
+  Momo = "Momo",
+  BankTransfer = "BankTransfer",
+}
+
+export enum PaymentStatus {
+  Pending = "Pending",
+  Paid = "Paid",
+  Failed = "Failed",
+  Refunded = "Refunded",
+}
+
+export interface Payment {
+  id: string;
+  billingInvoiceId: string;
+  method: PaymentMethod;
+  amount: number;
+  paidAt?: string | null;
+  status: PaymentStatus;
+  transactionRef?: string | null;
+}
+
+export interface PaymentUrlResult {
+  paymentId: string;
+  paymentUrl: string;
+}
+
+export interface ServiceRating {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  outpatientVisitId: string;
+  score: number;
+  comment?: string;
+  createdAt: string;
+}
+
+export interface DoctorRatingSummary {
+  doctorId: string;
+  averageScore: number;
+  totalRatings: number;
 }

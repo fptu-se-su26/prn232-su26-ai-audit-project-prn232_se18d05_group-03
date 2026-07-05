@@ -657,12 +657,218 @@ dễ bảo trì hơn, đúng tinh thần không over-engineer nhưng vẫn đáp
 
 ---
 
+### Lần sử dụng AI số 6
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 10/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Viết giao diện frontend Feature 2: Hồ sơ sức khỏe điện tử (PHR) |
+| Phần việc liên quan | Frontend / Coding |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Làm chức năng Feature 2: Quản lý Hồ sơ Sức khỏe Điện tử (PHR) cho bệnh nhân. Bệnh nhân có thể xem lịch sử khám, đơn thuốc, kết quả xét nghiệm và tải file kết quả.
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+AI tạo PHRPage.tsx (~560 dòng) với 3 tab: lịch sử khám (timeline, tìm kiếm, sắp xếp),
+đơn thuốc (accordion hiển thị chi tiết thuốc từng đơn), kết quả xét nghiệm (filter theo trạng thái, xem chi tiết, tải file).
+Thêm types vào types/index.ts, API calls vào services.ts, route vào App.tsx, link vào Header.tsx.
+AI phát hiện backend /history chỉ trả labOrderId (thiếu testName) và prescriptionId (thiếu drug items).
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng code vào dự án sau khi kiểm tra biên dịch thành công.
+(PatientsController: GET /api/patients/me, GET /api/patients/{id}/history;
+EntityControllers: GET /api/lab-orders, GET /api/prescription-items, GET /api/drugs, GET /api/clinics).
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Đọc EntityDtos.cs để xác nhận cấu trúc DTO thực tế trước khi viết type frontend.
+- Chạy npm run build xác nhận 0 TypeScript error trước khi test.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | chưa commit |
+| File liên quan | src/mediconnect-web/src/pages/PHRPage.tsx; src/mediconnect-web/src/types/index.ts; src/mediconnect-web/src/api/services.ts; src/mediconnect-web/src/App.tsx; src/mediconnect-web/src/components/layout/Header.tsx; src/mediconnect-web/src/index.css |
+| Screenshot |  |
+| Kết quả chạy/test | npm run build: 0 error; route /health-records hoạt động đúng với Patient role |
+| Link video demo |  |
+| Ghi chú khác | Backend endpoint đã có sẵn từ trước; session này chỉ làm phần frontend |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+AI xử lý tốt việc phân tích DTO shape và tự đề xuất cách enrichment dữ liệu client-side khi backend không trả đủ thông tin. Code frontend chạy ngay sau khi tích hợp, không phải fix lỗi build.
+```
+
+---
+
+### Lần sử dụng AI số 7
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 21/06/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Viết backend Feature 3: Quản lý viện phí & tích hợp BHYT |
+| Phần việc liên quan | Backend / Coding |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Làm chức năng Feature 3: Quản lý Viện phí & Tích hợp Bảo hiểm Y tế. Hệ thống tự động gom chi phí
+(khám, xét nghiệm, thuốc) thành phiếu thu tổng. Nhập mã thẻ BHYT, tự động tính mức khấu trừ.
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+AI đề xuất thêm BillingService (IBillingService) với 2 hàm: GenerateInvoiceAsync (gom phí khám,
+xét nghiệm, thuốc thành các BillingItem) và CalculateInsuranceAsync (tính khấu trừ BHYT theo mức 80%).
+Gắn 2 endpoint mới vào BillingInvoicesController: POST /generate và sửa lại /calculate-insurance.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Dùng cấu trúc service + 2 endpoint trên, các entity BillingInvoice/BillingItem đã có sẵn từ trước nên
+chỉ cần thêm logic tính toán.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Bỏ đoạn code cũ (stub CalculateInsurance) thay vì giữ lại song song để tránh code chết.
+- Xác nhận mức khấu trừ 80% và giá xét nghiệm mặc định là giả định đơn giản hóa, ghi rõ trong comment.
+- Build lại dự án (dotnet build) xác nhận 0 lỗi trước khi coi là xong.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | 8181dd8 |
+| File liên quan | src/Mediconnect.Application/Services/BillingService.cs; src/Mediconnect.Application/Interfaces/IBillingService.cs; src/Mediconnect.Application/DTOs/BillingDtos.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |
+| Kết quả chạy/test | dotnet build: 0 Warning, 0 Error |
+
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Phần khó nhất là tính phí xét nghiệm vì LabOrder không lưu giá - phải tự quyết định cách map sang
+MedicalService theo tên, AI chỉ gợi ý hướng còn cách làm cụ thể tự viết lại cho phù hợp dữ liệu hiện có.
+```
+
+---
+
+### Lần sử dụng AI số 8
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 02/07/2026 |
+| Công cụ AI | Claude (Claude Code) |
+| Mục đích sử dụng | Viết backend Feature 4: Thanh toán trực tuyến (VNPay/Momo) & đánh giá dịch vụ |
+| Phần việc liên quan | Backend / Coding / Testing |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 4.1. Prompt đã sử dụng
+
+```text
+Kiểm tra lại Feature 1, 2, 3 .
+```
+
+#### 4.2. Kết quả AI gợi ý
+
+```text
+AI đề xuất: entity ServiceRating mới (điểm 1-5 gắn với lần khám), IPaymentGatewayService sinh link
+thanh toán VNPay (ký HMACSHA512 theo chuẩn sandbox VNPay) và Momo (ký HMACSHA256, mô phỏng vì
+không gọi API thật của Momo), thêm endpoint callback /vnpay-return để xác thực chữ ký và cập nhật
+trạng thái Payment.
+```
+
+#### 4.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Dùng cấu trúc entity/DTO/service/endpoint AI đề xuất, áp dụng vào ServiceRatingsController và
+PaymentsController.
+```
+
+#### 4.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Chạy thử API thật (dotnet run + curl) : phát hiện bug ở BillingService
+  (Feature 3 cũ) — gọi Update() ngay sau AddAsync làm EF Core hiểu nhầm trạng thái Added thành
+  Modified, gây lỗi DbUpdateConcurrencyException khi generate invoice. Đã sửa bằng cách bỏ dòng
+  Update() thừa.
+- Test end-to-end: đăng nhập, tạo visit thật, generate invoice, tạo Payment, gọi vnpay-url/momo-url,
+- Tạo migration AddServiceRating bằng dotnet ef và áp dụng vào DB thật, không chỉ code suông.
+```
+
+#### 4.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | chưa commit |
+| File liên quan | src/Mediconnect.Domain/Entities/ServiceRating.cs; src/Mediconnect.Application/DTOs/ServiceRatingDtos.cs; src/Mediconnect.Application/DTOs/PaymentGatewayDtos.cs; src/Mediconnect.Application/Interfaces/IPaymentGatewayService.cs; src/Mediconnect.Infrastructure/Payments/; src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Infrastructure/Migrations/20260702005148_AddServiceRating.cs |
+| Kết quả chạy/test | dotnet build: 0 lỗi; test thủ công qua curl: tạo rating (201), rating điểm sai (400), tạo invoice, tạo payment, sinh link VNPay/Momo, giả lập callback hợp lệ (payment chuyển Paid) và callback giả mạo chữ ký (bị từ chối) |
+
+#### 4.6. Nhận xét cá nhân/nhóm
+
+```text
+Việc chạy thử API phát hiện một bug thật từ Feature 3 mà lúc review code
+không thấy — cần luôn test end-to-end với dữ liệu thật.
+```
+
+---
+
 ## 5. Bảng tổng hợp mức độ sử dụng AI
 
 Đánh dấu mức độ AI hỗ trợ ở từng hạng mục.
 
 | Hạng mục | Không dùng AI | AI hỗ trợ ít | AI hỗ trợ nhiều | AI sinh chính | Ghi chú |
 |---|:---:|:---:|:---:|:---:|---|
+| Phân tích yêu cầu | x |  |  |  |  |
+| Viết user story/use case | x |  |  |  |  |
+| Thiết kế database |  | x |  |  | AI gợi ý thêm một số field |
+| Thiết kế kiến trúc hệ thống | x |  |  |  | Clean Architecture nhóm tự thiết kế |
+| Thiết kế giao diện |  |  |  | x | AI sinh toàn bộ layout React + Tailwind |
+| Code frontend |  |  |  | x | PHRPage, BookingPage, ClinicDashboard, ManageServices |
+| Code backend |  |  | x |  | AI sinh endpoints + DTO; nhóm điều chỉnh logic nghiệp vụ |
+| Debug lỗi |  |  | x |  | DLL lock, login redirect loop, DTO mismatch enrichment |
+| Viết test case | x |  |  |  |  |
+| Kiểm thử sản phẩm | x |  |  |  | Test thủ công bằng browser và PowerShell |
+| Tối ưu code |  | x |  |  | AI gợi ý một số cải tiến nhỏ |
+| Viết báo cáo | x |  |  |  |  |
+| Làm slide thuyết trình | x |  |  |  |  |
+| Hạng mục                    | Không dùng AI | AI hỗ trợ ít | AI hỗ trợ nhiều | AI sinh chính | Ghi chú |
+| --------------------------- | :-----------: | :----------: | :-------------: | :-----------: | ------- |
+| Phân tích yêu cầu           |               |              |                 |               |         |
+| Viết user story/use case    |               |              |                 |               |         |
+| Thiết kế database           |               |              |                 |               |         |
+| Thiết kế kiến trúc hệ thống |               |              |                 |               |         |
+| Thiết kế giao diện          |               |              |                 |               |         |
+| Code frontend               |               |              |                 |               |         |
+| Code backend                |               |              |                 |               |         |
+| Debug lỗi                   |               |              |                 |               |         |
+| Viết test case              |               |              |                 |               |         |
+| Kiểm thử sản phẩm           |               |              |                 |               |         |
+| Tối ưu code                 |               |              |                 |               |         |
+| Viết báo cáo                |               |              |                 |               |         |
+| Làm slide thuyết trình      |               |              |                 |               |         |
+| Phân tích yêu cầu |  |  |  |  |  |
 | Phân tích yêu cầu |  |  | x |  | Đối chiếu checkfile.md với codebase để xác định Screen Admin thiếu/đủ |
 | Viết user story/use case |  |  |  |  |  |
 | Thiết kế database |  |  | x |  | Report module dùng entity có sẵn; riêng OTP/dose-check có thêm entity/migration mới (OtpSetting, OtpCode, cột dose threshold) |
@@ -684,6 +890,9 @@ dễ bảo trì hơn, đúng tinh thần không over-engineer nhưng vẫn đáp
 Ghi lại các trường hợp AI trả lời sai, thiếu, chưa phù hợp hoặc sinh code không chạy.
 
 | STT | Lỗi/hạn chế từ AI | Cách phát hiện | Cách xử lý/cải tiến |
+|---:|---|---|---|
+| 1 | LabResultReadDto từ GET /history chỉ có labOrderId, thiếu testName | Đọc EntityDtos.cs và so sánh với DTO thực tế | Gọi thêm GET /api/lab-orders client-side, dùng Map tra testName theo labOrderId |
+| 2 | PHRPage dùng color token MD3 chưa khai báo (on-secondary-container, tertiary-container...) | Kiểm tra index.css thấy thiếu 4 biến CSS | Bổ sung 4 token còn thiếu vào index.css |
 | --: | ----------------- | -------------- | ------------------- |
 |   1 |                   |                |                     |
 |   2 |                   |                |                     |
@@ -711,7 +920,13 @@ Có thể bao gồm:
 ### Nội dung kiểm chứng
 
 ```text
-Viết tại đây...
+- Chạy dotnet build sau mỗi lần sinh code backend, xác nhận 0 error 0 warning.
+- Test API endpoints thủ công bằng script PowerShell (GET/POST từng route, kiểm tra status 200).
+- Chạy npm run build để xác nhận TypeScript không có lỗi type trước khi test UI.
+- Đọc trực tiếp EntityDtos.cs để xác nhận cấu trúc DTO thực tế, không dựa vào giả định.
+- Test thủ công các route bảo vệ: không đăng nhập → redirect /login; sai role → redirect /.
+- Kiểm tra console log [PHR] trong browser DevTools để xác nhận API call và enrichment chạy đúng.
+- Xác nhận flow login theo role: Patient → /booking, Doctor/Nurse → /clinic-dashboard, Admin → /manage-services.
 ```
 
 ---
@@ -723,12 +938,23 @@ Viết tại đây...
 Mô tả phần sinh viên tự làm, phần AI hỗ trợ và phần đã tự cải tiến.
 
 ```text
-Viết tại đây...
+thiết kế flow booking wizard (4 bước), thiết kế SmartQueue service interface,
+điều chỉnh logic phát số thứ tự (max+1 trong ngày, kiểm tra clinic.IsActive).
+
+Phần AI hỗ trợ: sinh code boilerplate cho endpoints, DTO, component React;
+phân tích nguyên nhân login redirect loop và DLL lock.
+
+Phần tự cải tiến: test API thủ công bằng PowerShell, debug TypeScript errors khi tích hợp.
 ```
 
 ### 8.2. Đối với bài nhóm
 
 | Thành viên | MSSV | Nhiệm vụ chính | Có sử dụng AI không? | Minh chứng đóng góp |
+|---|---|---|---|---|
+|  |  |  | Có/Không |  |
+|  |  |  | Có/Không |  |
+|  |  |  | Có/Không |  |
+|  |  |  | Có/Không |  |
 | ---------- | ---- | -------------- | -------------------- | ------------------- |
 |            |      |                | Có / Không           |                     |
 |            |      |                | Có / Không           |                     |
@@ -1082,6 +1308,57 @@ không đụng controller của thành viên khác.)
 Lưu ý vận hành: dotnet watch hot-reload không áp được thay đổi constructor (lỗi
 "Multiple constructors") — cần restart hẳn process API sau khi sửa constructor DI.
 ```
+
+---
+
+### Lần sử dụng AI số 16
+
+| Nội dung            | Thông tin                                                              |
+| ------------------- | --------------------------------------------------------------------- |
+| Ngày sử dụng        | 05/07/2026                                                           |
+| Công cụ AI          | Claude Code (claude-opus-4-8)                                        |
+| Mục đích sử dụng    | Khôi phục frontend Member 2 sau merge + làm giao diện F3/F4          |
+| Phần việc liên quan | Member 2 – Patient/PHR/Billing frontend                             |
+| Mức độ sử dụng      | Khôi phục file + sinh code UI + tự kiểm thử                          |
+
+#### 16.1. Prompt đã sử dụng
+
+```text
+Kiểm tra các chức năng, làm cho tôi giao diện ở trong folder src/mediconnect-web
+(4 feature của Member 2: Đặt lịch, PHR, Viện phí & BHYT, Thanh toán & Đánh giá).
+```
+
+#### 16.2. Kết quả AI gợi ý & phần tự làm
+
+```text
+1. Phát hiện sau khi merge develop: các file frontend + config của Member 2 (BookingPage,
+   PHRPage, AppLayout, AuthContext, package.json, vite.config...) đã bị xóa khỏi đĩa,
+   nhưng App.tsx (bản merge) vẫn import chúng → app không build được. Khôi phục đúng các
+   file còn thiếu từ commit trước lần xóa (06ca0a7^), giữ nguyên file shared bản merge.
+
+2. Reconcile: bản merge đổi tên/bỏ type PHR (OutpatientVisit→OutpatientVisitItem...) và bỏ
+   phrApi/getHistory → thêm lại type + service cho Feature 2 mà không phá code thành viên khác.
+
+3. Làm mới UI: BillingPage.tsx (F3 – gom phí, nhập BHYT tính khấu trừ, + F4 thanh toán
+   VNPay/Momo), ReviewsPage.tsx (F4 – đánh giá sao bác sĩ theo lần khám). Thêm route +
+   nav Header.
+
+4. Bug quan trọng tự tìm ra khi test thật: backend (sau merge) serialize enum thành STRING
+   (JsonStringEnumConverter) nhưng frontend đang so sánh enum kiểu số → routing theo role và
+   mọi badge trạng thái sai. Sửa: giữ UserRole số + normalize chuỗi→số ở AuthContext (không
+   đụng page thành viên khác); các enum dữ liệu (VisitStatus, InvoiceStatus, PaymentMethod...)
+   chuyển sang string-enum khớp tên backend.
+
+5. Kiểm thử: tsc + vite build 0 lỗi; chạy backend + vite, test qua proxy toàn bộ luồng
+   login → hồ sơ → tạo phiếu thu → BHYT → thanh toán VNPay/Momo → đánh giá; dọn dữ liệu test.
+```
+
+#### 16.3. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| File liên quan     | src/mediconnect-web/src/pages/BillingPage.tsx, ReviewsPage.tsx, PHRPage.tsx; api/services.ts; types/index.ts; context/AuthContext.tsx; App.tsx; components/layout/Header.tsx |
+| Kết quả chạy/test | npm build (tsc + vite) 0 lỗi; smoke test API end-to-end qua proxy 5173→5079 đều 200/201     |
 
 ---
 

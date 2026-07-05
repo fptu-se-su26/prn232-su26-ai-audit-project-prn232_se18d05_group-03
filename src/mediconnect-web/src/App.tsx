@@ -6,6 +6,9 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import BookingPage from "./pages/BookingPage";
 import AppointmentsPage from "./pages/AppointmentsPage";
+import PHRPage from "./pages/PHRPage";
+import BillingPage from "./pages/BillingPage";
+import ReviewsPage from "./pages/ReviewsPage";
 import ScheduleManagementPage from "./pages/ScheduleManagementPage";
 import ClinicDashboardPage from "./pages/ClinicDashboardPage";
 import ManageServicesPage from "./pages/ManageServicesPage";
@@ -74,6 +77,30 @@ export default function App() {
               element={
                 <RoleProtectedRoute allowedRoles={[UserRole.Patient]}>
                   <AppointmentsPage />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/health-records"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Patient]}>
+                  <PHRPage />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/billing"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Patient]}>
+                  <BillingPage />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-reviews"
+              element={
+                <RoleProtectedRoute allowedRoles={[UserRole.Patient]}>
+                  <ReviewsPage />
                 </RoleProtectedRoute>
               }
             />
