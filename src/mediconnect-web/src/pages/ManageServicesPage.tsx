@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
 import { clinicManagementApi } from "../api/services";
 import type { Department, ClinicWithServices, MedicalService } from "../types";
-
+import { useAuth } from "../context/AuthContext";
 type ActiveTab = "departments" | "clinics" | "services";
 
 export default function ManageServicesPage() {
+    const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>("departments");
   const [departments, setDepartments] = useState<Department[]>([]);
   const [clinics, setClinics] = useState<ClinicWithServices[]>([]);

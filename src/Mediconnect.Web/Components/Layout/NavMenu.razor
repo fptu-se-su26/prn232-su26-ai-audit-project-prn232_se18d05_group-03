@@ -1,0 +1,48 @@
+<!-- Brand -->
+<div class="nav-brand">
+    <span class="material-symbols-outlined nav-brand-icon">local_hospital</span>
+    <div>
+        <div class="nav-brand-name">MediConnect</div>
+        <div class="nav-brand-sub">Smart Hospital HIS</div>
+    </div>
+</div>
+
+<!-- Nav items -->
+<nav class="nav-items">
+    <AuthorizeView>
+        <Authorized>
+            <NavLink class="nav-item" href="" Match="NavLinkMatch.All">
+                <span class="material-symbols-outlined nav-icon">home</span>
+                <span>Trang chủ</span>
+            </NavLink>
+            <div class="nav-section-label">Lâm sàng</div>
+            <NavLink class="nav-item" href="beds">
+                <span class="material-symbols-outlined nav-icon">bed</span>
+                <span>F1 · Sơ đồ giường</span>
+            </NavLink>
+            <NavLink class="nav-item" href="vitals">
+                <span class="material-symbols-outlined nav-icon">ecg_heart</span>
+                <span>F2 · Y lệnh &amp; sinh tồn</span>
+            </NavLink>
+            <NavLink class="nav-item" href="lab">
+                <span class="material-symbols-outlined nav-icon">biotech</span>
+                <span>F3 · Cận lâm sàng</span>
+            </NavLink>
+            <NavLink class="nav-item" href="discharge">
+                <span class="material-symbols-outlined nav-icon">receipt_long</span>
+                <span>F4 · Xuất viện</span>
+            </NavLink>
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="nav-item" href="login">
+                <span class="material-symbols-outlined nav-icon">login</span>
+                <span>Đăng nhập</span>
+            </NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</nav>
+
+<!-- Footer -->
+<div class="nav-footer">
+    <span style="font-size:.65rem;color:rgba(255,255,255,.3)">PRN232 · Member 3</span>
+</div>

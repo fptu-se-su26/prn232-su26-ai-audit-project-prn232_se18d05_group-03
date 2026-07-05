@@ -1,0 +1,815 @@
+/* /Components/Layout/MainLayout.razor.rz.scp.css */
+/* ---- Layout shell ----------------------------------------- */
+.hc-layout[b-phm33115mj] {
+    display: flex;
+    min-height: 100vh;
+    background: var(--surface);
+}
+
+/* ---- Sidebar ---------------------------------------------- */
+.hc-sidebar[b-phm33115mj] {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--sidebar-bg);
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---- Body area -------------------------------------------- */
+.hc-body[b-phm33115mj] {
+    flex: 1;
+    margin-left: var(--sidebar-w);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ---- Top bar ---------------------------------------------- */
+.hc-topbar[b-phm33115mj] {
+    height: 56px;
+    background: var(--surface-card);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ---- Main content ----------------------------------------- */
+.hc-main[b-phm33115mj] {
+    flex: 1;
+    padding: 1.5rem;
+    max-width: 1400px;
+    width: 100%;
+}
+
+/* ---- Avatar ----------------------------------------------- */
+.hc-avatar[b-phm33115mj] {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--brand-light);
+    color: var(--brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: .85rem;
+}
+
+/* ---- Mobile -------------------------------------------- -- */
+@media (max-width: 767px) {
+    .hc-sidebar[b-phm33115mj] { transform: translateX(-100%); }
+    .hc-body[b-phm33115mj] { margin-left: 0; }
+    .hc-topbar[b-phm33115mj] { padding: 0 1rem; }
+    .hc-main[b-phm33115mj] { padding: 1rem; }
+}
+/* /Components/Layout/NavMenu.razor.rz.scp.css */
+/* ---- Brand block ------------------------------------------ */
+.nav-brand[b-qdqydf0n4d] {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-brand-icon[b-qdqydf0n4d] {
+    font-size: 2rem;
+    color: #60a5fa;
+}
+.nav-brand-name[b-qdqydf0n4d] {
+    font-size: .9rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+}
+.nav-brand-sub[b-qdqydf0n4d] {
+    font-size: .65rem;
+    color: rgba(255,255,255,.45);
+}
+
+/* ---- Nav items -------------------------------------------- */
+.nav-items[b-qdqydf0n4d] {
+    flex: 1;
+    padding: .75rem .5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-section-label[b-qdqydf0n4d] {
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: rgba(255,255,255,.35);
+    padding: .75rem .75rem .25rem;
+}
+
+[b-qdqydf0n4d] .nav-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .55rem .75rem;
+    border-radius: 8px;
+    color: rgba(255,255,255,.75);
+    text-decoration: none;
+    font-size: .8125rem;
+    font-weight: 500;
+    transition: all .15s;
+}
+[b-qdqydf0n4d] .nav-item:hover {
+    background: rgba(255,255,255,.08);
+    color: #fff;
+}
+[b-qdqydf0n4d] .nav-item.active {
+    background: rgba(96,165,250,.18);
+    color: #60a5fa;
+}
+[b-qdqydf0n4d] .nav-item.active .nav-icon {
+    color: #60a5fa;
+}
+
+.nav-icon[b-qdqydf0n4d] {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,.5);
+    transition: color .15s;
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ---- Footer ----------------------------------------------- */
+.nav-footer[b-qdqydf0n4d] {
+    padding: .75rem 1rem;
+    border-top: 1px solid rgba(255,255,255,.06);
+    text-align: center;
+}
+/* /Components/Pages/BedMap.razor.rz.scp.css */
+/* ═══════════════════════════════════════════════
+   FLOOR PLAN STAGE
+═══════════════════════════════════════════════ */
+.fp-stage-wrapper[b-ajznrvj7aj] {
+    width: 100%;
+    position: relative;
+    padding-bottom: 60%;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 4px solid #2d2d2d;          /* outer building wall */
+    box-shadow: inset 0 0 0 2px #fff,
+                0 8px 32px rgba(0,0,0,.18);
+    background: #b0a898;                /* site / exterior */
+}
+
+.fp-stage[b-ajznrvj7aj] {
+    position: absolute;
+    inset: 0;
+    background: #f5f0e8;                /* architectural drawing paper */
+    /* fine + major graph-paper grid, blueprint style */
+    background-image:
+        linear-gradient(rgba(58,50,40,.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(58,50,40,.07) 1px, transparent 1px),
+        linear-gradient(rgba(58,50,40,.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(58,50,40,.15) 1px, transparent 1px);
+    background-size: 2% 2%, 2% 2%, 10% 10%, 10% 10%;
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    will-change: transform;
+}
+
+.fp-edit-mode[b-ajznrvj7aj] {
+    background-image:
+        linear-gradient(rgba(18,80,220,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18,80,220,.08) 1px, transparent 1px) !important;
+    background-size: 10% 10% !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   STRUCTURAL: corridor + nurse station
+═══════════════════════════════════════════════ */
+.fp-corridor[b-ajznrvj7aj] {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background:
+        repeating-linear-gradient(45deg, rgba(160,152,128,.30) 0 2px, transparent 2px 11px),
+        rgba(195,188,175,.45);
+    border-left:  2px dashed #a09880;
+    border-right: 2px dashed #a09880;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    z-index: 1;
+}
+
+.fp-corridor-label[b-ajznrvj7aj] {
+    font-size: .46rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    color: #7a7060;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    white-space: nowrap;
+}
+
+.fp-nurse-station[b-ajznrvj7aj] {
+    background: #dbeafe;
+    border: 2px solid #1d4ed8;
+    border-radius: 3px;
+    padding: 3px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: .42rem;
+    font-weight: 800;
+    color: #1d4ed8;
+    letter-spacing: .06em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    width: 70%;
+}
+
+/* ═══════════════════════════════════════════════
+   ROOM OUTLINES  (architectural wall style)
+═══════════════════════════════════════════════ */
+.fp-room[b-ajznrvj7aj] {
+    position: absolute;
+    /* soft ward-colored tint so each zone reads as a distinct room-colored area */
+    background: color-mix(in srgb, var(--ward-color, #94a3b8) 14%, #fffdf8);
+    border: 3px solid #3a3a3a;
+    /* inset second line ≈ double-wall CAD convention */
+    outline: 1px solid #3a3a3a;
+    outline-offset: -6px;
+    box-sizing: border-box;
+    z-index: 2;
+}
+
+/* door gap arc at bottom-left */
+.fp-room[b-ajznrvj7aj]::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: -2px;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #3a3a3a;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    border-radius: 0 14px 0 0;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+.fp-room-label[b-ajznrvj7aj] {
+    position: absolute;
+    top: 3px;
+    left: 5px;
+    font-size: .50rem;
+    font-weight: 800;
+    color: #3a3a3a;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    line-height: 1;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* ward zone header — thin strip above first room in ward */
+.fp-ward-label[b-ajznrvj7aj] {
+    position: absolute;
+    font-size: .48rem;
+    font-weight: 700;
+    color: #6b5e4e;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 3;
+    background: rgba(245,240,232,.85);
+    padding: 1px 5px 1px 6px;
+    border-left: 3px solid var(--ward-color, #94a3b8);
+    border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════════
+   TITLE BLOCK  (CAD-style floor/department label)
+═══════════════════════════════════════════════ */
+.fp-title-block[b-ajznrvj7aj] {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 20;
+    background: rgba(255,253,248,.92);
+    border: 2px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 3px 9px;
+    font-size: .55rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    color: #3a3a3a;
+    text-transform: uppercase;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+
+/* ═══════════════════════════════════════════════
+   BED TILES  (hospital-bed technical drawing)
+═══════════════════════════════════════════════ */
+.bed-tile[b-ajznrvj7aj] {
+    position: absolute;
+    width: 52px;
+    height: 34px;
+    transform: translate(-50%, -50%);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,.2), inset 0 0 0 1px rgba(255,255,255,.4);
+    z-index: 4;
+}
+
+.bed-tile:hover[b-ajznrvj7aj] {
+    transform: translate(-50%, -50%) scale(1.18);
+    box-shadow: 0 5px 16px rgba(0,0,0,.3);
+    z-index: 10;
+}
+
+.bed-tile.selected[b-ajznrvj7aj] {
+    box-shadow: 0 0 0 3px #2563eb, 0 5px 16px rgba(0,0,0,.3);
+    z-index: 11;
+    transform: translate(-50%, -50%) scale(1.12);
+}
+
+/* headboard strip */
+.bed-headboard[b-ajznrvj7aj] {
+    height: 9px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bed-pillow[b-ajznrvj7aj] {
+    width: 20px;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,.55);
+}
+
+/* mattress body */
+.bed-body[b-ajznrvj7aj] {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .48rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+}
+
+/* foot-board */
+.bed-foot[b-ajznrvj7aj] {
+    height: 4px;
+    flex-shrink: 0;
+    opacity: .35;
+}
+
+/* ── Available (green) ── */
+.bed-available[b-ajznrvj7aj]              { background: #f0fdf4; border-color: #16a34a; }
+.bed-available .bed-headboard[b-ajznrvj7aj] { background: #16a34a; }
+.bed-available .bed-body[b-ajznrvj7aj]      { color: #15803d; }
+.bed-available .bed-foot[b-ajznrvj7aj]      { background: #16a34a; }
+
+/* ── Occupied (red) ── */
+.bed-occupied[b-ajznrvj7aj]               { background: #fef2f2; border-color: #dc2626; }
+.bed-occupied .bed-headboard[b-ajznrvj7aj]  { background: #dc2626; }
+.bed-occupied .bed-body[b-ajznrvj7aj]       { color: #b91c1c; }
+.bed-occupied .bed-foot[b-ajznrvj7aj]       { background: #dc2626; }
+
+/* ── Cleaning (amber) ── */
+.bed-cleaning[b-ajznrvj7aj]               { background: #fffbeb; border-color: #d97706; }
+.bed-cleaning .bed-headboard[b-ajznrvj7aj]  { background: #d97706; }
+.bed-cleaning .bed-body[b-ajznrvj7aj]       { color: #92400e; }
+.bed-cleaning .bed-foot[b-ajznrvj7aj]       { background: #d97706; }
+
+/* ── Out-of-service (gray) ── */
+.bed-oos[b-ajznrvj7aj]                    { background: #f9fafb; border-color: #9ca3af; }
+.bed-oos .bed-headboard[b-ajznrvj7aj]       { background: #9ca3af; }
+.bed-oos .bed-body[b-ajznrvj7aj]            { color: #6b7280; }
+.bed-oos .bed-foot[b-ajznrvj7aj]            { background: #9ca3af; }
+
+
+/* ═══════════════════════════════════════════════
+   PAN CURSOR
+═══════════════════════════════════════════════ */
+.fp-pannable[b-ajznrvj7aj] { cursor: grab; }
+
+/* ═══════════════════════════════════════════════
+   ZOOM OVERLAY  (inside stage-wrapper, above stage)
+═══════════════════════════════════════════════ */
+.fp-zoom-controls[b-ajznrvj7aj] {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid #c8c2b8;
+    border-radius: 8px;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+
+.fp-zoom-btn[b-ajznrvj7aj] {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #3a3a3a;
+    transition: background .12s;
+    padding: 0;
+}
+.fp-zoom-btn:hover:not(:disabled)[b-ajznrvj7aj] { background: #e8e3da; }
+.fp-zoom-btn:disabled[b-ajznrvj7aj] { opacity: .35; cursor: default; }
+.fp-zoom-btn .material-symbols-outlined[b-ajznrvj7aj] { font-size: 1.1rem; }
+
+.fp-zoom-pct[b-ajznrvj7aj] {
+    width: 28px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    font-size: .6rem;
+    font-weight: 700;
+    color: #5a5040;
+    letter-spacing: -.02em;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 0;
+    transition: background .12s;
+}
+.fp-zoom-pct:hover[b-ajznrvj7aj] { background: #e8e3da; }
+
+/* ═══════════════════════════════════════════════
+   3D CANVAS  (Three.js WebGL scene)
+═══════════════════════════════════════════════ */
+.fp-3d-wrap[b-ajznrvj7aj] {
+    width: 100%;
+    position: relative;
+    padding-bottom: 60%;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 4px solid #2d2d2d;
+    box-shadow: inset 0 0 0 2px #fff, 0 8px 32px rgba(0,0,0,.18);
+    background: #eef1f5;
+}
+
+.fp-3d-canvas[b-ajznrvj7aj] {
+    position: absolute;
+    inset: 0;
+    cursor: grab;
+}
+.fp-3d-canvas:active[b-ajznrvj7aj] { cursor: grabbing; }
+.fp-3d-canvas canvas[b-ajznrvj7aj] { display: block; }
+
+.fp-3d-hint[b-ajznrvj7aj] {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    z-index: 20;
+    background: rgba(255,253,248,.9);
+    border: 1px solid #c8c2b8;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: .55rem;
+    font-weight: 600;
+    color: #5a5040;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+}
+
+/* ═══════════════════════════════════════════════
+   FLOOR OVERVIEW — clickable rooms, corridor, station, stairs
+═══════════════════════════════════════════════ */
+.fp-room-click[b-ajznrvj7aj] {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+.fp-room-click:hover[b-ajznrvj7aj] {
+    transform: scale(1.02);
+    box-shadow: 0 6px 18px rgba(0,0,0,.18);
+    z-index: 6;
+}
+
+.fp-room-occ[b-ajznrvj7aj] {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1;
+}
+.fp-room-occ.occ-free[b-ajznrvj7aj]    { color: #16a34a; }
+.fp-room-occ.occ-partial[b-ajznrvj7aj] { color: #d97706; }
+.fp-room-occ.occ-full[b-ajznrvj7aj]    { color: #dc2626; }
+
+.fp-room-sub[b-ajznrvj7aj] {
+    font-size: .48rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+/* central horizontal corridor */
+.fp-corridor-h[b-ajznrvj7aj] {
+    position: absolute;
+    background:
+        repeating-linear-gradient(45deg, rgba(160,152,128,.30) 0 2px, transparent 2px 11px),
+        rgba(195,188,175,.45);
+    border-top: 2px dashed #a09880;
+    border-bottom: 2px dashed #a09880;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    pointer-events: none;
+}
+.fp-corridor-label-h[b-ajznrvj7aj] {
+    font-size: .5rem;
+    font-weight: 700;
+    letter-spacing: .3em;
+    color: #7a7060;
+    text-transform: uppercase;
+}
+
+.fp-nurse-station-h[b-ajznrvj7aj] {
+    position: absolute;
+    background: #dbeafe;
+    border: 2px solid #1d4ed8;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: .5rem;
+    font-weight: 800;
+    color: #1d4ed8;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    z-index: 3;
+}
+
+.fp-stairs[b-ajznrvj7aj] {
+    position: absolute;
+    background: #ece7f4;
+    border: 2px solid #7c6f9c;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5b4d7a;
+    z-index: 3;
+}
+.fp-stairs .material-symbols-outlined[b-ajznrvj7aj] { font-size: 1rem; }
+
+/* ═══════════════════════════════════════════════
+   ROOM DETAIL — beds in the selected room
+═══════════════════════════════════════════════ */
+.fp-room-detail[b-ajznrvj7aj] { padding: 6px 4px; min-height: 340px; }
+.fp-room-detail-head[b-ajznrvj7aj] {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.fp-room-detail-title[b-ajznrvj7aj] { font-size: .95rem; color: #334155; }
+.fp-wc-chip[b-ajznrvj7aj] {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #7dd3fc;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: .72rem;
+    font-weight: 700;
+}
+.fp-room-chip[b-ajznrvj7aj] {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    background: var(--ward-color, #94a3b8);
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.fp-bed-grid[b-ajznrvj7aj] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 22px;
+    background: #f5f0e8;
+    background-image:
+        linear-gradient(rgba(58,50,40,.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(58,50,40,.07) 1px, transparent 1px);
+    background-size: 24px 24px;
+    border: 3px solid #3a3a3a;
+    border-radius: 8px;
+}
+
+/* larger, static bed tiles inside the room-detail grid */
+.fp-bed-grid .bed-tile[b-ajznrvj7aj] {
+    position: relative;
+    transform: none;
+    width: 104px;
+    height: 68px;
+}
+.fp-bed-grid .bed-tile:hover[b-ajznrvj7aj]  { transform: scale(1.05); }
+.fp-bed-grid .bed-tile.selected[b-ajznrvj7aj] { transform: scale(1.03); }
+.fp-bed-grid .bed-headboard[b-ajznrvj7aj]   { height: 16px; }
+.fp-bed-grid .bed-pillow[b-ajznrvj7aj]      { width: 38px; height: 9px; }
+.fp-bed-grid .bed-body[b-ajznrvj7aj]        { font-size: 1rem; }
+.fp-bed-grid .bed-foot[b-ajznrvj7aj]        { height: 7px; }
+
+/* 3D drill-down back button */
+.fp-back-btn[b-ajznrvj7aj] {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 20;
+    background: rgba(255,255,255,.94);
+    border: 1px solid #c8c2b8;
+    border-radius: 8px;
+    padding: 5px 11px;
+    font-size: .7rem;
+    font-weight: 600;
+    color: #3a3a3a;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.fp-back-btn:hover[b-ajznrvj7aj] { background: #eef0f2; }
+/* /Components/Pages/Discharge.razor.rz.scp.css */
+.dc-admission-item[b-vxi2y5q5c6] { font-size: .82rem; }
+
+.dc-invoice[b-vxi2y5q5c6] {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+.dc-invoice tfoot tr:last-child td[b-vxi2y5q5c6] {
+    padding-top: .6rem;
+    border-top: 2px solid var(--border);
+}
+
+.fw-600[b-vxi2y5q5c6] { font-weight: 600; }
+.fw-700[b-vxi2y5q5c6] { font-weight: 700; }
+/* /Components/Pages/Home.razor.rz.scp.css */
+.hm-hero[b-mtd2sy08dk] {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+.hm-hero-avatar[b-mtd2sy08dk] {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--brand-light);
+    color: var(--brand);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700;
+}
+
+.hm-tile[b-mtd2sy08dk] {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow-sm);
+    transition: all .18s;
+    color: var(--text);
+}
+.hm-tile:hover[b-mtd2sy08dk] {
+    box-shadow: var(--shadow);
+    border-color: var(--brand);
+    transform: translateY(-2px);
+}
+.hm-tile-icon[b-mtd2sy08dk] {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.5rem;
+}
+.hm-tile-body[b-mtd2sy08dk] { flex: 1; }
+.hm-tile-title[b-mtd2sy08dk] { font-weight: 600; font-size: .9rem; margin-bottom: .2rem; }
+.hm-tile-desc[b-mtd2sy08dk]  { font-size: .78rem; color: var(--text-muted); line-height: 1.4; }
+.hm-tile-arrow[b-mtd2sy08dk] { color: var(--text-muted); font-size: 1.2rem; }
+/* /Components/Pages/Lab.razor.rz.scp.css */
+.lab-order-item[b-9h1sx7fb8h] { font-size: .82rem; }
+
+.lab-dropzone[b-9h1sx7fb8h] {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+    transition: border-color .15s;
+}
+.lab-dropzone:hover[b-9h1sx7fb8h] { border-color: var(--brand); }
+.file-input[b-9h1sx7fb8h] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%; height: 100%;
+}
+
+.result-row[b-9h1sx7fb8h] {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .4rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .78rem;
+}
+.result-row:last-child[b-9h1sx7fb8h] { border-bottom: none; }
+/* /Components/Pages/Login.razor.rz.scp.css */
+.login-wrap[b-mf0nbh0r5o] {
+    display: flex;
+    min-height: 100vh;
+    margin: -1.5rem;   /* bleed past .hc-main padding */
+}
+
+.login-brand[b-mf0nbh0r5o] {
+    flex: 0 0 380px;
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3rem 2.5rem;
+}
+
+.login-hint[b-mf0nbh0r5o] {
+    background: rgba(255,255,255,.06);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+}
+
+.login-card[b-mf0nbh0r5o] {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    padding: 2rem;
+}
+
+.login-card-inner[b-mf0nbh0r5o] {
+    width: 100%;
+    max-width: 400px;
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+    box-shadow: var(--shadow);
+}
+
+@media (max-width: 640px) {
+    .login-wrap[b-mf0nbh0r5o] { flex-direction: column; }
+    .login-brand[b-mf0nbh0r5o] { flex: 0 0 auto; padding: 2rem; }
+}
+/* /Components/Pages/Vitals.razor.rz.scp.css */
+.vital-form[b-psd47heqk4] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: .75rem;
+}

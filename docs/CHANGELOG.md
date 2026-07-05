@@ -17,19 +17,19 @@ Nguyên tắc ghi changelog:
 
 ## 2. Thông tin project
 
-| Thông tin | Nội dung |
-|---|---|
-| Môn học | Building Cross-Platform Back-End Application with .NET |
-| Mã môn học | PRN232 |
-| Lớp | SE18D05 |
-| Học kỳ | SU26 |
-| Tên bài tập / Project | MEDICONNECT – Hệ thống Quản lý Bệnh viện Thông minh |
-| Tên sinh viên / Nhóm | Nhóm 3 |
-| MSSV / Danh sách MSSV | DE180522, DE180526, DE190580, DE190123 |
-| Giảng viên hướng dẫn |  |
-| Repository URL | https://github.com/fptu-se-su26/prn232-su26-ai-audit-project-prn232_se18d05_group-03 |
-| Ngày bắt đầu | 17/05/2026 |
-| Ngày hoàn thành | Đang thực hiện |
+| Thông tin             | Nội dung                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| Môn học               | Building Cross-Platform Back-End Application with .NET                               |
+| Mã môn học            | PRN232                                                                               |
+| Lớp                   | SE18D05                                                                              |
+| Học kỳ                | SU26                                                                                 |
+| Tên bài tập / Project | MEDICONNECT – Hệ thống Quản lý Bệnh viện Thông minh                                  |
+| Tên sinh viên / Nhóm  | Nhóm 3                                                                               |
+| MSSV / Danh sách MSSV | DE180522, DE180526, DE190580, DE190123                                               |
+| Giảng viên hướng dẫn  |                                                                                      |
+| Repository URL        | https://github.com/fptu-se-su26/prn232-su26-ai-audit-project-prn232_se18d05_group-03 |
+| Ngày bắt đầu          | 17/05/2026                                                                           |
+| Ngày hoàn thành       | Đang thực hiện                                                                       |
 
 ---
 
@@ -71,12 +71,12 @@ Nguyên tắc ghi changelog:
 
 ## Thay đổi chi tiết
 
-| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 | Ghi nhận prompt ve phan chia thanh vien, nhac quy trinh audit, va dinh huong models |  | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |  |
-| 2 | Ghi nhan yeu cau thiet ke models code-first cho .NET SQL Server |  | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |  |
-| 3 | Tao project .NET Web API mediconnect va them cau hinh code-first co ban |  | src/mediconnect |  |
-| 4 | Tao file solution cho du an mediconnect |  | mediconnect.sln |  |
+| STT | Nội dung thay đổi                                                                   | Người thực hiện | File/Module liên quan                                    | Minh chứng |
+| --: | ----------------------------------------------------------------------------------- | --------------- | -------------------------------------------------------- | ---------- |
+|   1 | Ghi nhận prompt ve phan chia thanh vien, nhac quy trinh audit, va dinh huong models |                 | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |            |
+|   2 | Ghi nhan yeu cau thiet ke models code-first cho .NET SQL Server                     |                 | docs/PROMPTS.md; docs/AI_AUDIT_LOG.md; docs/CHANGELOG.md |            |
+|   3 | Tao project .NET Web API mediconnect va them cau hinh code-first co ban             |                 | src/mediconnect                                          |            |
+|   4 | Tao file solution cho du an mediconnect                                             |                 | mediconnect.sln                                          |            |
 
 ## AI có hỗ trợ không?
 
@@ -127,10 +127,10 @@ Viết tại đây...
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| --: | ----------------- | --------------- | --------------------- | ---------- |
+|   1 |                   |                 |                       |            |
+|   2 |                   |                 |                       |            |
+|   3 |                   |                 |                       |            |
 
 ## AI có hỗ trợ không?
 
@@ -179,13 +179,13 @@ Viết tại đây...
 
 ## Thay đổi chi tiết
 
-| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 | Thiết kế entity StaffSchedule với các field: StaffId, ShiftDate, ShiftType, StartTime, EndTime, WorkRoom | DE180522 | `Mediconnect.Domain/Entities/StaffSchedule.cs` | commit 912b0cf |
-| 2 | Thiết kế enum ShiftType (Morning/Afternoon/Evening), StaffType (Doctor/Nurse/Admin/Caregiver) | DE180522 | `Mediconnect.Domain/Entities/Enums.cs` | commit 912b0cf |
-| 3 | Thiết kế interface IStaffScheduleService (create/update/delete với validation), IStaffScheduleQuery (flat read, paged filter, directory) | DE180522 | `Mediconnect.Application/Interfaces/` | commit 912b0cf |
-| 4 | Thiết kế DTO phẳng ScheduleFlatReadDto (join StaffProfile + UserAccount + Department) | DE180522 | `Mediconnect.Application/DTOs/ScheduleDtos.cs` | commit 912b0cf |
-| 5 | Thiết kế giao diện Gantt chart (staff rows × date columns) theo base-html | DE180522 | `base-html/hr_shift_scheduling_matrix.html` | — |
+| STT | Nội dung thay đổi                                                                                                                        | Người thực hiện | File/Module liên quan                          | Minh chứng     |
+| --: | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ---------------------------------------------- | -------------- |
+|   1 | Thiết kế entity StaffSchedule với các field: StaffId, ShiftDate, ShiftType, StartTime, EndTime, WorkRoom                                 | DE180522        | `Mediconnect.Domain/Entities/StaffSchedule.cs` | commit 912b0cf |
+|   2 | Thiết kế enum ShiftType (Morning/Afternoon/Evening), StaffType (Doctor/Nurse/Admin/Caregiver)                                            | DE180522        | `Mediconnect.Domain/Entities/Enums.cs`         | commit 912b0cf |
+|   3 | Thiết kế interface IStaffScheduleService (create/update/delete với validation), IStaffScheduleQuery (flat read, paged filter, directory) | DE180522        | `Mediconnect.Application/Interfaces/`          | commit 912b0cf |
+|   4 | Thiết kế DTO phẳng ScheduleFlatReadDto (join StaffProfile + UserAccount + Department)                                                    | DE180522        | `Mediconnect.Application/DTOs/ScheduleDtos.cs` | commit 912b0cf |
+|   5 | Thiết kế giao diện Gantt chart (staff rows × date columns) theo base-html                                                                | DE180522        | `base-html/hr_shift_scheduling_matrix.html`    | —              |
 
 ## AI có hỗ trợ không?
 
@@ -246,10 +246,16 @@ tránh circular reference khi serialize JSON.
 | 1 | Tao DbContext va bo Models cho HIS & Telemedicine |  | src/mediconnect/Models; src/mediconnect/Data |  |
 | 2 | Them EF Core packages va connection string SQL Server |  | src/mediconnect/mediconnect.csproj; src/mediconnect/appsettings.json; src/mediconnect/Program.cs |  |
 | 3 | Cap nhat README huong dan chay project |  | README.md |  |
-| 4 |  Tạo SmartQueueDtos, IQueueService, QueueService - Feature 1 smart queue | DE180526  | src/Mediconnect.Application/DTOs/SmartQueueDtos.cs; src/Mediconnect.Application/Interfaces/IQueueService.cs; src/Mediconnect.Application/Services/QueueService.cs |  |
-| 5 |  Tạo SmartQueueController, enhance ClinicsController & MedicalServicesController | DE180526   | src/mediconnect/Controllers/SmartQueueController.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |  |
+| 4 | Tạo SmartQueueDtos, IQueueService, QueueService - Feature 1 smart queue | DE180526  | src/Mediconnect.Application/DTOs/SmartQueueDtos.cs; src/Mediconnect.Application/Interfaces/IQueueService.cs; src/Mediconnect.Application/Services/QueueService.cs |  |
+| 5 | Tạo SmartQueueController, enhance ClinicsController & MedicalServicesController | DE180526   | src/mediconnect/Controllers/SmartQueueController.cs; src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs |  |
 | 6 | Them endpoints GET /api/beds/map, GET /api/inpatient-admissions/{id}/bed-assignments, POST /api/inpatient-admissions/{id}/transfer | Park Jea Minh | src/mediconnect/Controllers/EntityControllers.cs | feat(member3): F1 - bed map & transfer |
 | 7 | Them DTOs BedMapGroupDto, TransferAdmissionDto | Park Jea Minh | src/Mediconnect.Application/DTOs/EntityDtos.cs | feat(member3): F1 - bed map & transfer |
+| 8 | Thiết kế backend modular; frontend Clinic Dashboard & Manage Services; sửa lỗi port và session redirect | DE190123 | src/mediconnect/Modules/SmartClinic/*; src/mediconnect-web/src/pages/ClinicDashboardPage.tsx; src/mediconnect-web/src/pages/ManageServicesPage.tsx; src/mediconnect-web/src/context/AuthContext.tsx | feat: Smart Clinic Dashboard & Service Management - MouGlanzuddli |
+| 9 | Implement Outpatient Record (doctor) feature and robust diagnose/save flow | DE190123 | mediconnect-web/src/pages/OutpatientRecordPage.tsx; mediconnect-web/src/components/layout/Header.tsx; Mediconnect.Application/Services/MedicalRecordService.cs; mediconnect/Modules/SmartClinic/OutpatientRecordController.cs | feat(outpatient): UI + save flow; added fallback create visit and lab order creation |
+| 10 | Tích hợp NLM ClinicalTables API cho tìm kiếm ICD-10 (thay thế `Icd10Catalog` chưa định nghĩa gây build lỗi) | DE190123 | `src/Mediconnect.Application/Services/MedicalRecordService.cs` (`SearchICD10Async`); `src/Mediconnect.Application/Interfaces/IMedicalRecordService.cs`; `src/Mediconnect.Application/DTOs/MedicalRecordDtos.cs` (`ICD10ResultDto`); `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs` (`GET icd10/search`); `src/mediconnect/Program.cs` (`AddHttpClient()`); `src/mediconnect-web/src/api/services.ts` (`searchIcd10`); `src/mediconnect-web/src/types/index.ts` (`Icd10Result`) | `472681e feat(outpatient): add ICD-10 diagnosis lookup via NLM API` — URL: `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms={query}&sf=code,name&df=code,name`; parse `root[3]` (displayStrings array) |
+| 11 | Sửa lỗi tên bệnh nhân vãng lai bị mất khi điều hướng sang OutpatientRecord (walk-in patient name persistence) | DE190123 | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx` (navigate với `state: { ticket, clinicId }`); `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx` (`useLocation` + `loc.state?.ticket`); `src/mediconnect-web/src/types/index.ts` (`QueueTicketDetail.patientName`) | `472681e feat(outpatient): fix walk-in patient data persistence` — Root cause: `QueueTicket` entity không có cột `PatientName`; workaround: truyền qua React Router state |
+| 12 | Implement Feature 3 – E-Prescription: drug name autocomplete (live pharmacy inventory API via GET /api/drugs, client-side filter), client-side allergy conflict validation (Penicillin / Peanuts / Sulfa Drugs, DEMO_ALLERGIES constant), pharmacy stock filter (GET /api/clinics/active dùng thay Pharmacy entity), "Add to Prescription" disabled khi stock = 0, send flow POST /api/prescriptions + /api/prescriptionitems | DE190123 | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/api/services.ts` (drugApi, prescriptionApi); `src/mediconnect-web/src/types/index.ts` (DrugResult, ActivePrescriptionItem) | Chưa commit tại thời điểm ghi log — files untracked/modified trên nhánh main |
+| 13 | Sidebar UI: nâng cấp E-Prescription từ sub-nav item lên standalone top-level section; visual parity với Outpatient Records (text-on-surface-variant, hover:text-primary, font-medium); thứ tự: Queue → Outpatient Records → E-Prescription → Telemedicine; route /e-prescription với RoleProtectedRoute (Doctor, Nurse) | DE190123 | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` | Chưa commit tại thời điểm ghi log |
 
 ## AI có hỗ trợ không?
 
@@ -270,6 +276,8 @@ AI (Claude Code) hỗ trợ:
     Week Gantt (staff × date), Day Gantt (24h timeline với shift bars định vị theo giờ thực)
 - Fix lỗi React 19 deprecation: React.FormEvent → inline e.preventDefault()
 - Fix connection string: bỏ Trusted_Connection=True xung đột với SQL auth
+- Claude (claude.ai, 29/06/2026): sinh toàn bộ E-Prescription feature (drug autocomplete, allergy validation,
+  stock filter, disabled state) và sidebar promotion lên top-level section (DE190123)
 ```
 
 ## Commit/Screenshot minh chứng
@@ -280,6 +288,8 @@ Commit DE180522: 912b0cf [DE180522] feat: add HR & Staff Schedule Management (Ga
 Commit DE180526: 8c5e747 [DE180526] feat: add React TypeScript frontend and fix backend API integration
 Commit DE180526: e74ba55 [DE180526] feat: add smart queue service and clinic/service management endpoints
 Commit Park Jea Minh: 9c8929b feat(member3): F1 - bed map, bed-assignments & transfer endpoints
+Commit DE190123: 00ea032 feat: Smart Clinic Dashboard & Service Management
+Commit DE190123: feat(eprescription): E-Prescription feature + sidebar promotion — chưa commit tại thời điểm ghi log (xem git status: EPrescriptionPanel.tsx, EPrescriptionPage.tsx untracked; Header.tsx, App.tsx, services.ts, types/index.ts, OutpatientRecordPage.tsx modified)
 ```
 
 ## Ghi chú
@@ -316,21 +326,21 @@ Commit Park Jea Minh: 9c8929b feat(member3): F1 - bed map, bed-assignments & tra
 
 ## Danh sách lỗi đã xử lý
 
-| STT | Lỗi phát hiện | Nguyên nhân | Cách xử lý | Trạng thái |
-|---:|---|---|---|---|
-| 1 |  |  |  | Open / Fixed / Pending |
-| 2 |  |  |  | Open / Fixed / Pending |
-| 3 |  |  |  | Open / Fixed / Pending |
-| 4 |  |  |  | Open / Fixed / Pending |
-| 5 |  |  |  | Open / Fixed / Pending |
+| STT | Lỗi phát hiện | Nguyên nhân | Cách xử lý | Trạng thái             |
+| --: | ------------- | ----------- | ---------- | ---------------------- |
+|   1 |               |             |            | Open / Fixed / Pending |
+|   2 |               |             |            | Open / Fixed / Pending |
+|   3 |               |             |            | Open / Fixed / Pending |
+|   4 |               |             |            | Open / Fixed / Pending |
+|   5 |               |             |            | Open / Fixed / Pending |
 
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| --: | ----------------- | --------------- | --------------------- | ---------- |
+|   1 |                   |                 |                       |            |
+|   2 |                   |                 |                       |            |
+|   3 |                   |                 |                       |            |
 
 ## AI có hỗ trợ không?
 
@@ -610,10 +620,10 @@ DD/MM/YYYY
 ## Thay đổi chi tiết
 
 | STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
-|---:|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
+| --: | ----------------- | --------------- | --------------------- | ---------- |
+|   1 |                   |                 |                       |            |
+|   2 |                   |                 |                       |            |
+|   3 |                   |                 |                       |            |
 
 ## AI có hỗ trợ không?
 
@@ -656,14 +666,20 @@ Viết tại đây...
 | 8 | Gantt chart ngày (24h timeline, shift bars định vị theo giờ thực) | Completed | `ScheduleManagementPage.tsx` – Day view | DE180522 |
 | 9 | KPI stats bar (tổng nhân viên, đang trực, ca tuần, tỷ lệ phủ) | Completed | `ScheduleManagementPage.tsx` – KPI section | DE180522 |
 | 10 | Staff Profiles Grid (card trạng thái Đang trực/Nghỉ, liên kết Xem lịch trực) | Completed | `ScheduleManagementPage.tsx` – Staff section | DE180522 |
-| 11 | Report API: summary, revenue (theo ngày/tháng + lọc khoa), bed-occupancy, outpatient-visits | Completed | `ReportsController.cs`, `ReportQuery.cs` | DE180522 |
-| 12 | Screen 3.1 – Dashboard Doanh thu tài chính (bar + line chart, lọc khoa, export CSV) | Completed | `RevenueDashboardPage.tsx` | DE180522 |
-| 13 | Screen 3.2 – Dashboard Báo cáo vận hành (pie chart, data table, line chart outpatient) | Completed | `OperationsReportPage.tsx` | DE180522 |
-| 14 | Screen 1.1 (TV4) – Quản lý Hồ sơ Nhân sự (CRUD chuyên khoa/kinh nghiệm/học vị) | Completed | `StaffManagementPage.tsx` | DE180522 |
-| 15 | Screen 2.1 (TV4) – Cảnh báo Tương tác Thuốc CDSS (check + CRUD Drug/DrugInteraction) | Completed | `DrugInteractionPage.tsx` | DE180522 |
-| 16 | Screen 4.1 (TV4) – User Management Console (đổi role, khóa/mở khóa, CRUD tài khoản) | Completed | `UserManagementPage.tsx` | DE180522 |
-| 17 | Screen 2.2 (TV4-F2) – Banner cảnh báo quá liều (dose-check theo cân nặng, banner đỏ nhấp nháy) | Completed | `CdssController.DoseCheck`, `DrugInteractionPage.tsx` (tab "Cảnh báo quá liều") | DE180522 |
-| 18 | Screen 4.2 (TV4-F4) – Cấu hình & bảo mật OTP (chính sách OTP + issue/verify kích hoạt tài khoản) | Completed | `OtpController.cs`, `OtpSecurityPage.tsx` | DE180522 – gửi Email/SMS mô phỏng |
+| 11 | SmartClinic: backend modularization + Clinic Dashboard & Manage Services (frontend) + port/session fixes | Completed | `Modules/SmartClinic/*`, `ClinicDashboardPage.tsx`, `ManageServicesPage.tsx`, `AuthContext.tsx` | DE190123 |
+| 12 | Outpatient Record: doctor UI, diagnose/save flow, auto-create visit/patient, lab orders | Completed | `mediconnect-web/src/pages/OutpatientRecordPage.tsx`, `mediconnect-web/src/components/layout/Header.tsx`, `Mediconnect.Application/Services/MedicalRecordService.cs` | DE190123 |
+| 13 | ICD-10 diagnosis lookup via NLM ClinicalTables API (`GET /api/medical-records/icd10/search?query=`): dropdown tìm theo mã (E11) và tên (Hypertension), parse `root[3]` của response 4-element array | Completed | `Mediconnect.Application/Services/MedicalRecordService.cs` (`SearchICD10Async`); `OutpatientRecordController.cs` (`SearchICD10`); `mediconnect-web/src/api/services.ts` (`searchIcd10`); `Program.cs` (`AddHttpClient()`) | DE190123 |
+| 14 | Walk-in patient name persistence qua React Router state: `ClinicDashboardPage` navigate với `{ ticket, clinicId }`, `OutpatientRecordPage` đọc từ `useLocation().state.ticket.patientName` | Completed | `mediconnect-web/src/pages/ClinicDashboardPage.tsx` (line 384); `mediconnect-web/src/pages/OutpatientRecordPage.tsx` (lines 66–73, 414) | DE190123 |
+| 15 | E-Prescription (Feature 3): drug autocomplete (GET /api/drugs, debounced 250ms, client-side filter), allergy conflict validation (DEMO_ALLERGIES = [Penicillin, Peanuts, Sulfa], client-side), pharmacy stock filter (GET /api/clinics/active), disabled add button khi stock = 0, send flow POST /api/prescriptions + /api/prescriptionitems | Completed | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` | DE190123 |
+| 16 | Sidebar UI promotion: E-Prescription lên top-level nav section (Link to="/e-prescription"); visual parity với Outpatient Records (text-on-surface-variant, hover:text-primary, font-medium); thứ tự Queue → Outpatient Records → E-Prescription → Telemedicine; route /e-prescription với RoleProtectedRoute (Doctor, Nurse) | Completed | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` | DE190123 |
+| 17 | Report API: summary, revenue (theo ngày/tháng + lọc khoa), bed-occupancy, outpatient-visits | Completed | `ReportsController.cs`, `ReportQuery.cs` | DE180522 |
+| 18 | Screen 3.1 – Dashboard Doanh thu tài chính (bar + line chart, lọc khoa, export CSV) | Completed | `RevenueDashboardPage.tsx` | DE180522 |
+| 19 | Screen 3.2 – Dashboard Báo cáo vận hành (pie chart, data table, line chart outpatient) | Completed | `OperationsReportPage.tsx` | DE180522 |
+| 20 | Screen 1.1 (TV4) – Quản lý Hồ sơ Nhân sự (CRUD chuyên khoa/kinh nghiệm/học vị) | Completed | `StaffManagementPage.tsx` | DE180522 |
+| 21 | Screen 2.1 (TV4) – Cảnh báo Tương tác Thuốc CDSS (check + CRUD Drug/DrugInteraction) | Completed | `DrugInteractionPage.tsx` | DE180522 |
+| 22 | Screen 4.1 (TV4) – User Management Console (đổi role, khóa/mở khóa, CRUD tài khoản) | Completed | `UserManagementPage.tsx` | DE180522 |
+| 23 | Screen 2.2 (TV4-F2) – Banner cảnh báo quá liều (dose-check theo cân nặng, banner đỏ nhấp nháy) | Completed | `CdssController.DoseCheck`, `DrugInteractionPage.tsx` (tab "Cảnh báo quá liều") | DE180522 |
+| 24 | Screen 4.2 (TV4-F4) – Cấu hình & bảo mật OTP (chính sách OTP + issue/verify kích hoạt tài khoản) | Completed | `OtpController.cs`, `OtpSecurityPage.tsx` | DE180522 – gửi Email/SMS mô phỏng |
 
 ---
 
@@ -686,7 +702,7 @@ Viết tại đây...
 | Database | Có | Nhiều | Scaffold entities, migrations, DbContext, seed data |
 | Coding | Có | Nhiều | StaffScheduleService, StaffScheduleQuery, ScheduleController, toàn bộ frontend Gantt |
 | Debug | Có | Nhiều | Phát hiện và fix 5 bugs (React.FormEvent, connection string, DTO rename, ...) |
-| Testing | Có | Nhiều | Smoke test PowerShell + Playwright headless thực (login thật, click, screenshot) cho toàn bộ Report dashboard và 3 trang Admin; tự phát hiện 2 bug timezone qua test thực tế |
+| Testing | Có | Nhiều | Smoke test PowerShell (10 scenarios, DE190123) + Playwright headless thực (login thật, click, screenshot) cho toàn bộ Report dashboard và 3 trang Admin; tự phát hiện 2 bug timezone qua test thực tế (DE180522) |
 | Report | Có | Trung bình | Hỗ trợ điền CHANGELOG, README, AI_AUDIT_LOG, PROMPTS |
 | Presentation | Không | — | — |
 
@@ -713,5 +729,5 @@ Viết tại đây...
 Sinh viên/nhóm cam kết rằng nội dung changelog phản ánh đúng các thay đổi đã thực hiện trong quá trình làm bài tập/project.
 
 | Đại diện sinh viên/nhóm | Ngày xác nhận |
-|---|---|
-|  |  |
+| ----------------------- | ------------- |
+|                         |               |

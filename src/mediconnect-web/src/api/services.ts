@@ -27,6 +27,8 @@ import type {
   DoseCheckResult,
   OtpSetting,
   OtpCode,
+  Icd10Result,
+  PatientDiagnosisHistory,
 } from "../types";
 
 export const authApi = {
@@ -100,6 +102,18 @@ export const patientApi = {
     api.post<PatientProfile>("/patients", data),
 };
 
+export const outpatientApi = {
+  create: (data: {
+    patientId: string;
+    doctorId: string;
+    clinicId: string;
+    queueTicketId?: string | null;
+    visitDate?: string;
+    status?: number;
+    notes?: string;
+  }) => api.post<{ id: string }>("/OutpatientVisits", data),
+};
+
 export const appointmentApi = {
   getAll: () => api.get<AppointmentRead[]>("/appointments"),
   getById: (id: string) => api.get<AppointmentRead>(`/appointments/${id}`),
@@ -128,6 +142,40 @@ export const clinicDashboardApi = {
     api.post<{ message: string; ticket: QueueTicketDetail | null }>(`/clinic-dashboard/clinics/${clinicId}/call-next`),
   transferTicket: (ticketId: string, targetClinicId: string) =>
     api.patch<QueueTicketDetail>(`/clinic-dashboard/tickets/${ticketId}/transfer`, { targetClinicId }),
+};
+
+export const medicalRecordApi = {
+  diagnose: (data: {
+    visitId: string;
+    doctorId: string;
+    chiefComplaint?: string;
+    symptoms?: string;
+    diagnosisCode?: string;
+    diagnosisDescription?: string;
+    orderedTests?: string[];
+    notes?: string;
+  }) => api.post("/medical-records/diagnose", data),
+  searchIcd10: (query: string) =>
+    api.get<Icd10Result[]>("/medical-records/icd10/search", { params: { query } }),
+  getDiagnosisHistory: (patientId: string) =>
+    api.get<PatientDiagnosisHistory[]>(`/medical-records/patients/${patientId}/diagnosis-history`),
+};
+
+export const prescriptionApi = {
+  create: (data: {
+    outpatientVisitId: string;
+    doctorId: string;
+    issuedAt: string;
+    notes?: string;
+  }) => api.post<{ id: string; outpatientVisitId: string; doctorId: string; issuedAt: string; notes?: string }>("/prescriptions", data),
+  addItem: (data: {
+    prescriptionId: string;
+    drugId: string;
+    dose?: string;
+    frequency?: string;
+    durationDays: number;
+    quantity: number;
+  }) => api.post("/prescriptionitems", data),
 };
 
 export const clinicManagementApi = {

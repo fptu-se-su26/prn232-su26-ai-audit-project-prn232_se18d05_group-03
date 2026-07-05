@@ -17,6 +17,12 @@ public class DbInitializer
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
+        await SeedCoreAsync(cancellationToken);
+        await SeedBedsAsync(cancellationToken);
+    }
+
+    private async Task SeedCoreAsync(CancellationToken cancellationToken)
+    {
         if (await _context.Departments.AnyAsync(cancellationToken))
         {
             return;
@@ -94,6 +100,17 @@ public class DbInitializer
             Role = UserRole.Nurse,
             IsActive = true,
             PasswordHash = _passwordHasher.Hash("Nurse@123")
+        };
+
+        var labUser = new UserAccount
+        {
+            Id = Guid.NewGuid(),
+            FullName = "Lab Tech Hoa Vo",
+            Email = "lab@mediconnect.local",
+            PhoneNumber = "0930000000",
+            Role = UserRole.Lab,
+            IsActive = true,
+            PasswordHash = _passwordHasher.Hash("Lab@123")
         };
 
         var staffProfiles = new[]
@@ -185,6 +202,63 @@ public class DbInitializer
         await _context.StaffSchedules.AddRangeAsync(staffSchedules, cancellationToken);
         await _context.PatientProfiles.AddAsync(patientProfile, cancellationToken);
 
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SeedBedsAsync(CancellationToken cancellationToken)
+    {
+        if (await _context.Beds.AnyAsync(cancellationToken)) return;
+
+        var depts = await _context.Departments.ToListAsync(cancellationToken);
+        if (depts.Count < 2) return;
+
+        var beds = new List<Bed>();
+
+        // Multi-floor layout: each department spans 3 floors; each floor has 2 wards
+        // (Khu A / Khu B). Each ward has 4 rooms of mixed capacity [6, 3, 2, 1] beds so
+        // the UI can show room types (Phòng thường / 3 giường / đôi / VIP). No coordinates —
+        // the UI generates a realistic floor plan from the Ward → Room → Bed hierarchy.
+        var capacities = new[] { 6, 3, 2, 1 };
+        var statusCycle = new[]
+        {
+            BedStatus.Available, BedStatus.Occupied,     BedStatus.Available,
+            BedStatus.Cleaning,  BedStatus.Available,    BedStatus.Available,
+            BedStatus.Occupied,  BedStatus.OutOfService, BedStatus.Available
+        };
+
+        foreach (var dept in depts)
+        {
+            int deptOffset = dept == depts[0] ? 0 : 4;
+
+            for (int floor = 1; floor <= 3; floor++)
+            {
+                foreach (var (wardName, wardLetter) in new[] { ("Khu A", 'A'), ("Khu B", 'B') })
+                {
+                    for (int r = 0; r < capacities.Length; r++)
+                    {
+                        string room = $"{dept.Code}-{floor}{wardLetter}{r + 1:D2}";
+                        for (int b = 1; b <= capacities[r]; b++)
+                        {
+                            var status = statusCycle[(deptOffset + floor + r + b) % statusCycle.Length];
+                            beds.Add(new Bed
+                            {
+                                Id = Guid.NewGuid(),
+                                DepartmentId = dept.Id,
+                                Ward = wardName,
+                                RoomNumber = room,
+                                BedNumber = $"{b:D2}",
+                                Status = status,
+                                Floor = floor,
+                                PositionX = null,
+                                PositionY = null
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        await _context.Beds.AddRangeAsync(beds, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 }
