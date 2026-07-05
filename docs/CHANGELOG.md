@@ -743,6 +743,7 @@ Viết tại đây...
 | 22 | Screen 4.1 (TV4) – User Management Console (đổi role, khóa/mở khóa, CRUD tài khoản) | Completed | `UserManagementPage.tsx` | DE180522 |
 | 23 | Screen 2.2 (TV4-F2) – Banner cảnh báo quá liều (dose-check theo cân nặng, banner đỏ nhấp nháy) | Completed | `CdssController.DoseCheck`, `DrugInteractionPage.tsx` (tab "Cảnh báo quá liều") | DE180522 |
 | 24 | Screen 4.2 (TV4-F4) – Cấu hình & bảo mật OTP (chính sách OTP + issue/verify kích hoạt tài khoản) | Completed | `OtpController.cs`, `OtpSecurityPage.tsx` | DE180522 – gửi Email/SMS mô phỏng |
+| 25 | Member 2 – khôi phục frontend bị hỏng sau merge + giao diện F3 (Viện phí & BHYT) và F4 (Thanh toán VNPay/Momo & Đánh giá); sửa lỗi tương thích enum-string giữa backend và frontend | Completed | `BillingPage.tsx`, `ReviewsPage.tsx`, `PHRPage.tsx`, `AuthContext.tsx`, `types/index.ts`, `api/services.ts` | DE180526 |
 
 ---
 
