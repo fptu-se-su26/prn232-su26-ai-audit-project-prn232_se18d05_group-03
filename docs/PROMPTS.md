@@ -71,6 +71,12 @@ Sinh viên/nhóm cần ghi lại:
 | 7 | 16/06/2026 | Claude | Sinh code Feature 3 & 4 (lam hai phan) | F3: queue chi dinh, nhap ket qua, upload file that; F4: discharge tong hop chi phi giuong/thuoc/thu thuat thanh invoice gui Thanh toan | Da sinh endpoints F3 (lab-orders/lab-results) va nang cap discharge F4, build sach 0 error | Có | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
 | 9 |  |  |  |  |  | Có / Không |  |
 | 10 |  |  |  |  |  | Có / Không |  |
+| 10 | 14/06/2026 | GitHub Copilot, Claude | Implement Outpatient Record UI and diagnose/create flow | Scaffold OutpatientRecordPage, handle diagnose->create->retry, add local/top search and header link | Implemented OutpatientRecordPage.tsx, header link, ClinicDashboard navigation and payload checks | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+| 11 | 14/06/2026 | GitHub Copilot | Debug duplicate PatientProfile creation | Avoid duplicate PatientProfile by checking existing profile before create (GET /api/patients/me) | Added getMe() check and fallback create in OutpatientRecordPage.tsx to prevent DB unique index error | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+| 12 | 28/06/2026 | Antigravity | Tích hợp NLM ICD-10 API thay thế `Icd10Catalog` chưa định nghĩa | `tim hieu ve du an... tiep tuc hoan thien sua doi tim kiem ICD-10 dua theo nlm api` + test E11/Hypertension | Sinh `SearchICD10Async()` inject HttpClient, URL NLM, parse `root[3]`, DTO `ICD10ResultDto`, đăng ký `AddHttpClient()` | Có | `src/Mediconnect.Application/Services/MedicalRecordService.cs`; `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs`; `src/mediconnect/Program.cs` |
+| 13 | 28/06/2026 | Antigravity | Sửa lỗi tên walk-in mất khi navigate sang OutpatientRecord | Cùng session với prompt 12; AI phân tích `QueueTicket` thiếu `PatientName` cột | Sinh `navigate('/outpatient-record', { state: { ticket, clinicId } })` và `useLocation` + `loc.state?.ticket` | Có | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx` |
+| 14 | 29/06/2026 | Claude (claude.ai) | Implement E-Prescription feature: drug autocomplete (GET /api/drugs), allergy validation, pharmacy stock filter, send flow POST /api/prescriptions | Feature 3 E-Prescription: drug autocomplete debounced 250ms, allergy check [Penicillin/Peanuts/Sulfa Drugs], stock filter via GET /api/clinics/active, disabled add khi stock=0, send flow POST /api/prescriptions + /api/prescriptionitems | Sinh EPrescriptionPanel.tsx, EPrescriptionPage.tsx, update OutpatientRecordPage.tsx + services.ts + types/index.ts | Có | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
+| 15 | 29/06/2026 | Claude (claude.ai) | Sidebar UI: nâng E-Prescription lên top-level section, visual parity với Outpatient Records, route /e-prescription | Promote E-Prescription: standalone top-level nav link "Đơn thuốc điện tử", order Queue → Outpatient Records → E-Prescription → Telemedicine, route /e-prescription với RoleProtectedRoute | Sinh Header.tsx nav link (desktop + mobile, isStaff block), App.tsx route với RoleProtectedRoute (Doctor, Nurse) | Có | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` |
 
 ---
 
@@ -538,6 +544,456 @@ Han che mo hinh du lieu: Bed thieu don gia, CareOrder khong gan Drug/gia -> chi 
 
 ---
 
+### Prompt số 9
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 06/06/2026 |
+| Công cụ AI | Antigravity |
+| Mục đích | Sửa lỗi mất session và tự động đăng xuất |
+| Phần việc liên quan | Frontend / Debugging / Authentication |
+| Mức độ sử dụng | Hỏi xử lý lỗi |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Khi đăng nhập với vai trò Bác sĩ/Admin, trang bị tải lại liên tục và quay về màn đăng nhập /login, không thể truy cập dashboard hàng đợi.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+AI phân tích thấy trang LoginPage mặc định điều hướng mọi người dùng đến /booking (được bảo vệ chỉ cho phép Patient). Điều này dẫn đến vòng lặp chuyển hướng thất bại sang trang chủ, trả về 401 khi call API do thiếu quyền và trigger interceptor xóa token.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Sửa đổi LoginPage.tsx chuyển hướng theo role, và AuthContext.tsx để trả về user đồng bộ.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Kiểm tra biên dịch và test thực tế, xác nhận Bác sĩ vào thẳng /clinic-dashboard và Admin vào thẳng /manage-services không còn bị logout.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | |
+| File liên quan | src/mediconnect-web/src/pages/LoginPage.tsx; src/mediconnect-web/src/context/AuthContext.tsx |
+
+### Prompt số 9
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 14/06/2026 |
+| Công cụ AI | GitHub Copilot, Claude |
+| Mục đích | Implement Outpatient Record page and client-side diagnose/create flow |
+| Phần việc liên quan | Frontend UI, API integration, routing |
+| Mức độ sử dụng | Sinh code và gợi ý giải pháp |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Create an Outpatient Record page for doctors using React+TypeScript: left waiting list, middle patient overview, right consultation form. Implement POST /api/medical-records/diagnose call. If server returns visit-not-found, call POST /api/OutpatientVisits to create visit and retry diagnose. Resolve doctorId mapping to StaffProfile.Id and create/reuse PatientProfile when missing. Add local search for waiting list and top-level search that scans clinic queues.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Need a complete doctor-facing UI to record outpatient consultations and robust client behavior when backend requires an existing OutpatientVisit.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Generated component scaffold, sample API calls, and suggested control flow: diagnose -> if visit missing -> create visit -> retry. Recommended resolving staff profile id via /api/staff/directory and checking/creating patient profile via /api/patients endpoints.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Implemented mediconnect-web/src/pages/OutpatientRecordPage.tsx, added header link and ClinicDashboard navigation, added payload checks and retries, and applied theme styles.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Adapted payload shapes to match backend DTOs, added defensive checks (patient get/create, staffProfile resolution), improved error handling and messages, and prevented duplicate patient creation.
+```
+
+#### 5.6. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | branch: feature/de190123-outpatientRecords |
+| File liên quan | mediconnect-web/src/pages/OutpatientRecordPage.tsx; mediconnect-web/src/components/layout/Header.tsx; mediconnect-web/src/pages/ClinicDashboardPage.tsx |
+
+---
+
+### Prompt số 10
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 14/06/2026 |
+| Công cụ AI | GitHub Copilot |
+| Mục đích | Debug duplicate PatientProfile creation (DB unique index violation) |
+| Phần việc liên quan | Frontend error handling, API usage |
+| Mức độ sử dụng | Gợi ý sửa lỗi và kiểm tra |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Database throws unique index error when creating PatientProfile: IX_PatientProfiles_UserAccountId duplicate key. How to avoid duplicate creation in client-side flow that auto-creates patient profile?
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Client code attempted to auto-create PatientProfile before creating OutpatientVisit, causing SQL unique index violation when profile already exists (race or prior create).
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Recommend to call GET /api/patients/me (or endpoint to fetch patient profile by userAccountId) before creating; only call create when not found. Handle 404/409; surface clear message to user. Add logging and retry logic if needed.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Implemented patientApi.getMe() check in OutpatientRecordPage.tsx and fallback to patientApi.create() only when profile is absent. Added error handling to avoid duplicate insert and surfaced errors.
+```
+
+#### 5.5. Minh chứng
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | branch: feature/de190123-outpatientRecords |
+| File liên quan | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+
+---
+
+### Prompt số 11
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 28/06/2026 |
+| Công cụ AI | Antigravity |
+| Mục đích | Tích hợp NLM ClinicalTables API để tìm kiếm ICD-10, thay thế `Icd10Catalog.Search()` chưa định nghĩa |
+| Phần việc liên quan | Backend / API integration / Debug |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+tim hieu ve du an, chuc nang cua thanh vien "DE190123", tiep tuc hoan thien sua doi tim kiem "ICD-10" dua theo nlm api
+Test kịch bản 1 (Tìm theo mã): Gõ thử chữ E11 xem dropdown có hiển thị các bệnh liên quan đến tiểu đường kèm mô tả tiếng Anh không.
+Test kịch bản 2 (Tìm theo tên): Gõ thử chữ Hypertension xem hệ thống có hiển thị mã code I10 tương ứng không.
+Test lưu trữ: Chọn 1 kết quả, tiến hành Save form và kiểm tra trực tiếp trong cơ sở dữ liệu.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Build lỗi vì `Icd10Catalog.Search()` được gọi trong MedicalRecordService.cs nhưng class không tồn tại trong project.
+Cần thay thế bằng giải pháp thực tế không cần tự duy trì bộ dữ liệu ICD-10 cục bộ.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+- Xác định root cause: class `Icd10Catalog` chưa được định nghĩa ở bất kỳ đâu.
+- Đề xuất thay thế bằng NLM ClinicalTables API (miễn phí, không cần API key).
+- URL: https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms={encodedQuery}&sf=code,name&df=code,name
+- Sinh `SearchICD10Async()`: inject `HttpClient`, gọi `GetAsync`, parse JSON response 4-element array [count, codes[], fields[], displayStrings[][]].
+  Đọc `root[3]` (displayStrings), mỗi phần tử là `[code, description]`.
+- Sinh `ICD10ResultDto { Code, Description }` trong `MedicalRecordDtos.cs`.
+- Sinh endpoint `GET icd10/search` trong `OutpatientRecordController.cs`.
+- Hướng dẫn đăng ký `builder.Services.AddHttpClient()` (generic) trong `Program.cs`.
+- Frontend: `searchIcd10(query)` gọi `GET /medical-records/icd10/search?query=`, type `Icd10Result` trong `types/index.ts`.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ: SearchICD10Async(), ICD10ResultDto, endpoint GET icd10/search, AddHttpClient(),
+searchIcd10() API call và Icd10Result type. Build thành công 0 Error, 0 Warning.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Xác nhận đăng ký generic `AddHttpClient()` (không typed) vì MedicalRecordService nhận HttpClient trực tiếp qua constructor.
+- Test tay 2 kịch bản: "E11" → Diabetes mellitus; "Hypertension" → I10.
+- Xác nhận endpoint trả về JSON đúng format Icd10Result[].
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Cần hỏi lại AI nhiều lần
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | `472681e feat(outpatient): add ICD-10 diagnosis lookup via NLM API` |
+| File liên quan | `src/Mediconnect.Application/Services/MedicalRecordService.cs`; `src/Mediconnect.Application/DTOs/MedicalRecordDtos.cs`; `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs`; `src/mediconnect/Program.cs`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
+| Kết quả chạy/test | `dotnet build`: 0 Error(s), 0 Warning(s). Dropdown ICD-10 hoạt động trên giao diện bác sĩ. |
+
+---
+
+### Prompt số 12
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 28/06/2026 |
+| Công cụ AI | Antigravity |
+| Mục đích | Sửa lỗi tên bệnh nhân vãng lai bị mất khi điều hướng từ ClinicDashboard sang OutpatientRecord |
+| Phần việc liên quan | Frontend / Routing / Data persistence |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+(Cùng session với Prompt 11 — phát hiện trong quá trình test lưu trữ)
+Tên bệnh nhân vãng lai không hiển thị trên trang OutpatientRecord sau khi nhấn "Ghi khám" từ ClinicDashboard.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Entity `QueueTicket` trong DB không có cột `PatientName` (chỉ lưu ClinicId, AppointmentId, Number, IssuedAt, Status).
+Khi doctor navigate sang /outpatient-record, tên walk-in bị mất vì API không thể resolve lại từ DB.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+- Xác định root cause: QueueTicket entity thiếu PatientName column → không thể resolve tên walk-in từ DB sau navigate.
+- Đề xuất: truyền toàn bộ QueueTicketDetail object (đã có patientName từ WalkInCheckInAsync response) 
+  qua React Router navigate state thay vì chỉ truyền ID.
+- Code ClinicDashboardPage.tsx: navigate('/outpatient-record', { state: { ticket: currentPatient, clinicId: selectedClinicId } })
+- Code OutpatientRecordPage.tsx: useLocation() → loc.state?.ticket → setSelectedTicket(state.ticket)
+- Hiển thị: patient?.fullName || selectedTicket?.patientName || 'Bệnh nhân'
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng navigate với router state trong ClinicDashboardPage.tsx (line 384).
+Đọc lại trong OutpatientRecordPage.tsx bằng useLocation + loc.state (lines 66–73).
+Hiển thị tên ưu tiên fullName > patientName (line 414).
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Xác nhận không cần DB migration vì giải pháp hoàn toàn client-side.
+- Kiểm tra searchQuery flow (loc.state?.searchQuery) vẫn hoạt động song song.
+- Test: check-in walk-in → gọi khám → Ghi khám → tên hiển thị đúng trên OutpatientRecord.
+- Ghi nhận giới hạn: tên mất nếu user reload trang — known limitation do schema DB.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Cần hỏi lại AI nhiều lần
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | `472681e feat(outpatient): fix walk-in patient data persistence` |
+| File liên quan | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/types/index.ts` (`QueueTicketDetail.patientName`) |
+| Kết quả chạy/test | Tên walk-in hiển thị đúng trên OutpatientRecord. Không cần DB migration. |
+| Ghi chú khác | Workaround dùng React Router state (ephemeral trong SPA session). Known limitation: tên mất nếu reload. |
+
+---
+
+### Prompt số 13
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 29/06/2026 |
+| Công cụ AI | Claude (claude.ai) |
+| Mục đích | Implement Feature 3 – E-Prescription: drug autocomplete, allergy conflict validation, pharmacy stock filter |
+| Phần việc liên quan | Frontend / Feature / Coding |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+## Objective
+Feature 3 – Quản lý đơn thuốc ngoại trú (E-Prescription)
+
+Target state (sau khi bác sĩ save OutpatientRecord):
+1. Drug autocomplete từ live pharmacy inventory (GET /api/drugs, filter client-side)
+2. Allergy conflict warning: kiểm tra thuốc chọn với known allergies [Penicillin, Peanuts, Sulfa Drugs]
+3. Pharmacy stock filter: chỉ hiển thị thuốc có stockQuantity > 0 khi chọn pharmacy
+4. Nút "Add to Prescription" disabled khi stock = 0
+5. Active prescription list hiển thị thuốc đã thêm
+6. Send to pharmacy: POST /api/prescriptions → POST /api/prescriptionitems per item
+
+Constraints: không thêm DB migration, không thêm endpoint mới nếu có thể dùng endpoint hiện có.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Cần implement tính năng kê đơn thuốc ngoại trú cho bác sĩ trong trang OutpatientRecord.
+Yêu cầu: drug name autocomplete kết nối pharmacy inventory API, kiểm tra dị ứng phía client,
+lọc thuốc theo kho của pharmacy được chọn, và disable nút thêm khi hết hàng.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+- Sinh E-Prescription component với drug autocomplete input gọi live pharmacy inventory API.
+- Sinh allergy validation: so sánh drug được chọn với known allergy list [Penicillin, Peanuts, Sulfa Drugs];
+  hiển thị cảnh báo conflict nếu trùng.
+- Sinh pharmacy stock filter: dropdown chọn pharmacy → autocomplete drug scoped to pharmacy's stock.
+- Logic disable: nút "Add to Prescription" disabled khi stock quantity = 0.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ:
+- EPrescriptionPanel.tsx (mới): drug autocomplete debounced 250ms, allergy check, stock filter, disabled state khi stock=0, send flow POST /api/prescriptions + /api/prescriptionitems
+- EPrescriptionPage.tsx (mới): standalone page, Visit ID input, staffProfileId resolution via staffApi.getDirectory()
+- OutpatientRecordPage.tsx: thêm import EPrescriptionPanel, savedVisitId state, render EPrescriptionPanel sau save thành công
+- api/services.ts: thêm drugApi.getAll(), prescriptionApi.create(), prescriptionApi.addItem()
+- types/index.ts: thêm DrugResult, ActivePrescriptionItem interfaces
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Không có Pharmacy entity trong DB → dùng GET /api/clinics/active (Clinic[]) làm pharmacy selector; stock filter global (stockQuantity > 0), không per-pharmacy
+- PatientProfile không có AllergyInfo field → DEMO_ALLERGIES = ["Penicillin", "Peanuts", "Sulfa"] hardcoded constant
+- Dùng GET /api/drugs (fetch all, filter client-side) thay vì thêm endpoint /drugs/search mới
+- PrescriptionWriteDto.IssuedAt bắt buộc → truyền new Date().toISOString()
+- UI redesign đồng bộ ClinicDashboard: rounded-2xl, material-symbols-outlined, emerald/rose color scheme
+- Kiểm tra: npx tsc --noEmit → 0 errors (3 lần)
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Cần hỏi lại AI nhiều lần
+- [x] Cần tự kiểm tra và chỉnh sửa nhiều (adapt vì không có Pharmacy entity / AllergyInfo field trong schema)
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Chưa commit tại thời điểm ghi log (files untracked/modified trên nhánh main) |
+| File liên quan | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
+| Kết quả chạy/test | `npx tsc --noEmit`: 0 errors. Drug autocomplete hoạt động. Allergy warning hiển thị đúng. Stock=0 → nút Add disabled. Send flow → POST /api/prescriptions thành công. |
+| Ghi chú khác | Allergy list cứng phía client (Penicillin, Peanuts, Sulfa Drugs) — không query DB. Pharmacy selector dùng Clinic entity thay thế. |
+
+---
+
+### Prompt số 14
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 29/06/2026 |
+| Công cụ AI | Claude (claude.ai) |
+| Mục đích | Sidebar UI: nâng E-Prescription từ sub-nav item lên standalone top-level section, visual parity với Outpatient Records |
+| Phần việc liên quan | Frontend / UI / Routing |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+## Objective
+Promote E-Prescription from a child nav item into a standalone top-level section.
+
+Requirements:
+- Visual parity với Outpatient Records (same icon size, label size, active/hover state, padding)
+- Thứ tự nav: Queue → Outpatient Records → E-Prescription → Telemedicine
+- Trang standalone /e-prescription với EPrescriptionPage component
+- Route /e-prescription trong App.tsx với RoleProtectedRoute (Doctor, Nurse)
+- Nav link "Đơn thuốc điện tử" trong cả desktop và mobile nav (inside isStaff block)
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+E-Prescription được promote lên feature đầy đủ ngang hàng Outpatient Records.
+Cần cập nhật sidebar để phản ánh đúng: E-Prescription là top-level nav item,
+không còn là sub-item ẩn dưới nhóm khác. Thứ tự mong muốn: Queue → Outpatient Records → E-Prescription → Telemedicine.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+- Sinh sidebar/nav component update: E-Prescription entry ở top level với cùng icon size, label size,
+  active/hover state, padding như Outpatient Records.
+- Cập nhật thứ tự: Queue → Outpatient Records → E-Prescription → Telemedicine.
+- Sinh route /e-prescription trong App.tsx với RoleProtectedRoute allowedRoles={[UserRole.Doctor, UserRole.Nurse]} wrapping EPrescriptionPage.
+- Nav link dùng text-on-surface-variant hover:text-primary transition-colors font-medium (match Outpatient Records style).
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ:
+- Header.tsx: thêm <Link to="/e-prescription" className="text-on-surface-variant hover:text-primary transition-colors font-medium">Đơn thuốc điện tử</Link>
+  trong cả desktop nav và mobile nav (bên trong isStaff conditional block)
+- App.tsx: thêm import EPrescriptionPage, thêm route /e-prescription với RoleProtectedRoute allowedRoles={[UserRole.Doctor, UserRole.Nurse]}
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Dùng text-on-surface-variant + hover:text-primary cho nav link style (match Outpatient Records link — kiểm tra trong Header.tsx hiện có)
+- Icon "medication" (material-symbols-outlined) được chọn làm page icon trong EPrescriptionPage header — nhất quán với tên feature
+- RoleProtectedRoute scoped Doctor + Nurse (không bao gồm Admin)
+- npx tsc --noEmit → 0 errors sau khi thêm route và import
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Chưa commit tại thời điểm ghi log (files modified trên nhánh main) |
+| File liên quan | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` |
+| Kết quả chạy/test | `npx tsc --noEmit`: 0 errors. Nav link "Đơn thuốc điện tử" hiển thị đúng trong desktop và mobile nav. Route /e-prescription hoạt động với RoleProtectedRoute. |
+
+---
 
 ## 6. Prompt quan trọng nhất
 

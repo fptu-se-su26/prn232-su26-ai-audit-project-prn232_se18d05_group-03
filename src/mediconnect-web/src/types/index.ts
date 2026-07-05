@@ -206,3 +206,36 @@ export interface ClinicQueue {
   tickets: QueueTicketDetail[];
 }
 
+export interface Icd10Result {
+  code: string;
+  description: string;
+}
+
+export interface PatientDiagnosisHistory {
+  diagnosisCode?: string;
+  diagnosisDescription?: string;
+  visitDate: string;
+}
+
+export interface DrugResult {
+  id: string;
+  name: string;
+  code?: string;
+  unit?: string;
+  stockQuantity: number;
+  unitPrice: number;
+  isActive: boolean;
+}
+
+export interface ActivePrescriptionItem {
+  drugId: string;
+  drugName: string;
+  dose: string;
+  route: string;
+  frequency: string;
+  durationDays: number;
+  quantity: number;
+  unitPrice: number;
+  stockQuantity: number;
+}
+

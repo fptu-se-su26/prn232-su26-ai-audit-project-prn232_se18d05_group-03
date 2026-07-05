@@ -49,12 +49,26 @@ export default function Header() {
                   </>
                 )}
                 {isStaff && (
-                  <Link
-                    to="/clinic-dashboard"
-                    className="text-on-surface-variant hover:text-primary transition-colors font-medium"
-                  >
-                    Hàng đợi phòng khám
-                  </Link>
+                  <>
+                    <Link
+                      to="/clinic-dashboard"
+                      className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    >
+                      Hàng đợi phòng khám
+                    </Link>
+                    <Link
+                      to="/outpatient-record"
+                      className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    >
+                      Hồ sơ ngoại trú
+                    </Link>
+                    <Link
+                      to="/e-prescription"
+                      className="text-on-surface-variant hover:text-primary transition-colors font-medium"
+                    >
+                      Đơn thuốc điện tử
+                    </Link>
+                  </>
                 )}
                 {isAdmin && (
                   <Link
@@ -108,6 +122,8 @@ export default function Header() {
           <button
             className="md:hidden p-2"
             onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
+            aria-expanded={menuOpen}
           >
             <span className="material-symbols-outlined">
               {menuOpen ? "close" : "menu"}
@@ -139,13 +155,29 @@ export default function Header() {
                   </>
                 )}
                 {isStaff && (
-                  <Link
-                    to="/clinic-dashboard"
-                    className="px-3 py-2 text-on-surface-variant hover:text-primary"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Hàng đợi phòng khám
-                  </Link>
+                  <>
+                    <Link
+                      to="/clinic-dashboard"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Hàng đợi phòng khám
+                    </Link>
+                    <Link
+                      to="/outpatient-record"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Hồ sơ ngoại trú
+                    </Link>
+                    <Link
+                      to="/e-prescription"
+                      className="px-3 py-2 text-on-surface-variant hover:text-primary"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Đơn thuốc điện tử
+                    </Link>
+                  </>
                 )}
                 {isAdmin && (
                   <Link
