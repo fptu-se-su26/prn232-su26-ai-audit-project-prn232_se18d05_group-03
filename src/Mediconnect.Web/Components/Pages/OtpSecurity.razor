@@ -1,0 +1,352 @@
+@page "/admin/otp-security"
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Cấu hình & Bảo mật OTP – MediConnect</PageTitle>
+
+<div class="mb-4">
+    <h4 class="mb-1" style="font-size:1.5rem">Cấu hình & Bảo mật OTP</h4>
+    <p class="text-muted mb-0">Thiết lập chính sách OTP và kích hoạt tài khoản bằng mã xác thực một lần.</p>
+</div>
+
+@if (_setting is not null)
+{
+    @if (_setting.EmailConfigured)
+    {
+        <div class="alert alert-success d-flex align-items-start gap-2 mb-3">
+            <span class="material-symbols-outlined">mark_email_read</span>
+            <p class="mb-0">Đã cấu hình gửi email thật. Mã OTP sẽ được <b>gửi tới hộp thư của người dùng</b> và không hiển thị trong màn hình này vì lý do bảo mật.</p>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
+            <span class="material-symbols-outlined">info</span>
+            <p class="mb-0">Chưa cấu hình SMTP (Gmail App Password / SendGrid) nên OTP đang gửi <b>mô phỏng</b>: mã hiển thị ngay trong màn hình này để demo. Điền mục <code>OtpEmail</code> trong <code>appsettings.Development.json</code> rồi bật <code>Enabled=true</code> để gửi thật.</p>
+        </div>
+    }
+}
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-3">
+        <span class="material-symbols-outlined">error</span>
+        @_error
+    </div>
+}
+@if (_successMsg is not null)
+{
+    <div class="alert alert-success mb-3">
+        <span class="material-symbols-outlined">check_circle</span>
+        @_successMsg
+    </div>
+}
+
+@if (_loading || _setting is null)
+{
+    <div class="d-flex flex-column gap-2">
+        <Skeleton Style="height:6rem" />
+        <Skeleton Style="height:6rem" />
+        <Skeleton Style="height:6rem" />
+    </div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-lg-6">
+            <div class="report-card h-100">
+                <h6 class="d-flex align-items-center gap-2 mb-3">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem">tune</span>
+                    Cấu hình chính sách OTP
+                </h6>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-medium">Bật xác thực OTP</span>
+                    <button type="button" class="toggle-switch @(_setting.IsEnabled ? "on" : "off")" @onclick="() => _setting.IsEnabled = !_setting.IsEnabled">
+                        <span class="knob"></span>
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Kênh gửi</label>
+                    <select class="form-select" @bind="_setting.Channel">
+                        <option value="@OtpChannel.Email">Email</option>
+                        <option value="@OtpChannel.Sms">SMS</option>
+                    </select>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-4">
+                        <label class="form-label">Độ dài mã</label>
+                        <input type="number" min="4" max="10" class="form-control" @bind="_setting.CodeLength" />
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label">Hết hạn (phút)</label>
+                        <input type="number" min="1" max="60" class="form-control" @bind="_setting.ExpiryMinutes" />
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label">Số lần thử</label>
+                        <input type="number" min="1" max="20" class="form-control" @bind="_setting.MaxAttempts" />
+                    </div>
+                </div>
+
+                <button class="btn btn-primary w-100" disabled="@_savingSetting" @onclick="SaveSettings">
+                    @(_savingSetting ? "Đang lưu..." : "Lưu cấu hình")
+                </button>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="report-card h-100">
+                <h6 class="d-flex align-items-center gap-2 mb-3">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem">verified_user</span>
+                    Kích hoạt tài khoản bằng OTP
+                </h6>
+
+                <div class="mb-2">
+                    <label class="form-label">Tài khoản</label>
+                    <select class="form-select" @bind="_selectedUserId" @bind:after="OnUserChanged">
+                        <option value="">— Chọn tài khoản —</option>
+                        @foreach (var u in _users)
+                        {
+                            <option value="@u.Id">@u.FullName (@u.Email)@(u.VerifiedAt is not null ? " ✓" : "")</option>
+                        }
+                    </select>
+                    @if (_selectedUserId != "" && _users.FirstOrDefault(u => u.Id.ToString() == _selectedUserId)?.VerifiedAt is not null)
+                    {
+                        <p class="mb-0 mt-1" style="font-size:.75rem;color:var(--color-tertiary)">Tài khoản này đã được xác thực trước đó.</p>
+                    }
+                </div>
+
+                <button class="btn btn-primary w-100 mb-2" disabled="@(_issuing || _selectedUserId == "" || !_setting.IsEnabled)" @onclick="IssueOtp">
+                    @(_issuing ? "Đang gửi..." : "Gửi mã OTP")
+                </button>
+                @if (!_setting.IsEnabled)
+                {
+                    <p class="mb-2" style="font-size:.75rem;color:var(--color-error)">OTP đang tắt. Bật ở panel cấu hình để gửi mã.</p>
+                }
+
+                @if (_lastIssued is not null)
+                {
+                    @if (_lastIssued.Delivered)
+                    {
+                        <div class="alert alert-success text-center mb-3">
+                            <span class="material-symbols-outlined d-block mb-1" style="font-size:2rem">outgoing_mail</span>
+                            <p class="mb-1 fw-semibold">@(string.IsNullOrEmpty(_lastIssued.DeliveryDetail) ? $"Đã gửi mã qua {ChannelLabel(_lastIssued.Channel)}" : _lastIssued.DeliveryDetail)</p>
+                            <p class="mb-0" style="font-size:.75rem;opacity:.8">Người dùng kiểm tra hộp thư và nhập mã. Hết hạn lúc @_lastIssued.ExpiresAt.ToLocalTime().ToString("HH:mm:ss").</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert mb-3 text-center" style="background:var(--color-primary-container);color:var(--color-on-primary-container)">
+                            <p class="mb-1" style="font-size:.7rem;font-weight:700;text-transform:uppercase;opacity:.8">Mã OTP (mô phỏng qua @ChannelLabel(_lastIssued.Channel))</p>
+                            <p class="mb-1" style="font-size:1.8rem;font-weight:700;letter-spacing:.3em;font-family:monospace">@_lastIssued.Code</p>
+                            @if (!string.IsNullOrEmpty(_lastIssued.DeliveryDetail))
+                            {
+                                <p class="mb-0" style="font-size:.75rem;opacity:.8">@_lastIssued.DeliveryDetail</p>
+                            }
+                            <p class="mb-0" style="font-size:.75rem;opacity:.8">Hết hạn lúc @_lastIssued.ExpiresAt.ToLocalTime().ToString("HH:mm:ss")</p>
+                        </div>
+                    }
+                }
+
+                <div class="d-flex gap-2">
+                    <input class="form-control" style="letter-spacing:.2em" placeholder="Nhập mã OTP" @bind="_verifyCode" @bind:event="oninput" />
+                    <button class="btn btn-primary" style="background:var(--color-tertiary);border-color:var(--color-tertiary)"
+                            disabled="@(_verifying || _selectedUserId == "" || _verifyCode.Length == 0)" @onclick="VerifyOtp">
+                        @(_verifying ? "..." : "Xác thực")
+                    </button>
+                </div>
+
+                @if (_verifyResult is not null)
+                {
+                    <div class="alert @(_verifyResult.Success ? "alert-success" : "alert-danger") mt-3 mb-0">
+                        <span class="material-symbols-outlined">@(_verifyResult.Success ? "check_circle" : "cancel")</span>
+                        @_verifyResult.Message
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<div class="report-card p-0" style="overflow:hidden">
+    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+        <h6 class="mb-0 d-flex align-items-center gap-2">
+            <span class="material-symbols-outlined" style="font-size:1rem">history</span>
+            Nhật ký OTP gần đây
+        </h6>
+        <button class="btn btn-sm btn-outline-secondary border-0 d-inline-flex align-items-center gap-1" @onclick="RefreshCodes">
+            <span class="material-symbols-outlined" style="font-size:1rem">refresh</span> Làm mới
+        </button>
+    </div>
+    @if (_codes.Count == 0)
+    {
+        <div class="d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="height:140px">
+            <span class="material-symbols-outlined" style="font-size:2.5rem">inbox</span>
+            <p class="mb-0" style="font-size:.85rem">Chưa có mã OTP nào được phát hành</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Tài khoản</th>
+                        <th>Mã</th>
+                        <th>Kênh</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Số lần thử</th>
+                        <th>Thời điểm</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in _codes)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight:600">@c.UserFullName</div>
+                                <div class="text-muted" style="font-size:.75rem">@c.UserEmail</div>
+                            </td>
+                            <td style="font-family:monospace;letter-spacing:.15em">@c.Code</td>
+                            <td class="text-muted">@ChannelLabel(c.Channel)</td>
+                            <td><span class="badge @StatusBadge(c.Status)">@StatusLabel(c.Status)</span></td>
+                            <td class="text-end text-muted">@c.AttemptCount</td>
+                            <td class="text-muted" style="font-size:.78rem">@c.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+
+    private OtpSettingDto? _setting;
+    private List<UserAccountReadDto> _users = new();
+    private List<OtpCodeDto> _codes = new();
+    private bool _loading = true;
+    private string? _error;
+    private string? _successMsg;
+    private bool _savingSetting;
+
+    private string _selectedUserId = "";
+    private bool _issuing;
+    private OtpCodeDto? _lastIssued;
+    private string _verifyCode = "";
+    private bool _verifying;
+    private OtpVerifyResponseDto? _verifyResult;
+
+    protected override async Task OnInitializedAsync() => await LoadAll();
+
+    private async Task LoadAll()
+    {
+        _loading = true; _error = null;
+        try
+        {
+            _setting = await Api.GetOtpSettings();
+            _users = (await Api.GetUserAccounts()) ?? new();
+            _codes = (await Api.GetOtpCodes()) ?? new();
+        }
+        catch { _error = "Không thể tải cấu hình OTP."; }
+        finally { _loading = false; }
+    }
+
+    private async Task RefreshCodes()
+    {
+        try { _codes = (await Api.GetOtpCodes()) ?? new(); }
+        catch { /* silent, matches React behaviour */ }
+    }
+
+    private void OnUserChanged()
+    {
+        _lastIssued = null;
+        _verifyResult = null;
+    }
+
+    private async Task SaveSettings()
+    {
+        if (_setting is null) return;
+        _savingSetting = true; _error = null;
+        try
+        {
+            _setting = await Api.UpdateOtpSettings(new OtpSettingWriteDto
+            {
+                IsEnabled = _setting.IsEnabled,
+                Channel = _setting.Channel,
+                CodeLength = _setting.CodeLength,
+                ExpiryMinutes = _setting.ExpiryMinutes,
+                MaxAttempts = _setting.MaxAttempts,
+            });
+            ShowSuccess("Đã lưu cấu hình OTP.");
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Không thể lưu cấu hình OTP."; }
+        finally { _savingSetting = false; }
+    }
+
+    private async Task IssueOtp()
+    {
+        if (_selectedUserId == "" || _setting is null) { _error = "Chọn tài khoản cần kích hoạt."; return; }
+        _issuing = true; _error = null; _verifyResult = null;
+        try
+        {
+            _lastIssued = await Api.IssueOtp(Guid.Parse(_selectedUserId));
+            _verifyCode = "";
+            ShowSuccess(_lastIssued is { Delivered: true } ? "Đã gửi mã OTP tới email người dùng." : "Đã tạo mã OTP (mô phỏng).");
+            await RefreshCodes();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Không thể gửi OTP."; }
+        finally { _issuing = false; }
+    }
+
+    private async Task VerifyOtp()
+    {
+        if (_selectedUserId == "" || _verifyCode.Length == 0) { _error = "Nhập mã OTP để xác thực."; return; }
+        _verifying = true; _error = null;
+        try
+        {
+            _verifyResult = await Api.VerifyOtp(Guid.Parse(_selectedUserId), _verifyCode.Trim());
+            if (_verifyResult is { Success: true }) _lastIssued = null;
+            await RefreshCodes();
+        }
+        catch { _error = "Không thể xác thực OTP."; }
+        finally { _verifying = false; }
+    }
+
+    private void ShowSuccess(string msg)
+    {
+        _successMsg = msg;
+        _ = ClearSuccessAfterDelay();
+    }
+
+    private async Task ClearSuccessAfterDelay()
+    {
+        await Task.Delay(3000);
+        _successMsg = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static string ChannelLabel(OtpChannel c) => c == OtpChannel.Email ? "Email" : "SMS";
+
+    private static string StatusLabel(OtpStatus s) => s switch
+    {
+        OtpStatus.Pending => "Đang chờ",
+        OtpStatus.Verified => "Đã xác thực",
+        OtpStatus.Expired => "Hết hạn",
+        OtpStatus.Failed => "Thất bại",
+        _ => s.ToString(),
+    };
+
+    private static string StatusBadge(OtpStatus s) => s switch
+    {
+        OtpStatus.Pending => "badge-soft-blue",
+        OtpStatus.Verified => "badge-soft-tertiary",
+        OtpStatus.Expired => "badge-soft-purple",
+        OtpStatus.Failed => "badge-soft-red",
+        _ => "badge-soft-purple",
+    };
+}

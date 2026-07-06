@@ -1,48 +1,52 @@
-<!-- Brand -->
-<div class="nav-brand">
-    <span class="material-symbols-outlined nav-brand-icon">local_hospital</span>
-    <div>
-        <div class="nav-brand-name">MediConnect</div>
-        <div class="nav-brand-sub">Smart Hospital HIS</div>
-    </div>
-</div>
+<AuthorizeView>
+    <Authorized>
+        <NavLink class="app-nav-link" href="" Match="NavLinkMatch.All" @onclick="Notify">Trang chủ</NavLink>
 
-<!-- Nav items -->
-<nav class="nav-items">
-    <AuthorizeView>
-        <Authorized>
-            <NavLink class="nav-item" href="" Match="NavLinkMatch.All">
-                <span class="material-symbols-outlined nav-icon">home</span>
-                <span>Trang chủ</span>
-            </NavLink>
-            <div class="nav-section-label">Lâm sàng</div>
-            <NavLink class="nav-item" href="beds">
-                <span class="material-symbols-outlined nav-icon">bed</span>
-                <span>F1 · Sơ đồ giường</span>
-            </NavLink>
-            <NavLink class="nav-item" href="vitals">
-                <span class="material-symbols-outlined nav-icon">ecg_heart</span>
-                <span>F2 · Y lệnh &amp; sinh tồn</span>
-            </NavLink>
-            <NavLink class="nav-item" href="lab">
-                <span class="material-symbols-outlined nav-icon">biotech</span>
-                <span>F3 · Cận lâm sàng</span>
-            </NavLink>
-            <NavLink class="nav-item" href="discharge">
-                <span class="material-symbols-outlined nav-icon">receipt_long</span>
-                <span>F4 · Xuất viện</span>
-            </NavLink>
-        </Authorized>
-        <NotAuthorized>
-            <NavLink class="nav-item" href="login">
-                <span class="material-symbols-outlined nav-icon">login</span>
-                <span>Đăng nhập</span>
-            </NavLink>
-        </NotAuthorized>
-    </AuthorizeView>
-</nav>
+        <NavLink class="app-nav-link" href="beds" @onclick="Notify">F1 · Giường</NavLink>
+        <NavLink class="app-nav-link" href="vitals" @onclick="Notify">F2 · Y lệnh</NavLink>
+        <NavLink class="app-nav-link" href="lab" @onclick="Notify">F3 · Cận lâm sàng</NavLink>
+        <NavLink class="app-nav-link" href="discharge" @onclick="Notify">F4 · Xuất viện</NavLink>
+        <NavLink class="app-nav-link" href="schedules" @onclick="Notify">Lịch trực</NavLink>
 
-<!-- Footer -->
-<div class="nav-footer">
-    <span style="font-size:.65rem;color:rgba(255,255,255,.3)">PRN232 · Member 3</span>
-</div>
+        <AuthorizeView Roles="Doctor,Nurse,Admin" Context="clinicalCtx">
+            <Authorized>
+                <NavLink class="app-nav-link" href="clinic-dashboard" @onclick="Notify">Hàng đợi phòng khám</NavLink>
+                <NavLink class="app-nav-link" href="outpatient-record" @onclick="Notify">Hồ sơ ngoại trú</NavLink>
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Doctor,Nurse" Context="prescriptionCtx">
+            <Authorized>
+                <NavLink class="app-nav-link" href="e-prescription" @onclick="Notify">Đơn thuốc điện tử</NavLink>
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Patient" Context="patientCtx">
+            <Authorized>
+                <NavLink class="app-nav-link" href="booking" @onclick="Notify">Đặt lịch khám</NavLink>
+                <NavLink class="app-nav-link" href="appointments" @onclick="Notify">Lịch hẹn của tôi</NavLink>
+                <NavLink class="app-nav-link" href="billing" @onclick="Notify">Viện phí</NavLink>
+                <NavLink class="app-nav-link" href="health-records" @onclick="Notify">Hồ sơ sức khỏe</NavLink>
+                <NavLink class="app-nav-link" href="my-reviews" @onclick="Notify">Đánh giá</NavLink>
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Admin" Context="adminCtx">
+            <Authorized>
+                <NavLink class="app-nav-link" href="manage-services" @onclick="Notify">Dịch vụ</NavLink>
+                <NavLink class="app-nav-link" href="admin/staff" @onclick="Notify">Nhân sự</NavLink>
+                <NavLink class="app-nav-link" href="admin/users" @onclick="Notify">Tài khoản</NavLink>
+                <NavLink class="app-nav-link" href="admin/drug-interactions" @onclick="Notify">Tương tác thuốc</NavLink>
+                <NavLink class="app-nav-link" href="admin/otp-security" @onclick="Notify">OTP & Bảo mật</NavLink>
+                <NavLink class="app-nav-link" href="reports/revenue" @onclick="Notify">Doanh thu</NavLink>
+                <NavLink class="app-nav-link" href="reports/operations" @onclick="Notify">Vận hành</NavLink>
+            </Authorized>
+        </AuthorizeView>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public EventCallback OnNavigate { get; set; }
+
+    private Task Notify() => OnNavigate.HasDelegate ? OnNavigate.InvokeAsync() : Task.CompletedTask;
+}

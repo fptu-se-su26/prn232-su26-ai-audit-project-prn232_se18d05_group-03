@@ -1,0 +1,242 @@
+@page "/reports/operations"
+@attribute [Authorize(Roles = "Admin")]
+@using Mediconnect.Web.Components.Shared
+@using Mediconnect.Web.Services
+
+<PageTitle>Vận hành – MediConnect</PageTitle>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <h4 class="mb-1" style="font-size:1.5rem">Báo cáo vận hành</h4>
+        <p class="text-muted mb-0">Công suất giường nội trú và xu hướng lượt khám ngoại trú.</p>
+    </div>
+    <ReportFilterBar Period="_period" OnPeriodChange="OnPeriodChange"
+                      CustomStart="_customStart" CustomEnd="_customEnd"
+                      OnCustomStartChange="@(async v => { _customStart = v; await LoadData(); })"
+                      OnCustomEndChange="@(async v => { _customEnd = v; await LoadData(); })"
+                      Today="DateTime.Today" Department="_department"
+                      OnDepartmentChange="@(async v => { _department = v; await LoadData(); })"
+                      Departments="_allDepartments" OnExport="Export" ExportDisabled="_loading" />
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-4">
+        <span class="material-symbols-outlined">error</span>
+        @_error
+    </div>
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <KpiCard Icon="bed" IconBg="var(--color-primary-container)" IconColor="var(--color-on-primary-container)"
+                  Label="Tổng số giường" Value="@(_loading ? null : (_bedOccupancy?.TotalBeds ?? 0).ToString())"
+                  Sub="@(_department.Length > 0 ? _department : "Tất cả khoa")" />
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <KpiCard Icon="hotel" IconBg="var(--color-error-container)" IconColor="var(--color-on-error-container)"
+                  Label="Đang sử dụng" Value="@(_loading ? null : (_bedOccupancy?.OccupiedBeds ?? 0).ToString())"
+                  Badge="@(!_loading && _bedOccupancy is not null ? (_bedOccupancy.OccupancyPercentage >= 85 ? ("Nghiêm trọng", "var(--color-error)") : ("Bình thường", "var(--color-tertiary)")) : ((string, string)?)null)" />
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <KpiCard Icon="bed" IconBg="var(--color-tertiary-container)" IconColor="var(--color-on-tertiary-container)"
+                  Label="Còn trống" Value="@(_loading ? null : (_bedOccupancy?.AvailableBeds ?? 0).ToString())"
+                  Sub="Sẵn sàng tiếp nhận" />
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <KpiCard Icon="personal_injury" IconBg="var(--color-secondary-container)" IconColor="var(--color-on-secondary-container)"
+                  Label="Lượt khám ngoại trú" Value="@(_loading ? null : _rangeVisits.ToString())"
+                  Sub="@(_peakDay is not null ? $"Cao điểm: {_peakDay.VisitCount} vào {_peakDay.TimePeriod}" : PeriodLabel)" />
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-4">
+        <div class="report-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-0">Công suất giường</h5>
+                    <p class="text-muted mb-0" style="font-size:.78rem">Đang dùng và còn trống</p>
+                </div>
+                <span class="material-symbols-outlined text-muted">pie_chart</span>
+            </div>
+            @if (_loading)
+            {
+                <Skeleton Class="rounded-circle mx-auto d-block" Style="height:220px;width:220px" />
+            }
+            else
+            {
+                <div class="d-flex flex-column align-items-center gap-3">
+                    <PieChart Data="_occupancyPie" />
+                    <div class="d-flex gap-3" style="font-size:.85rem">
+                        @foreach (var s in _occupancyPie)
+                        {
+                            <span class="d-flex align-items-center gap-1">
+                                <span class="rounded-circle d-inline-block" style="width:10px;height:10px;background:@s.Color"></span>
+                                @s.Label (@(s.Value.ToString("0")))
+                            </span>
+                        }
+                    </div>
+                    <p class="mb-0" style="font-size:1.5rem;font-weight:700">
+                        @(_bedOccupancy?.OccupancyPercentage.ToString("0") ?? "0")%
+                        <span class="text-muted" style="font-size:.85rem;font-weight:400">công suất</span>
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-xl-8">
+        <div class="report-card p-0 h-100" style="overflow:hidden">
+            <div class="p-4" style="border-bottom:1px solid var(--color-outline-variant);background:var(--color-surface-container-low)">
+                <h5 class="mb-0">Công suất giường theo khoa</h5>
+                <p class="text-muted mb-0" style="font-size:.78rem">Chi tiết theo từng đơn vị</p>
+            </div>
+            @if (_loading)
+            {
+                <div class="p-4 d-flex flex-column gap-2">
+                    <Skeleton Style="height:2rem" />
+                    <Skeleton Style="height:2rem" />
+                    <Skeleton Style="height:2rem" />
+                </div>
+            }
+            else if (_bedOccupancy is not null && _bedOccupancy.ByDepartmentBreakdown.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Khoa</th>
+                                <th class="text-end">Tổng</th>
+                                <th class="text-end">Đang dùng</th>
+                                <th class="text-end">Còn trống</th>
+                                <th class="text-end">Công suất</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in _bedOccupancy.ByDepartmentBreakdown)
+                            {
+                                <tr>
+                                    <td style="font-weight:600">@d.Department</td>
+                                    <td class="text-end text-muted">@d.Total</td>
+                                    <td class="text-end text-muted">@d.Occupied</td>
+                                    <td class="text-end text-muted">@(d.Total - d.Occupied)</td>
+                                    <td class="text-end">
+                                        <span class="badge @(d.Percentage >= 85 ? "badge-soft-red" : d.Percentage >= 60 ? "" : "badge-soft-green")"
+                                              style="@(d.Percentage >= 85 ? "" : d.Percentage >= 60 ? "background:var(--color-primary);color:var(--color-on-primary)" : "")">
+                                            @(d.Percentage.ToString("0"))%
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="height:200px">
+                    <span class="material-symbols-outlined" style="font-size:2.5rem">hotel</span>
+                    <p class="mb-0" style="font-size:.85rem">Không có dữ liệu giường</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="report-card">
+    <div class="mb-3">
+        <h5 class="mb-0">Xu hướng lượt khám ngoại trú</h5>
+        <p class="text-muted mb-0" style="font-size:.78rem">@PeriodLabel</p>
+    </div>
+    @if (_loading)
+    {
+        <Skeleton Style="height:280px" />
+    }
+    else
+    {
+        <LineChart Data="_lineData" Color="#006a6a" EmptyIcon="personal_injury" ValueFormatter="@(v => v.ToString("0"))" />
+    }
+</div>
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private Microsoft.JSInterop.IJSRuntime Js { get; set; } = default!;
+
+    private ReportPeriod _period = ReportPeriod.ThisMonth;
+    private DateTime _customStart = DateTime.Today;
+    private DateTime _customEnd = DateTime.Today;
+    private string _department = "";
+    private List<string> _allDepartments = new();
+
+    private BedOccupancyReportDto? _bedOccupancy;
+    private List<OutpatientVisitItemDto> _visits = new();
+    private bool _loading = true;
+    private string? _error;
+
+    private string PeriodLabel => ReportUtils.PeriodLabels[_period];
+    private int _rangeVisits => _visits.Sum(v => v.VisitCount);
+    private OutpatientVisitItemDto? _peakDay => _visits.Count == 0 ? null : _visits.OrderByDescending(v => v.VisitCount).First();
+
+    private List<ChartPoint> _lineData => _visits
+        .Select(v => new ChartPoint(v.TimePeriod.Length > 7 ? v.TimePeriod[5..] : v.TimePeriod, v.VisitCount))
+        .ToList();
+
+    private List<PieSlice> _occupancyPie => new()
+    {
+        new("Đang dùng", _bedOccupancy?.OccupiedBeds ?? 0, "#ba1a1a"),
+        new("Còn trống", _bedOccupancy?.AvailableBeds ?? 0, "#006a6a"),
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _allDepartments = ((await Api.GetDepartments()) ?? new()).Select(d => d.Name).ToList(); }
+        catch { /* ignore */ }
+        await LoadData();
+    }
+
+    private async Task OnPeriodChange(ReportPeriod p)
+    {
+        _period = p;
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var (start, end, groupBy) = ReportUtils.GetDateRange(_period, _customStart, _customEnd);
+        if (_period == ReportPeriod.Custom && start > end)
+        {
+            _error = "Ngày bắt đầu không được sau ngày kết thúc.";
+            _loading = false;
+            StateHasChanged();
+            return;
+        }
+
+        _loading = true; _error = null;
+        StateHasChanged();
+        try
+        {
+            var dept = _department.Length == 0 ? null : _department;
+            var bedTask = Api.GetBedOccupancy(dept);
+            var visitsTask = Api.GetOutpatientVisitReport(start, end, groupBy);
+            _bedOccupancy = await bedTask;
+            _visits = (await visitsTask) ?? new();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Không thể tải dữ liệu vận hành. Vui lòng kiểm tra đăng nhập."; }
+        finally { _loading = false; }
+    }
+
+    private async Task Export()
+    {
+        var csv = ReportUtils.BuildCsv(new (string, IEnumerable<IEnumerable<object>>)[]
+        {
+            ($"Công suất giường theo khoa{(_department.Length > 0 ? $" — {_department}" : "")}",
+             new[] { new object[] { "Khoa", "Tổng giường", "Đang dùng", "Còn trống", "Công suất %" } }
+                .Concat(_bedOccupancy?.ByDepartmentBreakdown.Select(d => new object[] { d.Department, d.Total, d.Occupied, d.Total - d.Occupied, d.Percentage }) ?? Enumerable.Empty<object[]>())),
+            ($"Lượt khám ngoại trú — {PeriodLabel}",
+             new[] { new object[] { "Ngày", "Lượt khám" } }.Concat(_visits.Select(v => new object[] { v.TimePeriod, v.VisitCount }))),
+        });
+        await Js.InvokeVoidAsync("downloadCsv", $"operations-report-{DateTime.Today:yyyy-MM-dd}.csv", csv);
+    }
+}

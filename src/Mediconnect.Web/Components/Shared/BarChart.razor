@@ -1,0 +1,66 @@
+@namespace Mediconnect.Web.Components.Shared
+@using Mediconnect.Web.Services
+
+@if (Data.Count == 0)
+{
+    <div class="d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="height:@(Height)px">
+        <span class="material-symbols-outlined" style="font-size:2.5rem">@EmptyIcon</span>
+        <p class="mb-0" style="font-size:.85rem">@EmptyText</p>
+    </div>
+}
+else
+{
+    <svg viewBox="0 0 1000 @Height" class="w-100" style="height:@(Height)px">
+        <defs>
+            <linearGradient id="@_gradId" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="@Color" />
+                <stop offset="100%" stop-color="@Color" stop-opacity="0.55" />
+            </linearGradient>
+        </defs>
+        @for (var i = 0; i <= Grid; i++)
+        {
+            var y = 10 + (ChartH / Grid) * i;
+            var val = MaxVal * (1 - (double)i / Grid);
+            <g>
+                <line x1="@Fmt(PadL)" x2="990" y1="@Fmt(y)" y2="@Fmt(y)" stroke="#e6e8ea" stroke-width="1" />
+                <text x="@Fmt(PadL - 6)" y="@Fmt(y + 4)" text-anchor="end" font-size="11" fill="#727783">@FormatValue(val)</text>
+            </g>
+        }
+        @for (var i = 0; i < Data.Count; i++)
+        {
+            var d = Data[i];
+            var barH = Math.Max(2, d.Value / MaxVal * ChartH);
+            var cx = PadL + Spacing * i + Spacing / 2;
+            var x = cx - BarW / 2;
+            var y = 10 + ChartH - barH;
+            <g>
+                <rect x="@Fmt(x)" y="@Fmt(y)" width="@Fmt(BarW)" height="@Fmt(barH)" fill="url(#@_gradId)" rx="3" />
+                <text x="@Fmt(cx)" y="@Fmt(Height - 6)" text-anchor="middle" font-size="10" fill="#727783">@d.Label</text>
+            </g>
+        }
+        <line x1="@Fmt(PadL)" x2="990" y1="@Fmt(Height - PadB)" y2="@Fmt(Height - PadB)" stroke="#c2c6d4" stroke-width="1" />
+    </svg>
+}
+
+@code {
+    [Parameter] public List<ChartPoint> Data { get; set; } = new();
+    [Parameter] public string Color { get; set; } = "#005db6";
+    [Parameter] public int Height { get; set; } = 280;
+    [Parameter] public string EmptyIcon { get; set; } = "bar_chart";
+    [Parameter] public string EmptyText { get; set; } = "Không có dữ liệu cho khoảng thời gian này";
+    [Parameter] public Func<double, string>? ValueFormatter { get; set; }
+
+    private const double PadL = 70;
+    private const double PadB = 40;
+    private const int Grid = 4;
+    private readonly string _gradId = $"barGrad{Guid.NewGuid():N}";
+
+    private double ChartW => 1000 - PadL - 10;
+    private double ChartH => Height - PadB - 10;
+    private double MaxVal => Math.Max(Data.Count == 0 ? 1 : Data.Max(d => d.Value), 1);
+    private double Spacing => Data.Count == 0 ? 0 : ChartW / Data.Count;
+    private double BarW => Math.Max(8, Math.Min(60, Spacing - 10));
+
+    private string FormatValue(double v) => (ValueFormatter ?? ReportUtils.FormatCurrencyAxis)(v);
+    private static string Fmt(double v) => v.ToString(System.Globalization.CultureInfo.InvariantCulture);
+}

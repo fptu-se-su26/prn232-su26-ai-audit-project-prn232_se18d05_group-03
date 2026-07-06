@@ -56,7 +56,10 @@
                                 <strong style="font-size:.82rem">@o.TestName</strong>
                                 <span class="badge @StatusBadge(o.Status)" style="font-size:.65rem">@StatusLabel(o.Status)</span>
                             </div>
-                            <div style="font-size:.72rem;color:inherit;opacity:.7;margin-top:2px">@o.OrderedAt.ToString("dd/MM/yyyy HH:mm") · @o.Notes</div>
+                            <div style="font-size:.75rem;font-weight:600;margin-top:2px">@(o.PatientName ?? "(Chưa rõ bệnh nhân)")</div>
+                            <div style="font-size:.72rem;color:inherit;opacity:.7;margin-top:1px">
+                                BS chỉ định: @(o.OrderedByName ?? "?") · @o.OrderedAt.ToString("dd/MM/yyyy HH:mm")
+                            </div>
                         </button>
                     }
                 }
@@ -86,7 +89,8 @@
                 </div>
                 <div class="card-body">
                     <dl class="row mb-2" style="font-size:.8rem">
-                        <dt class="col-4 text-muted">Y lệnh ID</dt><dd class="col-8 text-truncate">@_selected.Id</dd>
+                        <dt class="col-4 text-muted">Bệnh nhân</dt> <dd class="col-8">@(_selected.PatientName ?? "(Chưa rõ)")</dd>
+                        <dt class="col-4 text-muted">BS chỉ định</dt> <dd class="col-8">@(_selected.OrderedByName ?? "?")</dd>
                         <dt class="col-4 text-muted">Ghi chú</dt>   <dd class="col-8">@_selected.Notes</dd>
                         <dt class="col-4 text-muted">Thời gian</dt> <dd class="col-8">@_selected.OrderedAt.ToString("dd/MM/yyyy HH:mm")</dd>
                     </dl>

@@ -1,0 +1,643 @@
+@page "/health-records"
+@attribute [Authorize(Roles = "Patient")]
+
+<PageTitle>Hồ sơ Sức khỏe Điện tử – MediConnect</PageTitle>
+
+@if (_loading)
+{
+    <div class="d-flex flex-column align-items-center justify-content-center gap-2" style="min-height:50vh">
+        <span class="material-symbols-outlined spin" style="font-size:2.5rem;color:var(--color-primary)">progress_activity</span>
+        <p class="text-muted mb-0">Đang tải hồ sơ sức khỏe...</p>
+    </div>
+}
+else if (_noProfile)
+{
+    <div class="text-center mx-auto py-5" style="max-width:480px">
+        <span class="material-symbols-outlined d-block mb-3" style="font-size:4rem;color:var(--color-outline)">person_off</span>
+        <h4 class="mb-2">Chưa có hồ sơ bệnh nhân</h4>
+        <p class="text-muted mb-4">Bạn chưa có hồ sơ bệnh nhân trong hệ thống. Hãy đặt lịch khám để hệ thống tạo hồ sơ cho bạn.</p>
+        <a href="booking" class="btn btn-primary d-inline-flex align-items-center gap-1">
+            <span class="material-symbols-outlined" style="font-size:1.1rem">calendar_add_on</span> Đặt lịch khám ngay
+        </a>
+    </div>
+}
+else if (_error is not null)
+{
+    <div class="text-center mx-auto py-5" style="max-width:480px">
+        <span class="material-symbols-outlined d-block mb-3" style="font-size:4rem;color:var(--color-error)">error_outline</span>
+        <h4 class="mb-2">Không thể tải dữ liệu</h4>
+        <p class="text-muted mb-4">@_error</p>
+        <button class="btn btn-primary d-inline-flex align-items-center gap-1" @onclick="LoadData">
+            <span class="material-symbols-outlined" style="font-size:1.1rem">refresh</span> Thử lại
+        </button>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h4 class="mb-1 d-flex align-items-center gap-2" style="font-size:1.5rem">
+                <span class="material-symbols-outlined text-primary">folder_shared</span>
+                Hồ sơ Sức khỏe Điện tử
+            </h4>
+            <p class="text-muted mb-0">Xem toàn bộ lịch sử khám bệnh, đơn thuốc và kết quả xét nghiệm của bạn.</p>
+        </div>
+        <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-1 flex-shrink-0" @onclick="LoadData">
+            <span class="material-symbols-outlined" style="font-size:1.1rem">refresh</span> <span class="d-none d-sm-inline">Làm mới</span>
+        </button>
+    </div>
+
+    @if (_profile is not null)
+    {
+        <div class="report-card mb-3">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width:3rem;height:3rem;background:var(--color-primary-container);color:var(--color-on-primary-container)">
+                    <span class="material-symbols-outlined">person</span>
+                </div>
+                <div class="row row-cols-2 row-cols-sm-4 g-2 flex-grow-1">
+                    <div class="col"><p class="text-muted mb-0" style="font-size:.72rem">Họ và tên</p><p class="mb-0 fw-semibold" style="font-size:.88rem">@(Token.User?.FullName ?? "—")</p></div>
+                    <div class="col"><p class="text-muted mb-0" style="font-size:.72rem">Ngày sinh</p><p class="mb-0 fw-semibold" style="font-size:.88rem">@FmtDate(_profile.DateOfBirth)</p></div>
+                    <div class="col"><p class="text-muted mb-0" style="font-size:.72rem">Giới tính</p><p class="mb-0 fw-semibold" style="font-size:.88rem">@GenderLabel(_profile.Gender)</p></div>
+                    <div class="col"><p class="text-muted mb-0" style="font-size:.72rem">Số BHYT</p><p class="mb-0 fw-semibold font-monospace" style="font-size:.88rem">@(_profile.InsuranceNumber ?? "—")</p></div>
+                    @if (!string.IsNullOrEmpty(_profile.Address))
+                    {
+                        <div class="col col-sm-4"><p class="text-muted mb-0" style="font-size:.72rem">Địa chỉ</p><p class="mb-0 fw-semibold" style="font-size:.88rem">@_profile.Address</p></div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-4">
+            <div class="report-card d-flex align-items-center gap-2 py-3">
+                <div class="d-flex align-items-center justify-content-center rounded-3" style="width:2.5rem;height:2.5rem;background:var(--color-primary-container);color:var(--color-on-primary-container)">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem">calendar_month</span>
+                </div>
+                <div><p class="mb-0" style="font-size:1.3rem;font-weight:800">@_visits.Count</p><p class="text-muted mb-0" style="font-size:.72rem">Lần khám</p></div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="report-card d-flex align-items-center gap-2 py-3">
+                <div class="d-flex align-items-center justify-content-center rounded-3" style="width:2.5rem;height:2.5rem;background:var(--color-secondary-container)">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem">medication</span>
+                </div>
+                <div><p class="mb-0" style="font-size:1.3rem;font-weight:800">@_prescriptions.Count</p><p class="text-muted mb-0" style="font-size:.72rem">Đơn thuốc</p></div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="report-card d-flex align-items-center gap-2 py-3">
+                <div class="d-flex align-items-center justify-content-center rounded-3" style="width:2.5rem;height:2.5rem;background:var(--color-tertiary-container);color:var(--color-on-tertiary-container)">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem">biotech</span>
+                </div>
+                <div><p class="mb-0" style="font-size:1.3rem;font-weight:800">@_labResults.Count</p><p class="text-muted mb-0" style="font-size:.72rem">Kết quả XN</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-card p-0">
+        <div class="tab-bar px-2">
+            <button class="tab-btn @(_tab == "timeline" ? "active" : "")" @onclick='() => _tab = "timeline"'>Lịch sử khám (@_visits.Count)</button>
+            <button class="tab-btn @(_tab == "prescriptions" ? "active" : "")" @onclick='() => _tab = "prescriptions"'>Đơn thuốc (@_prescriptions.Count)</button>
+            <button class="tab-btn @(_tab == "labresults" ? "active" : "")" @onclick='() => _tab = "labresults"'>Kết quả xét nghiệm (@_labResults.Count)</button>
+        </div>
+
+        <div class="p-3">
+            @if (_tab == "timeline")
+            {
+                <div class="d-flex gap-2 flex-wrap mb-3">
+                    <div class="report-filter-chip flex-grow-1" style="max-width:360px">
+                        <span class="material-symbols-outlined text-muted" style="font-size:1.1rem">search</span>
+                        <input @bind="_visitSearch" @bind:event="oninput" placeholder="Tìm theo triệu chứng, chẩn đoán, bác sĩ..." class="w-100" />
+                    </div>
+                    <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" @onclick="() => _visitSortDesc = !_visitSortDesc">
+                        <span class="material-symbols-outlined" style="font-size:1rem">@(_visitSortDesc ? "arrow_downward" : "arrow_upward")</span>
+                        @(_visitSortDesc ? "Mới nhất" : "Cũ nhất")
+                    </button>
+                </div>
+
+                @if (DisplayVisits.Count == 0)
+                {
+                    <div class="text-center text-muted py-5">
+                        <span class="material-symbols-outlined d-block mb-2" style="font-size:3rem">event_busy</span>
+                        @(_visitSearch.Length > 0 ? "Không tìm thấy lần khám nào phù hợp." : "Bạn chưa có lần khám nào được ghi nhận.")
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var v in DisplayVisits)
+                        {
+                            var si = VisitStatusInfo(v.Status);
+                            var num = _visits.Count - _visits.IndexOf(v);
+                            <div class="report-card d-flex align-items-start gap-3">
+                                <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0 @si.Badge" style="width:2rem;height:2rem;font-size:.75rem;font-weight:800">@num</div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="fw-semibold">@FmtDate(v.VisitDate)</span>
+                                        <span class="badge @si.Badge d-inline-flex align-items-center gap-1">
+                                            <span class="material-symbols-outlined" style="font-size:.8rem">@si.Icon</span>@si.Label
+                                        </span>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(v.ChiefComplaint))
+                                    {
+                                        <p class="mb-1 mt-1" style="font-size:.85rem"><span class="fw-semibold">Lý do khám: </span>@v.ChiefComplaint</p>
+                                    }
+                                    @if (!string.IsNullOrEmpty(v.DiagnosisCode) || !string.IsNullOrEmpty(v.DiagnosisDescription))
+                                    {
+                                        <p class="mb-1" style="font-size:.85rem">
+                                            @if (!string.IsNullOrEmpty(v.DiagnosisCode))
+                                            {
+                                                <span class="font-monospace fw-bold" style="color:var(--color-primary)">@v.DiagnosisCode</span>
+                                                <text> – </text>
+                                            }
+                                            @v.DiagnosisDescription
+                                        </p>
+                                    }
+                                    <div class="d-flex flex-wrap gap-3 text-muted" style="font-size:.72rem">
+                                        @if (!string.IsNullOrEmpty(v.DoctorName))
+                                        {
+                                            <span>BS. @v.DoctorName</span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(v.ClinicName))
+                                        {
+                                            <span>@v.ClinicName@(string.IsNullOrEmpty(v.ClinicRoomNumber) ? "" : $" ({v.ClinicRoomNumber})")</span>
+                                        }
+                                        @if (v.PrescriptionCount > 0)
+                                        {
+                                            <span style="color:var(--color-secondary)">@v.PrescriptionCount đơn thuốc</span>
+                                        }
+                                        @if (v.LabResultCount > 0)
+                                        {
+                                            <span style="color:var(--color-tertiary)">@v.LabResultCount kết quả XN</span>
+                                        }
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary flex-shrink-0" @onclick="() => _selectedVisit = v">Chi tiết</button>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else if (_tab == "prescriptions")
+            {
+                @if (_prescriptions.Count == 0)
+                {
+                    <div class="text-center text-muted py-5">
+                        <span class="material-symbols-outlined d-block mb-2" style="font-size:3rem">medication_liquid</span>
+                        Chưa có đơn thuốc nào được kê trong hệ thống.
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var rx in _prescriptions)
+                        {
+                            var isOpen = _expandedRxId == rx.Id;
+                            var num = _prescriptions.Count - _prescriptions.IndexOf(rx);
+                            <div class="report-card p-0" style="overflow:hidden">
+                                <button type="button" class="btn w-100 text-start d-flex justify-content-between align-items-center gap-2 p-3 border-0 rounded-0" @onclick="() => _expandedRxId = isOpen ? null : rx.Id">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="d-flex align-items-center justify-content-center rounded-3" style="width:2.2rem;height:2.2rem;background:var(--color-secondary-container)">
+                                            <span class="material-symbols-outlined" style="font-size:1rem">medication</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold" style="font-size:.88rem">Đơn thuốc #@num</div>
+                                            <div class="text-muted" style="font-size:.72rem">Ngày kê: @FmtDateTime(rx.IssuedAt)@(string.IsNullOrEmpty(rx.DoctorName) ? "" : $" · BS. {rx.DoctorName}")</div>
+                                        </div>
+                                    </div>
+                                    <span class="material-symbols-outlined text-muted">@(isOpen ? "expand_less" : "expand_more")</span>
+                                </button>
+                                @if (isOpen)
+                                {
+                                    <div class="border-top">
+                                        @if (rx.Items.Count == 0)
+                                        {
+                                            <div class="text-center text-muted py-3" style="font-size:.85rem">Không có thông tin chi tiết thuốc.</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="table-responsive">
+                                                <table class="table table-sm mb-0">
+                                                    <thead>
+                                                        <tr><th>Tên thuốc</th><th>Liều dùng</th><th>Tần suất</th><th class="text-center">Số ngày</th><th class="text-center">Số lượng</th></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var item in rx.Items)
+                                                        {
+                                                            <tr>
+                                                                <td><div class="fw-semibold">@(item.DrugName ?? "Không xác định")</div>@if (!string.IsNullOrEmpty(item.DrugUnit)) { <div class="text-muted" style="font-size:.72rem">@item.DrugUnit</div> }</td>
+                                                                <td>@(item.Dose ?? "—")</td>
+                                                                <td>@(item.Frequency ?? "—")</td>
+                                                                <td class="text-center">@(item.DurationDays > 0 ? $"{item.DurationDays} ngày" : "—")</td>
+                                                                <td class="text-center fw-semibold">@item.Quantity</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(rx.Notes))
+                                        {
+                                            <div class="alert alert-warning mb-0 rounded-0 border-0 border-top">
+                                                <span class="fw-semibold">Lưu ý từ bác sĩ: </span>@rx.Notes
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+                    <button class="btn btn-sm @(_labFilter == "all" ? "btn-primary" : "btn-outline-secondary")" @onclick='() => _labFilter = "all"'>Tất cả</button>
+                    <button class="btn btn-sm @(_labFilter == "has_result" ? "btn-primary" : "btn-outline-secondary")" @onclick='() => _labFilter = "has_result"'>Đã có kết quả</button>
+                    <button class="btn btn-sm @(_labFilter == "no_result" ? "btn-primary" : "btn-outline-secondary")" @onclick='() => _labFilter = "no_result"'>Chờ kết quả</button>
+                    <span class="text-muted ms-auto" style="font-size:.78rem">@DisplayLabResults.Count/@_labResults.Count kết quả</span>
+                </div>
+
+                @if (DisplayLabResults.Count == 0)
+                {
+                    <div class="text-center text-muted py-5">
+                        <span class="material-symbols-outlined d-block mb-2" style="font-size:3rem">science</span>
+                        @(_labFilter == "has_result" ? "Chưa có kết quả xét nghiệm nào trong hệ thống." : _labFilter == "no_result" ? "Không có xét nghiệm nào đang chờ kết quả." : "Chưa có xét nghiệm nào được chỉ định.")
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var lr in DisplayLabResults)
+                        {
+                            var hasResult = !string.IsNullOrEmpty(lr.ResultText) || !string.IsNullOrEmpty(lr.ResultFileUrl);
+                            var si = LabStatusInfo(lr.OrderStatus);
+                            <div class="report-card">
+                                <div class="d-flex align-items-start justify-content-between gap-3">
+                                    <div class="d-flex align-items-start gap-2 flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style="width:2.2rem;height:2.2rem;background:@(hasResult ? "var(--color-tertiary-container)" : "var(--color-surface-container-low)")">
+                                            <span class="material-symbols-outlined" style="font-size:1rem">@(hasResult ? "biotech" : "pending")</span>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <span class="fw-semibold" style="font-size:.88rem">@(lr.TestName ?? "Xét nghiệm không xác định")</span>
+                                                <span class="badge @si.Badge">@si.Label</span>
+                                                @if (!string.IsNullOrEmpty(lr.ResultFileUrl))
+                                                {
+                                                    <span class="badge badge-soft-green">Có file</span>
+                                                }
+                                            </div>
+                                            <div class="d-flex flex-wrap gap-3 text-muted mt-1" style="font-size:.72rem">
+                                                @if (lr.OrderedAt is not null)
+                                                {
+                                                    <span>Chỉ định: @FmtDateTime(lr.OrderedAt)</span>
+                                                }
+                                                @if (lr.ResultedAt is not null)
+                                                {
+                                                    <span style="color:var(--color-tertiary)">Kết quả: @FmtDateTime(lr.ResultedAt)</span>
+                                                }
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(lr.ResultText))
+                                            {
+                                                <div class="rounded-3 p-2 mt-2" style="background:var(--color-surface-container-low);font-size:.78rem;max-height:2.6rem;overflow:hidden">@lr.ResultText</div>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column gap-1 flex-shrink-0">
+                                        @if (hasResult)
+                                        {
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => _selectedLab = lr">Xem chi tiết</button>
+                                        }
+                                        @if (!string.IsNullOrEmpty(lr.ResultFileUrl))
+                                        {
+                                            <a href="@lr.ResultFileUrl" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1">
+                                                <span class="material-symbols-outlined" style="font-size:.9rem">download</span> Tải file
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@if (_selectedVisit is not null)
+{
+    <div class="modal-overlay" @onclick="() => _selectedVisit = null">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="mb-0 d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined" style="color:var(--color-primary)">event_note</span> Chi tiết lần khám
+                    </h5>
+                    <p class="text-muted mb-0" style="font-size:.78rem">@FmtDateTime(_selectedVisit.VisitDate)</p>
+                </div>
+                <button class="btn-close" @onclick="() => _selectedVisit = null"></button>
+            </div>
+
+            @{ var si = VisitStatusInfo(_selectedVisit.Status); }
+            <span class="badge @si.Badge d-inline-flex align-items-center gap-1 mb-3">
+                <span class="material-symbols-outlined" style="font-size:.85rem">@si.Icon</span>@si.Label
+            </span>
+
+            <div class="d-flex flex-column gap-2 mb-3" style="font-size:.88rem">
+                @if (!string.IsNullOrEmpty(_selectedVisit.ChiefComplaint))
+                {
+                    <div><p class="text-muted mb-0" style="font-size:.72rem">Lý do / Triệu chứng</p><p class="mb-0 fw-medium">@_selectedVisit.ChiefComplaint</p></div>
+                }
+                @if (!string.IsNullOrEmpty(_selectedVisit.DiagnosisCode) || !string.IsNullOrEmpty(_selectedVisit.DiagnosisDescription))
+                {
+                    <div>
+                        <p class="text-muted mb-0" style="font-size:.72rem">Chẩn đoán</p>
+                        <p class="mb-0 fw-medium">
+                            @if (!string.IsNullOrEmpty(_selectedVisit.DiagnosisCode))
+                            {
+                                <span class="font-monospace fw-bold" style="color:var(--color-primary)">@_selectedVisit.DiagnosisCode</span>
+                                <text> – </text>
+                            }
+                            @_selectedVisit.DiagnosisDescription
+                        </p>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(_selectedVisit.DoctorName))
+                {
+                    <div><p class="text-muted mb-0" style="font-size:.72rem">Bác sĩ phụ trách</p><p class="mb-0 fw-medium">BS. @_selectedVisit.DoctorName</p></div>
+                }
+                @if (!string.IsNullOrEmpty(_selectedVisit.ClinicName))
+                {
+                    <div><p class="text-muted mb-0" style="font-size:.72rem">Phòng khám</p><p class="mb-0 fw-medium">@_selectedVisit.ClinicName@(string.IsNullOrEmpty(_selectedVisit.ClinicRoomNumber) ? "" : $" – Phòng {_selectedVisit.ClinicRoomNumber}")</p></div>
+                }
+                @if (!string.IsNullOrEmpty(_selectedVisit.Notes))
+                {
+                    <div><p class="text-muted mb-0" style="font-size:.72rem">Ghi chú của bác sĩ</p><p class="mb-0 fw-medium" style="white-space:pre-wrap">@_selectedVisit.Notes</p></div>
+                }
+            </div>
+
+            @if (_selectedVisit.PrescriptionCount > 0 || _selectedVisit.LabResultCount > 0)
+            {
+                <div class="d-flex gap-2 flex-wrap pt-2 border-top">
+                    @if (_selectedVisit.PrescriptionCount > 0)
+                    {
+                        <button class="btn btn-sm" style="background:var(--color-secondary-container)" @onclick='() => { _selectedVisit = null; _tab = "prescriptions"; }'>@_selectedVisit.PrescriptionCount đơn thuốc</button>
+                    }
+                    @if (_selectedVisit.LabResultCount > 0)
+                    {
+                        <button class="btn btn-sm" style="background:var(--color-tertiary-container)" @onclick='() => { _selectedVisit = null; _tab = "labresults"; }'>@_selectedVisit.LabResultCount kết quả xét nghiệm</button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (_selectedLab is not null)
+{
+    <div class="modal-overlay" @onclick="() => _selectedLab = null">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="mb-0 d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined" style="color:var(--color-tertiary)">biotech</span> @(_selectedLab.TestName ?? "Kết quả xét nghiệm")
+                    </h5>
+                    @if (_selectedLab.OrderedAt is not null)
+                    {
+                        <p class="text-muted mb-0" style="font-size:.78rem">Ngày chỉ định: @FmtDateTime(_selectedLab.OrderedAt)</p>
+                    }
+                </div>
+                <button class="btn-close" @onclick="() => _selectedLab = null"></button>
+            </div>
+
+            @{ var lsi = LabStatusInfo(_selectedLab.OrderStatus); }
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+                <span class="badge @lsi.Badge">@lsi.Label</span>
+                @if (_selectedLab.ResultedAt is not null)
+                {
+                    <span class="text-muted" style="font-size:.78rem">Có kết quả: @FmtDateTime(_selectedLab.ResultedAt)</span>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(_selectedLab.ResultText))
+            {
+                <p class="fw-semibold mb-1" style="font-size:.8rem">Nội dung kết quả</p>
+                <div class="rounded-3 p-3 mb-3 font-monospace" style="background:var(--color-surface-container-low);font-size:.85rem;white-space:pre-wrap">@_selectedLab.ResultText</div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-4 mb-3">
+                    <span class="material-symbols-outlined d-block" style="font-size:2rem">pending_actions</span>
+                    Chưa có nội dung kết quả chi tiết.
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(_selectedLab.ResultFileUrl))
+            {
+                <a href="@_selectedLab.ResultFileUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-1 mb-3">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem">download</span> Tải xuống file kết quả
+                </a>
+            }
+
+            @if (!string.IsNullOrEmpty(_selectedLab.OrderNotes))
+            {
+                <div class="alert alert-warning mb-0"><span class="fw-semibold">Ghi chú: </span>@_selectedLab.OrderNotes</div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private TokenState Token { get; set; } = default!;
+
+    private class VisitVm
+    {
+        public Guid Id;
+        public DateTime VisitDate;
+        public VisitStatus Status;
+        public string? ChiefComplaint, DiagnosisCode, DiagnosisDescription, Notes;
+        public string? DoctorName, ClinicName, ClinicRoomNumber;
+        public int PrescriptionCount, LabResultCount;
+    }
+
+    private class RxItemVm
+    {
+        public string? DrugName, DrugUnit, Dose, Frequency;
+        public int DurationDays, Quantity;
+    }
+
+    private class RxVm
+    {
+        public Guid Id;
+        public DateTime IssuedAt;
+        public string? DoctorName, Notes;
+        public List<RxItemVm> Items = new();
+    }
+
+    private class LabVm
+    {
+        public Guid Id;
+        public string? TestName, ResultText, ResultFileUrl, OrderNotes;
+        public DateTime? ResultedAt, OrderedAt;
+        public LabOrderStatus? OrderStatus;
+    }
+
+    private bool _loading = true;
+    private bool _noProfile;
+    private string? _error;
+    private PatientProfileReadDto? _profile;
+
+    private List<VisitVm> _visits = new();
+    private List<RxVm> _prescriptions = new();
+    private List<LabVm> _labResults = new();
+
+    private string _tab = "timeline";
+    private string _visitSearch = "";
+    private bool _visitSortDesc = true;
+    private VisitVm? _selectedVisit;
+    private Guid? _expandedRxId;
+    private string _labFilter = "all";
+    private LabVm? _selectedLab;
+
+    private List<VisitVm> FilteredVisits => _visits.Where(v =>
+        _visitSearch.Length == 0 ||
+        (v.ChiefComplaint ?? "").Contains(_visitSearch, StringComparison.OrdinalIgnoreCase) ||
+        (v.DiagnosisCode ?? "").Contains(_visitSearch, StringComparison.OrdinalIgnoreCase) ||
+        (v.DiagnosisDescription ?? "").Contains(_visitSearch, StringComparison.OrdinalIgnoreCase) ||
+        (v.DoctorName ?? "").Contains(_visitSearch, StringComparison.OrdinalIgnoreCase) ||
+        (v.ClinicName ?? "").Contains(_visitSearch, StringComparison.OrdinalIgnoreCase)
+    ).ToList();
+
+    private List<VisitVm> DisplayVisits
+    {
+        get
+        {
+            var list = FilteredVisits;
+            return _visitSortDesc ? list : list.AsEnumerable().Reverse().ToList();
+        }
+    }
+
+    private List<LabVm> DisplayLabResults => _labResults.Where(lr =>
+        _labFilter == "all" ||
+        (_labFilter == "has_result" && (!string.IsNullOrEmpty(lr.ResultText) || !string.IsNullOrEmpty(lr.ResultFileUrl))) ||
+        (_labFilter == "no_result" && string.IsNullOrEmpty(lr.ResultText) && string.IsNullOrEmpty(lr.ResultFileUrl))
+    ).ToList();
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        _loading = true; _error = null; _noProfile = false;
+        try
+        {
+            PatientProfileReadDto profile;
+            try
+            {
+                var me = await Api.GetMyPatient();
+                if (me is null) throw new ApiClient.ApiException(404, "not found");
+                profile = me;
+            }
+            catch (ApiClient.ApiException)
+            {
+                _noProfile = true;
+                _loading = false;
+                return;
+            }
+            _profile = profile;
+
+            var history = await Api.GetPatientHistory(profile.Id);
+            var allLabOrders = (await Api.GetAllLabOrders()) ?? new();
+            var allPrescItems = (await Api.GetPrescriptionItems()) ?? new();
+            var allDrugs = (await Api.GetDrugs()) ?? new();
+            var staffDirectory = (await Api.GetStaffDirectory()) ?? new();
+            var allClinics = (await Api.GetAllClinics()) ?? new();
+
+            var visits = history?.Visits ?? Array.Empty<OutpatientVisitReadDto>();
+            var labResults = history?.LabResults ?? Array.Empty<LabResultReadDto>();
+            var prescriptions = history?.Prescriptions ?? Array.Empty<PrescriptionReadDto>();
+
+            var labOrderIds = labResults.Select(lr => lr.LabOrderId).ToHashSet();
+            var prescriptionIds = prescriptions.Select(p => p.Id).ToHashSet();
+
+            var patientLabOrders = allLabOrders.Where(o => labOrderIds.Contains(o.Id)).ToList();
+            var patientPrescItems = allPrescItems.Where(pi => prescriptionIds.Contains(pi.PrescriptionId)).ToList();
+
+            var labOrderById = patientLabOrders.ToDictionary(o => o.Id);
+            var drugById = allDrugs.ToDictionary(d => d.Id);
+            var staffNameById = staffDirectory.ToDictionary(s => s.Id, s => s.Name);
+            var clinicById = allClinics.ToDictionary(c => c.Id);
+
+            _visits = visits.Select(v =>
+            {
+                var clinic = clinicById.GetValueOrDefault(v.ClinicId);
+                var relatedOrderIds = patientLabOrders.Where(o => o.OutpatientVisitId == v.Id).Select(o => o.Id).ToHashSet();
+                return new VisitVm
+                {
+                    Id = v.Id, VisitDate = v.VisitDate, Status = v.Status,
+                    ChiefComplaint = v.ChiefComplaint, DiagnosisCode = v.DiagnosisCode, DiagnosisDescription = v.DiagnosisDescription, Notes = v.Notes,
+                    DoctorName = staffNameById.GetValueOrDefault(v.DoctorId),
+                    ClinicName = clinic?.Name, ClinicRoomNumber = clinic?.RoomNumber,
+                    PrescriptionCount = prescriptions.Count(p => p.OutpatientVisitId == v.Id),
+                    LabResultCount = labResults.Count(lr => relatedOrderIds.Contains(lr.LabOrderId)),
+                };
+            }).OrderByDescending(v => v.VisitDate).ToList();
+
+            _labResults = labResults.Select(lr =>
+            {
+                var order = labOrderById.GetValueOrDefault(lr.LabOrderId);
+                return new LabVm
+                {
+                    Id = lr.Id, ResultText = lr.ResultText, ResultFileUrl = lr.ResultFileUrl, ResultedAt = lr.ResultedAt,
+                    TestName = order?.TestName, OrderedAt = order?.OrderedAt, OrderStatus = order?.Status, OrderNotes = order?.Notes,
+                };
+            }).OrderByDescending(lr => lr.ResultedAt ?? lr.OrderedAt ?? DateTime.MinValue).ToList();
+
+            _prescriptions = prescriptions.Select(p => new RxVm
+            {
+                Id = p.Id, IssuedAt = p.IssuedAt, Notes = p.Notes,
+                DoctorName = staffNameById.GetValueOrDefault(p.DoctorId),
+                Items = patientPrescItems.Where(pi => pi.PrescriptionId == p.Id).Select(pi =>
+                {
+                    var drug = drugById.GetValueOrDefault(pi.DrugId);
+                    return new RxItemVm { DrugName = drug?.Name, DrugUnit = drug?.Unit, Dose = pi.Dose, Frequency = pi.Frequency, DurationDays = pi.DurationDays, Quantity = pi.Quantity };
+                }).ToList(),
+            }).OrderByDescending(p => p.IssuedAt).ToList();
+        }
+        catch { _error = "Không thể tải hồ sơ sức khỏe. Vui lòng kiểm tra kết nối và thử lại."; }
+        finally { _loading = false; }
+    }
+
+    private static string FmtDate(DateOnly? d) => d is null ? "—" : d.Value.ToString("dd/MM/yyyy");
+    private static string FmtDate(DateTime d) => d.ToString("dd/MM/yyyy");
+    private static string FmtDateTime(DateTime d) => d.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
+    private static string FmtDateTime(DateTime? d) => d is null ? "—" : FmtDateTime(d.Value);
+
+    private static string GenderLabel(Gender g) => g switch
+    {
+        Gender.Male => "Nam",
+        Gender.Female => "Nữ",
+        Gender.Other => "Khác",
+        _ => "Không rõ",
+    };
+
+    private static (string Label, string Badge, string Icon) VisitStatusInfo(VisitStatus s) => s switch
+    {
+        VisitStatus.Waiting => ("Chờ khám", "badge-soft-yellow", "schedule"),
+        VisitStatus.InProgress => ("Đang khám", "badge-soft-blue", "medical_services"),
+        VisitStatus.Completed => ("Hoàn thành", "badge-soft-green", "check_circle"),
+        VisitStatus.Cancelled => ("Đã hủy", "badge-soft-red", "cancel"),
+        _ => ("Không rõ", "bg-light text-dark", "help_outline"),
+    };
+
+    private static (string Label, string Badge) LabStatusInfo(LabOrderStatus? s) => s switch
+    {
+        LabOrderStatus.Ordered => ("Đã chỉ định", "bg-light text-dark"),
+        LabOrderStatus.InProgress => ("Đang thực hiện", "badge-soft-blue"),
+        LabOrderStatus.Completed => ("Có kết quả", "badge-soft-green"),
+        LabOrderStatus.Cancelled => ("Đã hủy", "badge-soft-red"),
+        _ => ("Không xác định", "bg-light text-dark"),
+    };
+}

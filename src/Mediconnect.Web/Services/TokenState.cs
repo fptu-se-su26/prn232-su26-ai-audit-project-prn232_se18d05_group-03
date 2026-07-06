@@ -3,7 +3,7 @@ using Mediconnect.Application.DTOs;
 namespace Mediconnect.Web.Services;
 
 // Per-circuit holder for the signed-in user's JWT and profile.
-// (In-memory: survives Blazor SPA navigation; a full browser refresh requires re-login.)
+// Persisted to the browser's localStorage by ApiAuthStateProvider so a page refresh (F5) keeps the user logged in.
 public class TokenState
 {
     public string? Token { get; private set; }
@@ -17,6 +17,13 @@ public class TokenState
         Token = auth.AccessToken;
         User = auth.User;
         ExpiresAt = auth.ExpiresAt;
+    }
+
+    public void Restore(string token, UserAccountReadDto user, DateTime? expiresAt)
+    {
+        Token = token;
+        User = user;
+        ExpiresAt = expiresAt;
     }
 
     public void Clear()

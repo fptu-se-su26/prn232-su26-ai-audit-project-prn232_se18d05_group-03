@@ -1,0 +1,68 @@
+@namespace Mediconnect.Web.Components.Shared
+
+@if (Total == 0)
+{
+    <div class="d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="height:@(Size)px">
+        <span class="material-symbols-outlined" style="font-size:2.5rem">pie_chart</span>
+        <p class="mb-0" style="font-size:.85rem">@EmptyText</p>
+    </div>
+}
+else
+{
+    <svg viewBox="0 0 @Size @Size" width="@Size" height="@Size">
+        @foreach (var s in Slices)
+        {
+            <path d="@s.Path" fill="@s.Slice.Color" stroke="#fff" stroke-width="2">
+                <title>@s.Slice.Label: @(s.Pct.ToString("0.0"))%</title>
+            </path>
+        }
+    </svg>
+}
+
+@code {
+    [Parameter] public List<PieSlice> Data { get; set; } = new();
+    [Parameter] public int Size { get; set; } = 220;
+    [Parameter] public string EmptyText { get; set; } = "Không có dữ liệu";
+
+    private double Total => Data.Sum(d => d.Value);
+    private double Radius => Size / 2.0 - 8;
+    private double Cx => Size / 2.0;
+    private double Cy => Size / 2.0;
+
+    private List<(PieSlice Slice, string Path, double Pct)> Slices
+    {
+        get
+        {
+            var result = new List<(PieSlice, string, double)>();
+            var positive = Data.Where(d => d.Value > 0).ToList();
+            double cumulative = 0;
+            foreach (var slice in positive)
+            {
+                var angle = slice.Value / Total * 360;
+                var startAngle = cumulative;
+                var endAngle = cumulative + angle;
+                cumulative = endAngle;
+
+                var start = PolarToCartesian(startAngle);
+                var end = PolarToCartesian(endAngle);
+                var largeArc = angle > 180 ? 1 : 0;
+                var isFullCircle = positive.Count == 1;
+
+                var path = isFullCircle
+                    ? Inv($"M {Cx} {Cy - Radius} A {Radius} {Radius} 0 1 1 {Cx - 0.01} {Cy - Radius} Z")
+                    : Inv($"M {Cx} {Cy} L {start.X} {start.Y} A {Radius} {Radius} 0 {largeArc} 1 {end.X} {end.Y} Z");
+
+                result.Add((slice, path, slice.Value / Total * 100));
+            }
+            return result;
+        }
+    }
+
+    private (double X, double Y) PolarToCartesian(double angleDeg)
+    {
+        var rad = (angleDeg - 90) * Math.PI / 180;
+        return (Cx + Radius * Math.Cos(rad), Cy + Radius * Math.Sin(rad));
+    }
+
+    private static string Inv(FormattableString s) => FormattableString.Invariant(s);
+}
