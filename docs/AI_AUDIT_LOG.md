@@ -1362,6 +1362,105 @@ Kiểm tra các chức năng, làm cho tôi giao diện ở trong folder src/med
 
 ---
 
+### Lần sử dụng AI số 17
+
+| Nội dung            | Thông tin                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Ngày sử dụng        | 06/07/2026                                                                           |
+| Công cụ AI          | Claude Code (claude-sonnet-5 / claude-opus-4-8)                                     |
+| Mục đích sử dụng    | Migrate toàn bộ trang React còn lại sang Blazor Server + sửa nav/Home theo đúng vai trò |
+| Phần việc liên quan | Frontend (Blazor) / Backend enrichment / Git workflow                              |
+| Mức độ sử dụng      | Viết code toàn bộ + tự phát hiện & fix bug                                          |
+
+#### 17.1. Prompt đã sử dụng
+
+```text
+tiep tuc cong viec
+phần số 3 này trang nào cũng xuất hiện, hãy làm cho nó đùng flow
+hiện trang chủ chưa đúng ở các trang đặt lại tên có các chức năng f1-f2-f3-f4 vân của dev3
+admin phai chia chính xác làm những việc gì, chứ không phải quản lý hết tất cả các trang
+để f1-f2-f3-f4 vậy luôn à, phải xóa đi chứ
+thay vì để đăng xuất thì ấn vào tên bác sĩ rồi dropdown xuống để đỡ diện tích
+trang chủ sẽ xuất hiện đầu tiên đi vào account, và xóa chữ trang chủ trên navbar, và vào chữ mediconnect thì ra trang chủ
+danh gia loi 500
+tạo nhánh mới cho việc sửa UI rồi push lên ko bỏ author by claude
+```
+
+#### 17.2. Kết quả AI gợi ý
+
+```text
+1. Migrate 18 trang React còn lại (Patient/Clinical/Admin/Report) sang Blazor Server:
+   Booking (wizard 4 bước), Billing (invoice + BHYT + VNPay/Momo), PHR (3 tab), Reviews,
+   Appointments, ClinicDashboard (hàng đợi live), OutpatientRecord (ICD-10 + kê đơn),
+   ScheduleManagement (Gantt tuần/ngày), UserManagement/StaffManagement/ManageServices/
+   DrugInteraction/OtpSecurity (Admin CRUD), RevenueDashboard/OperationsReport (chart SVG
+   thuần), EPrescription. Thêm IInpatientQuery (Application+Infrastructure) để enrich DTO
+   inpatient (tên BN/giường thay GUID trần). Toàn bộ dùng lại ApiClient/TokenState có sẵn.
+2. Sửa nav + Home dashboard theo đúng vai trò: role-gate từng link F1-F4 khớp đúng quyền
+   trang đích (Doctor,Nurse cho giường/y lệnh/xuất viện; Lab,Doctor,Nurse cho cận lâm sàng);
+   thu hẹp phạm vi Admin về đúng "quản trị + thống kê" (bỏ Admin khỏi mọi trang vận hành
+   lâm sàng, cả nav lẫn [Authorize] ở trang); Home.razor viết lại thành tile role-scoped
+   qua AuthorizeView thay vì hiện cứng 4 tile F1-F4 cho mọi role.
+3. Bỏ nhãn nội bộ "F1/F2/F3/F4" khỏi toàn bộ text hiển thị (nav, PageTitle, Home tile) —
+   đây là mã module trong đặc tả, không phải text nghiệp vụ cho end-user.
+4. Gộp chip tên + nút "Đăng xuất" trong MainLayout.razor thành 1 dropdown (click tên hiện
+   menu, click ngoài để đóng) để tiết kiệm diện tích header.
+5. Xóa link "Trang chủ" khỏi NavMenu vì brand logo "MediConnect" và luồng đăng nhập đã
+   điều hướng về "/" sẵn — link riêng bị dư.
+6. Tự chẩn đoán bug "Lỗi 500" ở trang Đánh giá: không phải lỗi code Blazor mà do 4 migration
+   EF Core đã có sẵn trong repo (AddStaffScheduleShiftType, AddDoseThresholdsAndOtp,
+   AddOtpDeliveredFlag, AddServiceRating) chưa từng được áp lên database thật — backend ném
+   SqlException "Invalid object name 'ServiceRatings'". Tự chạy `dotnet ef database update`
+   để áp cả 4 migration, xác nhận lại bằng curl (200 thay vì 500).
+7. Hỗ trợ git workflow: tạo branch mới, tách 2 commit rõ ràng trên cùng branch (1: toàn bộ
+   phần migrate Blazor chưa từng commit; 2: riêng các sửa UI của phiên làm việc này) theo
+   yêu cầu người dùng, không gắn "Co-Authored-By: Claude" vào message. Cài đặt `github-cli`
+   qua pacman và hướng dẫn `gh auth login` (device flow) để có quyền push, vì máy chưa có
+   credential helper nào cho remote HTTPS.
+```
+
+#### 17.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ 18 trang Blazor mới + IInpatientQuery + các sửa nav/Home/MainLayout sau khi
+xác nhận `dotnet build` sạch (0 Warning/0 Error) sau mỗi bước; áp dụng migration EF Core vào
+database dev thật sau khi xác nhận đây là migration additive (không mất dữ liệu).
+```
+
+#### 17.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Quyết định phạm vi Admin ("chỉ quản trị + thống kê") qua AskUserQuestion trước khi sửa
+  role gate, tránh đoán sai ý người dùng về việc Admin có được giám sát vận hành hay không.
+- Tự tách lại đúng 2 commit theo yêu cầu (không gộp migrate + UI-fix chung 1 commit) bằng
+  cách ghi lại chính xác nội dung "trước phiên này" của từng file rồi khôi phục tạm thời,
+  commit, rồi áp lại thay đổi của phiên này để commit tiếp — tránh lẫn lộn lịch sử git.
+- Kiểm tra kỹ .gitignore trước khi git add để không kéo theo build artifact (bin/obj) đã
+  lỡ được track từ trước vào commit mới.
+```
+
+#### 17.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Link commit       | 7aba0b3 (migrate Blazor), 5e09d6b (UI fixes) trên branch `feature/ui-fixes-role-nav`         |
+| File liên quan    | `src/Mediconnect.Web/Components/Pages/*.razor` (18 trang mới); `Components/Layout/NavMenu.razor`, `MainLayout.razor`; `Components/Pages/Home.razor`; `Mediconnect.Application/Interfaces/IInpatientQuery.cs`; `Mediconnect.Infrastructure/Repositories/InpatientQuery.cs`; migration `20260702005148_AddServiceRating` và 3 migration khác |
+| Screenshot        |                                                                                                |
+| Kết quả chạy/test | `dotnet build` toàn solution: 0 Warning/0 Error sau mỗi bước; `dotnet ef database update`: áp 4 migration thành công; curl `/api/serviceratings`: 500 → 200 sau khi áp migration |
+| Link video demo   |                                                                                                |
+| Ghi chú khác      | Docs (AI_AUDIT_LOG/PROMPTS/CHANGELOG) được cập nhật ngay trong phiên này, không để nợ lại      |
+
+#### 17.6. Nhận xét cá nhân/nhóm
+
+```text
+Bug "Lỗi 500" ở trang Đánh giá là ví dụ rõ cho việc không được vội kết luận lỗi nằm ở code
+Blazor mới viết — nguyên nhân thực ra là migration EF Core cũ chưa từng chạy trên DB dev,
+hoàn toàn không liên quan tới các trang vừa migrate. Việc curl trực tiếp endpoint để lấy
+stack trace thật (thay vì đoán qua UI) giúp xác định đúng gốc rễ trong 1 lần thử.
+```
+
+---
+
 ## 10. Cam kết học thuật
 
 Sinh viên/nhóm cam kết rằng:

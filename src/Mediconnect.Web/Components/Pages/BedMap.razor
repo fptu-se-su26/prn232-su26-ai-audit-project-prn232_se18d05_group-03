@@ -1,10 +1,10 @@
 @page "/beds"
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Doctor,Nurse")]
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 @using System.Globalization
 
-<PageTitle>F1 · Sơ đồ giường – MediConnect</PageTitle>
+<PageTitle>Sơ đồ giường – MediConnect</PageTitle>
 
 <!-- Page header -->
 <div class="page-header">
@@ -186,7 +186,7 @@ else
                         @foreach (var bed in RoomBeds(_selRoom))
                         {
                             <div class="bed-tile @BedCls(bed.Status) @(_selBed?.Id == bed.Id ? "selected" : "")"
-                                 title="@bed.BedNumber – @StatusLabel(bed.Status)"
+                                 title="@BedTileTitle(bed)"
                                  @onclick="() => SelectBed(bed)">
                                 <div class="bed-headboard"><div class="bed-pillow"></div></div>
                                 <div class="bed-body">@bed.BedNumber</div>
@@ -263,7 +263,20 @@ else
                 <dt class="col-5 text-muted">Tầng</dt>     <dd class="col-7">@_selBed.Floor</dd>
                 <dt class="col-5 text-muted">Trạng thái</dt>
                 <dd class="col-7"><span class="badge @StatusBadge(_selBed.Status)">@StatusLabel(_selBed.Status)</span></dd>
+                @{ var admission = AdmissionForBed(_selBed.Id); }
+                @if (_selBed.Status == BedStatus.Occupied && admission is not null)
+                {
+                    <dt class="col-5 text-muted">Bệnh nhân</dt><dd class="col-7">@(admission.PatientName ?? "(Chưa rõ tên)")</dd>
+                }
             </dl>
+
+            @if (_selBed.Status == BedStatus.Occupied && admission is not null)
+            {
+                <a class="btn btn-outline-success w-100 mb-2" href="@($"/vitals?admissionId={admission.Id}")">
+                    <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">ecg_heart</span>
+                    Xem sinh tồn &amp; y lệnh
+                </a>
+            }
 
             <hr />
 
@@ -429,6 +442,7 @@ else
     private List<DepartmentReadDto> _depts = new();
     private List<UserAccountReadDto> _patients = new();
     private List<BedReadDto> _allBeds = new();
+    private List<InpatientAdmissionReadDto> _activeAdmissions = new();
 
     private string _selDept = "";
     private int _selFloor = 1;
@@ -692,13 +706,27 @@ else
         _loading = true; _error = null;
         try
         {
-            var groups = await Api.GetBedMap(Guid.Parse(_selDept));
+            var groupsTask = Api.GetBedMap(Guid.Parse(_selDept));
+            var admissionsTask = Api.GetAdmissions();
+            var groups = await groupsTask;
             _allBeds = (groups ?? new()).SelectMany(g => g.Beds).ToList();
+            _activeAdmissions = ((await admissionsTask) ?? new()).Where(a => a.Status == AdmissionStatus.Active).ToList();
             var floors = Floors.ToList();
             if (!floors.Contains(_selFloor)) _selFloor = floors.FirstOrDefault(1);
         }
         catch (ApiClient.ApiException ex) { _error = ex.Message; }
         finally { _loading = false; }
+    }
+
+    private InpatientAdmissionReadDto? AdmissionForBed(Guid bedId) =>
+        _activeAdmissions.FirstOrDefault(a => a.BedId == bedId);
+
+    private string BedTileTitle(BedReadDto bed)
+    {
+        var baseTitle = $"{bed.BedNumber} – {StatusLabel(bed.Status)}";
+        if (bed.Status != BedStatus.Occupied) return baseTitle;
+        var patientName = AdmissionForBed(bed.Id)?.PatientName;
+        return patientName is null ? baseTitle : $"{baseTitle} – {patientName}";
     }
 
     private void Toggle3D()
@@ -726,7 +754,11 @@ else
 
     private void SelectBed(BedReadDto bed) => _selBed = bed;
 
-    private void OpenTransfer() { _showTransfer = true; _admitError = null; _transferAdmissionId = ""; _transferDto = new(); _transferBeds = new(); }
+    private void OpenTransfer()
+    {
+        _showTransfer = true; _admitError = null; _transferDto = new(); _transferBeds = new();
+        _transferAdmissionId = (_selBed is not null ? AdmissionForBed(_selBed.Id)?.Id.ToString() : null) ?? "";
+    }
     private void OpenAddBed()
     {
         _showAddBed = true; _admitError = null;

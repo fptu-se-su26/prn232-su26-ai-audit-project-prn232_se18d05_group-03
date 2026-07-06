@@ -1,45 +1,77 @@
 @inherits LayoutComponentBase
 
-<div class="hc-layout">
-    <aside class="hc-sidebar">
-        <NavMenu />
-    </aside>
+<header class="app-header">
+    <div class="app-header-inner">
+        <a href="/" class="app-brand">
+            <span class="material-symbols-outlined" style="font-size:1.7rem">local_hospital</span>
+            MediConnect
+        </a>
 
-    <div class="hc-body">
-        <header class="hc-topbar">
-            <div class="hc-topbar-brand d-md-none">
-                <span class="material-symbols-outlined" style="color:var(--brand)">local_hospital</span>
-                <span class="fw-700 ms-1" style="font-size:.9rem">MediConnect</span>
-            </div>
-            <div class="ms-auto d-flex align-items-center gap-3">
+        <nav class="app-nav">
+            <NavMenu />
+        </nav>
+
+        <div class="app-header-actions">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="app-user-menu">
+                        <button type="button" class="app-user-chip app-user-chip-btn" @onclick="ToggleUserMenu">
+                            <span class="material-symbols-outlined" style="font-size:.95rem">person</span>
+                            @context.User.Identity?.Name
+                            <span class="material-symbols-outlined" style="font-size:1rem">@(_userMenuOpen ? "expand_less" : "expand_more")</span>
+                        </button>
+
+                        @if (_userMenuOpen)
+                        {
+                            <div class="app-user-menu-backdrop" @onclick="CloseUserMenu"></div>
+                            <div class="app-user-dropdown">
+                                <button type="button" class="app-user-dropdown-item" @onclick="Logout">
+                                    <span class="material-symbols-outlined" style="font-size:1.1rem">logout</span>
+                                    Đăng xuất
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="login" class="app-nav-link">Đăng nhập</a>
+                    <a href="register" class="btn btn-primary btn-pill btn-sm">Đăng ký</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <button class="app-mobile-toggle" @onclick="ToggleMobileMenu" aria-label="Menu">
+            <span class="material-symbols-outlined">@(_mobileOpen ? "close" : "menu")</span>
+        </button>
+    </div>
+
+    @if (_mobileOpen)
+    {
+        <div class="app-mobile-menu">
+            <NavMenu OnNavigate="CloseMobileMenu" />
+
+            <div class="app-mobile-menu-actions">
                 <AuthorizeView>
                     <Authorized>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="hc-avatar">
-                                @(context.User.Identity?.Name?.Substring(0,1).ToUpper() ?? "?")
-                            </div>
-                            <div class="d-none d-sm-block">
-                                <div style="font-size:.8rem;font-weight:600;line-height:1.2">@context.User.Identity?.Name</div>
-                                <div style="font-size:.7rem;color:var(--text-muted)">@context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</div>
-                            </div>
-                        </div>
-                        <button class="btn btn-sm btn-outline-secondary" @onclick="Logout">
-                            <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">logout</span>
-                            <span class="d-none d-sm-inline ms-1">Đăng xuất</span>
-                        </button>
+                        <span class="app-user-chip" style="align-self:flex-start">
+                            <span class="material-symbols-outlined" style="font-size:.95rem">person</span>
+                            @context.User.Identity?.Name
+                        </span>
+                        <button class="app-logout-btn" style="text-align:left" @onclick="Logout">Đăng xuất</button>
                     </Authorized>
                     <NotAuthorized>
-                        <a href="login" class="btn btn-sm btn-primary">Đăng nhập</a>
+                        <a href="login" class="app-nav-link" @onclick="CloseMobileMenu">Đăng nhập</a>
+                        <a href="register" class="app-nav-link" @onclick="CloseMobileMenu">Đăng ký</a>
                     </NotAuthorized>
                 </AuthorizeView>
             </div>
-        </header>
+        </div>
+    }
+</header>
 
-        <main class="hc-main">
-            @Body
-        </main>
-    </div>
-</div>
+<main class="app-main">
+    @Body
+</main>
 
 <div id="blazor-error-ui">
     Đã xảy ra lỗi.
@@ -51,9 +83,18 @@
     [Inject] private ApiClient Api { get; set; } = default!;
     [Inject] private NavigationManager Nav { get; set; } = default!;
 
-    private void Logout()
+    private bool _mobileOpen;
+    private bool _userMenuOpen;
+
+    private void ToggleMobileMenu() => _mobileOpen = !_mobileOpen;
+    private void CloseMobileMenu() => _mobileOpen = false;
+
+    private void ToggleUserMenu() => _userMenuOpen = !_userMenuOpen;
+    private void CloseUserMenu() => _userMenuOpen = false;
+
+    private async Task Logout()
     {
-        Api.Logout();
+        await Api.Logout();
         Nav.NavigateTo("/login");
     }
 }

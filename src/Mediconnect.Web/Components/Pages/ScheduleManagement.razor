@@ -1,0 +1,658 @@
+@page "/schedules"
+@attribute [Authorize]
+@using System.Globalization
+
+<PageTitle>Nhân sự & Lịch trực – MediConnect</PageTitle>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h4 class="mb-1 d-flex align-items-center gap-2" style="font-size:1.5rem">
+            <span class="material-symbols-outlined text-primary">calendar_month</span>
+            Nhân sự & Lịch trực
+        </h4>
+        <p class="text-muted mb-0">Quản lý ca trực và theo dõi tình trạng nhân viên theo thời gian thực.</p>
+    </div>
+    <button class="btn btn-primary d-inline-flex align-items-center gap-1" @onclick="OpenCreate">
+        <span class="material-symbols-outlined" style="font-size:1.1rem">add_task</span>
+        Thêm lịch trực
+    </button>
+</div>
+
+@if (_toastMsg is not null)
+{
+    <div class="alert @_toastClass mb-3">
+        <span class="material-symbols-outlined">@(_toastClass == "alert-danger" ? "error" : _toastClass == "alert-warning" ? "warning" : "check_circle")</span>
+        @_toastMsg
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="report-card py-3">
+            <div class="text-muted d-flex align-items-center gap-1" style="font-size:.7rem;font-weight:700;text-transform:uppercase">
+                <span class="material-symbols-outlined" style="font-size:.9rem">groups</span> Tổng nhân viên
+            </div>
+            <p class="mb-0 mt-1" style="font-size:1.5rem;font-weight:700">@_directory.Count</p>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="report-card py-3">
+            <div class="text-muted d-flex align-items-center gap-1" style="font-size:.7rem;font-weight:700;text-transform:uppercase">
+                <span class="material-symbols-outlined" style="font-size:.9rem">badge</span> Đang trực hôm nay
+            </div>
+            <p class="mb-0 mt-1" style="font-size:1.5rem;font-weight:700">@OnDutyIds.Count</p>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="report-card py-3">
+            <div class="text-muted d-flex align-items-center gap-1" style="font-size:.7rem;font-weight:700;text-transform:uppercase">
+                <span class="material-symbols-outlined" style="font-size:.9rem">event_note</span> Ca trực trong tuần
+            </div>
+            <p class="mb-0 mt-1" style="font-size:1.5rem;font-weight:700">@_weekSchedules.Count</p>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="report-card py-3">
+            <div class="text-muted d-flex align-items-center gap-1" style="font-size:.7rem;font-weight:700;text-transform:uppercase">
+                <span class="material-symbols-outlined" style="font-size:.9rem">monitoring</span> Tỷ lệ phủ hôm nay
+            </div>
+            <p class="mb-0 mt-1" style="font-size:1.5rem;font-weight:700">@Coverage%</p>
+        </div>
+    </div>
+</div>
+
+<section class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h6 class="mb-1">Danh sách nhân viên</h6>
+            <p class="text-muted mb-0" style="font-size:.85rem">Quản lý nhân viên y tế và theo dõi tình trạng trực.</p>
+        </div>
+        <span class="badge bg-light text-dark" style="font-size:.75rem">@OnDutyIds.Count đang trực · @(_directory.Count - OnDutyIds.Count) nghỉ</span>
+    </div>
+
+    @if (_directory.Count == 0)
+    {
+        <div class="report-card text-center text-muted py-4">
+            <span class="material-symbols-outlined" style="font-size:2.5rem">group</span>
+            <p class="mb-0 mt-1" style="font-size:.85rem">Chưa có nhân viên nào.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var s in _directory)
+            {
+                var isOnDuty = OnDutyIds.Contains(s.Id);
+                <div class="col-6 col-lg-3">
+                    <div class="report-card h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center justify-content-center rounded-3" style="width:3rem;height:3rem;background:var(--color-primary-container);color:var(--color-on-primary-container);font-weight:800">
+                                @s.Name.Substring(0, 1).ToUpper()
+                            </div>
+                            <span class="badge @(isOnDuty ? "badge-soft-tertiary" : "bg-light text-muted")" style="font-size:.65rem">@(isOnDuty ? "Đang trực" : "Nghỉ")</span>
+                        </div>
+                        <h6 class="mb-2 text-truncate" title="@s.Name">@s.Name</h6>
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            <span class="badge @StaffBadge(s.StaffType)" style="font-size:.65rem">@StaffLabel(s.StaffType)</span>
+                            <span class="badge bg-light text-dark" style="font-size:.65rem">@s.Department</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <button class="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1" style="font-size:.75rem" @onclick="() => ViewStaffSchedule(s.Id)">
+                                <span class="material-symbols-outlined" style="font-size:.9rem">visibility</span> Xem lịch
+                            </button>
+                            <span class="text-muted text-truncate" style="font-size:.7rem;max-width:80px" title="@s.Specialty">@(s.Specialty ?? "—")</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+<div id="schedule-board" class="report-card p-0" style="overflow:hidden">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 p-3 border-bottom">
+        <div>
+            <h6 class="mb-0">Bảng ca trực</h6>
+            <p class="text-muted mb-0" style="font-size:.75rem">Ma trận ca trực theo thời gian thực.</p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <div class="btn-group btn-group-sm">
+                <button class="btn @(_viewMode == "day" ? "btn-primary" : "btn-outline-secondary")" @onclick='() => _viewMode = "day"'>Ngày</button>
+                <button class="btn @(_viewMode == "week" ? "btn-primary" : "btn-outline-secondary")" @onclick='() => _viewMode = "week"'>Tuần</button>
+            </div>
+
+            @if (_viewMode == "week")
+            {
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" @onclick="PrevWeek">
+                        <span class="material-symbols-outlined" style="font-size:1rem">chevron_left</span>
+                    </button>
+                    <span class="btn btn-outline-secondary disabled" style="font-size:.75rem;font-weight:700">@WeekLabel</span>
+                    <button class="btn btn-outline-secondary" @onclick="NextWeek">
+                        <span class="material-symbols-outlined" style="font-size:1rem">chevron_right</span>
+                    </button>
+                </div>
+                <button class="btn btn-sm @(IsCurrentWeek ? "btn-outline-primary disabled" : "btn-outline-secondary")" @onclick="ThisWeek">Tuần này</button>
+            }
+            else
+            {
+                <span class="badge badge-soft-blue" style="font-size:.75rem">@DateTime.Today.ToString("dd/MM/yyyy")</span>
+            }
+
+            <select class="form-select form-select-sm" style="width:auto" @bind="_filterDeptId" @bind:after="ReloadAll">
+                <option value="">Tất cả khoa</option>
+                @foreach (var d in _departments)
+                {
+                    <option value="@d.Id">@d.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5">
+            <span class="material-symbols-outlined spin" style="font-size:2.5rem;color:var(--color-primary)">progress_activity</span>
+            <p class="text-muted mb-0">Đang tải lịch trực...</p>
+        </div>
+    }
+    else if (_viewMode == "week")
+    {
+        <div class="table-responsive">
+            <table class="table mb-0" style="min-width:900px">
+                <thead>
+                    <tr>
+                        <th style="width:200px" class="bg-light">Nhân viên · @GanttRows.Count</th>
+                        @foreach (var d in WeekDates)
+                        {
+                            var isToday = d == DateOnly.FromDateTime(DateTime.Today);
+                            <th class="text-center @(isToday ? "bg-primary bg-opacity-10" : "")" style="font-size:.75rem">
+                                @VnDayShort(d)<br /><span style="font-size:1.1rem;font-weight:800">@d.Day.ToString("00")</span>/@d.Month
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (GanttRows.Count == 0)
+                    {
+                        <tr><td colspan="8" class="text-center text-muted py-5">
+                            <span class="material-symbols-outlined d-block mb-2" style="font-size:3rem">event_busy</span>
+                            Tuần này chưa có lịch trực
+                        </td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var row in GanttRows)
+                        {
+                            var highlighted = _highlightStaffId == row.StaffId;
+                            <tr class="@(highlighted ? "table-active" : "")">
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle" style="width:2rem;height:2rem;background:var(--color-primary-container);color:var(--color-on-primary-container);font-size:.7rem;font-weight:800;flex-shrink:0">
+                                            @row.Name.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="fw-semibold text-truncate" style="font-size:.82rem">@row.Name</div>
+                                            <span class="badge @StaffBadge(row.StaffType)" style="font-size:.6rem">@StaffLabel(row.StaffType)</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                @foreach (var d in WeekDates)
+                                {
+                                    <td class="align-top">
+                                        @if (row.ByDate.TryGetValue(d, out var shifts))
+                                        {
+                                            @foreach (var s in shifts)
+                                            {
+                                                <button type="button" class="btn w-100 text-start mb-1 @ShiftBadge(s.ShiftType)" style="font-size:.7rem;padding:.3rem .5rem" @onclick="() => _selectedSchedule = s">
+                                                    <div class="d-flex align-items-center gap-1">
+                                                        <span class="material-symbols-outlined" style="font-size:.85rem">@ShiftIcon(s.ShiftType)</span>
+                                                        <span class="fw-bold">@s.Shift</span>
+                                                    </div>
+                                                    <div style="font-size:.65rem;opacity:.75">@s.StartTime.ToString("HH:mm")–@s.EndTime.ToString("HH:mm")</div>
+                                                </button>
+                                            }
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <div style="min-width:900px">
+                <div class="d-flex border-bottom bg-light">
+                    <div style="width:200px;flex-shrink:0;font-size:.7rem;font-weight:700" class="px-2 py-2 border-end text-muted">Nhân viên</div>
+                    <div class="flex-grow-1 position-relative" style="height:2.2rem">
+                        @foreach (var h in DayHours)
+                        {
+                            <div class="position-absolute text-muted" style="left:@(Fmt(h / 24.0 * 100))%;font-size:.65rem;top:.3rem">@h.ToString("00"):00</div>
+                        }
+                    </div>
+                </div>
+                @if (DayRows.Count == 0)
+                {
+                    <div class="text-center text-muted py-5">
+                        <span class="material-symbols-outlined d-block mb-2" style="font-size:3rem">event_busy</span>
+                        Hôm nay chưa có ca trực
+                    </div>
+                }
+                else
+                {
+                    @foreach (var row in DayRows)
+                    {
+                        var highlighted = _highlightStaffId == row.StaffId;
+                        <div class="d-flex border-bottom @(highlighted ? "bg-primary bg-opacity-10" : "")">
+                            <div style="width:200px;flex-shrink:0" class="px-2 py-2 border-end d-flex align-items-center gap-2">
+                                <div class="d-flex align-items-center justify-content-center rounded-circle" style="width:1.8rem;height:1.8rem;background:var(--color-primary-container);color:var(--color-on-primary-container);font-size:.65rem;font-weight:800;flex-shrink:0">
+                                    @row.Name.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-truncate" style="font-size:.78rem">@row.Name</div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 position-relative" style="height:3.2rem">
+                                @foreach (var s in row.Shifts)
+                                {
+                                    var (left, width) = BarStyle(s.StartTime, s.EndTime);
+                                    <button type="button" class="btn position-absolute @ShiftBadge(s.ShiftType)" style="left:@(Fmt(left))%;width:@(Fmt(width))%;top:20%;height:60%;font-size:.68rem;padding:.15rem .4rem;border-left:3px solid;overflow:hidden" @onclick="() => _selectedSchedule = s">
+                                        <span class="material-symbols-outlined" style="font-size:.8rem;vertical-align:middle">@ShiftIcon(s.ShiftType)</span>
+                                        @s.Shift
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center p-2 px-3 bg-light border-top" style="font-size:.75rem">
+        <div class="d-flex gap-2">
+            @foreach (var st in new[] { ShiftType.Morning, ShiftType.Afternoon, ShiftType.Evening })
+            {
+                var count = (_viewMode == "week" ? _weekSchedules : _todaySchedules).Count(s => s.ShiftType == st);
+                <span class="badge @ShiftBadge(st)">@ShiftLabel(st) @count</span>
+            }
+        </div>
+        <span class="text-muted">Tỷ lệ phủ hôm nay: <strong>@Coverage% (@OnDutyIds.Count/@_directory.Count)</strong></span>
+    </div>
+</div>
+
+@if (_selectedSchedule is not null)
+{
+    <div class="modal-overlay" @onclick="() => _selectedSchedule = null">
+        <div class="modal-card" style="max-width:380px" @onclick:stopPropagation="true">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="d-flex align-items-center justify-content-center rounded-3" style="width:2.5rem;height:2.5rem;background:var(--color-primary-container);color:var(--color-on-primary-container);font-weight:800">
+                    @_selectedSchedule.Name.Substring(0, 1).ToUpper()
+                </div>
+                <div>
+                    <h6 class="mb-0">@_selectedSchedule.Name</h6>
+                    <span class="badge @StaffBadge(_selectedSchedule.StaffType)" style="font-size:.65rem">@StaffLabel(_selectedSchedule.StaffType)</span>
+                    <span class="text-muted" style="font-size:.75rem">· @_selectedSchedule.Department</span>
+                </div>
+            </div>
+
+            <div class="mb-3" style="font-size:.85rem">
+                <p class="mb-1"><span class="material-symbols-outlined align-middle text-muted" style="font-size:1rem">mail</span> @_selectedSchedule.Email</p>
+                @if (!string.IsNullOrEmpty(_selectedSchedule.Specialty))
+                {
+                    <p class="mb-1"><span class="material-symbols-outlined align-middle text-muted" style="font-size:1rem">medical_services</span> @_selectedSchedule.Specialty</p>
+                }
+                <p class="mb-1"><span class="material-symbols-outlined align-middle text-muted" style="font-size:1rem">workspace_premium</span> @_selectedSchedule.YearsExperience năm kinh nghiệm</p>
+            </div>
+
+            <div class="p-2 rounded-3 mb-3 @ShiftBadge(_selectedSchedule.ShiftType)">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined">@ShiftIcon(_selectedSchedule.ShiftType)</span>
+                    <div>
+                        <div class="fw-bold">@_selectedSchedule.Shift</div>
+                        <div style="font-size:.75rem;opacity:.8">@_selectedSchedule.StartTime.ToString("HH:mm") – @_selectedSchedule.EndTime.ToString("HH:mm")</div>
+                    </div>
+                </div>
+            </div>
+            <p class="mb-1" style="font-size:.85rem"><span class="material-symbols-outlined align-middle text-muted" style="font-size:1rem">calendar_today</span> @VnDayFull(_selectedSchedule.Date) @_selectedSchedule.Date.ToString("dd/MM/yyyy")</p>
+            @if (!string.IsNullOrEmpty(_selectedSchedule.WorkRoom))
+            {
+                <p class="mb-3" style="font-size:.85rem"><span class="material-symbols-outlined align-middle text-muted" style="font-size:1rem">meeting_room</span> @_selectedSchedule.WorkRoom</p>
+            }
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary flex-grow-1" @onclick="OpenEditFromPopup">
+                    <span class="material-symbols-outlined" style="font-size:1rem">edit</span> Chỉnh sửa
+                </button>
+                <button class="btn btn-outline-danger flex-grow-1" disabled="@_deleting" @onclick="DeleteFromPopup">
+                    @(_deleting ? "Đang xóa..." : "Xóa ca")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_showModal)
+{
+    <div class="modal-overlay" @onclick="() => _showModal = false">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-3">@(_editingId is not null ? "Cập nhật ca trực" : "Tạo lịch trực mới")</h5>
+
+            <div class="mb-2">
+                <label class="form-label">Nhân viên</label>
+                <select class="form-select" @bind="_form.StaffId">
+                    <option value="">— Chọn nhân viên —</option>
+                    @foreach (var s in _directory)
+                    {
+                        <option value="@s.Id">@StaffLabel(s.StaffType) — @(s.Specialty ?? s.Name)</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Ngày trực</label>
+                <input type="date" class="form-control" @bind="_formDate" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label d-block">Ca trực</label>
+                <div class="row g-2">
+                    @foreach (var st in new[] { ShiftType.Morning, ShiftType.Afternoon, ShiftType.Evening })
+                    {
+                        <div class="col-4">
+                            <button type="button" class="btn w-100 @(_form.ShiftType == st ? "btn-primary" : "btn-outline-secondary")" @onclick="() => _form.ShiftType = st">
+                                <span class="material-symbols-outlined d-block mx-auto" style="font-size:1.2rem">@ShiftIcon(st)</span>
+                                @ShiftLabel(st)
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Phòng (tùy chọn)</label>
+                <input class="form-control" placeholder="VD: P.201" maxlength="100" @bind="_form.WorkRoom" />
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="() => _showModal = false">Hủy</button>
+                <button class="btn btn-primary" disabled="@_saving" @onclick="Save">
+                    @(_saving ? "Đang lưu..." : (_editingId is not null ? "Cập nhật" : "Tạo lịch trực"))
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private IJSRuntime Js { get; set; } = default!;
+
+    private static readonly int[] DayHours = { 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22 };
+    private static readonly string[] VnDaysShort = { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+    private static readonly string[] VnDaysFull = { "Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy" };
+
+    private List<StaffDirectoryDto> _directory = new();
+    private List<DepartmentReadDto> _departments = new();
+    private List<ScheduleFlatReadDto> _weekSchedules = new();
+    private List<ScheduleFlatReadDto> _todaySchedules = new();
+
+    private bool _loading = true;
+    private string _viewMode = "week";
+    private string _filterDeptId = "";
+    private DateOnly _monday = MondayOf(DateOnly.FromDateTime(DateTime.Today));
+    private Guid? _highlightStaffId;
+
+    private ScheduleFlatReadDto? _selectedSchedule;
+    private bool _deleting;
+    private bool _showModal;
+    private Guid? _editingId;
+    private bool _saving;
+    private ScheduleWriteDto _form = new() { ShiftType = ShiftType.Morning };
+    private DateOnly _formDate = DateOnly.FromDateTime(DateTime.Today);
+
+    private string? _toastMsg;
+    private string _toastClass = "alert-success";
+
+    private static DateOnly MondayOf(DateOnly d)
+    {
+        var diff = (int)d.DayOfWeek == 0 ? 6 : (int)d.DayOfWeek - 1;
+        return d.AddDays(-diff);
+    }
+
+    private List<DateOnly> WeekDates => Enumerable.Range(0, 7).Select(i => _monday.AddDays(i)).ToList();
+    private bool IsCurrentWeek => _monday == MondayOf(DateOnly.FromDateTime(DateTime.Today));
+    private string WeekLabel => $"{_monday:dd/MM} – {_monday.AddDays(6):dd/MM/yyyy}";
+
+    private HashSet<Guid> OnDutyIds => _todaySchedules.Select(s => s.StaffId).ToHashSet();
+    private int Coverage => _directory.Count > 0 ? (int)Math.Round(100.0 * OnDutyIds.Count / _directory.Count) : 0;
+
+    private record GanttRow(Guid StaffId, string Name, StaffType StaffType, Dictionary<DateOnly, List<ScheduleFlatReadDto>> ByDate);
+    private record DayRow(Guid StaffId, string Name, List<ScheduleFlatReadDto> Shifts);
+
+    private List<GanttRow> GanttRows
+    {
+        get
+        {
+            var map = new Dictionary<Guid, GanttRow>();
+            foreach (var s in _weekSchedules)
+            {
+                if (!map.TryGetValue(s.StaffId, out var row))
+                {
+                    row = new GanttRow(s.StaffId, s.Name, s.StaffType, new());
+                    map[s.StaffId] = row;
+                }
+                if (!row.ByDate.TryGetValue(s.Date, out var list)) row.ByDate[s.Date] = list = new();
+                list.Add(s);
+            }
+            return map.Values.OrderBy(r => r.Name).ToList();
+        }
+    }
+
+    private List<DayRow> DayRows
+    {
+        get
+        {
+            var map = new Dictionary<Guid, DayRow>();
+            foreach (var s in _todaySchedules)
+            {
+                if (!map.TryGetValue(s.StaffId, out var row))
+                {
+                    row = new DayRow(s.StaffId, s.Name, new());
+                    map[s.StaffId] = row;
+                }
+                row.Shifts.Add(s);
+            }
+            return map.Values.OrderBy(r => r.Name).ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _departments = (await Api.GetDepartments()) ?? new();
+        _directory = (await Api.GetStaffDirectory()) ?? new();
+        await ReloadAll();
+    }
+
+    private async Task ReloadAll()
+    {
+        await Task.WhenAll(LoadWeek(), LoadToday());
+    }
+
+    private async Task LoadWeek()
+    {
+        _loading = true;
+        try
+        {
+            var deptId = Guid.TryParse(_filterDeptId, out var id) ? id : (Guid?)null;
+            var result = await Api.FilterSchedules(_monday, _monday.AddDays(6), deptId);
+            _weekSchedules = (result?.Items ?? Array.Empty<ScheduleFlatReadDto>()).ToList();
+        }
+        catch { ShowToast("alert-danger", "Không thể tải lịch trực."); }
+        finally { _loading = false; }
+    }
+
+    private async Task LoadToday()
+    {
+        try
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var deptId = Guid.TryParse(_filterDeptId, out var id) ? id : (Guid?)null;
+            var result = await Api.FilterSchedules(today, today, deptId);
+            _todaySchedules = (result?.Items ?? Array.Empty<ScheduleFlatReadDto>()).ToList();
+        }
+        catch { /* silent, matches source behaviour */ }
+    }
+
+    private async Task PrevWeek() { _monday = _monday.AddDays(-7); await LoadWeek(); }
+    private async Task NextWeek() { _monday = _monday.AddDays(7); await LoadWeek(); }
+    private async Task ThisWeek() { _monday = MondayOf(DateOnly.FromDateTime(DateTime.Today)); await LoadWeek(); }
+
+    private async Task ViewStaffSchedule(Guid staffId)
+    {
+        _highlightStaffId = staffId;
+        _viewMode = "week";
+        await Js.InvokeVoidAsync("eval", "document.getElementById('schedule-board')?.scrollIntoView({behavior:'smooth', block:'start'})");
+        _ = ClearHighlightAfterDelay();
+    }
+
+    private async Task ClearHighlightAfterDelay()
+    {
+        await Task.Delay(3000);
+        _highlightStaffId = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenCreate()
+    {
+        _editingId = null;
+        _form = new ScheduleWriteDto { StaffId = _directory.FirstOrDefault()?.Id ?? Guid.Empty, ShiftType = ShiftType.Morning, WorkRoom = "" };
+        _formDate = DateOnly.FromDateTime(DateTime.Today);
+        _showModal = true;
+    }
+
+    private void OpenEditFromPopup()
+    {
+        if (_selectedSchedule is null) return;
+        _editingId = _selectedSchedule.Id;
+        _form = new ScheduleWriteDto
+        {
+            StaffId = _selectedSchedule.StaffId,
+            ShiftType = _selectedSchedule.ShiftType,
+            WorkRoom = _selectedSchedule.WorkRoom ?? "",
+        };
+        _formDate = _selectedSchedule.Date;
+        _selectedSchedule = null;
+        _showModal = true;
+    }
+
+    private async Task Save()
+    {
+        if (_form.StaffId == Guid.Empty) { ShowToast("alert-warning", "Vui lòng chọn nhân viên."); return; }
+        _saving = true;
+        try
+        {
+            _form.ShiftDate = _formDate;
+            if (_editingId is { } id)
+            {
+                await Api.UpdateSchedule(id, _form);
+                ShowToast("alert-success", "Cập nhật ca trực thành công.");
+            }
+            else
+            {
+                await Api.CreateSchedule(_form);
+                ShowToast("alert-success", "Tạo ca trực thành công.");
+            }
+            _showModal = false;
+            await ReloadAll();
+        }
+        catch (ApiClient.ApiException ex) { ShowToast("alert-danger", ex.Message); }
+        catch { ShowToast("alert-danger", "Lưu lịch trực thất bại."); }
+        finally { _saving = false; }
+    }
+
+    private async Task DeleteFromPopup()
+    {
+        if (_selectedSchedule is null) return;
+        _deleting = true;
+        try
+        {
+            await Api.DeleteSchedule(_selectedSchedule.Id);
+            ShowToast("alert-success", $"Đã xóa {_selectedSchedule.Shift} của {_selectedSchedule.Name}.");
+            _selectedSchedule = null;
+            await ReloadAll();
+        }
+        catch { ShowToast("alert-danger", "Không thể xóa ca trực."); }
+        finally { _deleting = false; }
+    }
+
+    private void ShowToast(string cls, string msg)
+    {
+        _toastClass = cls;
+        _toastMsg = msg;
+        _ = ClearToastAfterDelay();
+    }
+
+    private async Task ClearToastAfterDelay()
+    {
+        await Task.Delay(4500);
+        _toastMsg = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static string VnDayShort(DateOnly d) => VnDaysShort[(int)d.DayOfWeek];
+    private static string VnDayFull(DateOnly d) => VnDaysFull[(int)d.DayOfWeek];
+
+    private static string ShiftLabel(ShiftType s) => s switch
+    {
+        ShiftType.Morning => "Ca Sáng",
+        ShiftType.Afternoon => "Ca Chiều",
+        ShiftType.Evening => "Ca Tối",
+        _ => s.ToString(),
+    };
+
+    private static string ShiftIcon(ShiftType s) => s switch
+    {
+        ShiftType.Morning => "wb_sunny",
+        ShiftType.Afternoon => "partly_cloudy_day",
+        ShiftType.Evening => "nights_stay",
+        _ => "schedule",
+    };
+
+    private static string ShiftBadge(ShiftType s) => s switch
+    {
+        ShiftType.Morning => "badge-soft-yellow",
+        ShiftType.Afternoon => "badge-soft-blue",
+        ShiftType.Evening => "badge-soft-purple",
+        _ => "badge-soft-purple",
+    };
+
+    private static string StaffLabel(StaffType s) => s switch
+    {
+        StaffType.Doctor => "Bác sĩ",
+        StaffType.Nurse => "Y tá",
+        StaffType.Admin => "Quản trị",
+        StaffType.Caregiver => "Điều dưỡng",
+        _ => s.ToString(),
+    };
+
+    private static string StaffBadge(StaffType s) => s switch
+    {
+        StaffType.Doctor => "badge-soft-blue",
+        StaffType.Nurse => "badge-soft-tertiary",
+        StaffType.Admin => "badge-soft-red",
+        StaffType.Caregiver => "badge-soft-green",
+        _ => "badge-soft-purple",
+    };
+
+    private static (double left, double width) BarStyle(TimeOnly start, TimeOnly end)
+    {
+        var startMin = start.Hour * 60 + start.Minute;
+        var endMin = end.Hour * 60 + end.Minute;
+        if (endMin == 0 || endMin < startMin) endMin = 1440;
+        return (startMin / 1440.0 * 100, (endMin - startMin) / 1440.0 * 100);
+    }
+
+    private static string Fmt(double v) => v.ToString(CultureInfo.InvariantCulture);
+}

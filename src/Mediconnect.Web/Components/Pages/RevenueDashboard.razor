@@ -1,0 +1,232 @@
+@page "/reports/revenue"
+@attribute [Authorize(Roles = "Admin")]
+@using Mediconnect.Web.Components.Shared
+@using Mediconnect.Web.Services
+
+<PageTitle>Doanh thu – MediConnect</PageTitle>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <h4 class="mb-1" style="font-size:1.5rem">Bảng điều khiển doanh thu</h4>
+        <p class="text-muted mb-0">Xu hướng doanh thu theo ngày và tháng, lọc theo khoa.</p>
+    </div>
+    <ReportFilterBar Period="_period" OnPeriodChange="OnPeriodChange"
+                      CustomStart="_customStart" CustomEnd="_customEnd"
+                      OnCustomStartChange="@(async v => { _customStart = v; await LoadData(); })"
+                      OnCustomEndChange="@(async v => { _customEnd = v; await LoadData(); })"
+                      Today="DateTime.Today" Department="_department"
+                      OnDepartmentChange="@(async v => { _department = v; await LoadData(); })"
+                      Departments="_allDepartments" OnExport="Export" ExportDisabled="_loading" />
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-4">
+        <span class="material-symbols-outlined">error</span>
+        @_error
+    </div>
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-4">
+        <KpiCard Icon="payments" IconBg="var(--color-primary-container)" IconColor="var(--color-on-primary-container)"
+                  Label="Tổng doanh thu" Value="@(_loading ? null : ReportUtils.FormatCurrency(_totalRevenue))"
+                  Sub="@($"Hoá đơn đã thanh toán · {PeriodLabel}{(_department.Length > 0 ? $" · {_department}" : "")}")" />
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <KpiCard Icon="trending_up" IconBg="var(--color-secondary-container)" IconColor="var(--color-on-secondary-container)"
+                  Label="Doanh thu TB/ngày" Value="@(_loading ? null : ReportUtils.FormatCurrency(_avgPerDay))"
+                  Sub="Tính trên các ngày có hoạt động" />
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <KpiCard Icon="apartment" IconBg="var(--color-tertiary-container)" IconColor="var(--color-on-tertiary-container)"
+                  Label="Khoa doanh thu cao nhất" Value="@(_loading ? null : _topDepartment)"
+                  Sub="@($"Trong {PeriodLabel.ToLower()}")" />
+    </div>
+</div>
+
+<div class="report-card mb-4">
+    <div class="mb-3">
+        <h5 class="mb-0">Doanh thu theo @(_period == ReportPeriod.Ytd ? "tháng" : "ngày")</h5>
+        <p class="text-muted mb-0" style="font-size:.78rem">@PeriodLabel@(_department.Length > 0 ? $" · {_department}" : "")</p>
+    </div>
+    @if (_loading)
+    {
+        <Skeleton Style="height:280px" />
+    }
+    else
+    {
+        <BarChart Data="_barData" />
+    }
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="report-card h-100">
+            <div class="mb-3">
+                <h5 class="mb-0">Xu hướng doanh thu (12 tháng)</h5>
+                <p class="text-muted mb-0" style="font-size:.78rem">Diễn biến doanh thu theo tháng@(_department.Length > 0 ? $" · {_department}" : "")</p>
+            </div>
+            @if (_loading)
+            {
+                <Skeleton Style="height:280px" />
+            }
+            else
+            {
+                <LineChart Data="_lineData" />
+            }
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="report-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-0">Theo khoa</h5>
+                    <p class="text-muted mb-0" style="font-size:.78rem">Tỷ trọng · @PeriodLabel</p>
+                </div>
+                <span class="material-symbols-outlined text-muted">apartment</span>
+            </div>
+            @if (_loading)
+            {
+                <div class="d-flex flex-column gap-2">
+                    <Skeleton Style="height:2rem" />
+                    <Skeleton Style="height:2rem" />
+                    <Skeleton Style="height:2rem" />
+                </div>
+            }
+            else if (_byDepartment.Count == 0)
+            {
+                <div class="d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="height:160px">
+                    <span class="material-symbols-outlined" style="font-size:2.5rem">pie_chart</span>
+                    <p class="mb-0" style="font-size:.85rem">Không có dữ liệu doanh thu cho khoảng thời gian này</p>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @{ var i = 0; }
+                    @foreach (var (dept, rev) in _byDepartment)
+                    {
+                        var idx = i++;
+                        var pct = _totalRevenue > 0 ? (double)(rev / _totalRevenue) * 100 : 0;
+                        <div>
+                            <div class="d-flex justify-content-between" style="font-size:.85rem">
+                                <span class="d-flex align-items-center gap-2">
+                                    <span class="rounded-circle d-inline-block" style="width:10px;height:10px;background:@DeptColor(idx)"></span>
+                                    @dept
+                                </span>
+                                <span style="font-weight:600">@ReportUtils.FormatCurrency(rev) <span class="text-muted" style="font-weight:400">(@pct.ToString("0")%)</span></span>
+                            </div>
+                            <div class="rounded-pill mt-1" style="height:6px;background:var(--color-surface-container);overflow:hidden">
+                                <div class="h-100 rounded-pill" style="width:@(pct.ToString(System.Globalization.CultureInfo.InvariantCulture))%;background:@DeptColor(idx)"></div>
+                            </div>
+                        </div>
+                    }
+                    <div class="d-flex justify-content-between pt-2 mt-1" style="font-size:.85rem;border-top:1px solid var(--color-outline-variant)">
+                        <span class="text-muted">Tổng</span>
+                        <span style="font-weight:700">@ReportUtils.FormatCurrency(_totalRevenue)</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private Microsoft.JSInterop.IJSRuntime Js { get; set; } = default!;
+
+    private static readonly string[] DeptColors = { "var(--color-primary)", "var(--color-secondary)", "var(--color-tertiary)", "var(--color-error)", "#a855f7" };
+    private static string DeptColor(int i) => DeptColors[i % DeptColors.Length];
+
+    private ReportPeriod _period = ReportPeriod.ThisMonth;
+    private DateTime _customStart = DateTime.Today;
+    private DateTime _customEnd = DateTime.Today;
+    private string _department = "";
+    private List<string> _allDepartments = new();
+
+    private List<RevenueItemDto> _revenue = new();
+    private List<RevenueItemDto> _monthlyTrend = new();
+    private bool _loading = true;
+    private string? _error;
+
+    private string PeriodLabel => ReportUtils.PeriodLabels[_period];
+    private decimal _totalRevenue => _revenue.Sum(r => r.Revenue);
+    private int _dayCount => Math.Max(_revenue.Select(r => r.TimePeriod).Distinct().Count(), 1);
+    private decimal _avgPerDay => _totalRevenue / _dayCount;
+
+    private List<(string Dept, decimal Revenue)> _byDepartment =>
+        _revenue.GroupBy(r => r.Department)
+                .Select(g => (g.Key, g.Sum(x => x.Revenue)))
+                .OrderByDescending(x => x.Item2)
+                .ToList();
+
+    private string _topDepartment => _byDepartment.FirstOrDefault().Dept ?? "—";
+
+    private List<ChartPoint> _barData =>
+        _revenue.GroupBy(r => r.TimePeriod)
+                .Select(g => new ChartPoint(g.Key, (double)g.Sum(x => x.Revenue)))
+                .OrderBy(p => p.Label)
+                .Select(p => new ChartPoint(p.Label.Length > 7 ? p.Label[5..] : p.Label, p.Value))
+                .ToList();
+
+    private List<ChartPoint> _lineData =>
+        _monthlyTrend.GroupBy(r => r.TimePeriod)
+                     .Select(g => new ChartPoint(g.Key, (double)g.Sum(x => x.Revenue)))
+                     .OrderBy(p => p.Label)
+                     .Select(p => new ChartPoint(p.Label.Length > 2 ? p.Label[2..] : p.Label, p.Value))
+                     .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _allDepartments = ((await Api.GetDepartments()) ?? new()).Select(d => d.Name).ToList(); }
+        catch { /* ignore */ }
+        await LoadData();
+    }
+
+    private async Task OnPeriodChange(ReportPeriod p)
+    {
+        _period = p;
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var (start, end, groupBy) = ReportUtils.GetDateRange(_period, _customStart, _customEnd);
+        if (_period == ReportPeriod.Custom && start > end)
+        {
+            _error = "Ngày bắt đầu không được sau ngày kết thúc.";
+            _loading = false;
+            StateHasChanged();
+            return;
+        }
+
+        var trend = ReportUtils.GetLastNMonthsRange(12);
+
+        _loading = true; _error = null;
+        StateHasChanged();
+        try
+        {
+            var dept = _department.Length == 0 ? null : _department;
+            var revenueTask = Api.GetRevenue(start, end, groupBy, dept);
+            var trendTask = Api.GetRevenue(trend.Start, trend.End, "month", dept);
+            _revenue = (await revenueTask) ?? new();
+            _monthlyTrend = (await trendTask) ?? new();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Không thể tải dữ liệu doanh thu. Vui lòng kiểm tra đăng nhập."; }
+        finally { _loading = false; }
+    }
+
+    private async Task Export()
+    {
+        var csv = ReportUtils.BuildCsv(new (string, IEnumerable<IEnumerable<object>>)[]
+        {
+            ($"Doanh thu theo ngày/tháng — {PeriodLabel}{(_department.Length > 0 ? $" — {_department}" : "")}",
+             new[] { new object[] { "Ngày", "Khoa", "Doanh thu" } }.Concat(_revenue.Select(r => new object[] { r.TimePeriod, r.Department, r.Revenue }))),
+            ("Xu hướng doanh thu — 12 tháng gần nhất",
+             new[] { new object[] { "Tháng", "Khoa", "Doanh thu" } }.Concat(_monthlyTrend.Select(r => new object[] { r.TimePeriod, r.Department, r.Revenue }))),
+        });
+        await Js.InvokeVoidAsync("downloadCsv", $"revenue-dashboard-{DateTime.Today:yyyy-MM-dd}.csv", csv);
+    }
+}

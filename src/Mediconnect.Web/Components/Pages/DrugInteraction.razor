@@ -1,0 +1,533 @@
+@page "/admin/drug-interactions"
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Cảnh báo tương tác thuốc – MediConnect</PageTitle>
+
+<div class="mb-4">
+    <h4 class="mb-1" style="font-size:1.5rem">Cảnh báo tương tác thuốc (CDSS)</h4>
+    <p class="text-muted mb-0">Kiểm tra tương tác giữa các loại thuốc và quản lý danh mục dược.</p>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-3"><span class="material-symbols-outlined">error</span>@_error</div>
+}
+@if (_successMsg is not null)
+{
+    <div class="alert alert-success mb-3"><span class="material-symbols-outlined">check_circle</span>@_successMsg</div>
+}
+
+<div class="tab-bar mb-3">
+    <button class="tab-btn @(_tab == Tab.Check ? "active" : "")" @onclick='() => _tab = Tab.Check'>
+        <span class="material-symbols-outlined" style="font-size:1.1rem">fact_check</span> Kiểm tra tương tác
+    </button>
+    <button class="tab-btn @(_tab == Tab.Dose ? "active" : "")" @onclick='() => _tab = Tab.Dose'>
+        <span class="material-symbols-outlined" style="font-size:1.1rem">vaccines</span> Cảnh báo quá liều
+    </button>
+    <button class="tab-btn @(_tab == Tab.Drugs ? "active" : "")" @onclick='() => _tab = Tab.Drugs'>
+        <span class="material-symbols-outlined" style="font-size:1.1rem">medication</span> Danh mục thuốc
+    </button>
+    <button class="tab-btn @(_tab == Tab.Interactions ? "active" : "")" @onclick='() => _tab = Tab.Interactions'>
+        <span class="material-symbols-outlined" style="font-size:1.1rem">warning</span> Cặp tương tác
+    </button>
+</div>
+
+@if (_tab == Tab.Check)
+{
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="report-card">
+                <h6 class="mb-1">Chọn thuốc cần kiểm tra</h6>
+                <p class="text-muted mb-3" style="font-size:.78rem">Chọn từ 2 loại thuốc trở lên</p>
+                @if (_loading)
+                {
+                    <Skeleton Style="height:2rem" />
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-1" style="max-height:340px;overflow-y:auto">
+                        @foreach (var d in _drugs)
+                        {
+                            <label class="d-flex align-items-center gap-2 px-2 py-1 rounded-2" style="cursor:pointer">
+                                <input type="checkbox" checked="@_selectedDrugIds.Contains(d.Id)" @onchange="() => ToggleDrugSelection(d.Id)" />
+                                <span>@d.Name</span>
+                                @if (!string.IsNullOrEmpty(d.Code)) { <span class="text-muted" style="font-size:.75rem">(@d.Code)</span> }
+                            </label>
+                        }
+                        @if (_drugs.Count == 0)
+                        {
+                            <p class="text-muted mb-0" style="font-size:.85rem">Chưa có thuốc nào. Thêm ở tab "Danh mục thuốc".</p>
+                        }
+                    </div>
+                }
+                <button class="btn btn-primary w-100 mt-3" disabled="@(_checking || _selectedDrugIds.Count < 2)" @onclick="RunCheck">
+                    @(_checking ? "Đang kiểm tra..." : $"Kiểm tra ({_selectedDrugIds.Count} thuốc)")
+                </button>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            @if (_checkResult is null)
+            {
+                <div class="report-card d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="height:100%;min-height:260px">
+                    <span class="material-symbols-outlined" style="font-size:2.5rem">science</span>
+                    <p class="mb-0" style="font-size:.85rem">Kết quả kiểm tra sẽ hiện ở đây</p>
+                </div>
+            }
+            else if (_checkResult.Count == 0)
+            {
+                <div class="report-card d-flex flex-column align-items-center justify-content-center gap-2" style="height:100%;min-height:260px;background:var(--color-tertiary-container);color:var(--color-on-tertiary-container)">
+                    <span class="material-symbols-outlined" style="font-size:3rem">check_circle</span>
+                    <p class="mb-0" style="font-weight:700">Không phát hiện tương tác nguy hiểm</p>
+                    <p class="mb-0" style="font-size:.78rem;opacity:.85">An toàn khi phối hợp các thuốc đã chọn</p>
+                </div>
+            }
+            else
+            {
+                <div class="report-card" style="background:var(--color-error-container);color:var(--color-on-error-container);border:2px solid var(--color-error)">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="material-symbols-outlined" style="font-size:1.8rem">warning</span>
+                        <h6 class="mb-0" style="font-weight:700">Phát hiện @_checkResult.Count cặp tương tác nguy hiểm!</h6>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var i in _checkResult)
+                        {
+                            <div class="rounded-3 p-2" style="background:var(--color-surface-container-lowest);color:var(--color-on-surface)">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span style="font-weight:600">@DrugName(i.DrugId) ⚡ @DrugName(i.InteractingDrugId)</span>
+                                    <span class="badge @SeverityBadge(i.Severity)">@(i.Severity ?? "N/A")</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(i.Description))
+                                {
+                                    <p class="text-muted mb-0 mt-1" style="font-size:.78rem">@i.Description</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else if (_tab == Tab.Dose)
+{
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="report-card">
+                <h6 class="mb-1">Kiểm tra liều lượng theo thể trạng</h6>
+                <p class="text-muted mb-3" style="font-size:.78rem">Đối chiếu liều nhập vào với ngưỡng an toàn tính theo cân nặng bệnh nhân.</p>
+
+                <div class="mb-2">
+                    <label class="form-label">Bệnh nhân</label>
+                    <select class="form-select" @bind="_doseForm.PatientId" @bind:after="() => _doseResult = null">
+                        <option value="">— Chọn bệnh nhân —</option>
+                        @foreach (var p in _patients)
+                        {
+                            <option value="@p.Id">@PatientName(p) @(p.WeightKg is { } w ? $"— {w} kg" : " (chưa có cân nặng)")</option>
+                        }
+                    </select>
+                    @if (_patients.Count == 0)
+                    {
+                        <div class="text-muted mt-1" style="font-size:.75rem">Chưa có hồ sơ bệnh nhân nào trong hệ thống.</div>
+                    }
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Thuốc</label>
+                    <select class="form-select" @bind="_doseForm.DrugId" @bind:after="() => _doseResult = null">
+                        <option value="">— Chọn thuốc —</option>
+                        @foreach (var d in _drugs)
+                        {
+                            <option value="@d.Id">@d.Name @DoseHint(d)</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Liều nhập vào (@(_drugs.FirstOrDefault(d => d.Id.ToString() == _doseForm.DrugId)?.Unit ?? "đơn vị"))</label>
+                    <input type="number" min="0" step="any" class="form-control" @bind="_doseForm.DoseAmount" @bind:after="() => _doseResult = null" placeholder="Ví dụ: 500" />
+                </div>
+                <button class="btn btn-primary w-100" disabled="@(_doseChecking || string.IsNullOrEmpty(_doseForm.PatientId) || string.IsNullOrEmpty(_doseForm.DrugId) || string.IsNullOrEmpty(_doseForm.DoseAmount))" @onclick="RunDoseCheck">
+                    @(_doseChecking ? "Đang kiểm tra..." : "Kiểm tra liều")
+                </button>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            @if (_doseResult is null)
+            {
+                <div class="report-card d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="height:100%;min-height:260px">
+                    <span class="material-symbols-outlined" style="font-size:2.5rem">vaccines</span>
+                    <p class="mb-0" style="font-size:.85rem">Kết quả kiểm tra liều sẽ hiện ở đây</p>
+                </div>
+            }
+            else if (_doseResult.IsOverDose)
+            {
+                <div class="report-card" style="background:var(--color-error-container);color:var(--color-on-error-container);border:2px solid var(--color-error)">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined" style="font-size:1.8rem">emergency</span>
+                        <h6 class="mb-0" style="font-weight:700">Cảnh báo quá liều!</h6>
+                    </div>
+                    <p style="font-size:.9rem">@_doseResult.Message</p>
+                    <div class="rounded-3 p-2" style="background:var(--color-surface-container-lowest);color:var(--color-on-surface);font-size:.85rem">
+                        <div class="d-flex justify-content-between"><span class="text-muted">Liều nhập</span><span style="font-weight:600">@_doseResult.EnteredDose @_doseResult.Unit</span></div>
+                        <div class="d-flex justify-content-between"><span class="text-muted">Ngưỡng khuyến nghị</span><span style="font-weight:600">@_doseResult.RecommendedMaxDose @_doseResult.Unit</span></div>
+                        @if (_doseResult.PatientWeightKg is { } w)
+                        {
+                            <div class="d-flex justify-content-between"><span class="text-muted">Cân nặng BN</span><span style="font-weight:600">@w kg</span></div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="report-card" style="@(_doseResult.ThresholdBasis == "none" ? "" : "background:var(--color-tertiary-container);color:var(--color-on-tertiary-container)")">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined" style="font-size:1.8rem">@(_doseResult.ThresholdBasis == "none" ? "info" : "check_circle")</span>
+                        <h6 class="mb-0" style="font-weight:700">@(_doseResult.ThresholdBasis == "none" ? "Chưa thể đánh giá" : "Liều an toàn")</h6>
+                    </div>
+                    <p class="mb-0" style="font-size:.9rem">@_doseResult.Message</p>
+                </div>
+            }
+        </div>
+    </div>
+}
+else if (_tab == Tab.Drugs)
+{
+    <div class="d-flex justify-content-end mb-2">
+        <button class="btn btn-primary d-inline-flex align-items-center gap-1" @onclick="OpenCreateDrug">
+            <span class="material-symbols-outlined" style="font-size:1.1rem">add</span> Thêm thuốc
+        </button>
+    </div>
+    <div class="report-card p-0" style="overflow:hidden">
+        @if (_loading)
+        {
+            <div class="p-3"><Skeleton Style="height:2.5rem" /></div>
+        }
+        else if (_drugs.Count == 0)
+        {
+            <div class="text-center text-muted py-5"><span class="material-symbols-outlined" style="font-size:2.5rem">medication</span><p class="mt-2 mb-0" style="font-size:.85rem">Chưa có thuốc nào</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Tên thuốc</th><th>Mã</th><th>Đơn vị</th><th class="text-end">Tồn kho</th><th class="text-end">Đơn giá</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead>
+                    <tbody>
+                        @foreach (var d in _drugs)
+                        {
+                            <tr>
+                                <td style="font-weight:600">@d.Name</td>
+                                <td class="text-muted">@(d.Code ?? "—")</td>
+                                <td class="text-muted">@(d.Unit ?? "—")</td>
+                                <td class="text-end @(d.StockQuantity <= 10 ? "text-danger" : "text-muted")" style="@(d.StockQuantity <= 10 ? "font-weight:700" : "")">@d.StockQuantity</td>
+                                <td class="text-end text-muted">@d.UnitPrice.ToString("#,0")đ</td>
+                                <td><span class="badge @(d.IsActive ? "badge-soft-tertiary" : "badge-soft-purple")">@(d.IsActive ? "Đang dùng" : "Ngừng dùng")</span></td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => OpenEditDrug(d)"><span class="material-symbols-outlined" style="font-size:1.05rem">edit</span></button>
+                                    <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => DeleteDrug(d)"><span class="material-symbols-outlined" style="font-size:1.05rem">delete</span></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-end mb-2">
+        <button class="btn btn-primary d-inline-flex align-items-center gap-1" disabled="@(_drugs.Count < 2)" @onclick="OpenCreateInteraction">
+            <span class="material-symbols-outlined" style="font-size:1.1rem">add</span> Thêm cặp tương tác
+        </button>
+    </div>
+    <div class="report-card p-0" style="overflow:hidden">
+        @if (_loading)
+        {
+            <div class="p-3"><Skeleton Style="height:2.5rem" /></div>
+        }
+        else if (_interactions.Count == 0)
+        {
+            <div class="text-center text-muted py-5"><span class="material-symbols-outlined" style="font-size:2.5rem">warning</span><p class="mt-2 mb-0" style="font-size:.85rem">Chưa có cặp tương tác nào</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Thuốc A</th><th>Thuốc B</th><th>Mức độ</th><th>Mô tả</th><th class="text-end">Thao tác</th></tr></thead>
+                    <tbody>
+                        @foreach (var i in _interactions)
+                        {
+                            <tr>
+                                <td style="font-weight:600">@DrugName(i.DrugId)</td>
+                                <td style="font-weight:600">@DrugName(i.InteractingDrugId)</td>
+                                <td><span class="badge @SeverityBadge(i.Severity)">@(i.Severity ?? "—")</span></td>
+                                <td class="text-muted">@(i.Description ?? "—")</td>
+                                <td class="text-end"><button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => DeleteInteraction(i)"><span class="material-symbols-outlined" style="font-size:1.05rem">delete</span></button></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@if (_isDrugModalOpen)
+{
+    <div class="modal-overlay" @onclick="() => _isDrugModalOpen = false">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-3">@(_editingDrugId is not null ? "Sửa thuốc" : "Thêm thuốc")</h5>
+            <div class="mb-2"><label class="form-label">Tên thuốc</label><input class="form-control" @bind="_drugForm.Name" /></div>
+            <div class="row g-2 mb-2">
+                <div class="col-6"><label class="form-label">Mã thuốc</label><input class="form-control" @bind="_drugForm.Code" /></div>
+                <div class="col-6"><label class="form-label">Đơn vị</label><input class="form-control" @bind="_drugForm.Unit" placeholder="Viên, ống..." /></div>
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-6"><label class="form-label">Tồn kho</label><input type="number" min="0" class="form-control" @bind="_drugForm.StockQuantity" /></div>
+                <div class="col-6"><label class="form-label">Đơn giá (đ)</label><input type="number" min="0" class="form-control" @bind="_drugForm.UnitPrice" /></div>
+            </div>
+            <div class="row g-2 mb-1">
+                <div class="col-6"><label class="form-label">Liều tối đa/ngày</label><input type="number" min="0" step="any" class="form-control" @bind="_drugForm.MaxDailyDose" placeholder="vd: 4000" /></div>
+                <div class="col-6"><label class="form-label">Liều tối đa/kg</label><input type="number" min="0" step="any" class="form-control" @bind="_drugForm.MaxDosePerKg" placeholder="vd: 15" /></div>
+            </div>
+            <p class="text-muted mb-2" style="font-size:.72rem">Dùng cho cảnh báo quá liều. Ưu tiên liều/kg khi biết cân nặng bệnh nhân.</p>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="drug-active" @bind="_drugForm.IsActive" />
+                <label class="form-check-label" for="drug-active">Đang sử dụng</label>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="() => _isDrugModalOpen = false">Hủy</button>
+                <button class="btn btn-primary" disabled="@_submitting" @onclick="SubmitDrug">@(_submitting ? "Đang lưu..." : "Lưu")</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_isInteractionModalOpen)
+{
+    <div class="modal-overlay" @onclick="() => _isInteractionModalOpen = false">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-3">Thêm cặp tương tác thuốc</h5>
+            <div class="mb-2">
+                <label class="form-label">Thuốc A</label>
+                <select class="form-select" @bind="_interactionForm.DrugId">
+                    <option value="">— Chọn thuốc —</option>
+                    @foreach (var d in _drugs) { <option value="@d.Id">@d.Name</option> }
+                </select>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Thuốc B (tương tác với A)</label>
+                <select class="form-select" @bind="_interactionForm.InteractingDrugId">
+                    <option value="">— Chọn thuốc —</option>
+                    @foreach (var d in _drugs) { <option value="@d.Id">@d.Name</option> }
+                </select>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Mức độ nghiêm trọng</label>
+                <select class="form-select" @bind="_interactionForm.Severity">
+                    <option value="Low">Thấp</option>
+                    <option value="Medium">Trung bình</option>
+                    <option value="High">Cao</option>
+                </select>
+            </div>
+            <div class="mb-3"><label class="form-label">Mô tả</label><textarea class="form-control" rows="2" @bind="_interactionForm.Description"></textarea></div>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="() => _isInteractionModalOpen = false">Hủy</button>
+                <button class="btn btn-primary" disabled="@_submitting" @onclick="SubmitInteraction">@(_submitting ? "Đang lưu..." : "Lưu")</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private Microsoft.JSInterop.IJSRuntime Js { get; set; } = default!;
+
+    private enum Tab { Check, Dose, Drugs, Interactions }
+    private Tab _tab = Tab.Check;
+
+    private List<DrugReadDto> _drugs = new();
+    private List<DrugInteractionReadDto> _interactions = new();
+    private List<PatientProfileReadDto> _patients = new();
+    private List<UserAccountReadDto> _users = new();
+    private bool _loading = true;
+    private string? _error;
+    private string? _successMsg;
+    private bool _submitting;
+
+    private List<Guid> _selectedDrugIds = new();
+    private List<DrugInteractionReadDto>? _checkResult;
+    private bool _checking;
+
+    private DoseForm _doseForm = new();
+    private DoseCheckResponseDto? _doseResult;
+    private bool _doseChecking;
+
+    private bool _isDrugModalOpen, _isInteractionModalOpen;
+    private Guid? _editingDrugId;
+    private DrugForm _drugForm = new();
+    private InteractionForm _interactionForm = new();
+
+    private string DrugName(Guid id) => _drugs.FirstOrDefault(d => d.Id == id)?.Name ?? id.ToString();
+    private string PatientName(PatientProfileReadDto p) => _users.FirstOrDefault(u => u.Id == p.UserAccountId)?.FullName ?? p.Id.ToString();
+
+    private static string DoseHint(DrugReadDto d) =>
+        d.MaxDosePerKg is { } perKg ? $"(≤ {perKg} {d.Unit}/kg)" :
+        d.MaxDailyDose is { } daily ? $"(≤ {daily} {d.Unit})" : "(chưa có ngưỡng)";
+
+    private static string SeverityBadge(string? sev) => (sev ?? "").ToLowerInvariant() switch
+    {
+        "high" or "severe" => "badge-soft-red",
+        "medium" or "moderate" => "badge-soft-yellow",
+        "low" => "badge-soft-tertiary",
+        _ => "badge-soft-purple",
+    };
+
+    protected override async Task OnInitializedAsync() => await LoadAll();
+
+    private async Task LoadAll()
+    {
+        _loading = true; _error = null;
+        try
+        {
+            var drugsTask = Api.GetDrugs();
+            var interactionsTask = Api.GetDrugInteractions();
+            var patientsTask = Api.GetAllPatients();
+            var usersTask = Api.GetUserAccounts();
+            _drugs = (await drugsTask) ?? new();
+            _interactions = (await interactionsTask) ?? new();
+            _patients = (await patientsTask) ?? new();
+            _users = (await usersTask) ?? new();
+        }
+        catch { _error = "Không thể tải dữ liệu thuốc."; }
+        finally { _loading = false; }
+    }
+
+    private void ShowSuccess(string msg) { _successMsg = msg; _ = ClearSuccessAfterDelay(); }
+    private async Task ClearSuccessAfterDelay() { await Task.Delay(3000); _successMsg = null; await InvokeAsync(StateHasChanged); }
+
+    // ---- Checker ----
+    private void ToggleDrugSelection(Guid id)
+    {
+        _checkResult = null;
+        if (!_selectedDrugIds.Remove(id)) _selectedDrugIds.Add(id);
+    }
+
+    private async Task RunCheck()
+    {
+        if (_selectedDrugIds.Count < 2) { _error = "Chọn ít nhất 2 loại thuốc để kiểm tra tương tác."; return; }
+        _checking = true; _error = null;
+        try { _checkResult = ((await Api.CheckDrugInteractions(_selectedDrugIds))?.Interactions ?? Array.Empty<DrugInteractionReadDto>()).ToList(); }
+        catch { _error = "Không thể kiểm tra tương tác thuốc."; }
+        finally { _checking = false; }
+    }
+
+    // ---- Dose checker ----
+    private async Task RunDoseCheck()
+    {
+        if (string.IsNullOrEmpty(_doseForm.PatientId) || string.IsNullOrEmpty(_doseForm.DrugId) || string.IsNullOrEmpty(_doseForm.DoseAmount))
+        {
+            _error = "Chọn bệnh nhân, thuốc và nhập liều lượng để kiểm tra.";
+            return;
+        }
+        _doseChecking = true; _error = null;
+        try
+        {
+            _doseResult = await Api.CheckDose(Guid.Parse(_doseForm.PatientId), Guid.Parse(_doseForm.DrugId), decimal.Parse(_doseForm.DoseAmount, System.Globalization.CultureInfo.InvariantCulture));
+        }
+        catch { _error = "Không thể kiểm tra liều lượng."; }
+        finally { _doseChecking = false; }
+    }
+
+    // ---- Drug CRUD ----
+    private void OpenCreateDrug() { _editingDrugId = null; _drugForm = new(); _isDrugModalOpen = true; }
+    private void OpenEditDrug(DrugReadDto d)
+    {
+        _editingDrugId = d.Id;
+        _drugForm = new DrugForm
+        {
+            Name = d.Name, Code = d.Code ?? "", Unit = d.Unit ?? "", StockQuantity = d.StockQuantity, UnitPrice = d.UnitPrice, IsActive = d.IsActive,
+            MaxDailyDose = d.MaxDailyDose?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
+            MaxDosePerKg = d.MaxDosePerKg?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
+        };
+        _isDrugModalOpen = true;
+    }
+
+    private async Task SubmitDrug()
+    {
+        if (string.IsNullOrWhiteSpace(_drugForm.Name)) { _error = "Vui lòng nhập tên thuốc."; return; }
+        _submitting = true; _error = null;
+        try
+        {
+            var ci = System.Globalization.CultureInfo.InvariantCulture;
+            var dto = new DrugWriteDto
+            {
+                Name = _drugForm.Name,
+                Code = string.IsNullOrWhiteSpace(_drugForm.Code) ? null : _drugForm.Code,
+                Unit = string.IsNullOrWhiteSpace(_drugForm.Unit) ? null : _drugForm.Unit,
+                StockQuantity = _drugForm.StockQuantity,
+                UnitPrice = _drugForm.UnitPrice,
+                IsActive = _drugForm.IsActive,
+                MaxDailyDose = string.IsNullOrWhiteSpace(_drugForm.MaxDailyDose) ? null : decimal.Parse(_drugForm.MaxDailyDose, ci),
+                MaxDosePerKg = string.IsNullOrWhiteSpace(_drugForm.MaxDosePerKg) ? null : decimal.Parse(_drugForm.MaxDosePerKg, ci),
+            };
+            if (_editingDrugId is { } id) { await Api.UpdateDrug(id, dto); ShowSuccess("Đã cập nhật thuốc."); }
+            else { await Api.CreateDrug(dto); ShowSuccess("Đã thêm thuốc mới."); }
+            _isDrugModalOpen = false;
+            await LoadAll();
+        }
+        catch { _error = "Không thể lưu thông tin thuốc."; }
+        finally { _submitting = false; }
+    }
+
+    private async Task DeleteDrug(DrugReadDto d)
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", $"Xóa thuốc \"{d.Name}\"?")) return;
+        try { await Api.DeleteDrug(d.Id); ShowSuccess("Đã xóa thuốc."); await LoadAll(); }
+        catch { _error = "Không thể xóa thuốc (có thể đang được tham chiếu trong tương tác)."; }
+    }
+
+    // ---- Interaction CRUD ----
+    private void OpenCreateInteraction() { _interactionForm = new(); _isInteractionModalOpen = true; }
+
+    private async Task SubmitInteraction()
+    {
+        if (string.IsNullOrEmpty(_interactionForm.DrugId) || string.IsNullOrEmpty(_interactionForm.InteractingDrugId))
+        {
+            _error = "Vui lòng chọn đủ 2 loại thuốc.";
+            return;
+        }
+        if (_interactionForm.DrugId == _interactionForm.InteractingDrugId) { _error = "Hai loại thuốc phải khác nhau."; return; }
+
+        _submitting = true; _error = null;
+        try
+        {
+            await Api.CreateDrugInteraction(new DrugInteractionWriteDto
+            {
+                DrugId = Guid.Parse(_interactionForm.DrugId),
+                InteractingDrugId = Guid.Parse(_interactionForm.InteractingDrugId),
+                Severity = _interactionForm.Severity,
+                Description = string.IsNullOrWhiteSpace(_interactionForm.Description) ? null : _interactionForm.Description,
+            });
+            ShowSuccess("Đã thêm cặp tương tác thuốc.");
+            _isInteractionModalOpen = false;
+            await LoadAll();
+        }
+        catch { _error = "Không thể lưu cặp tương tác thuốc."; }
+        finally { _submitting = false; }
+    }
+
+    private async Task DeleteInteraction(DrugInteractionReadDto i)
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", "Xóa cặp tương tác thuốc này?")) return;
+        try { await Api.DeleteDrugInteraction(i.Id); ShowSuccess("Đã xóa cặp tương tác."); await LoadAll(); }
+        catch { _error = "Không thể xóa cặp tương tác."; }
+    }
+
+    private class DoseForm { public string PatientId = ""; public string DrugId = ""; public string DoseAmount = ""; }
+    private class DrugForm
+    {
+        public string Name = ""; public string Code = ""; public string Unit = "";
+        public int StockQuantity; public decimal UnitPrice; public bool IsActive = true;
+        public string MaxDailyDose = ""; public string MaxDosePerKg = "";
+    }
+    private class InteractionForm { public string DrugId = ""; public string InteractingDrugId = ""; public string Severity = "Medium"; public string Description = ""; }
+}

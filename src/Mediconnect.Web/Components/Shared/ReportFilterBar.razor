@@ -1,0 +1,57 @@
+@namespace Mediconnect.Web.Components.Shared
+@using Mediconnect.Web.Services
+
+<div class="d-flex flex-wrap gap-2">
+    <div class="report-filter-chip">
+        <span class="material-symbols-outlined text-muted" style="font-size:1.1rem">calendar_month</span>
+        <select value="@Period" @onchange="e => OnPeriodChange.InvokeAsync(Enum.Parse<ReportPeriod>(e.Value!.ToString()!))">
+            <option value="Today">Hôm nay</option>
+            <option value="ThisMonth">Tháng này</option>
+            <option value="Last30">30 ngày qua</option>
+            <option value="Ytd">Từ đầu năm</option>
+            <option value="Custom">Tuỳ chọn</option>
+        </select>
+    </div>
+
+    @if (Period == ReportPeriod.Custom)
+    {
+        <div class="report-filter-chip">
+            <input type="date" value="@CustomStart.ToString("yyyy-MM-dd")" max="@CustomEnd.ToString("yyyy-MM-dd")"
+                   @onchange="e => OnCustomStartChange.InvokeAsync(DateTime.Parse(e.Value!.ToString()!))" />
+            <span class="text-muted">→</span>
+            <input type="date" value="@CustomEnd.ToString("yyyy-MM-dd")" min="@CustomStart.ToString("yyyy-MM-dd")" max="@Today.ToString("yyyy-MM-dd")"
+                   @onchange="e => OnCustomEndChange.InvokeAsync(DateTime.Parse(e.Value!.ToString()!))" />
+        </div>
+    }
+
+    <div class="report-filter-chip">
+        <span class="material-symbols-outlined text-muted" style="font-size:1.1rem">filter_list</span>
+        <select value="@Department" @onchange="e => OnDepartmentChange.InvokeAsync(e.Value!.ToString())">
+            <option value="">Tất cả khoa</option>
+            @foreach (var d in Departments)
+            {
+                <option value="@d">@d</option>
+            }
+        </select>
+    </div>
+
+    <button class="btn btn-primary d-inline-flex align-items-center gap-1" disabled="@ExportDisabled" @onclick="() => OnExport.InvokeAsync()">
+        <span class="material-symbols-outlined" style="font-size:1.1rem">download</span>
+        Xuất CSV
+    </button>
+</div>
+
+@code {
+    [Parameter] public ReportPeriod Period { get; set; }
+    [Parameter] public EventCallback<ReportPeriod> OnPeriodChange { get; set; }
+    [Parameter] public DateTime CustomStart { get; set; }
+    [Parameter] public DateTime CustomEnd { get; set; }
+    [Parameter] public EventCallback<DateTime> OnCustomStartChange { get; set; }
+    [Parameter] public EventCallback<DateTime> OnCustomEndChange { get; set; }
+    [Parameter] public DateTime Today { get; set; }
+    [Parameter] public string Department { get; set; } = "";
+    [Parameter] public EventCallback<string> OnDepartmentChange { get; set; }
+    [Parameter] public List<string> Departments { get; set; } = new();
+    [Parameter] public EventCallback OnExport { get; set; }
+    [Parameter] public bool ExportDisabled { get; set; }
+}
