@@ -1,10 +1,10 @@
 @page "/beds"
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Doctor,Nurse")]
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 @using System.Globalization
 
-<PageTitle>F1 · Sơ đồ giường – MediConnect</PageTitle>
+<PageTitle>Sơ đồ giường – MediConnect</PageTitle>
 
 <!-- Page header -->
 <div class="page-header">

@@ -1,14 +1,24 @@
 <AuthorizeView>
     <Authorized>
-        <NavLink class="app-nav-link" href="" Match="NavLinkMatch.All" @onclick="Notify">Trang chủ</NavLink>
-
-        <NavLink class="app-nav-link" href="beds" @onclick="Notify">F1 · Giường</NavLink>
-        <NavLink class="app-nav-link" href="vitals" @onclick="Notify">F2 · Y lệnh</NavLink>
-        <NavLink class="app-nav-link" href="lab" @onclick="Notify">F3 · Cận lâm sàng</NavLink>
-        <NavLink class="app-nav-link" href="discharge" @onclick="Notify">F4 · Xuất viện</NavLink>
+        <AuthorizeView Roles="Doctor,Nurse" Context="inpBedsVitals">
+            <Authorized>
+                <NavLink class="app-nav-link" href="beds" @onclick="Notify">Giường bệnh</NavLink>
+                <NavLink class="app-nav-link" href="vitals" @onclick="Notify">Y lệnh & Sinh tồn</NavLink>
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="Lab,Doctor,Nurse" Context="inpLab">
+            <Authorized>
+                <NavLink class="app-nav-link" href="lab" @onclick="Notify">Cận lâm sàng</NavLink>
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="Doctor,Nurse" Context="inpDischarge">
+            <Authorized>
+                <NavLink class="app-nav-link" href="discharge" @onclick="Notify">Xuất viện</NavLink>
+            </Authorized>
+        </AuthorizeView>
         <NavLink class="app-nav-link" href="schedules" @onclick="Notify">Lịch trực</NavLink>
 
-        <AuthorizeView Roles="Doctor,Nurse,Admin" Context="clinicalCtx">
+        <AuthorizeView Roles="Doctor,Nurse" Context="clinicalCtx">
             <Authorized>
                 <NavLink class="app-nav-link" href="clinic-dashboard" @onclick="Notify">Hàng đợi phòng khám</NavLink>
                 <NavLink class="app-nav-link" href="outpatient-record" @onclick="Notify">Hồ sơ ngoại trú</NavLink>

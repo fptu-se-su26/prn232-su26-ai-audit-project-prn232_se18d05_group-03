@@ -289,6 +289,44 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; color: var(--color-on-surface); }
     border: none;
 }
 .app-logout-btn:hover { color: var(--color-error); }
+.app-user-menu { position: relative; }
+.app-user-chip-btn {
+    border: none;
+    cursor: pointer;
+}
+.app-user-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    z-index: 1040;
+}
+.app-user-dropdown {
+    position: absolute;
+    top: calc(100% + .4rem);
+    right: 0;
+    min-width: 160px;
+    background: var(--color-surface-container-lowest);
+    border: 1px solid var(--color-outline-variant);
+    border-radius: .75rem;
+    box-shadow: var(--shadow);
+    padding: .35rem;
+    z-index: 1050;
+}
+.app-user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    width: 100%;
+    padding: .55rem .7rem;
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--color-on-surface-variant);
+    background: transparent;
+    border: none;
+    border-radius: .5rem;
+    text-align: left;
+}
+.app-user-dropdown-item:hover { color: var(--color-error); background: var(--color-surface-container-low); }
 .app-mobile-toggle {
     display: none;
     background: transparent;

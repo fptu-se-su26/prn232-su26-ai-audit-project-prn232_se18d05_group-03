@@ -14,11 +14,24 @@
         <div class="app-header-actions">
             <AuthorizeView>
                 <Authorized>
-                    <span class="app-user-chip">
-                        <span class="material-symbols-outlined" style="font-size:.95rem">person</span>
-                        @context.User.Identity?.Name
-                    </span>
-                    <button class="app-logout-btn" @onclick="Logout">Đăng xuất</button>
+                    <div class="app-user-menu">
+                        <button type="button" class="app-user-chip app-user-chip-btn" @onclick="ToggleUserMenu">
+                            <span class="material-symbols-outlined" style="font-size:.95rem">person</span>
+                            @context.User.Identity?.Name
+                            <span class="material-symbols-outlined" style="font-size:1rem">@(_userMenuOpen ? "expand_less" : "expand_more")</span>
+                        </button>
+
+                        @if (_userMenuOpen)
+                        {
+                            <div class="app-user-menu-backdrop" @onclick="CloseUserMenu"></div>
+                            <div class="app-user-dropdown">
+                                <button type="button" class="app-user-dropdown-item" @onclick="Logout">
+                                    <span class="material-symbols-outlined" style="font-size:1.1rem">logout</span>
+                                    Đăng xuất
+                                </button>
+                            </div>
+                        }
+                    </div>
                 </Authorized>
                 <NotAuthorized>
                     <a href="login" class="app-nav-link">Đăng nhập</a>
@@ -71,9 +84,13 @@
     [Inject] private NavigationManager Nav { get; set; } = default!;
 
     private bool _mobileOpen;
+    private bool _userMenuOpen;
 
     private void ToggleMobileMenu() => _mobileOpen = !_mobileOpen;
     private void CloseMobileMenu() => _mobileOpen = false;
+
+    private void ToggleUserMenu() => _userMenuOpen = !_userMenuOpen;
+    private void CloseUserMenu() => _userMenuOpen = false;
 
     private async Task Logout()
     {

@@ -17,64 +17,45 @@
     </div>
 </div>
 
-<!-- Feature tiles -->
+<!-- Feature tiles (role-scoped) -->
 <div class="row g-3">
-    <div class="col-md-6">
-        <a href="/beds" class="text-decoration-none">
-            <div class="hm-tile">
-                <div class="hm-tile-icon" style="background:var(--brand-light);color:var(--brand)">
-                    <span class="material-symbols-outlined">bed</span>
-                </div>
-                <div class="hm-tile-body">
-                    <div class="hm-tile-title">F1 · Sơ đồ giường bệnh</div>
-                    <div class="hm-tile-desc">Bản đồ 2D/3D khu – phòng – giường; nhập viện, chuyển giường theo thời gian thực.</div>
-                </div>
-                <span class="material-symbols-outlined hm-tile-arrow">chevron_right</span>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-6">
-        <a href="/vitals" class="text-decoration-none">
-            <div class="hm-tile">
-                <div class="hm-tile-icon" style="background:#e0f2f1;color:var(--teal)">
-                    <span class="material-symbols-outlined">ecg_heart</span>
-                </div>
-                <div class="hm-tile-body">
-                    <div class="hm-tile-title">F2 · Y lệnh &amp; Sinh tồn</div>
-                    <div class="hm-tile-desc">Điều dưỡng nhập sinh tồn; bác sĩ ban hành và hoàn thành y lệnh hàng ngày.</div>
-                </div>
-                <span class="material-symbols-outlined hm-tile-arrow">chevron_right</span>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-6">
-        <a href="/lab" class="text-decoration-none">
-            <div class="hm-tile">
-                <div class="hm-tile-icon" style="background:#fff8e1;color:#b45309">
-                    <span class="material-symbols-outlined">biotech</span>
-                </div>
-                <div class="hm-tile-body">
-                    <div class="hm-tile-title">F3 · Cận lâm sàng</div>
-                    <div class="hm-tile-desc">Nhận y lệnh xét nghiệm, nhập kết quả, tải file, trả kết quả cho bác sĩ.</div>
-                </div>
-                <span class="material-symbols-outlined hm-tile-arrow">chevron_right</span>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-6">
-        <a href="/discharge" class="text-decoration-none">
-            <div class="hm-tile">
-                <div class="hm-tile-icon" style="background:#fef2f2;color:#b91c1c">
-                    <span class="material-symbols-outlined">receipt_long</span>
-                </div>
-                <div class="hm-tile-body">
-                    <div class="hm-tile-title">F4 · Quản lý xuất viện</div>
-                    <div class="hm-tile-desc">Xử lý xuất viện, tổng hợp chi phí nằm viện và tạo hoá đơn viện phí.</div>
-                </div>
-                <span class="material-symbols-outlined hm-tile-arrow">chevron_right</span>
-            </div>
-        </a>
-    </div>
+    @* Nội trú: giường + y lệnh · bác sĩ / điều dưỡng *@
+    <AuthorizeView Roles="Doctor,Nurse" Context="tInp12">
+        <Authorized>
+            @foreach (var t in _inpatient12) { @Tile(t) }
+        </Authorized>
+    </AuthorizeView>
+
+    @* Nội trú: cận lâm sàng · KTV xét nghiệm + bác sĩ / điều dưỡng *@
+    <AuthorizeView Roles="Lab,Doctor,Nurse" Context="tLab">
+        <Authorized>
+            @foreach (var t in _inpatientLab) { @Tile(t) }
+        </Authorized>
+    </AuthorizeView>
+
+    @* Xuất viện + ngoại trú · bác sĩ / điều dưỡng *@
+    <AuthorizeView Roles="Doctor,Nurse" Context="tClinical">
+        <Authorized>
+            @foreach (var t in _clinical) { @Tile(t) }
+        </Authorized>
+    </AuthorizeView>
+
+    @* Bệnh nhân *@
+    <AuthorizeView Roles="Patient" Context="tPatient">
+        <Authorized>
+            @foreach (var t in _patient) { @Tile(t) }
+        </Authorized>
+    </AuthorizeView>
+
+    @* Quản trị · thống kê *@
+    <AuthorizeView Roles="Admin" Context="tAdmin">
+        <Authorized>
+            @foreach (var t in _admin) { @Tile(t) }
+        </Authorized>
+    </AuthorizeView>
+
+    @* Lịch trực · mọi vai trò *@
+    @foreach (var t in _shared) { @Tile(t) }
 </div>
 
 @code {
@@ -87,4 +68,86 @@
         _userName = Token.User?.FullName ?? "";
         _role     = Token.User?.Role.ToString() ?? "";
     }
+
+    private record TileDef(string Href, string IconBg, string IconColor, string Icon, string Title, string Desc);
+
+    private RenderFragment Tile(TileDef t) =>
+        @<div class="col-md-6">
+            <a href="@t.Href" class="text-decoration-none">
+                <div class="hm-tile">
+                    <div class="hm-tile-icon" style="background:@t.IconBg;color:@t.IconColor">
+                        <span class="material-symbols-outlined">@t.Icon</span>
+                    </div>
+                    <div class="hm-tile-body">
+                        <div class="hm-tile-title">@t.Title</div>
+                        <div class="hm-tile-desc">@t.Desc</div>
+                    </div>
+                    <span class="material-symbols-outlined hm-tile-arrow">chevron_right</span>
+                </div>
+            </a>
+        </div>;
+
+    private readonly TileDef[] _inpatient12 =
+    {
+        new("/beds", "var(--brand-light)", "var(--brand)", "bed", "Sơ đồ giường bệnh",
+            "Bản đồ 2D/3D khu – phòng – giường; nhập viện, chuyển giường theo thời gian thực."),
+        new("/vitals", "#e0f2f1", "var(--teal)", "ecg_heart", "Y lệnh & Sinh tồn",
+            "Điều dưỡng nhập sinh tồn; bác sĩ ban hành và hoàn thành y lệnh hàng ngày."),
+    };
+
+    private readonly TileDef[] _inpatientLab =
+    {
+        new("/lab", "#fff8e1", "#b45309", "biotech", "Cận lâm sàng",
+            "Nhận y lệnh xét nghiệm, nhập kết quả, tải file, trả kết quả cho bác sĩ."),
+    };
+
+    private readonly TileDef[] _clinical =
+    {
+        new("/discharge", "#fef2f2", "#b91c1c", "receipt_long", "Quản lý xuất viện",
+            "Xử lý xuất viện, tổng hợp chi phí nằm viện và tạo hoá đơn viện phí."),
+        new("/clinic-dashboard", "#eef2ff", "#4f46e5", "meeting_room", "Hàng đợi phòng khám",
+            "Tiếp nhận, gọi số và chuyển bệnh nhân giữa các phòng khám theo thời gian thực."),
+        new("/outpatient-record", "#ecfeff", "#0e7490", "clinical_notes", "Hồ sơ ngoại trú",
+            "Khám, chẩn đoán ICD-10, chỉ định cận lâm sàng và kê đơn thuốc."),
+        new("/e-prescription", "#f0fdf4", "#15803d", "prescriptions", "Đơn thuốc điện tử",
+            "Kê đơn điện tử, kiểm tra tồn kho và cảnh báo tương tác / dị ứng."),
+    };
+
+    private readonly TileDef[] _patient =
+    {
+        new("/booking", "var(--brand-light)", "var(--brand)", "event_available", "Đặt lịch khám",
+            "Đặt lịch khám theo chuyên khoa, bác sĩ và khung giờ mong muốn."),
+        new("/appointments", "#eef2ff", "#4f46e5", "calendar_month", "Lịch hẹn của tôi",
+            "Theo dõi trạng thái các lịch hẹn đã đặt."),
+        new("/billing", "#fef2f2", "#b91c1c", "payments", "Viện phí",
+            "Xem hoá đơn, tính BHYT và thanh toán VNPay / Momo."),
+        new("/health-records", "#ecfeff", "#0e7490", "folder_shared", "Hồ sơ sức khỏe",
+            "Lịch sử khám, đơn thuốc và kết quả cận lâm sàng của bạn."),
+        new("/my-reviews", "#fff8e1", "#b45309", "star", "Đánh giá",
+            "Đánh giá bác sĩ và dịch vụ sau mỗi lần khám."),
+    };
+
+    private readonly TileDef[] _admin =
+    {
+        new("/manage-services", "var(--brand-light)", "var(--brand)", "medical_services", "Dịch vụ & Khoa phòng",
+            "Quản lý khoa, phòng khám và bảng giá dịch vụ."),
+        new("/admin/staff", "#e0f2f1", "var(--teal)", "badge", "Nhân sự",
+            "Quản lý hồ sơ nhân viên y tế."),
+        new("/admin/users", "#eef2ff", "#4f46e5", "manage_accounts", "Tài khoản",
+            "Quản lý tài khoản, vai trò và trạng thái người dùng."),
+        new("/admin/drug-interactions", "#f0fdf4", "#15803d", "medication", "Tương tác thuốc",
+            "Danh mục thuốc và quy tắc cảnh báo tương tác (CDSS)."),
+        new("/admin/otp-security", "#fef2f2", "#b91c1c", "encrypted", "OTP & Bảo mật",
+            "Cấu hình OTP, cấp / xác thực mã và nhật ký bảo mật."),
+        new("/reports/revenue", "#fff8e1", "#b45309", "monitoring", "Báo cáo doanh thu",
+            "Doanh thu theo kỳ, biểu đồ và xuất CSV."),
+        new("/reports/operations", "#ecfeff", "#0e7490", "insights", "Báo cáo vận hành",
+            "Công suất giường, lượt khám và các chỉ số vận hành."),
+    };
+
+    private readonly TileDef[] _shared =
+    {
+        new("/schedules", "#f1f5f9", "#475569", "calendar_clock", "Lịch trực",
+            "Xem lịch trực của đội ngũ theo tuần / ngày."),
+    };
 }
