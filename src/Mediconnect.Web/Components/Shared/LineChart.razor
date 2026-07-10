@@ -1,0 +1,87 @@
+@namespace Mediconnect.Web.Components.Shared
+@using Mediconnect.Web.Services
+
+@if (Data.Count == 0)
+{
+    <div class="d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="height:@(Height)px">
+        <span class="material-symbols-outlined" style="font-size:2.5rem">@EmptyIcon</span>
+        <p class="mb-0" style="font-size:.85rem">@EmptyText</p>
+    </div>
+}
+else
+{
+    <svg viewBox="0 0 1000 @Height" class="w-100" style="height:@(Height)px">
+        <defs>
+            <linearGradient id="@_gradId" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="@Color" stop-opacity="0.15" />
+                <stop offset="100%" stop-color="@Color" stop-opacity="0" />
+            </linearGradient>
+        </defs>
+        @for (var i = 0; i <= Grid; i++)
+        {
+            var y = PadT + (ChartH / Grid) * i;
+            var val = MaxVal * (1 - (double)i / Grid);
+            <g>
+                <line x1="@Fmt(PadL)" x2="990" y1="@Fmt(y)" y2="@Fmt(y)" stroke="#e6e8ea" stroke-width="1" />
+                <text x="@Fmt(PadL - 6)" y="@Fmt(y + 4)" text-anchor="end" font-size="11" fill="#727783">@FormatValue(val)</text>
+            </g>
+        }
+        <path d="@AreaPath" fill="url(#@_gradId)" />
+        <path d="@LinePath" fill="none" stroke="@Color" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" />
+        @foreach (var c in Coords)
+        {
+            <circle cx="@Fmt(c.X)" cy="@Fmt(c.Y)" r="4" fill="@Color" stroke="white" stroke-width="1.5">
+                <title>@c.Point.Label: @FormatValue(c.Point.Value)</title>
+            </circle>
+        }
+        @foreach (var c in Coords)
+        {
+            <g><text x="@Fmt(c.X)" y="@Fmt(Height - 6)" text-anchor="middle" font-size="10" fill="#727783">@c.Point.Label</text></g>
+        }
+        <line x1="@Fmt(PadL)" x2="990" y1="@Fmt(Height - PadB)" y2="@Fmt(Height - PadB)" stroke="#c2c6d4" stroke-width="1" />
+    </svg>
+}
+
+@code {
+    [Parameter] public List<ChartPoint> Data { get; set; } = new();
+    [Parameter] public string Color { get; set; } = "#00478d";
+    [Parameter] public int Height { get; set; } = 280;
+    [Parameter] public string EmptyIcon { get; set; } = "show_chart";
+    [Parameter] public string EmptyText { get; set; } = "Không có dữ liệu cho khoảng thời gian này";
+    [Parameter] public Func<double, string>? ValueFormatter { get; set; }
+
+    private const double PadL = 70;
+    private const double PadB = 40;
+    private const double PadT = 20;
+    private const int Grid = 4;
+    private readonly string _gradId = $"lineGrad{Guid.NewGuid():N}";
+
+    private double ChartW => 1000 - PadL - 20;
+    private double ChartH => Height - PadB - PadT;
+    private double MaxVal => Math.Max(Data.Count == 0 ? 1 : Data.Max(d => d.Value), 1);
+    private double StepX => Data.Count > 1 ? ChartW / (Data.Count - 1) : 0;
+
+    private List<(double X, double Y, ChartPoint Point)> Coords => Data
+        .Select((d, i) => (
+            X: PadL + (Data.Count > 1 ? StepX * i : ChartW / 2),
+            Y: PadT + ChartH - d.Value / MaxVal * ChartH,
+            Point: d))
+        .ToList();
+
+    private string LinePath => string.Join(" ", Coords.Select((c, i) => i == 0 ? $"M {Fmt(c.X)} {Fmt(c.Y)}" : $"L {Fmt(c.X)} {Fmt(c.Y)}"));
+
+    private string AreaPath
+    {
+        get
+        {
+            if (Coords.Count == 0) return "";
+            var last = Coords[^1];
+            var first = Coords[0];
+            return $"{LinePath} L {Fmt(last.X)} {Fmt(PadT + ChartH)} L {Fmt(first.X)} {Fmt(PadT + ChartH)} Z";
+        }
+    }
+
+    private static string Fmt(double v) => v.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    private string FormatValue(double v) => (ValueFormatter ?? ReportUtils.FormatCurrencyAxis)(v);
+}

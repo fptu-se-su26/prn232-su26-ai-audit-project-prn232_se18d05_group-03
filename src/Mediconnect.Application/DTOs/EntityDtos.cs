@@ -240,6 +240,12 @@ public class InpatientAdmissionReadDto
     public Guid DepartmentId { get; set; }
     public DateTime AdmissionDate { get; set; }
     public AdmissionStatus Status { get; set; }
+
+    // Enriched display fields (joined via IInpatientQuery) — GUID fields above stay for compatibility.
+    public string? PatientName { get; set; }
+    public string? DepartmentName { get; set; }
+    public Guid? BedId { get; set; }
+    public string? BedLabel { get; set; }
 }
 
 public class InpatientAdmissionWriteDto
@@ -260,6 +266,10 @@ public class LabOrderReadDto
     public LabOrderStatus Status { get; set; }
     public DateTime OrderedAt { get; set; }
     public string? Notes { get; set; }
+
+    // Enriched display fields (joined in LabOrdersController.Filter).
+    public string? PatientName { get; set; }
+    public string? OrderedByName { get; set; }
 }
 
 public class LabOrderWriteDto

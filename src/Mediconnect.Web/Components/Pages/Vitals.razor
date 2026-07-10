@@ -1,7 +1,7 @@
 @page "/vitals"
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Nurse,Doctor")]
 
-<PageTitle>F2 · Sinh tồn &amp; Y lệnh – MediConnect</PageTitle>
+<PageTitle>Sinh tồn &amp; Y lệnh – MediConnect</PageTitle>
 
 <div class="page-header">
     <div>
@@ -24,7 +24,7 @@
                 <option value="">-- Chọn bệnh nhân nội trú --</option>
                 @foreach (var a in _admissions)
                 {
-                    <option value="@a.Id">ID:@a.Id.ToString()[..8]… · Nhập @a.AdmissionDate.ToString("dd/MM/yyyy")</option>
+                    <option value="@a.Id">@(a.PatientName ?? "(Chưa rõ tên)") · @(a.BedLabel ?? "Chưa gán giường") · @a.DepartmentName</option>
                 }
             </select>
             <button class="btn btn-outline-secondary btn-sm" @onclick="LoadAdmissions">
@@ -33,6 +33,18 @@
         </div>
     </div>
 </div>
+
+@if (_selectedAdmission is not null)
+{
+    <div class="alert alert-light border d-flex align-items-center gap-2 mb-3" style="font-size:.85rem">
+        <span class="material-symbols-outlined" style="font-size:1.1rem;color:var(--teal)">badge</span>
+        <strong>@(_selectedAdmission.PatientName ?? "(Chưa rõ tên)")</strong>
+        <span class="text-muted">·</span>
+        <span>@(_selectedAdmission.BedLabel ?? "Chưa gán giường")</span>
+        <span class="text-muted">·</span>
+        <span>@_selectedAdmission.DepartmentName</span>
+    </div>
+}
 
 @if (!string.IsNullOrEmpty(_selectedAdmissionId))
 {
@@ -214,17 +226,30 @@
     [Inject] private ApiClient Api { get; set; } = default!;
     [Inject] private TokenState Token { get; set; } = default!;
 
+    [SupplyParameterFromQuery(Name = "admissionId")]
+    public string? AdmissionIdQuery { get; set; }
+
     private List<InpatientAdmissionReadDto> _admissions = new();
     private List<VitalSignReadDto> _vitals = new();
     private List<CareOrderReadDto> _orders = new();
     private string _selectedAdmissionId = "";
+    private InpatientAdmissionReadDto? _selectedAdmission;
     private string? _error, _vitalError, _orderError;
     private bool _saving, _showVitalForm, _showOrderForm;
 
     private VitalSignWriteDto _vitalDto = new() { RecordedAt = DateTime.Now };
     private CareOrderWriteDto _orderDto = new() { OrderedAt = DateTime.Now };
 
-    protected override async Task OnInitializedAsync() => await LoadAdmissions();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAdmissions();
+
+        if (Guid.TryParse(AdmissionIdQuery, out var admissionId) && _admissions.Any(a => a.Id == admissionId))
+        {
+            _selectedAdmissionId = admissionId.ToString();
+            await LoadAdmissionData();
+        }
+    }
 
     private async Task LoadAdmissions()
     {
@@ -234,8 +259,9 @@
 
     private async Task LoadAdmissionData()
     {
-        if (string.IsNullOrEmpty(_selectedAdmissionId)) return;
+        if (string.IsNullOrEmpty(_selectedAdmissionId)) { _selectedAdmission = null; return; }
         var admId = Guid.Parse(_selectedAdmissionId);
+        _selectedAdmission = _admissions.FirstOrDefault(a => a.Id == admId);
         _vitalDto = new() { AdmissionId = admId, RecordedAt = DateTime.Now };
         _orderDto = new() { AdmissionId = admId, OrderedAt = DateTime.Now };
         try

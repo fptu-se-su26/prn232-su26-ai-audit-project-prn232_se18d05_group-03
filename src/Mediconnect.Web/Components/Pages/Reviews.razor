@@ -1,0 +1,237 @@
+@page "/my-reviews"
+@attribute [Authorize(Roles = "Patient")]
+
+<PageTitle>Đánh giá dịch vụ – MediConnect</PageTitle>
+
+<div style="max-width:820px;margin:0 auto">
+    @if (_loading)
+    {
+        <div class="d-flex flex-column align-items-center gap-3 py-5 text-muted">
+            <span class="material-symbols-outlined spin" style="font-size:2.5rem;color:var(--color-primary)">progress_activity</span>
+            <p class="mb-0">Đang tải dữ liệu đánh giá...</p>
+        </div>
+    }
+    else if (_noProfile)
+    {
+        <div class="text-center py-5">
+            <span class="material-symbols-outlined d-block mb-3" style="font-size:3.5rem;color:var(--color-primary)">reviews</span>
+            <h5 class="mb-2">Chưa có hồ sơ bệnh nhân</h5>
+            <p class="text-muted mb-4">Bạn cần có lần khám hoàn tất để đánh giá chất lượng dịch vụ.</p>
+            <a class="btn btn-primary btn-pill" href="/booking">Đặt lịch khám</a>
+        </div>
+    }
+    else if (_error is not null)
+    {
+        <div class="text-center py-5">
+            <span class="material-symbols-outlined d-block mb-3" style="font-size:3.5rem;color:var(--color-error)">error</span>
+            <p class="text-muted mb-4">@_error</p>
+            <button class="btn btn-primary btn-pill" @onclick="LoadData">Thử lại</button>
+        </div>
+    }
+    else
+    {
+        <div class="mb-4">
+            <h4 class="mb-1 d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined" style="color:var(--color-primary);font-size:1.6rem">reviews</span>
+                Đánh giá dịch vụ khám chữa bệnh
+            </h4>
+            <p class="text-muted mb-0">
+                Chia sẻ trải nghiệm của bạn sau mỗi lần khám để giúp bệnh viện cải thiện chất lượng.
+                Đã đánh giá @(_rows.Count(r => r.Rating is not null))/@_rows.Count lần khám.
+            </p>
+        </div>
+
+        @if (_rows.Count == 0)
+        {
+            <div class="text-center py-5" style="background:var(--color-surface-container-low);border-radius:1rem">
+                <span class="material-symbols-outlined d-block mb-2" style="font-size:2.5rem;color:var(--color-on-surface-variant)">event_busy</span>
+                <p class="text-muted mb-0">Bạn chưa có lần khám nào hoàn tất để đánh giá.</p>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-3">
+                @foreach (var row in _rows)
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2" style="font-weight:600">
+                                        <span class="material-symbols-outlined" style="color:var(--color-primary);font-size:1.1rem">stethoscope</span>
+                                        BS. @(row.DoctorName ?? "—")
+                                    </div>
+                                    <div class="text-muted mt-1" style="font-size:.82rem">
+                                        @(row.ClinicName ?? "Phòng khám") · Khám ngày @row.Visit.VisitDate.ToString("dd/MM/yyyy")
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(row.Visit.DiagnosisDescription))
+                                    {
+                                        <div class="text-muted mt-1" style="font-size:.82rem">Chẩn đoán: @row.Visit.DiagnosisDescription</div>
+                                    }
+                                </div>
+                                @if (row.Rating is not null)
+                                {
+                                    <span class="badge badge-soft-tertiary d-inline-flex align-items-center gap-1">
+                                        <span class="material-symbols-outlined" style="font-size:.85rem">task_alt</span>
+                                        Đã đánh giá
+                                    </span>
+                                }
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                @for (var i = 1; i <= 5; i++)
+                                {
+                                    var star = i;
+                                    <span class="material-symbols-outlined"
+                                          style="font-size:1.5rem;cursor:@(row.Rating is null ? "pointer" : "default");color:@(star <= row.EditScore ? "#f5b301" : "var(--color-outline-variant)");font-variation-settings:@(star <= row.EditScore ? "'FILL' 1" : "'FILL' 0")"
+                                          @onclick="() => { if (row.Rating is null) row.EditScore = star; }">
+                                        star
+                                    </span>
+                                }
+                                @if (row.EditScore > 0)
+                                {
+                                    <span class="text-muted" style="font-size:.85rem">@row.EditScore/5</span>
+                                }
+                            </div>
+
+                            @if (row.Rating is not null)
+                            {
+                                @if (!string.IsNullOrWhiteSpace(row.Rating.Comment))
+                                {
+                                    <p class="mb-0" style="font-size:.85rem;background:var(--color-surface-container-low);border-radius:.6rem;padding:.6rem .8rem">"@row.Rating.Comment"</p>
+                                }
+                            }
+                            else
+                            {
+                                <textarea class="form-control mb-3" rows="2" placeholder="Nhận xét của bạn về bác sĩ và dịch vụ (tùy chọn)..." @bind="row.EditComment"></textarea>
+                                <div class="d-flex justify-content-end">
+                                    <button class="btn btn-primary btn-pill d-inline-flex align-items-center gap-1" disabled="@(row.EditScore < 1 || row.Submitting)" @onclick="() => SubmitRating(row)">
+                                        @if (row.Submitting)
+                                        {
+                                            <span class="material-symbols-outlined spin" style="font-size:1.1rem">progress_activity</span>
+                                        }
+                                        <span class="material-symbols-outlined" style="font-size:1.1rem">send</span>
+                                        Gửi đánh giá
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@if (_toast is not null)
+{
+    <div class="toast-error" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:2000">@_toast</div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+
+    private bool _loading = true;
+    private bool _noProfile;
+    private string? _error;
+    private string? _toast;
+    private PatientProfileReadDto? _profile;
+    private List<RatingRow> _rows = new();
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        _loading = true; _noProfile = false; _error = null;
+        try
+        {
+            _profile = await Api.GetMyPatient();
+        }
+        catch (ApiClient.ApiException)
+        {
+            _noProfile = true; _loading = false; return;
+        }
+
+        if (_profile is null) { _noProfile = true; _loading = false; return; }
+
+        try
+        {
+            var historyTask = Api.GetPatientHistory(_profile.Id);
+            var ratingsTask = Api.GetServiceRatings();
+            var staffTask = Api.GetStaffDirectory();
+            var clinicsTask = Api.GetAllClinics();
+
+            var history = await historyTask;
+            var ratings = (await ratingsTask) ?? new();
+            var staff = (await staffTask) ?? new();
+            var clinics = (await clinicsTask) ?? new();
+
+            var myRatings = ratings.Where(r => r.PatientId == _profile.Id).ToList();
+
+            _rows = (history?.Visits ?? new List<OutpatientVisitReadDto>())
+                .Where(v => v.Status == VisitStatus.Completed)
+                .OrderByDescending(v => v.VisitDate)
+                .Select(v =>
+                {
+                    var rating = myRatings.FirstOrDefault(r => r.OutpatientVisitId == v.Id);
+                    return new RatingRow
+                    {
+                        Visit = v,
+                        DoctorName = staff.FirstOrDefault(s => s.Id == v.DoctorId)?.Name,
+                        ClinicName = clinics.FirstOrDefault(c => c.Id == v.ClinicId)?.Name,
+                        Rating = rating,
+                        EditScore = rating?.Score ?? 0
+                    };
+                })
+                .ToList();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Không thể tải dữ liệu đánh giá."; }
+        finally { _loading = false; }
+    }
+
+    private async Task SubmitRating(RatingRow row)
+    {
+        if (_profile is null || row.EditScore < 1) return;
+        row.Submitting = true;
+        try
+        {
+            var created = await Api.CreateServiceRating(new ServiceRatingWriteDto
+            {
+                PatientId = _profile.Id,
+                DoctorId = row.Visit.DoctorId,
+                OutpatientVisitId = row.Visit.Id,
+                Score = row.EditScore,
+                Comment = string.IsNullOrWhiteSpace(row.EditComment) ? null : row.EditComment.Trim()
+            });
+            row.Rating = created;
+            ShowToast("Cảm ơn bạn đã đánh giá!");
+        }
+        catch { ShowToast("Không thể gửi đánh giá. Vui lòng thử lại."); }
+        finally { row.Submitting = false; }
+    }
+
+    private void ShowToast(string message)
+    {
+        _toast = message;
+        _ = ClearToastAfterDelay();
+    }
+
+    private async Task ClearToastAfterDelay()
+    {
+        await Task.Delay(4000);
+        _toast = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private class RatingRow
+    {
+        public OutpatientVisitReadDto Visit { get; set; } = null!;
+        public string? DoctorName { get; set; }
+        public string? ClinicName { get; set; }
+        public ServiceRatingReadDto? Rating { get; set; }
+        public int EditScore { get; set; }
+        public string EditComment { get; set; } = "";
+        public bool Submitting { get; set; }
+    }
+}

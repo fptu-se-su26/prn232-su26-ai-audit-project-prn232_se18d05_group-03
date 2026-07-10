@@ -1,0 +1,36 @@
+@namespace Mediconnect.Web.Components.Shared
+
+<div class="report-card" style="transition:box-shadow .15s">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="d-flex align-items-center justify-content-center rounded-3" style="width:40px;height:40px;background:@IconBg">
+            <span class="material-symbols-outlined" style="color:@IconColor">@Icon</span>
+        </div>
+        @if (Badge is not null)
+        {
+            <span style="font-size:.72rem;font-weight:700;color:@Badge.Value.Color">@Badge.Value.Text</span>
+        }
+    </div>
+    <p class="mb-0 text-muted" style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em">@Label</p>
+    @if (Value is null)
+    {
+        <Skeleton Style="height:2.25rem;margin-top:.25rem" />
+    }
+    else
+    {
+        <h3 class="mb-0 mt-1" style="font-size:1.75rem;font-weight:700">@Value</h3>
+    }
+    @if (!string.IsNullOrEmpty(Sub))
+    {
+        <p class="text-muted mb-0 mt-2" style="font-size:.75rem">@Sub</p>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Icon { get; set; } = "";
+    [Parameter] public string IconBg { get; set; } = "var(--color-primary-container)";
+    [Parameter] public string IconColor { get; set; } = "var(--color-on-primary-container)";
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public string? Sub { get; set; }
+    [Parameter] public (string Text, string Color)? Badge { get; set; }
+}

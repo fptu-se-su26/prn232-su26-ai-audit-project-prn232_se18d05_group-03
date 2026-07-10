@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IStaffScheduleQuery, StaffScheduleQuery>();
         services.AddScoped<IStaffScheduleService, StaffScheduleService>();
         services.AddScoped<IReportQuery, ReportQuery>();
+        services.AddScoped<IInpatientQuery, InpatientQuery>();
         services.AddScoped<IPasswordHasher, PasswordHasherService>();
         services.AddScoped<ITokenService, JwtTokenService>();
 

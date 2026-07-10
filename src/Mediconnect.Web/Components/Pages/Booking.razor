@@ -1,0 +1,377 @@
+@page "/booking"
+@attribute [Authorize(Roles = "Patient")]
+
+<PageTitle>Đặt lịch khám – MediConnect</PageTitle>
+
+<div class="mx-auto" style="max-width:900px">
+    @if (_loading)
+    {
+        <div class="d-flex flex-column align-items-center justify-content-center gap-2" style="min-height:50vh">
+            <span class="material-symbols-outlined spin" style="font-size:2.5rem;color:var(--color-primary)">progress_activity</span>
+            <p class="text-muted mb-0">Đang tải dữ liệu...</p>
+        </div>
+    }
+    else if (_loadError is not null)
+    {
+        <div class="d-flex flex-column align-items-center justify-content-center gap-2 text-center" style="min-height:50vh">
+            <span class="material-symbols-outlined" style="font-size:2.5rem;color:var(--color-error)">error</span>
+            <p class="mb-0" style="color:var(--color-error)">@_loadError</p>
+        </div>
+    }
+    else
+    {
+        @if (_step < 3)
+        {
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                    @for (var i = 0; i < Steps.Length; i++)
+                    {
+                        var idx = i;
+                        <div class="d-flex flex-column align-items-center gap-1 flex-grow-1">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle" style="width:2.5rem;height:2.5rem;@(idx <= _step ? "background:var(--color-primary);color:var(--color-on-primary)" : "background:var(--color-surface-container-high);color:var(--color-outline)")">
+                                <span class="material-symbols-outlined">@(idx < _step ? "check" : Steps[idx].Icon)</span>
+                            </div>
+                            <span class="text-center" style="font-size:.75rem;font-weight:600;color:@(idx <= _step ? "var(--color-primary)" : "var(--color-outline)")">@Steps[idx].Label</span>
+                        </div>
+                    }
+                </div>
+                <div class="rounded-pill" style="height:.35rem;background:var(--color-surface-container-high);overflow:hidden">
+                    <div class="h-100 rounded-pill" style="width:@((_step + 1) * 100 / Steps.Length)%;background:var(--color-primary);transition:width .3s"></div>
+                </div>
+            </div>
+        }
+
+        @if (_step == 0)
+        {
+            <h4 class="mb-1">Chọn chuyên khoa</h4>
+            <p class="text-muted mb-4">Chọn chuyên khoa bạn muốn khám để chúng tôi giới thiệu bác sĩ phù hợp.</p>
+            <div class="row g-3">
+                @foreach (var dept in _departments)
+                {
+                    var isSelected = _selectedDept?.Id == dept.Id;
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <button type="button" class="report-card w-100 h-100 text-start @(isSelected ? "border-primary" : "")" style="@(isSelected ? "border-width:2px" : "")" @onclick="() => SelectDept(dept)">
+                            <div class="d-flex align-items-center justify-content-center rounded-3 mb-2" style="width:3rem;height:3rem;background:var(--color-primary-container);color:var(--color-on-primary-container)">
+                                <span class="material-symbols-outlined">medical_services</span>
+                            </div>
+                            <h6 class="mb-1">@dept.Name</h6>
+                            @if (!string.IsNullOrEmpty(dept.Description))
+                            {
+                                <p class="text-muted mb-0" style="font-size:.8rem">@dept.Description</p>
+                            }
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+        else if (_step == 1)
+        {
+            <h4 class="mb-1">Chọn bác sĩ</h4>
+            <p class="text-muted mb-4">Chọn bác sĩ mà bạn muốn khám.</p>
+            @if (FilteredDoctors.Count == 0)
+            {
+                <div class="text-center text-muted py-5">
+                    <span class="material-symbols-outlined d-block mb-2" style="font-size:3rem">person_off</span>
+                    <h6>Chưa có bác sĩ</h6>
+                    <p class="mb-0" style="font-size:.85rem">Hiện tại chưa có bác sĩ nào trong chuyên khoa này. Vui lòng quay lại chọn chuyên khoa khác.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var doc in FilteredDoctors)
+                    {
+                        var isSelected = _selectedDoctor?.Id == doc.Id;
+                        <div class="col-12 col-sm-6">
+                            <button type="button" class="report-card w-100 h-100 text-start d-flex gap-3 @(isSelected ? "border-primary" : "")" style="@(isSelected ? "border-width:2px" : "")" @onclick="() => SelectDoctor(doc)">
+                                <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width:3.5rem;height:3.5rem;background:var(--color-secondary-container);color:var(--color-on-primary-container)">
+                                    <span class="material-symbols-outlined" style="font-size:1.6rem">person</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <h6 class="mb-1">BS. @doc.Name</h6>
+                                    @if (!string.IsNullOrEmpty(doc.Specialty))
+                                    {
+                                        <p class="mb-1" style="font-size:.82rem;color:var(--color-primary);font-weight:600">@doc.Specialty</p>
+                                    }
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @if (!string.IsNullOrEmpty(doc.Degree))
+                                        {
+                                            <span class="badge bg-light text-dark" style="font-size:.68rem">@doc.Degree</span>
+                                        }
+                                        <span class="badge bg-light text-dark" style="font-size:.68rem">@doc.YearsExperience năm kinh nghiệm</span>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else if (_step == 2)
+        {
+            <h4 class="mb-1">Chọn ngày và giờ khám</h4>
+            <p class="text-muted mb-4">Chọn ngày và khung giờ phù hợp với bạn.</p>
+            <div class="row g-4">
+                <div class="col-12 col-lg-6">
+                    <div class="report-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => _viewMonth = _viewMonth.AddMonths(-1)">
+                                <span class="material-symbols-outlined" style="font-size:1rem">chevron_left</span>
+                            </button>
+                            <h6 class="mb-0 text-capitalize">Tháng @_viewMonth.Month, @_viewMonth.Year</h6>
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => _viewMonth = _viewMonth.AddMonths(1)">
+                                <span class="material-symbols-outlined" style="font-size:1rem">chevron_right</span>
+                            </button>
+                        </div>
+                        <div class="row row-cols-7 g-1 text-center text-muted mb-1" style="font-size:.7rem;font-weight:700">
+                            @foreach (var d in VnDaysShort)
+                            {
+                                <div class="col">@d</div>
+                            }
+                        </div>
+                        <div class="row row-cols-7 g-1">
+                            @foreach (var cell in CalendarCells)
+                            {
+                                <div class="col">
+                                    @if (cell is { } day)
+                                    {
+                                        var date = new DateOnly(_viewMonth.Year, _viewMonth.Month, day);
+                                        var disabled = IsDateDisabled(date);
+                                        var selected = _selectedDate == date;
+                                        <button type="button" class="btn w-100 @(selected ? "btn-primary" : disabled ? "btn-light text-muted" : "btn-outline-secondary border-0")" disabled="@disabled" @onclick="() => _selectedDate = date">
+                                            @day
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <div class="report-card">
+                        <h6 class="d-flex align-items-center gap-2 mb-3">
+                            <span class="material-symbols-outlined" style="color:var(--color-primary)">schedule</span>
+                            Khung giờ khám
+                        </h6>
+                        @if (_selectedDate is null)
+                        {
+                            <div class="text-center text-muted py-4">
+                                <span class="material-symbols-outlined d-block mb-2" style="font-size:2.2rem">event</span>
+                                Vui lòng chọn ngày trước
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-2" style="font-size:.82rem">Buổi sáng</p>
+                            <div class="row row-cols-4 g-2 mb-3">
+                                @foreach (var t in MorningSlots)
+                                {
+                                    <div class="col"><button class="btn w-100 btn-sm @(_selectedTime == t ? "btn-primary" : "btn-outline-secondary")" @onclick="() => _selectedTime = t">@FormatTime(t)</button></div>
+                                }
+                            </div>
+                            <p class="text-muted mb-2" style="font-size:.82rem">Buổi chiều</p>
+                            <div class="row row-cols-4 g-2">
+                                @foreach (var t in AfternoonSlots)
+                                {
+                                    <div class="col"><button class="btn w-100 btn-sm @(_selectedTime == t ? "btn-primary" : "btn-outline-secondary")" @onclick="() => _selectedTime = t">@FormatTime(t)</button></div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else if (_step == 3 && _selectedDept is not null && _selectedDoctor is not null && _selectedDate is not null && _selectedTime is not null)
+        {
+            <div class="text-center mx-auto" style="max-width:480px">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width:5rem;height:5rem;background:var(--color-tertiary-container)">
+                    <span class="material-symbols-outlined" style="font-size:2.8rem;color:var(--color-tertiary)">check_circle</span>
+                </div>
+                <h4 class="mb-1">Đặt lịch thành công!</h4>
+                <p class="text-muted mb-4">Lịch hẹn của bạn đã được đặt thành công. Vui lòng đến đúng giờ.</p>
+
+                <div class="report-card text-start mb-4">
+                    <div class="d-flex align-items-start gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary">medical_services</span>
+                        <div><p class="text-muted mb-0" style="font-size:.78rem">Chuyên khoa</p><p class="mb-0 fw-semibold">@_selectedDept.Name</p></div>
+                    </div>
+                    <hr />
+                    <div class="d-flex align-items-start gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary">person</span>
+                        <div><p class="text-muted mb-0" style="font-size:.78rem">Bác sĩ</p><p class="mb-0 fw-semibold">BS. @_selectedDoctor.Name</p></div>
+                    </div>
+                    <hr />
+                    <div class="d-flex align-items-start gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary">calendar_month</span>
+                        <div><p class="text-muted mb-0" style="font-size:.78rem">Ngày khám</p><p class="mb-0 fw-semibold">@_selectedDate.Value.ToString("dd/MM/yyyy")</p></div>
+                    </div>
+                    <hr />
+                    <div class="d-flex align-items-start gap-2">
+                        <span class="material-symbols-outlined text-primary">schedule</span>
+                        <div><p class="text-muted mb-0" style="font-size:.78rem">Giờ khám</p><p class="mb-0 fw-semibold">@FormatTime(_selectedTime)</p></div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                    <a href="appointments" class="btn btn-primary">Xem lịch hẹn của tôi</a>
+                    <a href="" class="btn btn-outline-secondary">Về trang chủ</a>
+                </div>
+            </div>
+        }
+
+        @if (_step > 0 && _step < 3)
+        {
+            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" @onclick="() => _step--">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem">arrow_back</span>
+                    Quay lại
+                </button>
+                @if (_step == 2)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        @if (_submitError is not null)
+                        {
+                            <span style="color:var(--color-error);font-size:.85rem">@_submitError</span>
+                        }
+                        <button class="btn btn-primary d-inline-flex align-items-center gap-1" disabled="@(_selectedDate is null || _selectedTime is null || _submitting)" @onclick="Complete">
+                            @(_submitting ? "Đang xử lý..." : "Hoàn tất đặt lịch")
+                            <span class="material-symbols-outlined" style="font-size:1.1rem">@(_submitting ? "progress_activity" : "check")</span>
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private TokenState Token { get; set; } = default!;
+
+    private record StepInfo(string Label, string Icon);
+    private static readonly StepInfo[] Steps =
+    {
+        new("Chọn chuyên khoa", "category"),
+        new("Chọn bác sĩ", "person_search"),
+        new("Chọn ngày giờ", "calendar_month"),
+    };
+
+    private static readonly string[] VnDaysShort = { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+    private static readonly string[] MorningSlots = { "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30" };
+    private static readonly string[] AfternoonSlots = { "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00" };
+
+    private bool _loading = true;
+    private string? _loadError;
+    private List<DepartmentReadDto> _departments = new();
+    private List<ClinicReadDto> _clinics = new();
+    private List<StaffDirectoryDto> _doctors = new();
+
+    private int _step;
+    private DepartmentReadDto? _selectedDept;
+    private StaffDirectoryDto? _selectedDoctor;
+    private DateOnly? _selectedDate;
+    private string? _selectedTime;
+    private DateOnly _viewMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+    private bool _submitting;
+    private string? _submitError;
+
+    private List<StaffDirectoryDto> FilteredDoctors =>
+        _selectedDept is null ? new() : _doctors.Where(d => d.DepartmentId == _selectedDept.Id).ToList();
+
+    private ClinicReadDto? SelectedClinic =>
+        _selectedDept is null ? null : _clinics.FirstOrDefault(c => c.DepartmentId == _selectedDept.Id);
+
+    private List<int?> CalendarCells
+    {
+        get
+        {
+            var firstDayOfWeek = (int)new DateOnly(_viewMonth.Year, _viewMonth.Month, 1).DayOfWeek;
+            var daysInMonth = DateTime.DaysInMonth(_viewMonth.Year, _viewMonth.Month);
+            var cells = new List<int?>();
+            for (var i = 0; i < firstDayOfWeek; i++) cells.Add(null);
+            for (var d = 1; d <= daysInMonth; d++) cells.Add(d);
+            return cells;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _departments = (await Api.GetDepartments()) ?? new();
+            _clinics = (await Api.GetActiveClinics()) ?? new();
+            var directory = (await Api.GetStaffDirectory()) ?? new();
+            _doctors = directory.Where(d => d.StaffType == StaffType.Doctor).ToList();
+        }
+        catch { _loadError = "Không thể tải dữ liệu. Vui lòng thử lại."; }
+        finally { _loading = false; }
+    }
+
+    private bool IsDateDisabled(DateOnly d) => d < DateOnly.FromDateTime(DateTime.Today) || d.DayOfWeek == DayOfWeek.Sunday;
+
+    private static string FormatTime(string? t)
+    {
+        if (t is null) return "";
+        var parts = t.Split(':');
+        var hour = int.Parse(parts[0]);
+        var suffix = hour < 12 ? "SA" : "CH";
+        var display = hour > 12 ? hour - 12 : hour;
+        return $"{display}:{parts[1]} {suffix}";
+    }
+
+    private void SelectDept(DepartmentReadDto dept)
+    {
+        _selectedDept = dept;
+        _selectedDoctor = null;
+        _selectedDate = null;
+        _selectedTime = null;
+        _step = 1;
+    }
+
+    private void SelectDoctor(StaffDirectoryDto doctor)
+    {
+        _selectedDoctor = doctor;
+        _selectedDate = null;
+        _selectedTime = null;
+        _step = 2;
+    }
+
+    private async Task Complete()
+    {
+        if (Token.User is null || _selectedDoctor is null || SelectedClinic is null || _selectedDate is null || _selectedTime is null) return;
+
+        _submitting = true; _submitError = null;
+        try
+        {
+            Guid patientProfileId;
+            try
+            {
+                var me = await Api.GetMyPatient();
+                if (me is null) throw new ApiClient.ApiException(404, "not found");
+                patientProfileId = me.Id;
+            }
+            catch (ApiClient.ApiException)
+            {
+                var created = await Api.CreatePatient(new PatientProfileWriteDto { UserAccountId = Token.User.Id });
+                if (created is null) throw new ApiClient.ApiException(500, "Không thể tạo hồ sơ bệnh nhân.");
+                patientProfileId = created.Id;
+            }
+
+            var appointmentTime = _selectedDate.Value.ToDateTime(TimeOnly.Parse(_selectedTime));
+            await Api.CreateAppointment(new AppointmentWriteDto
+            {
+                PatientId = patientProfileId,
+                DoctorId = _selectedDoctor.Id,
+                ClinicId = SelectedClinic.Id,
+                AppointmentTime = appointmentTime,
+                Status = AppointmentStatus.Requested,
+                Reason = $"Khám {_selectedDept?.Name}",
+            });
+            _step = 3;
+        }
+        catch (ApiClient.ApiException ex) { _submitError = ex.Message; }
+        catch { _submitError = "Đặt lịch thất bại. Vui lòng thử lại."; }
+        finally { _submitting = false; }
+    }
+}

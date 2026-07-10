@@ -409,6 +409,7 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
     private readonly IRepository<BillingInvoice> _invoiceRepository;
     private readonly IRepository<BillingItem> _billingItemRepository;
     private readonly IRepository<PatientProfile> _patientProfileRepository;
+    private readonly IInpatientQuery _inpatientQuery;
 
     public InpatientAdmissionsController(
         ICrudService<InpatientAdmission, InpatientAdmissionReadDto, InpatientAdmissionWriteDto> service,
@@ -420,7 +421,8 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         IRepository<Bed> bedRepository,
         IRepository<BillingInvoice> invoiceRepository,
         IRepository<BillingItem> billingItemRepository,
-        IRepository<PatientProfile> patientProfileRepository)
+        IRepository<PatientProfile> patientProfileRepository,
+        IInpatientQuery inpatientQuery)
         : base(service)
     {
         _repository = repository;
@@ -432,6 +434,16 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         _invoiceRepository = invoiceRepository;
         _billingItemRepository = billingItemRepository;
         _patientProfileRepository = patientProfileRepository;
+        _inpatientQuery = inpatientQuery;
+    }
+
+    // Enriched with patient name / department name / current bed — see InpatientQuery.
+    [HttpGet]
+    public override async Task<ActionResult<IReadOnlyList<InpatientAdmissionReadDto>>> GetAll(
+        CancellationToken cancellationToken)
+    {
+        var result = await _inpatientQuery.GetAllAsync(cancellationToken);
+        return Ok(result);
     }
 
     [HttpPatch("{id:guid}/status")]
@@ -805,15 +817,27 @@ public class LabOrdersController : CrudController<LabOrder, LabOrderReadDto, Lab
 {
     private readonly IRepository<LabOrder> _repository;
     private readonly IRepository<LabResult> _resultRepository;
+    private readonly IRepository<OutpatientVisit> _visitRepository;
+    private readonly IRepository<PatientProfile> _patientProfileRepository;
+    private readonly IRepository<StaffProfile> _staffProfileRepository;
+    private readonly IRepository<UserAccount> _userAccountRepository;
 
     public LabOrdersController(
         ICrudService<LabOrder, LabOrderReadDto, LabOrderWriteDto> service,
         IRepository<LabOrder> repository,
-        IRepository<LabResult> resultRepository)
+        IRepository<LabResult> resultRepository,
+        IRepository<OutpatientVisit> visitRepository,
+        IRepository<PatientProfile> patientProfileRepository,
+        IRepository<StaffProfile> staffProfileRepository,
+        IRepository<UserAccount> userAccountRepository)
         : base(service)
     {
         _repository = repository;
         _resultRepository = resultRepository;
+        _visitRepository = visitRepository;
+        _patientProfileRepository = patientProfileRepository;
+        _staffProfileRepository = staffProfileRepository;
+        _userAccountRepository = userAccountRepository;
     }
 
     // F3: doctors (Bác sĩ) raise the lab / imaging order.
@@ -825,6 +849,9 @@ public class LabOrdersController : CrudController<LabOrder, LabOrderReadDto, Lab
         => base.Create(dto, cancellationToken);
 
     // Lab department receives incoming orders; ordering doctor polls their own results.
+    // Enriches each order with the patient's name (via OutpatientVisit → PatientProfile → UserAccount)
+    // and the ordering doctor's name (via OrderedById → StaffProfile → UserAccount) so the Lab screen
+    // shows real identities instead of bare GUIDs.
     [HttpGet("filter")]
     public async Task<ActionResult<IReadOnlyList<LabOrderReadDto>>> Filter(
         [FromQuery] LabOrderStatus? status,
@@ -843,10 +870,40 @@ public class LabOrdersController : CrudController<LabOrder, LabOrderReadDto, Lab
             query = query.Where(o => o.OrderedById == orderedById.Value);
         }
 
-        var result = query
-            .OrderByDescending(o => o.OrderedAt)
-            .Select(SimpleMapper.Map<LabOrder, LabOrderReadDto>)
+        var filtered = query.OrderByDescending(o => o.OrderedAt).ToList();
+
+        var visitIds = filtered.Select(o => o.OutpatientVisitId).Distinct().ToList();
+        var visits = await _visitRepository.ListAsync(v => visitIds.Contains(v.Id), cancellationToken);
+        var patientIds = visits.Select(v => v.PatientId).Distinct().ToList();
+        var patientProfiles = await _patientProfileRepository.ListAsync(p => patientIds.Contains(p.Id), cancellationToken);
+
+        var staffIds = filtered.Select(o => o.OrderedById).Distinct().ToList();
+        var staffProfiles = await _staffProfileRepository.ListAsync(s => staffIds.Contains(s.Id), cancellationToken);
+
+        var userIds = patientProfiles.Select(p => p.UserAccountId)
+            .Concat(staffProfiles.Select(s => s.UserAccountId))
+            .Distinct()
             .ToList();
+        var users = await _userAccountRepository.ListAsync(u => userIds.Contains(u.Id), cancellationToken);
+        var userNameById = users.ToDictionary(u => u.Id, u => u.FullName);
+
+        var patientNameByVisitId = visits.ToDictionary(
+            v => v.Id,
+            v => patientProfiles.FirstOrDefault(p => p.Id == v.PatientId) is { } profile
+                && userNameById.TryGetValue(profile.UserAccountId, out var name) ? name : null);
+
+        var orderedByNameByStaffId = staffProfiles.ToDictionary(
+            s => s.Id,
+            s => userNameById.TryGetValue(s.UserAccountId, out var name) ? name : null);
+
+        var result = filtered.Select(o =>
+        {
+            var dto = SimpleMapper.Map<LabOrder, LabOrderReadDto>(o);
+            dto.PatientName = patientNameByVisitId.TryGetValue(o.OutpatientVisitId, out var patientName) ? patientName : null;
+            dto.OrderedByName = orderedByNameByStaffId.TryGetValue(o.OrderedById, out var doctorName) ? doctorName : null;
+            return dto;
+        }).ToList();
+
         return Ok(result);
     }
 
