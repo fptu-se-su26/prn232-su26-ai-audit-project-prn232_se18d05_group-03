@@ -35,25 +35,10 @@
                         Thêm thuốc
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Nhà thuốc / Phòng khám</label>
-                        <select class="form-select" @bind="_selectedClinicId">
-                            <option value="">— Tất cả (hiển thị mọi thuốc) —</option>
-                            @foreach (var c in _clinics)
-                            {
-                                <option value="@c.Id">@c.Name</option>
-                            }
-                        </select>
-                        @if (!string.IsNullOrEmpty(_selectedClinicId))
-                        {
-                            <div class="form-text">Chỉ hiển thị thuốc còn tồn kho.</div>
-                        }
-                    </div>
-
                     <div class="mb-3 position-relative">
                         <label class="form-label">Tên thuốc</label>
-                        <input class="form-control" @bind="_search" @bind:event="oninput" placeholder="Nhập tên thuốc để tìm trong kho..." autocomplete="off" />
-                        @if (!string.IsNullOrWhiteSpace(_search) && SearchResults.Any())
+                        <input class="form-control" value="@_search" @oninput="OnSearchInput" placeholder="Nhập tên thuốc để tìm trong kho..." autocomplete="off" />
+                        @if (!string.IsNullOrWhiteSpace(_search) && _selectedDrug is null && SearchResults.Any())
                         {
                             <ul class="list-group position-absolute w-100 shadow-sm" style="z-index:20;max-height:210px;overflow-y:auto">
                                 @foreach (var d in SearchResults)
@@ -86,6 +71,16 @@
                     {
                         <div class="alert alert-danger py-2 mb-3">Thuốc này hiện đã hết kho, không thể kê đơn.</div>
                     }
+                    @if (_doseWarning is not null && _doseWarning.IsOverDose)
+                    {
+                        <div class="alert alert-danger py-2 mb-3">
+                            <span class="material-symbols-outlined" style="font-size:1.2rem">warning</span>
+                            <div>
+                                <div style="font-weight:700">Cảnh báo quá liều</div>
+                                <div>@_doseWarning.Message</div>
+                            </div>
+                        </div>
+                    }
 
                     <div class="row g-2 mb-3">
                         <div class="col-6">
@@ -100,6 +95,10 @@
                                     <option value="@r">@r</option>
                                 }
                             </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Liều lượng (số) <span class="text-muted">(tùy chọn — để kiểm tra quá liều)</span></label>
+                            <input type="number" step="0.01" min="0" class="form-control" @bind="_doseAmount" @bind:after="CheckDoseIfPossible" placeholder="VD: 500" />
                         </div>
                         <div class="col-6">
                             <label class="form-label">Tần suất</label>
@@ -133,6 +132,27 @@
                     }
                 </div>
 
+                @if (_interactionWarnings.Count > 0)
+                {
+                    <div class="alert alert-danger py-2 mb-3">
+                        <div class="d-flex align-items-center gap-1" style="font-weight:700">
+                            <span class="material-symbols-outlined" style="font-size:1.1rem">warning</span>
+                            Cảnh báo tương tác thuốc
+                        </div>
+                        @foreach (var i in _interactionWarnings)
+                        {
+                            <div style="font-size:.82rem" class="mt-1">
+                                <strong>@DrugNameById(i.DrugId)</strong> ↔ <strong>@DrugNameById(i.InteractingDrugId)</strong>
+                                @if (!string.IsNullOrEmpty(i.Severity)) { <span class="badge badge-soft-red ms-1">@i.Severity</span> }
+                                @if (!string.IsNullOrEmpty(i.Description))
+                                {
+                                    <div class="text-muted">@i.Description</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+
                 @if (_items.Count == 0)
                 {
                     <div class="d-flex flex-column align-items-center justify-content-center text-center py-5 rounded-3" style="border:1px dashed var(--color-outline-variant);color:var(--color-outline)">
@@ -164,7 +184,7 @@
                                         <td>@item.Frequency</td>
                                         <td>@(item.DurationDays)d</td>
                                         <td style="font-weight:600">@item.Quantity</td>
-                                        <td><button class="btn btn-sm btn-outline-danger py-0" @onclick="() => _items.Remove(item)">
+                                        <td><button class="btn btn-sm btn-outline-danger py-0" @onclick="() => RemoveItem(item)">
                                             <span class="material-symbols-outlined" style="font-size:.9rem">delete</span>
                                         </button></td>
                                     </tr>
@@ -186,13 +206,6 @@
                             }
                             @(_saving ? "Đang gửi..." : "Gửi đến nhà thuốc")
                         </button>
-                        @if (string.IsNullOrEmpty(_selectedClinicId))
-                        {
-                            <span class="text-muted d-flex align-items-center gap-1" style="font-size:.75rem">
-                                <span class="material-symbols-outlined" style="font-size:.9rem">info</span>
-                                Chọn nhà thuốc để định tuyến đơn thuốc.
-                            </span>
-                        }
                     </div>
                 }
             </div>
@@ -208,6 +221,7 @@
 @code {
     [Parameter] public string VisitId { get; set; } = "";
     [Parameter] public Guid DoctorId { get; set; }
+    [Parameter] public Guid? PatientId { get; set; }
     [Parameter] public string PatientName { get; set; } = "Bệnh nhân";
     [Parameter] public List<string>? KnownAllergies { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
@@ -217,12 +231,13 @@
     private static readonly string[] Routes = { "Oral", "IV", "IM", "Topical", "Sublingual", "Inhalation" };
 
     private List<DrugReadDto> _allDrugs = new();
-    private List<ClinicReadDto> _clinics = new();
-    private string _selectedClinicId = "";
     private string _search = "";
     private DrugReadDto? _selectedDrug;
     private string _dose = "";
     private string _route = "Oral";
+    private decimal? _doseAmount;
+    private DoseCheckResponseDto? _doseWarning;
+    private List<DrugInteractionReadDto> _interactionWarnings = new();
     private string _frequency = "";
     private int _durationDays = 7;
     private int _quantity = 1;
@@ -238,7 +253,6 @@
         get
         {
             var pool = _allDrugs.AsEnumerable();
-            if (!string.IsNullOrEmpty(_selectedClinicId)) pool = pool.Where(d => d.StockQuantity > 0);
             var term = _search.Trim();
             if (term.Length == 0) return Enumerable.Empty<DrugReadDto>();
             return pool.Where(d => d.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
@@ -255,22 +269,26 @@
     {
         try
         {
-            var drugsTask = Api.GetDrugs();
-            var clinicsTask = Api.GetActiveClinics();
-            _allDrugs = ((await drugsTask) ?? new()).Where(d => d.IsActive).ToList();
-            _clinics = (await clinicsTask) ?? new();
+            _allDrugs = ((await Api.GetDrugs()) ?? new()).Where(d => d.IsActive).ToList();
         }
         catch (ApiClient.ApiException ex) { _error = ex.Message; }
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        _search = e.Value?.ToString() ?? "";
+        _selectedDrug = null;
     }
 
     private void SelectDrug(DrugReadDto d)
     {
         _selectedDrug = d;
-        _search = "";
+        _search = d.Name;
         _dose = ""; _route = "Oral"; _frequency = ""; _durationDays = 7; _quantity = 1;
+        _doseAmount = null; _doseWarning = null;
     }
 
-    private void AddItem()
+    private async Task AddItem()
     {
         if (_selectedDrug is null || _selectedDrug.StockQuantity == 0) return;
         _items.Add(new ActiveItem
@@ -284,7 +302,41 @@
             Quantity = _quantity
         });
         _selectedDrug = null;
+        _doseAmount = null; _doseWarning = null;
+        await CheckInteractionsIfPossible();
     }
+
+    private async Task RemoveItem(ActiveItem item)
+    {
+        _items.Remove(item);
+        await CheckInteractionsIfPossible();
+    }
+
+    private async Task CheckInteractionsIfPossible()
+    {
+        _interactionWarnings = new();
+        if (_items.Count < 2) return;
+        try
+        {
+            var response = await Api.CheckDrugInteractions(_items.Select(i => i.DrugId).Distinct().ToList());
+            _interactionWarnings = response?.Interactions?.ToList() ?? new();
+        }
+        catch { /* cảnh báo tương tác chỉ mang tính khuyến nghị, không chặn luồng kê đơn nếu API lỗi */ }
+    }
+
+    private async Task CheckDoseIfPossible()
+    {
+        _doseWarning = null;
+        if (PatientId is null || _selectedDrug is null || _doseAmount is null) return;
+        try
+        {
+            _doseWarning = await Api.CheckDose(PatientId.Value, _selectedDrug.Id, _doseAmount);
+        }
+        catch { /* cảnh báo quá liều chỉ mang tính khuyến nghị, không chặn luồng kê đơn nếu API lỗi */ }
+    }
+
+    private string DrugNameById(Guid drugId) =>
+        _allDrugs.FirstOrDefault(d => d.Id == drugId)?.Name ?? "Thuốc không xác định";
 
     private async Task SendToPharmacy()
     {
@@ -297,13 +349,11 @@
         _saving = true; _error = null;
         try
         {
-            var clinicName = _clinics.FirstOrDefault(c => c.Id.ToString() == _selectedClinicId)?.Name;
             var prescription = await Api.CreatePrescription(new PrescriptionWriteDto
             {
                 OutpatientVisitId = visitGuid,
                 DoctorId = DoctorId,
-                IssuedAt = DateTime.UtcNow,
-                Notes = clinicName is null ? null : $"Gửi đến: {clinicName}"
+                IssuedAt = DateTime.UtcNow
             });
 
             if (prescription is not null)

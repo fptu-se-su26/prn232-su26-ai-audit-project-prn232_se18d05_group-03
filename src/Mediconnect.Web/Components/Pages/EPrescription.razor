@@ -13,7 +13,7 @@
 
 @if (_activeVisitId is not null)
 {
-    <EPrescriptionPanel VisitId="@_activeVisitId" DoctorId="@_staffProfileId!.Value" OnClose="Close" />
+    <EPrescriptionPanel VisitId="@_activeVisitId" DoctorId="@_staffProfileId!.Value" PatientId="@_activePatientId" OnClose="Close" />
 }
 else
 {
@@ -34,7 +34,7 @@ else
 
                     <label class="form-label">Visit ID</label>
                     <input class="form-control mb-3" style="font-family:monospace;font-size:.85rem" @bind="_visitInput" @bind:event="oninput"
-                           @onkeyup="@(e => { if (e.Key == "Enter") Open(); })"
+                           @onkeyup="@(async e => { if (e.Key == "Enter") await Open(); })"
                            placeholder="Dán GUID phiên khám vào đây..." />
 
                     @if (_error is not null)
@@ -85,6 +85,7 @@ else
     private string? _error;
     private string _visitInput = "";
     private string? _activeVisitId;
+    private Guid? _activePatientId;
 
     private static readonly (string Icon, string Label)[] _features =
     {
@@ -105,17 +106,25 @@ else
         finally { _loadingStaff = false; }
     }
 
-    private void Open()
+    private async Task Open()
     {
         var visit = _visitInput.Trim();
         if (string.IsNullOrEmpty(visit)) { _error = "Vui lòng nhập Visit ID."; return; }
         _error = null;
         _activeVisitId = visit;
+
+        _activePatientId = null;
+        if (Guid.TryParse(visit, out var visitGuid))
+        {
+            try { _activePatientId = (await Api.GetOutpatientVisit(visitGuid))?.PatientId; }
+            catch { /* không lấy được PatientId thì bỏ qua — chỉ mất tính năng cảnh báo quá liều, không chặn kê đơn */ }
+        }
     }
 
     private void Close()
     {
         _activeVisitId = null;
+        _activePatientId = null;
         _visitInput = "";
     }
 }

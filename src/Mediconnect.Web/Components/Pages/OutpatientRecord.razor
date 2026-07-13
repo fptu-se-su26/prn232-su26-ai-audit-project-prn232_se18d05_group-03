@@ -28,7 +28,7 @@
 
 @if (_savedVisitId is not null && _staffProfileId is not null)
 {
-    <EPrescriptionPanel VisitId="@_savedVisitId" DoctorId="@_staffProfileId.Value" PatientName="@_savedPatientName" OnClose="CloseEPrescription" />
+    <EPrescriptionPanel VisitId="@_savedVisitId" DoctorId="@_staffProfileId.Value" PatientId="@_savedPatientId" PatientName="@_savedPatientName" OnClose="CloseEPrescription" />
 }
 
 <div class="row g-4">
@@ -262,6 +262,7 @@
     private string? _message;
     private bool _messageIsError;
     private string? _savedVisitId;
+    private Guid? _savedPatientId;
     private string _savedPatientName = "";
 
     private int WaitingCount => _queue?.Tickets.Count(t => t.Status == QueueStatus.Waiting) ?? 0;
@@ -449,6 +450,7 @@
             _message = "Đã lưu hồ sơ khám cho bệnh nhân.";
             _messageIsError = false;
             _savedVisitId = dto.VisitId.ToString();
+            _savedPatientId = _selectedTicket.PatientId;
             _savedPatientName = _selectedTicket.PatientName ?? "Bệnh nhân";
 
             if (_clinicId is { } cid) await LoadQueue(cid);
@@ -466,6 +468,7 @@
     private void CloseEPrescription()
     {
         _savedVisitId = null;
+        _savedPatientId = null;
         _savedPatientName = "";
     }
 

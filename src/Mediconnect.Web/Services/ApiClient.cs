@@ -251,9 +251,9 @@ public class ApiClient
         SendAsync<List<ClinicQueueSummaryDto>>(HttpMethod.Get, "api/clinic-dashboard/overview");
     public Task<ClinicQueueDto?> GetClinicQueue(Guid clinicId) =>
         SendAsync<ClinicQueueDto>(HttpMethod.Get, $"api/clinic-dashboard/clinics/{clinicId}/queue");
-    public Task<QueueTicketDetailDto?> CheckIn(Guid clinicId, Guid? appointmentId, string? patientName) =>
+    public Task<QueueTicketDetailDto?> CheckIn(Guid clinicId, Guid? appointmentId, string? patientName, string? patientEmail = null, string? patientPhone = null) =>
         SendAsync<QueueTicketDetailDto>(HttpMethod.Post, "api/clinic-dashboard/check-in",
-            new WalkInCheckInRequestDto { ClinicId = clinicId, AppointmentId = appointmentId, PatientName = patientName });
+            new WalkInCheckInRequestDto { ClinicId = clinicId, AppointmentId = appointmentId, PatientName = patientName, PatientEmail = patientEmail, PatientPhone = patientPhone });
     // The call-next endpoint returns either the raw ticket (patient found) or { message, ticket: null } (queue empty) —
     // this merged shape lets us tell the two apart without guessing at JSON structure.
     public Task<CallNextResultDto?> CallNext(Guid clinicId) =>
@@ -268,6 +268,7 @@ public class ApiClient
 
     // ---- Outpatient visits & medical records ----
     public Task<OutpatientVisitReadDto?> CreateOutpatientVisit(OutpatientVisitWriteDto dto) => SendAsync<OutpatientVisitReadDto>(HttpMethod.Post, "api/outpatientvisits", dto);
+    public Task<OutpatientVisitReadDto?> GetOutpatientVisit(Guid id) => SendAsync<OutpatientVisitReadDto>(HttpMethod.Get, $"api/outpatientvisits/{id}");
     public Task Diagnose(MedicalRecordDtos dto) => SendAsync(HttpMethod.Post, "api/medical-records/diagnose", dto);
     public Task<List<ICD10ResultDto>?> SearchIcd10(string query) => SendAsync<List<ICD10ResultDto>>(HttpMethod.Get, "api/medical-records/icd10/search" + Q(("query", query)));
     public Task<List<PatientDiagnosisHistoryDto>?> GetDiagnosisHistory(Guid patientId) => SendAsync<List<PatientDiagnosisHistoryDto>>(HttpMethod.Get, $"api/medical-records/patients/{patientId}/diagnosis-history");
