@@ -1461,6 +1461,147 @@ stack trace thật (thay vì đoán qua UI) giúp xác định đúng gốc rễ
 
 ---
 
+### Lần sử dụng AI số 18
+
+| Nội dung            | Thông tin                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Ngày sử dụng        | 12/07/2026 – 13/07/2026                                                             |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                       |
+| Mục đích sử dụng    | Kiểm thử trực tiếp luồng nghiệp vụ khám vãng lai/kê đơn/CDSS + sửa các lỗi phát hiện qua test thực tế trên trình duyệt |
+| Phần việc liên quan | Backend (QueueService, Controllers) / Frontend (Blazor) / Database (seed data, migration) / Git workflow |
+| Mức độ sử dụng      | Viết code toàn bộ + tự phát hiện & fix bug qua test thực tế, không chỉ đọc code tĩnh |
+
+#### 18.1. Prompt đã sử dụng
+
+```text
+hãy thử thêm 1 bệnh nhân vãng lai vào hàng đợi, tiếp nhận họ và ghi đơn thuốc, chẩn đoán
+theo như nghiệp vụ thông thường sau đó kiểm tra xem có vấn đề gì với data
+đề xuất luôn hướng fix cho 2 lỗi này
+giờ giả sử tôi muốn làm theo kiểu mỗi lần thêm khách vãng lai là giống như bác sĩ sẽ tạo
+thủ công patient
+tôi muốn tránh việc phải chỉnh sửa vào module mà tôi không làm; hãy giải thích nếu điều đó
+cần thiết
+chốt lại kế hoạch với sửa service — lưu ý: queue không phải tôi viết tôi không kiểm tra
+được, chỉ viết thêm vào không thay thế
+cập nhật file sql mới đó vào db, xóa hết data cũ (vì bản của tôi outdated)
+thêm những seed mà tôi cần trực tiếp vào file sql đó, sau đó chạy lại db
+tôi bị lỗi 500 khi tạo hồ sơ
+tôi không nhập được tên thuốc / không click/focus vào ô được
+gửi đến nhà thuốc là gửi đi đâu
+plan: thêm liên kết Pharmacy thật (nếu có luồng trong hệ thống) thay vì ghi note tên clinic
+chức năng viện phí nó đang tính bill theo db bảng nào
+ví dụ tôi gọi api cho mã icd thì cái drug này có gọi api không? chứ không thêm vào db
+Bỏ dropdown đi
+đơn thuốc sẽ được chuyển qua cho admin -> tính năng test cảnh báo tương tác thuốc
+hãy tiến hành flow bệnh nhân đặt lịch hẹn -> bác sĩ hoàn thành chẩn đoán và đơn thuốc để
+tôi xem dữ liệu nó có về hồ sơ sức khỏe điện tử khồng, sử dụng tài khoản demo cho sẵn
+cập nhật doc và commit
+```
+
+#### 18.2. Kết quả AI gợi ý
+
+```text
+1. Test trực tiếp luồng vãng lai (Browser pane) và phát hiện bệnh nhân hiển thị "Bệnh nhân
+   vãng lai" xuyên suốt hàng đợi thay vì tên thật — nguyên nhân: QueueTicket không có cột
+   lưu tên, và GetClinicQueueAsync/CallNextAsync/TransferTicketAsync/GetAllClinicsQueue-
+   SummaryAsync chỉ resolve tên qua AppointmentId (walk-in không có). Đồng thời phát hiện
+   Submit() chặn hẳn việc lưu bệnh án cho vãng lai vì OutpatientVisit.PatientId là FK bắt
+   buộc nhưng walk-in chưa từng có PatientProfile.
+2. Theo đúng ràng buộc "chỉ thêm không thay thế" của người dùng: thêm PatientId/PatientName
+   snapshot vào QueueTicket (migration mới, nullable); walk-in check-in giờ tạo thật
+   UserAccount (Email/SĐT do lễ tân nhập, không phải giả) + PatientProfile qua đúng
+   ICrudService/IRepository đã inject sẵn trong QueueService — không đổi constructor thêm
+   dependency mới, không sửa nhánh appointment cũ; 4 hàm đọc dữ liệu được thêm helper
+   fallback (đọc snapshot trước, fallback về logic AppointmentId cũ nếu không có) thay vì
+   viết đè logic gốc.
+3. Test lại → lộ thêm bug thứ 2: lưu chẩn đoán lần đầu cho bất kỳ bệnh nhân nào (kể cả có
+   lịch hẹn) đều 500 vì OutpatientRecordController.SaveDiagnosis không try/catch
+   InvalidOperationException("Outpatient visit not found") — trong khi fallback tự tạo visit
+   mới đã được viết sẵn ở frontend nhưng chưa bao giờ có cơ hội chạy. Fix bằng try/catch
+   giống pattern ClinicDashboardController đã dùng.
+4. Theo yêu cầu cập nhật seed_hospital.sql: rà thấy script DELETE 26 bảng nhưng chỉ INSERT
+   lại 6 bảng — MedicalServices và Drugs bị xoá và không bao giờ được điền lại, khiến tính
+   năng quản lý dịch vụ/kê đơn không có dữ liệu test dù code đã hoàn chỉnh. Bổ sung 16 dịch
+   vụ (đủ 12 khoa) + 14 thuốc (có vài thuốc trùng tên danh sách dị ứng demo để test cảnh
+   báo). Sau khi chạy, phát hiện sqlcmd đọc sai encoding UTF-8 không BOM làm hỏng dấu tiếng
+   Việt trong toàn bộ dữ liệu vừa seed — fix bằng cách convert file sang UTF-16LE+BOM
+   (iconv) trước khi chạy lại, xác nhận qua browser (không qua terminal vì terminal cũng bị
+   lỗi hiển thị encoding riêng, dễ nhầm lẫn với lỗi DB thật).
+5. Người dùng bỏ dropdown "Nhà thuốc/Phòng khám" trong E-Prescription sau khi được chỉ ra
+   đây là filter giả (không lọc theo địa điểm thật, Drug.StockQuantity là tồn kho chung
+   toàn viện) — xoá toàn bộ state/logic liên quan, không còn ghi tên phòng khám vào
+   Prescription.Notes.
+6. Qua test thao tác thật (không phải đọc code): phát hiện chọn thuốc gợi ý trong ô "Tên
+   thuốc" làm ô bị xoá trắng thay vì điền tên thuốc đã chọn — do SelectDrug() set _search
+   rỗng thay vì tên thuốc. Fix + đổi sang pattern value+@oninput (giống ô tìm ICD-10 đã có)
+   để dropdown tự đóng đúng lúc.
+7. Theo yêu cầu tích hợp CDSS thật vào lúc kê đơn (thay vì chỉ để Admin duyệt riêng): nối
+   2 API cảnh báo tương tác thuốc + quá liều đã viết sẵn nhưng trước đó chỉ được gọi từ
+   trang Admin riêng biệt (chưa từng nối vào luồng kê đơn thật) — thêm PatientId parameter
+   xuyên suốt EPrescriptionPanel + 2 trang gọi nó, thêm 1 API GetOutpatientVisit còn thiếu
+   ở client. Verify sống: nhập liều 5000 cho Paracetamol (ngưỡng seed 4000) → cảnh báo quá
+   liều hiện đúng message tính từ server.
+8. Chạy full flow thật theo tài khoản demo: bệnh nhân đặt lịch → bác sĩ tiếp nhận theo lịch
+   hẹn → chẩn đoán → kê đơn → đăng nhập lại bằng tài khoản bệnh nhân xem Hồ sơ Sức khỏe
+   Điện tử — xác nhận dữ liệu khớp 100% (lý do khám, ICD-10, bác sĩ, phòng khám, chi tiết
+   đơn thuốc). Qua bước này lộ thêm bug thứ 3: ngày trong tab "Lịch sử khám" lệch 1 ngày so
+   với ngày trong tab "Đơn thuốc" của cùng 1 lượt khám — do FmtDate(DateTime) thiếu
+   .ToLocalTime() trong khi FmtDateTime có, chỉ lộ ra khi lượt khám diễn ra sau 17:00 giờ
+   VN (UTC vẫn còn ngày hôm trước). Fix 1 dòng.
+```
+
+#### 18.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ các fix trên sau khi xác nhận `dotnet build` sạch (0 Warning/0 Error) và
+test trực tiếp qua Browser pane ở mỗi bước (không chỉ tin vào code compile được); áp dụng
+migration EF Core mới và seed_hospital.sql đã sửa vào database dev thật sau khi xác nhận là
+thay đổi additive, không phá dữ liệu hiện có ngoài phạm vi đã báo trước.
+```
+
+#### 18.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Chủ động đặt ràng buộc "chỉ thêm code mới, không viết lại logic có sẵn" cho mọi thay đổi
+  trong QueueService.cs (module không tự viết, không tự kiểm chứng được đúng/sai) trước khi
+  cho phép AI sửa — giữ nguyên hành vi mọi ticket có AppointmentId, chỉ thêm nhánh xử lý mới
+  cho ticket vãng lai.
+- Quyết định bỏ hẳn dropdown "Nhà thuốc" giả thay vì giữ lại cho đủ UI, và chọn hướng tích
+  hợp CDSS thật vào luồng kê đơn thay vì chỉ route dữ liệu qua Admin duyệt riêng — thay đổi
+  hướng đi so với đề xuất ban đầu của AI sau khi hỏi rõ ý nghĩa "route đến admin".
+- Từ chối yêu cầu AI tự seed thêm dữ liệu DrugInteractions mẫu, chấp nhận tính năng cảnh báo
+  tương tác thuốc hoạt động đúng logic nhưng chưa có dữ liệu để demo trực quan.
+- Tự yêu cầu AI giải thích nguyên nhân lỗi 500 "theo dạng nghiệp vụ" thay vì chỉ đọc stack
+  trace kỹ thuật, để hiểu đúng bản chất trước khi đồng ý cho sửa.
+```
+
+#### 18.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Link commit       | 49a2141 (queue walk-in), 51ce622 (fix 500 outpatient), e26abc2 (seed data), e664d5d (prescription CDSS), b0627a5 (fix PHR timezone) trên branch `claude/de190123-integration-audit-e5ce7f` |
+| File liên quan    | `QueueTicket.cs`, `QueueService.cs`, `SmartQueueDtos.cs`, `ClinicDashboard.razor`, migration `AddQueueTicketPatientSnapshot`; `OutpatientRecordController.cs`; `docs/seed_hospital.sql`; `EPrescriptionPanel.razor`, `OutpatientRecord.razor`, `EPrescription.razor`, `ApiClient.cs`; `PHR.razor` |
+| Screenshot        |                                                                                                |
+| Kết quả chạy/test | `dotnet build` từng project: 0 Warning/0 Error sau mỗi bước; test sống qua Browser pane: check-in vãng lai → tên hiển thị đúng ở mọi màn hình → lưu chẩn đoán thành công → kê đơn thành công → dose-check cảnh báo đúng ngưỡng; full flow đặt lịch → khám → kê đơn → PHR khớp 100% dữ liệu |
+| Link video demo   |                                                                                                |
+| Ghi chú khác      | Docs (AI_AUDIT_LOG/CHANGELOG) được cập nhật ngay trong phiên này theo yêu cầu, trước khi commit |
+
+#### 18.6. Nhận xét cá nhân/nhóm
+
+```text
+Phần lớn lỗi phát hiện được trong phiên này không nằm ở logic nghiệp vụ sai, mà ở khoảng
+trống giữa các module do nhiều người viết riêng lẻ ghép lại: QueueTicket không có cột lưu
+tên khách vãng lai, 2 API CDSS đã viết xong từ trước nhưng chưa từng được nối vào luồng kê
+đơn thật, seed data thiếu hẳn 2 bảng vì mỗi module tự bổ sung seed cho phần của mình mà
+không ai seed chung. Kiểm thử bằng cách chạy đúng luồng nghiệp vụ thật (đặt lịch → khám →
+kê đơn → xem lại hồ sơ bằng tài khoản bệnh nhân) hiệu quả hơn hẳn so với chỉ đọc code tĩnh —
+phát hiện được cả bug lệch ngày UTC/local mà review code khó nhận ra ngay vì cả 2 dòng code
+đều "trông đúng" nếu đọc riêng lẻ, chỉ lộ ra khi so sánh 2 màn hình cạnh nhau bằng dữ liệu
+thật.
+```
+
+---
+
 ## 10. Cam kết học thuật
 
 Sinh viên/nhóm cam kết rằng:

@@ -748,6 +748,11 @@ Viết tại đây...
 | 22 | Screen 4.1 (TV4) – User Management Console (đổi role, khóa/mở khóa, CRUD tài khoản) | Completed | `UserManagementPage.tsx` | DE180522 |
 | 23 | Screen 2.2 (TV4-F2) – Banner cảnh báo quá liều (dose-check theo cân nặng, banner đỏ nhấp nháy) | Completed | `CdssController.DoseCheck`, `DrugInteractionPage.tsx` (tab "Cảnh báo quá liều") | DE180522 |
 | 24 | Screen 4.2 (TV4-F4) – Cấu hình & bảo mật OTP (chính sách OTP + issue/verify kích hoạt tài khoản) | Completed | `OtpController.cs`, `OtpSecurityPage.tsx` | DE180522 – gửi Email/SMS mô phỏng |
+| 25 | Walk-in check-in tạo tài khoản Patient thật (Email/SĐT thật do lễ tân nhập) thay vì chỉ ghi note tên; `QueueTicket` lưu snapshot `PatientId`/`PatientName` để hiển thị đúng tên xuyên suốt hàng đợi (trước đó hiện "Bệnh nhân vãng lai" ở mọi nơi sau khi check-in) | Completed | `QueueTicket.cs`, `QueueService.cs`, `SmartQueueDtos.cs`, `ClinicDashboard.razor`, migration `AddQueueTicketPatientSnapshot` | DE190123 |
+| 26 | Fix lỗi 500 khi bác sĩ lưu chẩn đoán lần đầu cho bất kỳ bệnh nhân nào (thiếu try/catch bọc `InvalidOperationException`, chặn cơ chế tự tạo hồ sơ khám đã viết sẵn ở phía frontend) | Completed | `OutpatientRecordController.cs` | DE190123 |
+| 27 | Bổ sung seed `MedicalServices` (16 dịch vụ) và `Drugs` (14 thuốc) — 2 bảng bị `DELETE` trong `seed_hospital.sql` nhưng chưa từng được `INSERT` lại, khiến ManageServices/E-Prescription trống dữ liệu | Completed | `docs/seed_hospital.sql` | DE190123 |
+| 28 | E-Prescription: bỏ dropdown "Nhà thuốc" không lọc thật theo địa điểm; fix bug chọn thuốc gợi ý không điền tên vào ô tìm kiếm; tích hợp CDSS cảnh báo tương tác thuốc + quá liều ngay lúc kê đơn (2 API đã có sẵn nhưng trước đó chỉ dùng ở trang Admin riêng biệt) | Completed | `EPrescriptionPanel.razor`, `OutpatientRecord.razor`, `EPrescription.razor`, `ApiClient.cs` | DE190123 |
+| 29 | Fix lệch ngày hiển thị (UTC vs local) ở Hồ sơ Sức khỏe Điện tử — tab "Lịch sử khám" thiếu `.ToLocalTime()` nên lùi 1 ngày với mọi lượt khám sau 17:00 giờ VN | Completed | `PHR.razor` | DE190123 |
 
 ---
 
