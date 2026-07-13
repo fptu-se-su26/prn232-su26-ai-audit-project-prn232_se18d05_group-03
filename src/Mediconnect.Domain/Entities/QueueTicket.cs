@@ -24,4 +24,13 @@ public class QueueTicket
     public DateTime IssuedAt { get; set; } = DateTime.UtcNow;
 
     public QueueStatus Status { get; set; } = QueueStatus.Waiting;
+
+    /// <summary>Bệnh nhân gắn với vé (kể cả vãng lai, được resolve/tạo lúc check-in).</summary>
+    public Guid? PatientId { get; set; }
+
+    [ForeignKey(nameof(PatientId))]
+    public PatientProfile? Patient { get; set; }
+
+    /// <summary>Snapshot tên bệnh nhân tại thời điểm check-in — tránh phải resolve lại qua Appointment.</summary>
+    public string? PatientName { get; set; }
 }

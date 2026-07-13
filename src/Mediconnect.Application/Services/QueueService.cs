@@ -11,19 +11,22 @@ public class QueueService : IQueueService
     private readonly IRepository<Appointment> _appointmentRepository;
     private readonly IRepository<PatientProfile> _patientProfileRepository;
     private readonly IRepository<UserAccount> _userAccountRepository;
+    private readonly IPasswordHasher _passwordHasher;
 
     public QueueService(
         IRepository<QueueTicket> ticketRepository,
         IRepository<Clinic> clinicRepository,
         IRepository<Appointment> appointmentRepository,
         IRepository<PatientProfile> patientProfileRepository,
-        IRepository<UserAccount> userAccountRepository)
+        IRepository<UserAccount> userAccountRepository,
+        IPasswordHasher passwordHasher)
     {
         _ticketRepository = ticketRepository;
         _clinicRepository = clinicRepository;
         _appointmentRepository = appointmentRepository;
         _patientProfileRepository = patientProfileRepository;
         _userAccountRepository = userAccountRepository;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<QueueTicketDetailDto> CheckInAsync(CheckInRequestDto dto, CancellationToken cancellationToken = default)
@@ -59,6 +62,19 @@ public class QueueService : IQueueService
             ? await ResolvePatientIdAsync(dto.AppointmentId, cancellationToken)
             : null;
 
+        // Vãng lai có tên + email: tạo (hoặc tái sử dụng) tài khoản Patient thật, y hệt cách
+        // Admin tạo user thủ công, để có PatientId hợp lệ cho toàn bộ luồng khám/kê đơn phía sau.
+        if (!dto.AppointmentId.HasValue && !string.IsNullOrWhiteSpace(dto.PatientName) && !string.IsNullOrWhiteSpace(dto.PatientEmail))
+        {
+            var profile = await GetOrCreateWalkInPatientProfileAsync(dto.PatientName, dto.PatientEmail, dto.PatientPhone, cancellationToken);
+            patientId = profile.Id;
+
+            ticket.PatientId = profile.Id;
+            ticket.PatientName = dto.PatientName;
+            _ticketRepository.Update(ticket);
+            await _ticketRepository.SaveChangesAsync(cancellationToken);
+        }
+
         return MapToDetail(ticket, clinic, patientId, patientName);
     }
 
@@ -78,7 +94,7 @@ public class QueueService : IQueueService
         var sorted = activeTickets.OrderBy(t => t.Number).ToList();
         var inProgress = sorted.FirstOrDefault(t => t.Status == QueueStatus.InProgress);
 
-        // Batch-resolve patient names
+        // Batch-resolve patient names (đã bao gồm fallback cho ticket vãng lai có PatientName snapshot)
         var nameMap = await BuildPatientNameMapAsync(sorted, cancellationToken);
         var patientIdMap = await BuildPatientIdMapAsync(sorted, cancellationToken);
 
@@ -135,8 +151,8 @@ public class QueueService : IQueueService
         _ticketRepository.Update(next);
         await _ticketRepository.SaveChangesAsync(cancellationToken);
 
-        var patientName = await ResolvePatientNameAsync(next.AppointmentId, cancellationToken);
-        var patientId = await ResolvePatientIdAsync(next.AppointmentId, cancellationToken);
+        var patientName = await ResolveNameWithWalkInFallback(next, cancellationToken);
+        var patientId = await ResolveIdWithWalkInFallback(next, cancellationToken);
 
         return MapToDetail(next, clinic, patientId, patientName);
     }
@@ -158,8 +174,8 @@ public class QueueService : IQueueService
 
             var inProgress = activeTickets.FirstOrDefault(t => t.Status == QueueStatus.InProgress);
             string? currentPatientName = null;
-            if (inProgress?.AppointmentId is not null)
-                currentPatientName = await ResolvePatientNameAsync(inProgress.AppointmentId, cancellationToken);
+            if (inProgress is not null)
+                currentPatientName = await ResolveNameWithWalkInFallback(inProgress, cancellationToken);
 
             result.Add(new ClinicQueueSummaryDto
             {
@@ -201,8 +217,8 @@ public class QueueService : IQueueService
         _ticketRepository.Update(ticket);
         await _ticketRepository.SaveChangesAsync(cancellationToken);
 
-        var patientName = await ResolvePatientNameAsync(ticket.AppointmentId, cancellationToken);
-        var patientId = await ResolvePatientIdAsync(ticket.AppointmentId, cancellationToken);
+        var patientName = await ResolveNameWithWalkInFallback(ticket, cancellationToken);
+        var patientId = await ResolveIdWithWalkInFallback(ticket, cancellationToken);
 
         return MapToDetail(ticket, targetClinic, patientId, patientName);
     }
@@ -233,6 +249,62 @@ public class QueueService : IQueueService
         return ticket;
     }
 
+    /// <summary>
+    /// Tạo tài khoản Patient + PatientProfile cho khách vãng lai (giống Admin tạo user thủ công),
+    /// hoặc tái sử dụng tài khoản đã có nếu email trùng với bệnh nhân từng đăng ký/khám trước đó.
+    /// </summary>
+    private async Task<PatientProfile> GetOrCreateWalkInPatientProfileAsync(
+        string patientName, string patientEmail, string? patientPhone, CancellationToken cancellationToken)
+    {
+        var existingUser = await _userAccountRepository.FirstOrDefaultAsync(u => u.Email == patientEmail, cancellationToken);
+
+        UserAccount user;
+        if (existingUser is not null)
+        {
+            user = existingUser;
+        }
+        else
+        {
+            user = new UserAccount
+            {
+                Id = Guid.NewGuid(),
+                FullName = patientName,
+                Email = patientEmail,
+                PhoneNumber = patientPhone,
+                Role = UserRole.Patient,
+                IsActive = true,
+                PasswordHash = _passwordHasher.Hash(Guid.NewGuid().ToString("N"))
+            };
+            await _userAccountRepository.AddAsync(user, cancellationToken);
+            await _userAccountRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        var existingProfile = await _patientProfileRepository.FirstOrDefaultAsync(p => p.UserAccountId == user.Id, cancellationToken);
+        if (existingProfile is not null)
+        {
+            return existingProfile;
+        }
+
+        var profile = new PatientProfile
+        {
+            Id = Guid.NewGuid(),
+            UserAccountId = user.Id
+        };
+        await _patientProfileRepository.AddAsync(profile, cancellationToken);
+        await _patientProfileRepository.SaveChangesAsync(cancellationToken);
+        return profile;
+    }
+
+    /// <summary>Ưu tiên đọc tên đã snapshot trên ticket (vãng lai); fallback resolve qua Appointment như cũ.</summary>
+    private async Task<string?> ResolveNameWithWalkInFallback(QueueTicket ticket, CancellationToken cancellationToken) =>
+        !string.IsNullOrEmpty(ticket.PatientName)
+            ? ticket.PatientName
+            : await ResolvePatientNameAsync(ticket.AppointmentId, cancellationToken);
+
+    /// <summary>Ưu tiên đọc PatientId đã lưu trên ticket (vãng lai); fallback resolve qua Appointment như cũ.</summary>
+    private async Task<Guid?> ResolveIdWithWalkInFallback(QueueTicket ticket, CancellationToken cancellationToken) =>
+        ticket.PatientId ?? await ResolvePatientIdAsync(ticket.AppointmentId, cancellationToken);
+
     private async Task<string?> ResolvePatientNameAsync(Guid? appointmentId, CancellationToken cancellationToken)
     {
         if (!appointmentId.HasValue) return null;
@@ -260,13 +332,20 @@ public class QueueService : IQueueService
         CancellationToken cancellationToken)
     {
         var result = new Dictionary<Guid, string?>();
-        var appointmentIds = tickets
+        var ticketList = tickets.ToList();
+        var appointmentIds = ticketList
             .Where(t => t.AppointmentId.HasValue)
             .Select(t => t.AppointmentId!.Value)
             .Distinct()
             .ToList();
 
-        if (appointmentIds.Count == 0) return result;
+        if (appointmentIds.Count == 0)
+        {
+            // Không có ticket nào gắn appointment — vẫn cần điền tên vãng lai đã snapshot trên ticket.
+            foreach (var t in ticketList)
+                result[t.Id] = t.PatientName;
+            return result;
+        }
 
         var appointments = await _appointmentRepository.ListAsync(
             a => appointmentIds.Contains(a.Id), cancellationToken);
@@ -283,11 +362,12 @@ public class QueueService : IQueueService
         var userByAccountId = users.ToDictionary(u => u.Id);
         var appointmentById = appointments.ToDictionary(a => a.Id);
 
-        foreach (var ticket in tickets)
+        foreach (var ticket in ticketList)
         {
             if (!ticket.AppointmentId.HasValue)
             {
-                result[ticket.Id] = null;
+                // Vãng lai: dùng tên đã snapshot trên ticket lúc check-in (nếu có).
+                result[ticket.Id] = ticket.PatientName;
                 continue;
             }
             if (!appointmentById.TryGetValue(ticket.AppointmentId.Value, out var appt))
@@ -311,23 +391,34 @@ public class QueueService : IQueueService
         CancellationToken cancellationToken)
     {
         var result = new Dictionary<Guid, Guid>();
-        var appointmentIds = tickets
+        var ticketList = tickets.ToList();
+        var appointmentIds = ticketList
             .Where(t => t.AppointmentId.HasValue)
             .Select(t => t.AppointmentId!.Value)
             .Distinct()
             .ToList();
 
-        if (appointmentIds.Count == 0) return result;
+        if (appointmentIds.Count == 0)
+        {
+            // Không có ticket nào gắn appointment — vẫn cần điền PatientId vãng lai đã lưu trên ticket.
+            foreach (var t in ticketList)
+            {
+                if (t.PatientId.HasValue) result[t.Id] = t.PatientId.Value;
+            }
+            return result;
+        }
 
         var appointments = await _appointmentRepository.ListAsync(
             a => appointmentIds.Contains(a.Id), cancellationToken);
 
         var appointmentById = appointments.ToDictionary(a => a.Id);
 
-        foreach (var ticket in tickets)
+        foreach (var ticket in ticketList)
         {
             if (ticket.AppointmentId.HasValue && appointmentById.TryGetValue(ticket.AppointmentId.Value, out var appt))
                 result[ticket.Id] = appt.PatientId;
+            else if (ticket.PatientId.HasValue)
+                result[ticket.Id] = ticket.PatientId.Value;
         }
 
         return result;
