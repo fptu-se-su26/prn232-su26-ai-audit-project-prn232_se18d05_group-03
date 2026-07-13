@@ -20,8 +20,15 @@ public class OutpatientRecordController : ControllerBase
     [HttpPost("diagnose")]
     public async Task<IActionResult> SaveDiagnosis([FromBody] MedicalRecordDtos dto, CancellationToken cancellationToken)
     {
-        await _medicalRecordService.SaveMedicalRecordAsync(dto, cancellationToken);
-        return Ok(new { message = "Lưu bệnh án thành công" });
+        try
+        {
+            await _medicalRecordService.SaveMedicalRecordAsync(dto, cancellationToken);
+            return Ok(new { message = "Lưu bệnh án thành công" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("icd10/search")]
