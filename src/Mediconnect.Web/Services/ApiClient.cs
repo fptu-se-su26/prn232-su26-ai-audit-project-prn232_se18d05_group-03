@@ -123,6 +123,27 @@ public class ApiClient
     // ---- appointments (patient) ----
     public Task<List<AppointmentReadDto>?> GetAppointments() => SendAsync<List<AppointmentReadDto>>(HttpMethod.Get, "api/appointments");
     public Task<AppointmentReadDto?> CreateAppointment(AppointmentWriteDto dto) => SendAsync<AppointmentReadDto>(HttpMethod.Post, "api/appointments", dto);
+    public Task<AppointmentReadDto?> GetAppointment(Guid id) => SendAsync<AppointmentReadDto>(HttpMethod.Get, $"api/appointments/{id}");
+    public Task UpdateAppointmentStatus(Guid id, AppointmentStatus status) => SendAsync(HttpMethod.Patch, $"api/appointments/{id}/status", new { status });
+
+    // ---- telemedicine ----
+    public Task<TelemedicineSessionReadDto?> CreateTelemedicineSession(TelemedicineSessionWriteDto dto) => SendAsync<TelemedicineSessionReadDto>(HttpMethod.Post, "api/telemedicinesessions", dto);
+    public Task<TelemedicineSessionReadDto?> GetTelemedicineSession(Guid id) => SendAsync<TelemedicineSessionReadDto>(HttpMethod.Get, $"api/telemedicinesessions/{id}");
+    public Task UpdateTelemedicineSession(Guid id, TelemedicineSessionWriteDto dto) => SendAsync(HttpMethod.Put, $"api/telemedicinesessions/{id}", dto);
+    public Task StartTelemedicineSession(Guid id) => SendAsync(HttpMethod.Patch, $"api/telemedicinesessions/{id}/start");
+    public Task EndTelemedicineSession(Guid id) => SendAsync(HttpMethod.Patch, $"api/telemedicinesessions/{id}/end");
+
+    // GetAll has no server-side filter (base CrudController.GetAll takes no query params), so this
+    // filters client-side. "Pending" = created but not yet started — StartedAt is only set once the
+    // callee (2nd participant) joins the hub room, so this is the window where a patient should see
+    // an incoming-call prompt.
+    public async Task<TelemedicineSessionReadDto?> GetPendingCallForPatient(Guid patientId)
+    {
+        var all = await SendAsync<List<TelemedicineSessionReadDto>>(HttpMethod.Get, "api/telemedicinesessions") ?? new();
+        return all.FirstOrDefault(s => s.PatientId == patientId && s.StartedAt is null && s.EndedAt is null);
+    }
+
+    public Task CompleteOutpatientVisit(Guid visitId) => SendAsync(HttpMethod.Patch, $"api/outpatientvisits/{visitId}/status", new { status = VisitStatus.Completed });
 
     // ---- service ratings (patient) ----
     public Task<List<ServiceRatingReadDto>?> GetServiceRatings() => SendAsync<List<ServiceRatingReadDto>>(HttpMethod.Get, "api/serviceratings");
@@ -251,9 +272,9 @@ public class ApiClient
         SendAsync<List<ClinicQueueSummaryDto>>(HttpMethod.Get, "api/clinic-dashboard/overview");
     public Task<ClinicQueueDto?> GetClinicQueue(Guid clinicId) =>
         SendAsync<ClinicQueueDto>(HttpMethod.Get, $"api/clinic-dashboard/clinics/{clinicId}/queue");
-    public Task<QueueTicketDetailDto?> CheckIn(Guid clinicId, Guid? appointmentId, string? patientName) =>
+    public Task<QueueTicketDetailDto?> CheckIn(Guid clinicId, Guid? appointmentId, string? patientName, string? patientEmail = null, string? patientPhone = null) =>
         SendAsync<QueueTicketDetailDto>(HttpMethod.Post, "api/clinic-dashboard/check-in",
-            new WalkInCheckInRequestDto { ClinicId = clinicId, AppointmentId = appointmentId, PatientName = patientName });
+            new WalkInCheckInRequestDto { ClinicId = clinicId, AppointmentId = appointmentId, PatientName = patientName, PatientEmail = patientEmail, PatientPhone = patientPhone });
     // The call-next endpoint returns either the raw ticket (patient found) or { message, ticket: null } (queue empty) —
     // this merged shape lets us tell the two apart without guessing at JSON structure.
     public Task<CallNextResultDto?> CallNext(Guid clinicId) =>
@@ -268,6 +289,7 @@ public class ApiClient
 
     // ---- Outpatient visits & medical records ----
     public Task<OutpatientVisitReadDto?> CreateOutpatientVisit(OutpatientVisitWriteDto dto) => SendAsync<OutpatientVisitReadDto>(HttpMethod.Post, "api/outpatientvisits", dto);
+    public Task<OutpatientVisitReadDto?> GetOutpatientVisit(Guid id) => SendAsync<OutpatientVisitReadDto>(HttpMethod.Get, $"api/outpatientvisits/{id}");
     public Task Diagnose(MedicalRecordDtos dto) => SendAsync(HttpMethod.Post, "api/medical-records/diagnose", dto);
     public Task<List<ICD10ResultDto>?> SearchIcd10(string query) => SendAsync<List<ICD10ResultDto>>(HttpMethod.Get, "api/medical-records/icd10/search" + Q(("query", query)));
     public Task<List<PatientDiagnosisHistoryDto>?> GetDiagnosisHistory(Guid patientId) => SendAsync<List<PatientDiagnosisHistoryDto>>(HttpMethod.Get, $"api/medical-records/patients/{patientId}/diagnosis-history");

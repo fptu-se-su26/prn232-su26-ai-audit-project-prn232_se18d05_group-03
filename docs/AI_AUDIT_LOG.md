@@ -1461,6 +1461,446 @@ stack trace thật (thay vì đoán qua UI) giúp xác định đúng gốc rễ
 
 ---
 
+### Lần sử dụng AI số 18
+
+| Nội dung            | Thông tin                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Ngày sử dụng        | 12/07/2026 – 13/07/2026                                                             |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                       |
+| Mục đích sử dụng    | Kiểm thử trực tiếp luồng nghiệp vụ khám vãng lai/kê đơn/CDSS + sửa các lỗi phát hiện qua test thực tế trên trình duyệt |
+| Phần việc liên quan | Backend (QueueService, Controllers) / Frontend (Blazor) / Database (seed data, migration) / Git workflow |
+| Mức độ sử dụng      | Viết code toàn bộ + tự phát hiện & fix bug qua test thực tế, không chỉ đọc code tĩnh |
+
+#### 18.1. Prompt đã sử dụng
+
+```text
+hãy thử thêm 1 bệnh nhân vãng lai vào hàng đợi, tiếp nhận họ và ghi đơn thuốc, chẩn đoán
+theo như nghiệp vụ thông thường sau đó kiểm tra xem có vấn đề gì với data
+đề xuất luôn hướng fix cho 2 lỗi này
+giờ giả sử tôi muốn làm theo kiểu mỗi lần thêm khách vãng lai là giống như bác sĩ sẽ tạo
+thủ công patient
+tôi muốn tránh việc phải chỉnh sửa vào module mà tôi không làm; hãy giải thích nếu điều đó
+cần thiết
+chốt lại kế hoạch với sửa service — lưu ý: queue không phải tôi viết tôi không kiểm tra
+được, chỉ viết thêm vào không thay thế
+cập nhật file sql mới đó vào db, xóa hết data cũ (vì bản của tôi outdated)
+thêm những seed mà tôi cần trực tiếp vào file sql đó, sau đó chạy lại db
+tôi bị lỗi 500 khi tạo hồ sơ
+tôi không nhập được tên thuốc / không click/focus vào ô được
+gửi đến nhà thuốc là gửi đi đâu
+plan: thêm liên kết Pharmacy thật (nếu có luồng trong hệ thống) thay vì ghi note tên clinic
+chức năng viện phí nó đang tính bill theo db bảng nào
+ví dụ tôi gọi api cho mã icd thì cái drug này có gọi api không? chứ không thêm vào db
+Bỏ dropdown đi
+đơn thuốc sẽ được chuyển qua cho admin -> tính năng test cảnh báo tương tác thuốc
+hãy tiến hành flow bệnh nhân đặt lịch hẹn -> bác sĩ hoàn thành chẩn đoán và đơn thuốc để
+tôi xem dữ liệu nó có về hồ sơ sức khỏe điện tử khồng, sử dụng tài khoản demo cho sẵn
+cập nhật doc và commit
+```
+
+#### 18.2. Kết quả AI gợi ý
+
+```text
+1. Test trực tiếp luồng vãng lai (Browser pane) và phát hiện bệnh nhân hiển thị "Bệnh nhân
+   vãng lai" xuyên suốt hàng đợi thay vì tên thật — nguyên nhân: QueueTicket không có cột
+   lưu tên, và GetClinicQueueAsync/CallNextAsync/TransferTicketAsync/GetAllClinicsQueue-
+   SummaryAsync chỉ resolve tên qua AppointmentId (walk-in không có). Đồng thời phát hiện
+   Submit() chặn hẳn việc lưu bệnh án cho vãng lai vì OutpatientVisit.PatientId là FK bắt
+   buộc nhưng walk-in chưa từng có PatientProfile.
+2. Theo đúng ràng buộc "chỉ thêm không thay thế" của người dùng: thêm PatientId/PatientName
+   snapshot vào QueueTicket (migration mới, nullable); walk-in check-in giờ tạo thật
+   UserAccount (Email/SĐT do lễ tân nhập, không phải giả) + PatientProfile qua đúng
+   ICrudService/IRepository đã inject sẵn trong QueueService — không đổi constructor thêm
+   dependency mới, không sửa nhánh appointment cũ; 4 hàm đọc dữ liệu được thêm helper
+   fallback (đọc snapshot trước, fallback về logic AppointmentId cũ nếu không có) thay vì
+   viết đè logic gốc.
+3. Test lại → lộ thêm bug thứ 2: lưu chẩn đoán lần đầu cho bất kỳ bệnh nhân nào (kể cả có
+   lịch hẹn) đều 500 vì OutpatientRecordController.SaveDiagnosis không try/catch
+   InvalidOperationException("Outpatient visit not found") — trong khi fallback tự tạo visit
+   mới đã được viết sẵn ở frontend nhưng chưa bao giờ có cơ hội chạy. Fix bằng try/catch
+   giống pattern ClinicDashboardController đã dùng.
+4. Theo yêu cầu cập nhật seed_hospital.sql: rà thấy script DELETE 26 bảng nhưng chỉ INSERT
+   lại 6 bảng — MedicalServices và Drugs bị xoá và không bao giờ được điền lại, khiến tính
+   năng quản lý dịch vụ/kê đơn không có dữ liệu test dù code đã hoàn chỉnh. Bổ sung 16 dịch
+   vụ (đủ 12 khoa) + 14 thuốc (có vài thuốc trùng tên danh sách dị ứng demo để test cảnh
+   báo). Sau khi chạy, phát hiện sqlcmd đọc sai encoding UTF-8 không BOM làm hỏng dấu tiếng
+   Việt trong toàn bộ dữ liệu vừa seed — fix bằng cách convert file sang UTF-16LE+BOM
+   (iconv) trước khi chạy lại, xác nhận qua browser (không qua terminal vì terminal cũng bị
+   lỗi hiển thị encoding riêng, dễ nhầm lẫn với lỗi DB thật).
+5. Người dùng bỏ dropdown "Nhà thuốc/Phòng khám" trong E-Prescription sau khi được chỉ ra
+   đây là filter giả (không lọc theo địa điểm thật, Drug.StockQuantity là tồn kho chung
+   toàn viện) — xoá toàn bộ state/logic liên quan, không còn ghi tên phòng khám vào
+   Prescription.Notes.
+6. Qua test thao tác thật (không phải đọc code): phát hiện chọn thuốc gợi ý trong ô "Tên
+   thuốc" làm ô bị xoá trắng thay vì điền tên thuốc đã chọn — do SelectDrug() set _search
+   rỗng thay vì tên thuốc. Fix + đổi sang pattern value+@oninput (giống ô tìm ICD-10 đã có)
+   để dropdown tự đóng đúng lúc.
+7. Theo yêu cầu tích hợp CDSS thật vào lúc kê đơn (thay vì chỉ để Admin duyệt riêng): nối
+   2 API cảnh báo tương tác thuốc + quá liều đã viết sẵn nhưng trước đó chỉ được gọi từ
+   trang Admin riêng biệt (chưa từng nối vào luồng kê đơn thật) — thêm PatientId parameter
+   xuyên suốt EPrescriptionPanel + 2 trang gọi nó, thêm 1 API GetOutpatientVisit còn thiếu
+   ở client. Verify sống: nhập liều 5000 cho Paracetamol (ngưỡng seed 4000) → cảnh báo quá
+   liều hiện đúng message tính từ server.
+8. Chạy full flow thật theo tài khoản demo: bệnh nhân đặt lịch → bác sĩ tiếp nhận theo lịch
+   hẹn → chẩn đoán → kê đơn → đăng nhập lại bằng tài khoản bệnh nhân xem Hồ sơ Sức khỏe
+   Điện tử — xác nhận dữ liệu khớp 100% (lý do khám, ICD-10, bác sĩ, phòng khám, chi tiết
+   đơn thuốc). Qua bước này lộ thêm bug thứ 3: ngày trong tab "Lịch sử khám" lệch 1 ngày so
+   với ngày trong tab "Đơn thuốc" của cùng 1 lượt khám — do FmtDate(DateTime) thiếu
+   .ToLocalTime() trong khi FmtDateTime có, chỉ lộ ra khi lượt khám diễn ra sau 17:00 giờ
+   VN (UTC vẫn còn ngày hôm trước). Fix 1 dòng.
+```
+
+#### 18.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ các fix trên sau khi xác nhận `dotnet build` sạch (0 Warning/0 Error) và
+test trực tiếp qua Browser pane ở mỗi bước (không chỉ tin vào code compile được); áp dụng
+migration EF Core mới và seed_hospital.sql đã sửa vào database dev thật sau khi xác nhận là
+thay đổi additive, không phá dữ liệu hiện có ngoài phạm vi đã báo trước.
+```
+
+#### 18.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Chủ động đặt ràng buộc "chỉ thêm code mới, không viết lại logic có sẵn" cho mọi thay đổi
+  trong QueueService.cs (module không tự viết, không tự kiểm chứng được đúng/sai) trước khi
+  cho phép AI sửa — giữ nguyên hành vi mọi ticket có AppointmentId, chỉ thêm nhánh xử lý mới
+  cho ticket vãng lai.
+- Quyết định bỏ hẳn dropdown "Nhà thuốc" giả thay vì giữ lại cho đủ UI, và chọn hướng tích
+  hợp CDSS thật vào luồng kê đơn thay vì chỉ route dữ liệu qua Admin duyệt riêng — thay đổi
+  hướng đi so với đề xuất ban đầu của AI sau khi hỏi rõ ý nghĩa "route đến admin".
+- Từ chối yêu cầu AI tự seed thêm dữ liệu DrugInteractions mẫu, chấp nhận tính năng cảnh báo
+  tương tác thuốc hoạt động đúng logic nhưng chưa có dữ liệu để demo trực quan.
+- Tự yêu cầu AI giải thích nguyên nhân lỗi 500 "theo dạng nghiệp vụ" thay vì chỉ đọc stack
+  trace kỹ thuật, để hiểu đúng bản chất trước khi đồng ý cho sửa.
+```
+
+#### 18.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Link commit       | 49a2141 (queue walk-in), 51ce622 (fix 500 outpatient), e26abc2 (seed data), e664d5d (prescription CDSS), b0627a5 (fix PHR timezone) trên branch `claude/de190123-integration-audit-e5ce7f` |
+| File liên quan    | `QueueTicket.cs`, `QueueService.cs`, `SmartQueueDtos.cs`, `ClinicDashboard.razor`, migration `AddQueueTicketPatientSnapshot`; `OutpatientRecordController.cs`; `docs/seed_hospital.sql`; `EPrescriptionPanel.razor`, `OutpatientRecord.razor`, `EPrescription.razor`, `ApiClient.cs`; `PHR.razor` |
+| Screenshot        |                                                                                                |
+| Kết quả chạy/test | `dotnet build` từng project: 0 Warning/0 Error sau mỗi bước; test sống qua Browser pane: check-in vãng lai → tên hiển thị đúng ở mọi màn hình → lưu chẩn đoán thành công → kê đơn thành công → dose-check cảnh báo đúng ngưỡng; full flow đặt lịch → khám → kê đơn → PHR khớp 100% dữ liệu |
+| Link video demo   |                                                                                                |
+| Ghi chú khác      | Docs (AI_AUDIT_LOG/CHANGELOG) được cập nhật ngay trong phiên này theo yêu cầu, trước khi commit |
+
+#### 18.6. Nhận xét cá nhân/nhóm
+
+```text
+Phần lớn lỗi phát hiện được trong phiên này không nằm ở logic nghiệp vụ sai, mà ở khoảng
+trống giữa các module do nhiều người viết riêng lẻ ghép lại: QueueTicket không có cột lưu
+tên khách vãng lai, 2 API CDSS đã viết xong từ trước nhưng chưa từng được nối vào luồng kê
+đơn thật, seed data thiếu hẳn 2 bảng vì mỗi module tự bổ sung seed cho phần của mình mà
+không ai seed chung. Kiểm thử bằng cách chạy đúng luồng nghiệp vụ thật (đặt lịch → khám →
+kê đơn → xem lại hồ sơ bằng tài khoản bệnh nhân) hiệu quả hơn hẳn so với chỉ đọc code tĩnh —
+phát hiện được cả bug lệch ngày UTC/local mà review code khó nhận ra ngay vì cả 2 dòng code
+đều "trông đúng" nếu đọc riêng lẻ, chỉ lộ ra khi so sánh 2 màn hình cạnh nhau bằng dữ liệu
+thật.
+```
+
+---
+
+### Lần sử dụng AI số 19
+
+| Nội dung            | Thông tin                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Ngày sử dụng        | 20/07/2026 – 23/07/2026                                                             |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                       |
+| Mục đích sử dụng    | Xây Feature 4 – Telemedicine (video call) từ đầu, sửa các bug lộ ra qua test sống trên trình duyệt |
+| Phần việc liên quan | Backend (SignalR Hub) / Frontend (Blazor, JS interop WebRTC) / Git workflow          |
+| Mức độ sử dụng      | Viết code toàn bộ + tự phát hiện & fix bug qua test thực tế, không chỉ đọc code tĩnh |
+
+#### 19.1. Prompt đã sử dụng
+
+```text
+hãy làm chức năng gọi video giữa bác sĩ và bệnh nhân cho lịch hẹn tele, dùng SignalR có sẵn
+được không
+camera bị từ chối quyền thì cả trang bị sập luôn chứ không phải chỉ mỗi video, sửa lại đi
+bệnh nhân phải biết là có cuộc gọi đến chứ, hiện không thấy gì cả
+1 bên tắt máy thì bên kia vẫn đứng hình không biết cuộc gọi đã kết thúc
+```
+
+#### 19.2. Kết quả AI gợi ý
+
+```text
+1. Tạo `TelemedicineHub` (SignalR) làm relay tín hiệu offer/answer/ICE giữa 2 circuit Blazor
+   Server (bác sĩ + bệnh nhân) trong cùng phòng khám tele — không mang PHI, chỉ relay
+   SDP/ICE, room id là GUID không đoán được nên đủ làm access control, không cần
+   [Authorize] riêng.
+2. Viết `telemedicine.js` (WebRTC interop qua JSInterop: getUserMedia, RTCPeerConnection, tạo
+   offer/answer, add ICE candidate) và trang mới `/telemedicine/{RoomId}`: video local/remote,
+   nút mute/tắt cam/kết thúc, panel riêng cho bác sĩ để ghi chú và mở đơn thuốc điện tử.
+3. Bọc lời gọi `startLocalVideo` trong try/catch riêng — getUserMedia ném lỗi khi trình duyệt
+   không có camera/mic hoặc người dùng từ chối quyền; nếu để lỗi này văng ra ngoài thì sẽ làm
+   sập toàn bộ circuit Blazor Server (ngắt kết nối cả trang), không chỉ mỗi khung video. Tách
+   biến `_mediaError` khỏi `_error` để phần ghi chú/đơn thuốc (phía bác sĩ) vẫn dùng được bình
+   thường dù không có camera.
+4. Hệ thống chưa có cơ chế đẩy thông báo (push) sẵn, nên thêm polling 10 giây ở trang
+   Appointments của bệnh nhân (`GetPendingCallForPatient`, lọc phiên tele đã tạo nhưng chưa
+   `StartedAt`) để hiện modal "có cuộc gọi đến", cho bệnh nhân bấm vào tham gia; tự động gọi
+   `CompleteOutpatientVisit` khi cuộc gọi kết thúc.
+5. Thêm `NotifyCallEnded` vào Hub. Vì `Clients.OthersInGroup` chỉ còn với thành viên vẫn nằm
+   trong group, lệnh gửi này phải đứng trước `LeaveRoom` trong `EndCall()` chứ không phải sau
+   — nếu không bên kết thúc cuộc gọi đã rời group trước khi tín hiệu kịp gửi, bên còn lại sẽ
+   không bao giờ nhận được và đứng hình vô thời hạn.
+```
+
+#### 19.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng toàn bộ sau khi xác nhận `dotnet build` sạch (0 Warning/0 Error) và tự test sống bằng
+2 tab trình duyệt (tài khoản bác sĩ + bệnh nhân) qua từng bug: từ chối quyền camera không làm
+sập trang, bệnh nhân nhận được thông báo cuộc gọi đến trong vòng 10 giây, kết thúc cuộc gọi ở
+1 bên thì bên còn lại thoát ngay thay vì đứng hình.
+```
+
+#### 19.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Tự phát hiện lỗi crash camera qua test thật (chủ động từ chối quyền camera trên trình
+  duyệt) chứ không đợi đọc lại code, yêu cầu AI sửa ngay khi thấy trang trắng.
+- Chấp nhận đánh đổi polling 10 giây (độ trễ tối đa 10s) thay vì thiết kế lại toàn bộ cơ chế
+  push notification, vì hệ thống chưa có hub cho việc này và không muốn mở rộng phạm vi công
+  việc quá xa mục tiêu chính (video call).
+- Yêu cầu xác nhận thứ tự gửi `NotifyCallEnded` trước `LeaveRoom` bằng lời giải thích rõ ràng
+  (`OthersInGroup` không còn thấy người đã rời group) trước khi chấp nhận fix.
+```
+
+#### 19.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Link commit       | `bb5706d` trên branch `feature/de190123-telemedicine`                                        |
+| File liên quan    | `src/Mediconnect.Web/Hubs/TelemedicineHub.cs`; `src/Mediconnect.Web/wwwroot/js/telemedicine.js`; `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Web/Components/Pages/Appointments.razor`; `src/Mediconnect.Web/Components/Pages/Appointments.razor.css`; `src/Mediconnect.Web/Program.cs`; `src/Mediconnect.Web/Mediconnect.Web.csproj`; `src/Mediconnect.Web/Components/App.razor`; `src/Mediconnect.Web/Components/Pages/ClinicDashboard.razor`; `src/Mediconnect.Web/Services/ApiClient.cs` |
+| Screenshot        |                                                                                                |
+| Kết quả chạy/test | `dotnet build`: 0 Warning/0 Error sau mỗi bước; test sống 2 tab trình duyệt (doctor@mediconnect.local / patient@mediconnect.local): gọi video 2 chiều thành công, từ chối quyền camera không sập trang, thông báo cuộc gọi đến hiện đúng cho bệnh nhân, kết thúc cuộc gọi đồng bộ ở cả 2 bên |
+| Link video demo   |                                                                                                |
+| Ghi chú khác      | `Program.cs`, `Mediconnect.Web.csproj`, `App.razor`, `ClinicDashboard.razor`, `Appointments.razor`, `ApiClient.cs` vốn do teammate `minhPJ2812` viết — thay đổi lần này chỉ thêm mới (SignalR registration, script tag, nút bấm, polling, API method), không sửa logic có sẵn của các file này |
+
+#### 19.6. Nhận xét cá nhân/nhóm
+
+```text
+Lỗi crash camera là ví dụ rõ cho việc một lỗi JS tưởng chừng nhỏ (permission denied) có thể
+lan ra ngoài phạm vi tưởng tượng ban đầu trong mô hình Blazor Server — vì toàn bộ trang chạy
+trên 1 circuit dùng chung kết nối SignalR, một exception không bắt ở JSInterop có thể ngắt cả
+circuit chứ không dừng lại ở component gây lỗi. Việc test bằng cách chủ động từ chối quyền
+camera (không phải chỉ đọc code) là cách duy nhất phát hiện được lỗi này trước khi nó xảy ra
+với người dùng thật.
+```
+
+---
+
+### Lần sử dụng AI số 20
+
+| Nội dung            | Thông tin                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Ngày sử dụng        | 23/07/2026                                                                           |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                       |
+| Mục đích sử dụng    | Fix UI đơn thuốc điện tử bị chật khi nhúng cạnh khung video call                    |
+| Phần việc liên quan | Frontend (Blazor, CSS)                                                              |
+| Mức độ sử dụng      | Viết code toàn bộ                                                                    |
+
+#### 20.1. Prompt đã sử dụng
+
+```text
+form kê đơn nhét vào cạnh video bị chật quá, chia cột kiểu cũ không hợp, sửa lại UI cho đỡ
+chật đi
+```
+
+#### 20.2. Kết quả AI gợi ý
+
+```text
+`EPrescriptionPanel.razor` vốn dùng Bootstrap `col-*`/`row` — cơ chế này chia layout theo bề
+rộng viewport toàn trang (breakpoint sm/md/lg), không biết gì về bề rộng thật của khung chứa
+nó. Khi nhúng panel vào cột hẹp (~360px) cạnh video call, Bootstrap vẫn tính layout theo
+viewport rộng của toàn màn hình nên các trường bị chật, không co giãn đúng. Thay toàn bộ class
+Bootstrap layout bằng CSS container-query riêng trong file mới `EPrescriptionPanel.razor.css`
+— layout tự tính theo bề rộng khung chứa thực tế thay vì viewport. Không đổi hành vi, chỉ đổi
+cách chia layout.
+```
+
+#### 20.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng sau khi xác nhận `dotnet build` sạch và xem trực quan qua browser ở cả 2 nơi dùng
+panel: nhúng cạnh video (360px) và dùng độc lập ở trang Outpatient Record cũ (rộng hơn).
+```
+
+#### 20.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu xác nhận rõ đây chỉ là thay đổi layout, không đổi hành vi/logic, trước khi đồng ý sửa
+— vì đây là file dùng chung giữa 2 trang (Outpatient Record cũ và Telemedicine mới), lo ngại
+sửa nhầm ảnh hưởng ngược lại trang cũ.
+```
+
+#### 20.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Link commit       | `a7a1472` trên branch `feature/de190123-telemedicine`                                        |
+| File liên quan    | `src/Mediconnect.Web/Components/Shared/EPrescriptionPanel.razor`; `src/Mediconnect.Web/Components/Shared/EPrescriptionPanel.razor.css` |
+| Screenshot        |                                                                                                |
+| Kết quả chạy/test | `dotnet build`: 0 Warning/0 Error; kiểm trực quan qua browser ở cả 2 chỗ dùng panel, không phát hiện lệch layout mới |
+| Link video demo   |                                                                                                |
+| Ghi chú khác      | `EPrescriptionPanel.razor` vốn do teammate `minhPJ2812` viết — thay đổi lần này thay class layout có sẵn (không phải chỉ thêm mới) |
+
+#### 20.6. Nhận xét cá nhân/nhóm
+
+```text
+Bug layout kiểu này (Bootstrap viewport-based col-* trong khung nhúng hẹp) rất dễ bị bỏ qua
+khi review code tĩnh vì class trông vẫn "đúng chuẩn Bootstrap" — chỉ lộ ra khi thực sự nhìn
+trang chạy trong đúng bối cảnh nhúng hẹp, không phải màn hình rộng lúc code lần đầu.
+```
+
+---
+
+### Lần sử dụng AI số 21
+
+| Nội dung            | Thông tin                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Ngày sử dụng        | 23/07/2026                                                                           |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                       |
+| Mục đích sử dụng    | Thêm ghi Triệu chứng & Chẩn đoán ICD-10 ngay trong lúc gọi video tele                |
+| Phần việc liên quan | Frontend (Blazor)                                                                    |
+| Mức độ sử dụng      | Viết code toàn bộ                                                                    |
+
+#### 21.1. Prompt đã sử dụng
+
+```text
+khám qua tele mà không ghi triệu chứng/chẩn đoán gì thì sau này tính bill sao được, thêm phần
+đó vào trang gọi video luôn đi, giống như bên khám vãng lai đã có
+```
+
+#### 21.2. Kết quả AI gợi ý
+
+```text
+Trang Telemedicine (Lần sử dụng AI số 19) ban đầu chỉ có ô ghi chú tự do + nút mở đơn thuốc,
+không có chỗ ghi triệu chứng/mã ICD-10 như luồng khám vãng lai đã có sẵn ở
+`OutpatientRecord`. Thêm card "Triệu chứng & Chẩn đoán" vào panel bác sĩ: ô lý do khám chính,
+ô mô tả triệu chứng, ô tìm mã ICD-10 có debounce 300ms + dropdown gợi ý (tái dùng
+`SearchIcd10`/`ICD10ResultDto` đã có từ trước), nút "Lưu triệu chứng & chẩn đoán" gọi lại đúng
+API `Diagnose` đã có sẵn — không viết endpoint mới. Tách phần logic tạo `OutpatientVisit`
+(trước đó nằm gộp trong `OpenPrescription`) ra hàm dùng chung `EnsureVisitCreatedAsync`, vì
+giờ có 2 chỗ cần visit tồn tại trước khi ghi dữ liệu (lưu chẩn đoán và mở đơn thuốc), tránh
+tạo visit trùng lặp nếu bác sĩ bấm cả 2.
+```
+
+#### 21.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng sau khi xác nhận `dotnet build` sạch và test sống: nhập triệu chứng + chọn mã ICD-10
+(vd E11 — Type 2 diabetes) trong lúc đang gọi video, lưu thành công, xác nhận dữ liệu hiện
+đúng ở Billing và Hồ sơ Sức khỏe Điện tử (PHR) sau đó.
+```
+
+#### 21.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu tái dùng đúng API `Diagnose`/`SearchIcd10` đã có sẵn từ luồng khám vãng lai thay vì để
+AI viết endpoint riêng cho tele, để giữ nhất quán dữ liệu chẩn đoán giữa 2 luồng khám (không
+tạo 2 nguồn sự thật khác nhau cho cùng 1 loại dữ liệu).
+```
+
+#### 21.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Link commit       | `7bd9072` trên branch `feature/de190123-telemedicine`                                        |
+| File liên quan    | `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`                                     |
+| Screenshot        |                                                                                                |
+| Kết quả chạy/test | `dotnet build`: 0 Warning/0 Error; test sống: lưu triệu chứng + ICD-10 trong lúc gọi video thành công, dữ liệu hiện đúng ở Billing/PHR |
+| Link video demo   |                                                                                                |
+| Ghi chú khác      |                                                                                                |
+
+#### 21.6. Nhận xét cá nhân/nhóm
+
+```text
+Tái sử dụng API/DTO đã có (SearchIcd10, Diagnose) thay vì viết mới giúp tránh phân mảnh dữ
+liệu chẩn đoán giữa 2 luồng khám (vãng lai và tele) — nếu viết riêng rất dễ sinh ra 2 cách lưu
+chẩn đoán khác nhau cho cùng 1 khái niệm nghiệp vụ.
+```
+
+---
+
+### Lần sử dụng AI số 22
+
+| Nội dung            | Thông tin                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Ngày sử dụng        | 23/07/2026                                                                           |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                       |
+| Mục đích sử dụng    | Fix bill thiếu phí khám (bug có sẵn của Billing, không riêng tele) + Appointment.Status không bao giờ đổi khỏi "Chờ xác nhận" |
+| Phần việc liên quan | Backend (Application service) / Frontend (Blazor)                                   |
+| Mức độ sử dụng      | Viết code toàn bộ + tự phát hiện bug qua test thực tế                                |
+
+#### 22.1. Prompt đã sử dụng
+
+```text
+sao khám xong hoá đơn ra 0đ, đâu có tính phí khám vào
+lịch hẹn khám xong rồi mà status vẫn còn chờ xác nhận, phải đổi qua hoàn thành chứ
+```
+
+#### 22.2. Kết quả AI gợi ý
+
+```text
+1. Test full flow đặt lịch → gọi video tele → chẩn đoán → tạo hoá đơn thì phát hiện hoá đơn
+   không hề có phí khám. Rà `Billing.razor.SubmitCreate`: không gửi `ExamServiceId` lên API
+   tạo hoá đơn dù DTO backend đã có sẵn trường này từ trước (bug có sẵn của trang Billing gốc
+   — DE180526, không phải lỗi mới sinh ra từ tele, chỉ lộ rõ khi test qua tele vì trước đó
+   Billing thường được test kèm dịch vụ xét nghiệm/thuốc nên vẫn ra số tiền khác 0). Thêm
+   dropdown "Dịch vụ khám" lọc theo đúng khoa của visit (`VisitOption` gán thêm `ClinicId`,
+   `LoadData` dựng danh sách `ExamOptions` khớp khoa), chọn xong mới gửi kèm `ExamServiceId`
+   khi tạo hoá đơn.
+2. Rà toàn bộ luồng nghiệp vụ hiện có: không nơi nào từng gọi update `Appointment.Status` sau
+   khi khám xong — cột này đứng yên ở "Chờ xác nhận" vĩnh viễn kể từ khi tạo lịch hẹn. Thêm
+   `UpdateAppointmentStatus` vào `ApiClient`, gọi trong `EndCall()` của trang tele; đồng thời
+   cascade `Appointment.Status = Completed` ngay trong khối cascade `QueueTicket` có sẵn của
+   `MedicalRecordService.SaveMedicalRecordAsync` (thêm `IRepository<Appointment>` vào
+   constructor) để luồng walk-in/hẹn trước không qua tele cũng được cập nhật đúng, không chỉ
+   riêng luồng tele.
+```
+
+#### 22.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng sau khi xác nhận `dotnet build` sạch (0 Warning/0 Error) ở cả 2 project và test sống:
+tạo hoá đơn sau khám tele ra đúng phí khám cộng phí khác (nếu có); hoàn tất khám qua cả 2
+luồng (tele và walk-in/hẹn trước) đều đổi đúng Appointment.Status sang Completed.
+```
+
+#### 22.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu AI xác nhận rõ đây là bug có sẵn của Billing từ trước (không phải lỗi riêng của tele)
+trước khi cho sửa, để tránh khoanh vùng fix chỉ trong phạm vi trang tele trong khi bug thực
+tế ảnh hưởng mọi hoá đơn tạo từ trước tới giờ.
+```
+
+#### 22.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Link commit       | `3f21e3f` trên branch `feature/de190123-telemedicine`                                        |
+| File liên quan    | `src/Mediconnect.Web/Components/Pages/Billing.razor`; `src/Mediconnect.Web/Services/ApiClient.cs`; `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Application/Services/MedicalRecordService.cs` |
+| Screenshot        |                                                                                                |
+| Kết quả chạy/test | `dotnet build` cả 2 project (`src/mediconnect`, `src/Mediconnect.Web`): 0 Warning/0 Error; test sống: hoá đơn sau khám tele có đúng phí khám; Appointment.Status chuyển đúng Completed ở cả 2 luồng (tele + walk-in/hẹn trước) |
+| Link video demo   |                                                                                                |
+| Ghi chú khác      | `Billing.razor` vốn do teammate `minhPJ2812` viết — thay đổi lần này sửa logic `LoadData`/`SubmitCreate` có sẵn (không phải chỉ thêm mới). `MedicalRecordService.cs` — thay đổi thêm dependency mới vào constructor có sẵn và cascade thêm logic vào khối xử lý có sẵn (không phải chỉ thêm mới) |
+
+#### 22.6. Nhận xét cá nhân/nhóm
+
+```text
+Cả 2 bug (thiếu phí khám, Appointment.Status không đổi) đều là lỗ hổng có sẵn từ trước, không
+phải lỗi do tính năng tele gây ra — chúng chỉ tình cờ lộ ra rõ nhất khi test qua luồng tele vì
+đây là lần đầu tiên toàn bộ chuỗi nghiệp vụ (đặt lịch → khám → tạo hoá đơn) được test liên tục
+từ đầu đến cuối trong 1 phiên. Đây là bằng chứng cho thấy test theo luồng nghiệp vụ thật hiệu
+quả hơn test từng tính năng riêng lẻ trong việc phát hiện lỗ hổng tích hợp giữa các module.
+```
+
+---
+
 ## 10. Cam kết học thuật
 
 Sinh viên/nhóm cam kết rằng:

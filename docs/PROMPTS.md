@@ -57,9 +57,7 @@ Sinh viên/nhóm cần ghi lại:
 | 3 | 17/05/2026 | GitHub Copilot | Tao project .NET Web API va them DbContext + Models | Tao project mediconnect, them EF Core, DbContext, Models cho HIS | Da scaffold du an va them models, DbContext, connection string | Có | src/mediconnect; docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
 | 4 | 17/05/2026 | GitHub Copilot | Tao file solution cho du an .NET Web API | Yeu cau co file .sln cho project | Da tao mediconnect.sln va add project | Có | mediconnect.sln; docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
 | 5 | 03/06/2026 | Claude (Claude Code) | Tham khảo cách tổ chức interface và service pattern cho smart queue | Hỏi cách tổ chức IQueueService trong Clean Architecture | AI gợi ý tên method và cách tổ chức layer; DTO và logic được điều chỉnh theo yêu cầu dự án | Có | src/Mediconnect.Application/Interfaces/IQueueService.cs |
-
 | 6 | 05/06/2026 | Claude | Sinh code Feature 1: Bed Map & Inpatient Transfer | Them endpoints GET /api/beds/map, GET bed-assignments, POST transfer vao BedsController va InpatientAdmissionsController | Da sinh endpoints va DTOs dung clean architecture pattern | Có | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
-
 | 7 | 06/06/2026 | Antigravity | Viết backend modular riêng biệt cho smart clinic | viet backend o folder module rieng biet | Gợi ý cấu trúc module và sinh ClinicDashboard/ClinicManagement Controller | Có | src/mediconnect/Modules/SmartClinic |
 | 8 | 06/06/2026 | Antigravity | Kiểm tra lỗi cơ sở dữ liệu | check for database error | Phân tích DLL lock, giải phóng tiến trình và kiểm tra EF database up-to-date | Có | dotnet ef database update |
 | 9 | 06/06/2026 | Antigravity | Sửa lỗi mất session / đăng nhập lặp | toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap | Phát hiện login redirect loop về /booking và sửa đổi LoginPage/AuthContext | Có | src/mediconnect-web/src/pages/LoginPage.tsx |
@@ -84,6 +82,26 @@ Sinh viên/nhóm cần ghi lại:
 | 14 | 01/07/2026 | Claude (Claude Code) | Hoàn thiện 2 Screen còn thiếu của Thành viên 4: Banner cảnh báo quá liều (2.2) và Cấu hình/bảo mật OTP (4.2) | tìm hiểu dự án còn thiếu các screen nào trong các screen này rồi làm cho tôi [kèm đặc tả Thành viên 4] | Xác nhận đúng 2 screen còn thiếu; sinh backend (Drug dose threshold, CdssController.DoseCheck thật, OtpSetting/OtpCode/OtpController) và frontend (tab dose-check + trang OtpSecurityPage); tự tạo migration và test Playwright 15/15 pass | Có | src/mediconnect/Controllers/CdssController.cs; OtpController.cs; src/mediconnect-web/src/pages/OtpSecurityPage.tsx |
 | 15 | 01/07/2026 | Claude (Claude Code) | Tích hợp gửi OTP thật qua Email (SMTP) dùng chung cho Gmail App Password và SendGrid | mình muốn dùng otp thật hãy làm cho mình tích hợp send grid với google app passwords | Thiết kế 1 abstraction IOtpSender + SmtpOtpSender (MailKit) dùng chung cho cả 2 provider vì cùng chuẩn SMTP; che mã khi gửi thật, fallback mô phỏng khi lỗi/chưa cấu hình; tự kiểm chứng bằng host giả để xác nhận code gửi thật có chạy | Có | src/Mediconnect.Infrastructure/Notifications/SmtpOtpSender.cs; src/mediconnect/appsettings.json |
 | 16 | 05/07/2026 | Claude (Claude Code) | Khôi phục frontend Member 2 bị hỏng sau merge + làm giao diện Feature 3 (Viện phí & BHYT) và Feature 4 (Thanh toán VNPay/Momo & Đánh giá) | kiểm tra các chức năng, làm cho tôi giao diện ở trong folder src/mediconnect-web | Phát hiện frontend + config Member 2 bị xóa nhưng App.tsx vẫn import; khôi phục từ commit trước, sinh BillingPage/ReviewsPage; tự tìm & sửa lỗi backend serialize enum thành chuỗi khi test thật (chuyển enum dữ liệu sang string-enum, normalize UserRole ở AuthContext) | Có | src/mediconnect-web/src/pages/BillingPage.tsx; ReviewsPage.tsx; context/AuthContext.tsx; types/index.ts; api/services.ts |
+| 13 | 14/06/2026 | Claude | Sinh code Feature 2: Y lenh & cham soc hang ngay | Them endpoints GET vital-signs va GET care-orders theo ca nhap vien (loc theo ngay/loai/trang thai) vao InpatientAdmissionsController | Da sinh 2 nested-route endpoint tai su dung IRepository + SimpleMapper, build sach 0 error | Có | src/mediconnect/Controllers/EntityControllers.cs |
+| 14 | 16/06/2026 | Claude | Sinh code Feature 3 & 4 (lam hai phan) | F3: queue chi dinh, nhap ket qua, upload file that; F4: discharge tong hop chi phi giuong/thuoc/thu thuat thanh invoice gui Thanh toan | Da sinh endpoints F3 (lab-orders/lab-results) va nang cap discharge F4, build sach 0 error | Có | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
+| 15 | 14/06/2026 | GitHub Copilot, Claude | Implement Outpatient Record UI and diagnose/create flow | Scaffold OutpatientRecordPage, handle diagnose->create->retry, add local/top search and header link | Implemented OutpatientRecordPage.tsx, header link, ClinicDashboard navigation and payload checks | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+| 16 | 14/06/2026 | GitHub Copilot | Debug duplicate PatientProfile creation | Avoid duplicate PatientProfile by checking existing profile before create (GET /api/patients/me) | Added getMe() check and fallback create in OutpatientRecordPage.tsx to prevent DB unique index error | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+| 17 | 28/06/2026 | Antigravity | Tích hợp NLM ICD-10 API thay thế `Icd10Catalog` chưa định nghĩa | `tim hieu ve du an... tiep tuc hoan thien sua doi tim kiem ICD-10 dua theo nlm api` + test E11/Hypertension | Sinh `SearchICD10Async()` inject HttpClient, URL NLM, parse `root[3]`, DTO `ICD10ResultDto`, đăng ký `AddHttpClient()` | Có | `src/Mediconnect.Application/Services/MedicalRecordService.cs`; `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs`; `src/mediconnect/Program.cs` |
+| 18 | 28/06/2026 | Antigravity | Sửa lỗi tên walk-in mất khi navigate sang OutpatientRecord | Cùng session với prompt 17; AI phân tích `QueueTicket` thiếu `PatientName` cột | Sinh `navigate('/outpatient-record', { state: { ticket, clinicId } })` và `useLocation` + `loc.state?.ticket` | Có | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx` |
+| 19 | 29/06/2026 | Claude (claude.ai) | Implement E-Prescription feature: drug autocomplete (GET /api/drugs), allergy validation, pharmacy stock filter, send flow POST /api/prescriptions | Feature 3 E-Prescription: drug autocomplete debounced 250ms, allergy check [Penicillin/Peanuts/Sulfa Drugs], stock filter via GET /api/clinics/active, disabled add khi stock=0, send flow POST /api/prescriptions + /api/prescriptionitems | Sinh EPrescriptionPanel.tsx, EPrescriptionPage.tsx, update OutpatientRecordPage.tsx + services.ts + types/index.ts | Có | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
+| 20 | 29/06/2026 | Claude (claude.ai) | Sidebar UI: nâng E-Prescription lên top-level section, visual parity với Outpatient Records, route /e-prescription | Promote E-Prescription: standalone top-level nav link "Đơn thuốc điện tử", order Queue → Outpatient Records → E-Prescription → Telemedicine, route /e-prescription với RoleProtectedRoute | Sinh Header.tsx nav link (desktop + mobile, isStaff block), App.tsx route với RoleProtectedRoute (Doctor, Nurse) | Có | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` |
+| 21 | 20/06/2026 | Claude (Claude Code) | Kiểm thử end-to-end chức năng Statistics Report bằng Playwright, thêm seed data và xác nhận sửa lỗi | bạn test lại xem đã chạy ổn chức năng report này chưa / thêm data vào database rồi test lại / tất cả đã oke hết chưa | Phát hiện và sửa 2 bug thật: lệch ngày do `toISOString()` lấy giờ UTC ở frontend, và endDate không bao trọn ngày cuối ở backend; seed thêm dữ liệu invoice/khoa phòng để dashboard có số liệu thực tế | Có | C:/tmp/pwtest/*.mjs; src/Mediconnect.Infrastructure/Repositories/ReportQuery.cs; src/mediconnect-web/src/utils/reportUtils.ts |
+| 22 | 20/06/2026 | Claude (Claude Code) | Sinh code Screen 3.1 (Dashboard Doanh thu) và Screen 3.2 (Dashboard Vận hành) từ backend đến frontend theo đặc tả chính xác | Dashboard Thống kê & Báo cáo... Screen 3.1: Dashboard Doanh thu tài chính... Screen 3.2: Dashboard Báo cáo vận hành... hãy làm theo 2 màn hình như này từ backend đến frontend | Sinh DTO/Interface/Query/Controller cho Report module theo pattern CQRS-lite có sẵn; sinh 2 trang React riêng biệt dùng SVG chart tự viết (Bar/Line/Pie), filter theo kỳ và khoa phòng, export CSV | Có | src/Mediconnect.Application/DTOs/ReportDtos.cs; src/mediconnect-web/src/pages/RevenueDashboardPage.tsx; src/mediconnect-web/src/pages/OperationsReportPage.tsx |
+| 23 | 20/06/2026 | Claude (Claude Code) | Đọc checkfile.md để đối chiếu các screen của Admin (Thành viên 4) đã có/chưa có trong project | hãy đọc file này và tổng hợp các screen nào là của admin mà cái nào đã có trong project và cái nào chưa có | Liệt kê 6 screen thuộc Thành viên 4, xác định 3 đã có backend nhưng chưa có UI (Quản lý nhân sự, Cảnh báo tương tác thuốc, Quản lý tài khoản) và 2 chưa làm (Banner cảnh báo quá liều, Cấu hình OTP) | Có | docs (đối chiếu nội bộ, không tạo file mới) |
+| 24 | 20/06/2026 | Claude (Claude Code) | Hoàn thiện frontend cho 3 trang Admin còn thiếu UI: Quản lý nhân sự, Cảnh báo tương tác thuốc (CDSS), Quản lý tài khoản | hãy hoàn thiện các trang đang nửa vời | Sinh 3 trang React đầy đủ CRUD + kiểm thử bằng Playwright (gọi API thật qua fetch để xác nhận persist), phát hiện 1 bug trong chính script test (chọn nhầm nút do selector trùng text) chứ không phải bug ứng dụng | Có | src/mediconnect-web/src/pages/StaffManagementPage.tsx; src/mediconnect-web/src/pages/UserManagementPage.tsx; src/mediconnect-web/src/pages/DrugInteractionPage.tsx |
+| 25 | 01/07/2026 | Claude (Claude Code) | Hoàn thiện 2 Screen còn thiếu của Thành viên 4: Banner cảnh báo quá liều (2.2) và Cấu hình/bảo mật OTP (4.2) | tìm hiểu dự án còn thiếu các screen nào trong các screen này rồi làm cho tôi [kèm đặc tả Thành viên 4] | Xác nhận đúng 2 screen còn thiếu; sinh backend (Drug dose threshold, CdssController.DoseCheck thật, OtpSetting/OtpCode/OtpController) và frontend (tab dose-check + trang OtpSecurityPage); tự tạo migration và test Playwright 15/15 pass | Có | src/mediconnect/Controllers/CdssController.cs; OtpController.cs; src/mediconnect-web/src/pages/OtpSecurityPage.tsx |
+| 26 | 01/07/2026 | Claude (Claude Code) | Tích hợp gửi OTP thật qua Email (SMTP) dùng chung cho Gmail App Password và SendGrid | mình muốn dùng otp thật hãy làm cho mình tích hợp send grid với google app passwords | Thiết kế 1 abstraction IOtpSender + SmtpOtpSender (MailKit) dùng chung cho cả 2 provider vì cùng chuẩn SMTP; che mã khi gửi thật, fallback mô phỏng khi lỗi/chưa cấu hình; tự kiểm chứng bằng host giả để xác nhận code gửi thật có chạy | Có | src/Mediconnect.Infrastructure/Notifications/SmtpOtpSender.cs; src/mediconnect/appsettings.json |
+| 27 | 12/07/2026 - 13/07/2026 | Claude Code (claude-sonnet-5) | Kiểm thử trực tiếp luồng khám vãng lai/kê đơn/CDSS trên browser, phát hiện và sửa 3 bug thật | hãy thử thêm 1 bệnh nhân vãng lai vào hàng đợi, tiếp nhận họ và ghi đơn thuốc, chẩn đoán... queue không phải tôi viết, chỉ viết thêm vào không thay thế | Phát hiện & fix: (1) walk-in không lưu tên + không lưu được bệnh án do thiếu PatientProfile; (2) lỗi 500 khi lưu chẩn đoán lần đầu cho bất kỳ bệnh nhân nào; (3) MedicalServices/Drugs seed rỗng; (4) dropdown nhà thuốc giả + bug autocomplete chọn thuốc; (5) 2 API CDSS có sẵn nhưng chưa nối vào luồng kê đơn; (6) lệch ngày UTC/local ở PHR | Có | Chi tiết đầy đủ: docs/AI_AUDIT_LOG.md, "Lần sử dụng AI số 18" |
+| 28 | 13/07/2026 | Claude Code (claude-sonnet-5) | Viết lại 6 commit của phiên trên sang tiếng Anh theo quy chuẩn, chuẩn bị PR checklist | giờ tôi muốn bạn undo hết commit để sửa về tiếng anh cho đúng quy chuẩn, mỗi commit liệt kê nội dung, file nào bị sửa (nhấn mạnh nếu không phải của tôi), file nào được tạo / giúp tôi làm pull request | Soft-reset 6 commit về base rồi recommit từng nhóm với message tiếng Anh liệt kê rõ file sửa/tạo và đánh dấu file không phải do người dùng viết (dựa trên git blame); tạo branch mới cho bản viết lại; điền sẵn nội dung PR checklist (description, type of change, AI usage, verification, evidence) dựa trên commit thật và AI_AUDIT_LOG #18 | Có | 6 commit viết lại trên `feature/de190123-walkin-cdss-fixes`; nội dung PR checklist đã điền sẵn gửi qua chat (chưa tạo file trong repo) |
+| 29 | 20/07/2026 – 23/07/2026 | Claude Code (claude-sonnet-5) | Xây Feature 4 – Telemedicine (video call) từ đầu: SignalR/WebRTC, fix crash camera, thông báo cuộc gọi cho bệnh nhân, đồng bộ kết thúc cuộc gọi 2 bên | hãy làm chức năng gọi video giữa bác sĩ và bệnh nhân cho lịch hẹn tele... camera bị từ chối quyền thì cả trang bị sập luôn chứ không phải chỉ mỗi video... bệnh nhân phải biết là có cuộc gọi đến chứ... 1 bên tắt máy bên kia vẫn đứng hình | Tạo `TelemedicineHub` (SignalR relay offer/answer/ICE) + `telemedicine.js` (WebRTC) + trang `/telemedicine/{RoomId}`; bọc try/catch quanh `startLocalVideo` để lỗi permission camera/mic không làm sập cả circuit Blazor; thêm polling 10s phía bệnh nhân để nhận thông báo cuộc gọi đến + tự complete visit khi kết thúc; thêm `NotifyCallEnded` để bên kia thoát ngay thay vì đứng hình | Có | `bb5706d` trên `feature/de190123-telemedicine` |
+| 30 | 23/07/2026 | Claude Code (claude-sonnet-5) | Fix UI đơn thuốc điện tử bị chật khi nhúng cạnh khung video call | form kê đơn nhét vào cạnh video bị chật quá, chia cột kiểu cũ không hợp | Đổi `EPrescriptionPanel.razor` từ Bootstrap `col-*`/`row` (chia theo viewport) sang CSS container-query riêng (`EPrescriptionPanel.razor.css`) để form tự chia layout theo bề rộng khung chứa, không phải viewport | Có | `a7a1472` trên `feature/de190123-telemedicine` |
+| 31 | 23/07/2026 | Claude Code (claude-sonnet-5) | Thêm ghi Triệu chứng & Chẩn đoán ICD-10 ngay trong lúc gọi video (tele trước đó không ghi gì nên bill ra 0đ) | khám qua tele mà không ghi triệu chứng/chẩn đoán gì thì sau này tính bill sao được | Thêm card "Triệu chứng & Chẩn đoán" vào panel bác sĩ trong trang tele: lý do khám, mô tả triệu chứng, tìm ICD-10 debounce, `SaveDiagnosis`; tách logic tạo visit ra `EnsureVisitCreatedAsync` dùng chung cho cả lưu chẩn đoán và mở đơn thuốc | Có | `7bd9072` trên `feature/de190123-telemedicine` |
+| 32 | 23/07/2026 | Claude Code (claude-sonnet-5) | Fix bill thiếu phí khám (bug có sẵn của Billing, không riêng tele) + Appointment.Status không bao giờ đổi khỏi "Chờ xác nhận" | sao khám xong hoá đơn ra 0đ, đâu có tính phí khám... lịch hẹn khám xong rồi mà status vẫn còn chờ xác nhận | Thêm dropdown "Dịch vụ khám" lọc theo khoa trong `Billing.razor` để hoá đơn luôn kèm phí khám (`ExamServiceId`); thêm `UpdateAppointmentStatus`, cascade `Appointment.Status = Completed` từ cả luồng tele (`EndCall`) và luồng walk-in/hẹn trước (`MedicalRecordService.SaveMedicalRecordAsync`) | Có | `3f21e3f` trên `feature/de190123-telemedicine` |
 
 ---
 
@@ -1219,6 +1237,539 @@ Prompt "danh gia loi 500" ngắn và không nêu rõ nguyên nhân, nhưng việ
 endpoint (thay vì chỉ đọc lại code Blazor vừa sửa) giúp tìm đúng gốc rễ (migration EF
 Core chưa áp dụng) chỉ trong 1 lần thử, tránh sửa nhầm chỗ không liên quan.
 ```
+
+---
+
+### Prompt số 17
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 12/07/2026 - 13/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Kiểm thử trực tiếp luồng nghiệp vụ khám vãng lai/kê đơn/CDSS trên browser, sửa các lỗi phát hiện được qua test thực tế |
+| Phần việc liên quan | Backend (QueueService, Controllers) / Frontend (Blazor) / Database (seed data, migration) |
+| Mức độ sử dụng | Sinh code chính + tự phát hiện & fix bug qua test thực tế |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+hãy thử thêm 1 bệnh nhân vãng lai vào hàng đợi, tiếp nhận họ và ghi đơn thuốc, chẩn đoán
+theo như nghiệp vụ thông thường sau đó kiểm tra xem có vấn đề gì với data
+đề xuất luôn hướng fix cho 2 lỗi này
+giờ giả sử tôi muốn làm theo kiểu mỗi lần thêm khách vãng lai là giống như bác sĩ sẽ tạo
+thủ công patient
+tôi muốn tránh việc phải chỉnh sửa vào module mà tôi không làm; hãy giải thích nếu điều đó
+cần thiết
+chốt lại kế hoạch với sửa service — lưu ý: queue không phải tôi viết tôi không kiểm tra
+được, chỉ viết thêm vào không thay thế
+cập nhật file sql mới đó vào db, xóa hết data cũ (vì bản của tôi outdated)
+thêm những seed mà tôi cần trực tiếp vào file sql đó, sau đó chạy lại db
+tôi bị lỗi 500 khi tạo hồ sơ
+tôi không nhập được tên thuốc / không click/focus vào ô được
+gửi đến nhà thuốc là gửi đi đâu
+Bỏ dropdown đi
+đơn thuốc sẽ được chuyển qua cho admin -> tính năng test cảnh báo tương tác thuốc
+hãy tiến hành flow bệnh nhân đặt lịch hẹn -> bác sĩ hoàn thành chẩn đoán và đơn thuốc để
+tôi xem dữ liệu nó có về hồ sơ sức khỏe điện tử khồng, sử dụng tài khoản demo cho sẵn
+cập nhật doc và commit
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Module DE190123 (SmartClinic: hàng đợi, hồ sơ ngoại trú, đơn thuốc điện tử) vừa được merge
+vào develop. Thay vì chỉ đọc code để audit, người dùng yêu cầu chạy thử đúng luồng nghiệp vụ
+thật qua trình duyệt (browser pane) để tìm lỗi thật thay vì lỗi lý thuyết. QueueService.cs là
+module không phải người dùng tự viết nên yêu cầu chỉ được thêm mới, không được sửa/ghi đè logic
+có sẵn.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+1. Check-in vãng lai → tên hiển thị "Bệnh nhân vãng lai" xuyên suốt hàng đợi, và không lưu
+   được bệnh án vì OutpatientVisit.PatientId là FK bắt buộc nhưng walk-in chưa có
+   PatientProfile. Fix: thêm PatientId/PatientName snapshot vào QueueTicket (migration mới,
+   nullable), WalkInCheckInAsync tạo thật UserAccount + PatientProfile, 4 hàm đọc dữ liệu đọc
+   snapshot trước rồi fallback về logic cũ — không sửa nhánh appointment hiện có.
+2. Lưu chẩn đoán lần đầu cho bất kỳ bệnh nhân nào bị 500 vì thiếu try/catch quanh
+   SaveMedicalRecordAsync — fix bằng try/catch giống pattern ClinicDashboardController.
+3. seed_hospital.sql xóa 26 bảng nhưng chỉ insert lại 6 — MedicalServices và Drugs luôn rỗng.
+   Thêm 16 dịch vụ + 14 thuốc (có thuốc trùng tên dị ứng demo để test cảnh báo, 1 thuốc hết
+   hàng, 2 thuốc có MaxDailyDose để test CDSS quá liều).
+4. Bỏ dropdown "Nhà thuốc/Phòng khám" giả trong e-prescription (không lọc theo địa điểm thật),
+   fix bug chọn thuốc gợi ý làm xóa trắng ô tên thuốc, và nối thẳng 2 API CDSS (tương tác
+   thuốc + quá liều) đã viết sẵn nhưng chưa từng dùng ngoài trang Admin riêng vào luồng kê
+   đơn thật.
+5. Chạy full flow demo (đặt lịch → khám → kê đơn → xem PHR) phát hiện thêm bug lệch ngày
+   UTC/local ở tab "Lịch sử khám" của PHR — fix 1 dòng thiếu .ToLocalTime().
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ 6 fix trên sau khi dotnet build sạch (0 Warning/0 Error) và test trực tiếp
+qua Browser pane ở mỗi bước; áp dụng migration EF Core mới và seed_hospital.sql đã sửa vào DB
+dev thật.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Đặt ràng buộc "chỉ thêm code mới, không viết lại logic có sẵn" cho QueueService.cs trước khi
+  cho AI sửa, vì đây không phải module tự viết nên không tự kiểm chứng đúng/sai được.
+- Quyết định bỏ hẳn dropdown "Nhà thuốc" giả và tích hợp CDSS thẳng vào luồng kê đơn, thay vì
+  giữ nguyên hướng route qua Admin duyệt riêng như thiết kế ban đầu.
+- Từ chối yêu cầu AI tự seed thêm dữ liệu DrugInteractions mẫu.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | 49a2141, 51ce622, e26abc2, e664d5d, b0627a5 (sau này viết lại tiếng Anh ở Prompt số 18) |
+| File liên quan | `QueueTicket.cs`, `QueueService.cs`, `SmartQueueDtos.cs`, `ClinicDashboard.razor`, migration `AddQueueTicketPatientSnapshot`; `OutpatientRecordController.cs`; `docs/seed_hospital.sql`; `EPrescriptionPanel.razor`, `OutpatientRecord.razor`, `EPrescription.razor`, `ApiClient.cs`; `PHR.razor` |
+| Screenshot | |
+| Kết quả chạy/test | `dotnet build`: 0 Warning/0 Error sau mỗi bước; test sống qua Browser pane từng bug; full flow đặt lịch → khám → kê đơn → PHR khớp 100% dữ liệu |
+| Link tài liệu/báo cáo | docs/AI_AUDIT_LOG.md, "Lần sử dụng AI số 18" |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Chi tiết đầy đủ hơn (bao gồm cả log lỗi encoding khi seed) đã ghi ở docs/AI_AUDIT_LOG.md,
+"Lần sử dụng AI số 18", tránh lặp lại toàn văn ở đây.
+```
+
+---
+
+### Prompt số 18
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 13/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Viết lại 6 commit của Prompt số 17 sang tiếng Anh theo quy chuẩn, và soạn sẵn nội dung PR checklist |
+| Phần việc liên quan | Git workflow / Documentation |
+| Mức độ sử dụng | Thao tác git + soạn nội dung |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+giờ tôi muốn bạn undo hết commit để sửa về tiếng anh cho đúng quy chuẩn, mỗi commit liệt kê
+nội dung, file nào bị sửa (nhấn mạnh nếu không phải của tôi), file nào được tạo
+rewrite in feature/de190123-walkin-cdss-fixes
+switch feature/de190123-walkin-cdss-fixes to the new history
+delete
+now help me do the pull request [kèm mẫu PR checklist] fill in these info
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+6 commit của Prompt số 17 (walk-in/prescribing/CDSS) đang viết message bằng tiếng Việt,
+không đúng quy chuẩn commit message của môn học/nhóm. Người dùng muốn giữ nguyên nội dung
+thay đổi nhưng viết lại message tiếng Anh, có liệt kê rõ file sửa/tạo và đánh dấu file không
+phải do mình viết để tránh nhận vơ công của người khác. Sau đó cần chuẩn bị PR theo mẫu
+checklist của môn học nhưng máy không cài `gh` CLI.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+- `git reset --soft` về commit trước phiên (giữ nguyên toàn bộ nội dung thay đổi), rồi
+  recommit từng nhóm file đúng như cũ với message tiếng Anh; mỗi message liệt kê rõ "Files
+  modified" / "Files created", và với file không phải người dùng tự viết (dựa theo
+  `git log <base> -1 -- <file>` xem tác giả cuối cùng trước phiên) thì ghi rõ "NOT authored
+  by me (last touched by teammate X)". Xác nhận `git diff` giữa cây thư mục cũ và mới rỗng
+  tuyệt đối trước khi coi là xong.
+- Tạo branch tạm `feature/de190123-walkin-cdss-fixes-en` trỏ vào chuỗi commit viết lại, không
+  đụng vào branch gốc đang checkout ở worktree chia sẻ khác cho tới khi được xác nhận rõ ràng.
+- Khi thao tác `git reset --hard` trên worktree khác bị bộ lọc an toàn chặn lần đầu (do ghi
+  chú cũ trong bộ nhớ về xung đột appsettings.json chưa giải quyết) — kiểm tra lại trạng thái
+  thật (working tree sạch) và hỏi lại người dùng bằng AskUserQuestion trước khi thử lại.
+- Soạn sẵn nội dung PR checklist (Description, Type of change, Related issue, AI Usage
+  Declaration, Main AI Prompt, Verification, Evidence) dựa trên 6 commit thật và
+  docs/AI_AUDIT_LOG.md #18, vì máy không có `gh` CLI nên đưa link "compare" GitHub + nội dung
+  để người dùng tự dán vào, không tự ý push hay tạo PR thay.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng: 6 commit viết lại tiếng Anh trên branch `feature/de190123-walkin-cdss-fixes` (branch
+gốc được chuyển sang trỏ vào lịch sử mới sau khi xác nhận nội dung cây thư mục giống hệt);
+xóa branch tạm `-en` sau khi không còn cần; nội dung PR checklist gửi qua chat để người dùng
+tự dán vào GitHub.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Chỉ định rõ base branch (develop) và từ chối để AI tự push — tự kiểm soát thời điểm đẩy code
+  lên remote.
+- Yêu cầu AI xác nhận cây thư mục (git diff) giống hệt trước khi tin là viết lại commit không
+  làm mất/lệch nội dung.
+- Tự quyết định xóa branch tạm `-en` sau khi xác nhận branch chính đã trỏ đúng lịch sử mới.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [x] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | bbf2a74, 71fbc6d, d60fa4d, 7ac842b, 8f995a0, 00de2c4 trên `feature/de190123-walkin-cdss-fixes` |
+| File liên quan | (không đổi nội dung file so với Prompt số 17, chỉ viết lại message commit) |
+| Screenshot | |
+| Kết quả chạy/test | `git diff <commit cũ> <commit mới> --stat` rỗng — xác nhận nội dung cây thư mục không đổi |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | Chưa tạo PR thật trên GitHub tại thời điểm ghi log — chỉ soạn sẵn nội dung, chờ người dùng tự mở link và dán |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Bộ lọc an toàn (safety classifier) của công cụ chặn 1 lần thao tác git reset --hard trên
+worktree khác vì thấy ghi chú cũ (đã lỗi thời) về xung đột file chưa giải quyết — minh chứng
+việc nên luôn kiểm tra lại trạng thái git thật (git status) ngay trước khi thao tác thay vì
+chỉ tin vào ghi chú/bối cảnh cũ.
+```
+
+---
+
+### Prompt số 19
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 20/07/2026 – 23/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Xây Feature 4 – Telemedicine (video call) từ đầu: SignalR/WebRTC, fix crash camera, thông báo cuộc gọi cho bệnh nhân, đồng bộ kết thúc cuộc gọi 2 bên |
+| Phần việc liên quan | Backend (SignalR Hub) / Frontend (Blazor, JS interop WebRTC) |
+| Mức độ sử dụng | Viết code toàn bộ + tự phát hiện & fix bug qua test thực tế trên trình duyệt |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+hãy làm chức năng gọi video giữa bác sĩ và bệnh nhân cho lịch hẹn tele, dùng SignalR có sẵn
+được không
+camera bị từ chối quyền thì cả trang bị sập luôn chứ không phải chỉ mỗi video, sửa lại đi
+bệnh nhân phải biết là có cuộc gọi đến chứ, hiện không thấy gì cả
+1 bên tắt máy thì bên kia vẫn đứng hình không biết cuộc gọi đã kết thúc
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Feature 4 (Telemedicine) chưa có gì ngoài `TelemedicineSession` entity + CRUD API cơ bản đã
+có sẵn từ trước, chưa có video call thật. Cần build từ đầu cơ chế signaling + WebRTC peer
+connection, rồi sửa các bug lộ ra khi tự test 2 tab trình duyệt (1 bác sĩ, 1 bệnh nhân).
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+1. Tạo `TelemedicineHub` (SignalR) làm relay tín hiệu offer/answer/ICE giữa 2 circuit Blazor
+   Server — không mang PHI, chỉ relay SDP/ICE, room id là GUID không đoán được nên không cần
+   [Authorize] riêng.
+2. Viết `telemedicine.js` (WebRTC interop: getUserMedia, RTCPeerConnection, tạo offer/answer,
+   add ICE candidate) và trang mới `/telemedicine/{RoomId}` (video local/remote, nút mute/tắt
+   cam/kết thúc, panel bác sĩ để ghi chú + mở đơn thuốc).
+3. Bọc `startLocalVideo` trong try/catch riêng — lỗi permission camera/mic (JSException) không
+   được để văng ra ngoài vì sẽ sập cả circuit Blazor (ngắt kết nối cả trang), không chỉ mỗi
+   video. Tách `_mediaError` khỏi `_error` để phần ghi chú/đơn thuốc vẫn dùng được khi không có
+   camera.
+4. Thêm polling 10 giây ở trang Appointments của bệnh nhân để phát hiện cuộc gọi đang chờ
+   (`GetPendingCallForPatient`) vì hệ thống chưa có hub đẩy thông báo — hiện modal cho bệnh
+   nhân bấm vào tham gia, tự động complete visit khi kết thúc cuộc gọi.
+5. Thêm `NotifyCallEnded` vào Hub, gửi cho bên kia trước khi rời phòng (`LeaveRoom` xoá khỏi
+   group nên phải gửi trước) để bên còn lại tự thoát ngay thay vì đứng hình chờ vô thời hạn.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ sau khi xác nhận `dotnet build` sạch (0 Warning/0 Error) và test sống 2 tab
+trình duyệt (bác sĩ + bệnh nhân) qua từng bug: từ chối quyền camera không sập trang, bệnh nhân
+nhận được thông báo cuộc gọi đến, kết thúc cuộc gọi ở 1 bên thì bên kia thoát ngay.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Tự phát hiện lỗi crash camera không phải qua đọc code mà qua test thật (từ chối quyền
+  camera trên trình duyệt), yêu cầu AI sửa ngay khi thấy trang trắng thay vì chỉ báo lỗi UI.
+- Yêu cầu polling thay vì thiết kế lại toàn bộ cơ chế push notification (không có sẵn hub cho
+  việc này), chấp nhận độ trễ tối đa 10 giây để không mở rộng phạm vi quá công việc chính.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [x] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | `bb5706d` trên `feature/de190123-telemedicine` |
+| File liên quan | `src/Mediconnect.Web/Hubs/TelemedicineHub.cs`; `src/Mediconnect.Web/wwwroot/js/telemedicine.js`; `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Web/Components/Pages/Appointments.razor` |
+| Screenshot | |
+| Kết quả chạy/test | `dotnet build`: 0 Warning/0 Error; test sống 2 tab trình duyệt (doctor@mediconnect.local / patient@mediconnect.local): gọi video thành công, từ chối camera không sập trang, thông báo cuộc gọi đến hiện đúng, kết thúc cuộc gọi đồng bộ 2 bên |
+| Link video demo | |
+| Ghi chú khác | |
+
+---
+
+### Prompt số 20
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 23/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Fix UI đơn thuốc điện tử bị chật khi nhúng cạnh khung video call |
+| Phần việc liên quan | Frontend (Blazor, CSS) |
+| Mức độ sử dụng | Viết code toàn bộ |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+form kê đơn nhét vào cạnh video bị chật quá, chia cột kiểu cũ không hợp, sửa lại UI cho đỡ
+chật đi
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+`EPrescriptionPanel.razor` vốn dùng Bootstrap `col-*`/`row` — chia layout theo bề rộng
+viewport (breakpoint sm/md/lg toàn màn hình). Khi nhúng panel này vào cột hẹp cạnh video call
+(khoảng 360px), Bootstrap vẫn tính theo viewport rộng nên layout bị sai, các trường bị chật.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Thay toàn bộ class Bootstrap `col-*`/`row` trong `EPrescriptionPanel.razor` bằng class CSS
+container-query riêng viết trong `EPrescriptionPanel.razor.css` mới — layout tự tính theo bề
+rộng của khung chứa panel thay vì viewport toàn trang. Chỉ đổi layout, không đổi hành vi.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng sau khi xác nhận `dotnet build` sạch và xem trực quan qua browser: panel hiển thị đúng
+tỉ lệ khi nhúng cạnh video (360px) lẫn khi dùng độc lập ở trang Outpatient Record cũ.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu xác nhận không đổi hành vi (chỉ layout) trước khi merge, vì đây là file dùng chung
+cho cả trang Outpatient Record cũ lẫn trang Telemedicine mới.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [x] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | `a7a1472` trên `feature/de190123-telemedicine` |
+| File liên quan | `src/Mediconnect.Web/Components/Shared/EPrescriptionPanel.razor`; `src/Mediconnect.Web/Components/Shared/EPrescriptionPanel.razor.css` |
+| Screenshot | |
+| Kết quả chạy/test | `dotnet build`: 0 Warning/0 Error; kiểm trực quan qua browser ở cả 2 chỗ dùng panel |
+| Link video demo | |
+| Ghi chú khác | File `EPrescriptionPanel.razor` vốn do teammate `minhPJ2812` viết — thay đổi lần này đổi class layout có sẵn, không phải chỉ thêm mới |
+
+---
+
+### Prompt số 21
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 23/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Thêm ghi Triệu chứng & Chẩn đoán ICD-10 ngay trong lúc gọi video |
+| Phần việc liên quan | Frontend (Blazor) |
+| Mức độ sử dụng | Viết code toàn bộ |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+khám qua tele mà không ghi triệu chứng/chẩn đoán gì thì sau này tính bill sao được, thêm phần
+đó vào trang gọi video luôn đi, giống như bên khám vãng lai đã có
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Trang Telemedicine ban đầu (Prompt số 19) chỉ có ghi chú tự do + nút mở đơn thuốc, không có
+chỗ ghi triệu chứng/mã ICD-10 như luồng khám vãng lai đã có ở `OutpatientRecord`. Vì Billing
+tính phí dựa trên dữ liệu khám (xem Prompt số 22), thiếu bước này thì khám qua tele không có
+cơ sở để tính bill.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Thêm card "Triệu chứng & Chẩn đoán" vào panel bác sĩ trong trang Telemedicine: ô lý do khám
+chính, ô mô tả triệu chứng, ô tìm mã ICD-10 có debounce + dropdown gợi ý (tái dùng
+`SearchIcd10` đã có), nút "Lưu triệu chứng & chẩn đoán" gọi lại API `Diagnose` đã có sẵn.
+Tách phần logic tạo `OutpatientVisit` (trước đây nằm riêng trong `OpenPrescription`) ra hàm
+dùng chung `EnsureVisitCreatedAsync`, vì giờ có 2 nơi cần visit tồn tại trước khi ghi dữ liệu
+(lưu chẩn đoán và mở đơn thuốc).
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng sau khi xác nhận `dotnet build` sạch và test sống: nhập triệu chứng + chọn mã ICD-10
+(vd E11) trong lúc đang gọi video, lưu thành công, xác nhận dữ liệu xuất hiện đúng ở Billing
+và PHR sau đó.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu tái dùng đúng API `Diagnose`/`SearchIcd10` đã có sẵn từ luồng khám vãng lai thay vì
+viết endpoint riêng cho tele, giữ nhất quán dữ liệu chẩn đoán giữa 2 luồng.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | `7bd9072` trên `feature/de190123-telemedicine` |
+| File liên quan | `src/Mediconnect.Web/Components/Pages/Telemedicine.razor` |
+| Screenshot | |
+| Kết quả chạy/test | `dotnet build`: 0 Warning/0 Error; test sống: lưu triệu chứng + ICD-10 trong lúc gọi video thành công |
+| Link video demo | |
+| Ghi chú khác | |
+
+---
+
+### Prompt số 22
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 23/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Fix bill thiếu phí khám (bug có sẵn của Billing, không riêng tele) + Appointment.Status không bao giờ đổi khỏi "Chờ xác nhận" |
+| Phần việc liên quan | Backend (Application service) / Frontend (Blazor) |
+| Mức độ sử dụng | Viết code toàn bộ + tự phát hiện bug qua test thực tế |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+sao khám xong hoá đơn ra 0đ, đâu có tính phí khám vào
+lịch hẹn khám xong rồi mà status vẫn còn chờ xác nhận, phải đổi qua hoàn thành chứ
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Test full flow đặt lịch → gọi video → chẩn đoán → tạo hoá đơn thì phát hiện 2 vấn đề: hoá đơn
+tạo ra không có phí khám (chỉ có phí xét nghiệm/thuốc nếu có), và `Appointment.Status` đứng
+yên ở "Chờ xác nhận" dù đã khám xong — cả 2 đều là bug có sẵn từ trước (Billing từ DE180526,
+Appointment.Status chưa từng được cascade ở bất kỳ luồng nào), lộ ra rõ nhất khi test qua tele.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+1. Rà `Billing.razor.SubmitCreate`: không hề gửi `ExamServiceId` lên API tạo hoá đơn dù DTO có
+   trường này. Thêm dropdown "Dịch vụ khám" lọc theo khoa của visit (`VisitOption` gán thêm
+   `ClinicId`, `LoadData` dựng danh sách `ExamOptions` khớp khoa), chọn xong mới gửi kèm
+   `ExamServiceId` khi tạo hoá đơn.
+2. Rà toàn bộ luồng nghiệp vụ: không nơi nào từng gọi update `Appointment.Status`. Thêm
+   `UpdateAppointmentStatus` vào `ApiClient`, gọi trong `EndCall()` của trang tele; đồng thời
+   cascade `Appointment.Status = Completed` ngay trong `MedicalRecordService.SaveMedicalRecordAsync`
+   (thêm `IRepository<Appointment>` vào constructor) để luồng walk-in/hẹn trước (không qua
+   tele) cũng được cập nhật đúng, không chỉ riêng tele.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng sau khi xác nhận `dotnet build` sạch (0 Warning/0 Error) và test sống: tạo hoá đơn sau
+khám tele ra đúng phí khám + phí khác; hoàn tất khám (cả qua tele và walk-in/hẹn trước) đổi
+đúng Appointment.Status sang Completed.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu AI xác nhận đây là bug có sẵn của Billing (không phải lỗi mới do tele) trước khi sửa,
+để tránh nhầm phạm vi fix chỉ áp dụng riêng cho tele trong khi bug ảnh hưởng toàn bộ luồng
+billing sẵn có.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [x] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [x] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | `3f21e3f` trên `feature/de190123-telemedicine` |
+| File liên quan | `src/Mediconnect.Web/Components/Pages/Billing.razor`; `src/Mediconnect.Web/Services/ApiClient.cs`; `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Application/Services/MedicalRecordService.cs` |
+| Screenshot | |
+| Kết quả chạy/test | `dotnet build` cả 2 project: 0 Warning/0 Error; test sống: hoá đơn sau khám tele có đúng phí khám; Appointment.Status chuyển Completed đúng ở cả 2 luồng |
+| Link video demo | |
+| Ghi chú khác | `Billing.razor` do teammate `minhPJ2812` viết ban đầu — thay đổi lần này sửa logic `LoadData`/`SubmitCreate` có sẵn, không phải chỉ thêm mới. `MedicalRecordService.cs` — thay đổi thêm dependency vào constructor có sẵn, không phải chỉ thêm mới. |
 
 ---
 

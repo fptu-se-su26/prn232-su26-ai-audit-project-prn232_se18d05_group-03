@@ -611,7 +611,7 @@ else
     }
 
     private static string FmtDate(DateOnly? d) => d is null ? "—" : d.Value.ToString("dd/MM/yyyy");
-    private static string FmtDate(DateTime d) => d.ToString("dd/MM/yyyy");
+    private static string FmtDate(DateTime d) => d.ToLocalTime().ToString("dd/MM/yyyy");
     private static string FmtDateTime(DateTime d) => d.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
     private static string FmtDateTime(DateTime? d) => d is null ? "—" : FmtDateTime(d.Value);
 

@@ -1067,6 +1067,47 @@ INSERT INTO Beds (Id, DepartmentId, Ward, RoomNumber, BedNumber, Status, Floor, 
 (NEWID(),'A0000001-0000-0000-0000-00000000000C',N'Khu B','UB-3B4','01',1,3,NULL,NULL);
 
 -- ────────────────────────────────────────────────────────────
+--  8. MEDICAL SERVICES  (dịch vụ khám theo khoa)
+-- ────────────────────────────────────────────────────────────
+INSERT INTO MedicalServices (Id, DepartmentId, Name, Code, Price, IsActive) VALUES
+(NEWID(),'A0000001-0000-0000-0000-000000000001',N'Hội Chẩn Hồi Sức',        'ICU01',  500000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000002',N'Khám Cấp Cứu',            'ER01',   250000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000003',N'Khám Nội Tổng Quát',      'GEN01',  150000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000003',N'Khám Sức Khỏe Định Kỳ',   'GEN02',  200000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000004',N'Khám Nhi',                'PED01',  150000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000005',N'Khám Tim Mạch',           'CARD01', 300000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000005',N'Đo Điện Tâm Đồ (ECG)',    'CARD02', 180000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000006',N'Khám Thần Kinh',          'NEURO01',280000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000007',N'Khám Ngoại Tổng Quát',    'SURG01', 200000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000008',N'Khám Hô Hấp',             'PULM01', 200000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000009',N'Khám Sản Phụ Khoa',       'OB01',   250000,1),
+(NEWID(),'A0000001-0000-0000-0000-000000000009',N'Siêu Âm Thai',            'OB02',   200000,1),
+(NEWID(),'A0000001-0000-0000-0000-00000000000A',N'Khám Cơ Xương Khớp',      'ORTHO01',220000,1),
+(NEWID(),'A0000001-0000-0000-0000-00000000000B',N'Khám Tiêu Hóa',           'GI01',   220000,1),
+(NEWID(),'A0000001-0000-0000-0000-00000000000B',N'Nội Soi Dạ Dày',          'GI02',   800000,1),
+(NEWID(),'A0000001-0000-0000-0000-00000000000C',N'Khám Ung Bướu',           'ONC01',  350000,1);
+
+-- ────────────────────────────────────────────────────────────
+--  9. DRUGS  (kho thuốc mẫu — vài tên trùng danh sách dị ứng demo
+--     (Penicillin, Sulfa) để test cảnh báo dị ứng ở E-Prescription)
+-- ────────────────────────────────────────────────────────────
+INSERT INTO Drugs (Id, Name, Code, Unit, StockQuantity, UnitPrice, IsActive, MaxDailyDose, MaxDosePerKg) VALUES
+(NEWID(),N'Paracetamol 500mg',                      'PARA500', 'viên',  500, 1000, 1, 4000, 60),
+(NEWID(),N'Ibuprofen 400mg',                        'IBU400',  'viên',  300, 1500, 1, 2400, NULL),
+(NEWID(),N'Amoxicillin 500mg',                      'AMOX500', 'viên',  200, 2000, 1, NULL, NULL),
+(NEWID(),N'Penicillin V 500mg',                     'PENV500', 'viên',  150, 2500, 1, NULL, NULL),
+(NEWID(),N'Sulfamethoxazole/Trimethoprim 480mg',    'SULFA480','viên',  120, 3000, 1, NULL, NULL),
+(NEWID(),N'Cefixime 200mg',                         'CEFI200', 'viên',  180, 4500, 1, NULL, NULL),
+(NEWID(),N'Metformin 500mg',                        'METF500', 'viên',  400, 1200, 1, NULL, NULL),
+(NEWID(),N'Losartan 50mg',                          'LOSA50',  'viên',  250, 1800, 1, NULL, NULL),
+(NEWID(),N'Omeprazole 20mg',                        'OMEP20',  'viên',  350, 2200, 1, NULL, NULL),
+(NEWID(),N'Salbutamol Inhaler 100mcg',               'SALB100', 'ống',   80,  85000,1, NULL, NULL),
+(NEWID(),N'Loratadine 10mg',                        'LORA10',  'viên',  300, 1500, 1, NULL, NULL),
+(NEWID(),N'Diclofenac 50mg',                        'DICL50',  'viên',  220, 1800, 1, 150,  NULL),
+(NEWID(),N'Vitamin C 500mg',                        'VITC500', 'viên',  600, 900,  1, NULL, NULL),
+(NEWID(),N'Hết Hàng Demo 100mg',                    'OOS100',  'viên',  0,   1000, 1, NULL, NULL);
+
+-- ────────────────────────────────────────────────────────────
 --  VERIFY
 -- ────────────────────────────────────────────────────────────
 SELECT

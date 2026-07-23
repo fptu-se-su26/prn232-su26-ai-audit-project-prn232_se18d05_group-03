@@ -1,5 +1,7 @@
 @page "/appointments"
 @attribute [Authorize(Roles = "Patient")]
+@implements IDisposable
+@inject NavigationManager Nav
 
 <PageTitle>Lịch hẹn của tôi – MediConnect</PageTitle>
 
@@ -55,6 +57,17 @@
             }
         </div>
     }
+
+    @if (_incomingCall is not null)
+    {
+        <div class="incoming-call-overlay">
+            <div class="incoming-call-modal">
+                <p>📹 Bác sĩ <strong>@(_doctorName ?? "MediConnect")</strong> đang gọi cho bạn</p>
+                <button class="btn btn-success me-2" @onclick="JoinCall">Tham gia</button>
+                <button class="btn btn-outline-secondary" @onclick="DismissCall">Từ chối</button>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
@@ -62,6 +75,12 @@
 
     private List<AppointmentReadDto> _appointments = new();
     private bool _loading = true;
+
+    private Guid? _currentPatientId;
+    private TelemedicineSessionReadDto? _incomingCall;
+    private string? _doctorName;
+    private PeriodicTimer? _callPollTimer;
+    private CancellationTokenSource? _callPollCts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -74,9 +93,59 @@
                 : all.Where(a => a.PatientId == profile.Id)
                      .OrderByDescending(a => a.AppointmentTime)
                      .ToList();
+            _currentPatientId = profile?.Id;
         }
         catch (ApiClient.ApiException) { /* treated as empty, matches original behavior */ }
         finally { _loading = false; }
+
+        if (_currentPatientId is not null) StartCallPolling();
+    }
+
+    private void StartCallPolling()
+    {
+        _callPollCts = new CancellationTokenSource();
+        _callPollTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        _ = RunCallPolling(_callPollCts.Token);
+    }
+
+    private async Task RunCallPolling(CancellationToken token)
+    {
+        try
+        {
+            while (await _callPollTimer!.WaitForNextTickAsync(token))
+            {
+                if (_incomingCall is not null) continue;
+
+                var call = await Api.GetPendingCallForPatient(_currentPatientId!.Value);
+                if (call is not null)
+                {
+                    _incomingCall = call;
+                    var staff = await Api.GetStaffDirectory();
+                    _doctorName = staff?.FirstOrDefault(s => s.Id == call.DoctorId)?.Name;
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private void JoinCall()
+    {
+        if (_incomingCall is not null) Nav.NavigateTo($"/telemedicine/{_incomingCall.Id}");
+    }
+
+    private void DismissCall()
+    {
+        // Does not call any "end session" API — the doctor may still be waiting; this only
+        // hides the prompt locally so the patient isn't asked again for the same call.
+        _incomingCall = null;
+    }
+
+    public void Dispose()
+    {
+        _callPollCts?.Cancel();
+        _callPollCts?.Dispose();
+        _callPollTimer?.Dispose();
     }
 
     private static string StatusLabel(AppointmentStatus s) => s switch

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Mediconnect.Web.Components;
 using Mediconnect.Web.Services;
+using Mediconnect.Web.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,9 @@ builder.Services.AddCascadingAuthenticationState();
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5079/";
 builder.Services.AddHttpClient<ApiClient>(client => client.BaseAddress = new Uri(apiBaseUrl));
 
+// Signaling relay for telemedicine WebRTC offer/answer/ICE exchange (see Hubs/TelemedicineHub.cs).
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -43,5 +47,7 @@ app.UseAuthorization();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AllowAnonymous();
+
+app.MapHub<TelemedicineHub>("/hubs/telemedicine");
 
 app.Run();

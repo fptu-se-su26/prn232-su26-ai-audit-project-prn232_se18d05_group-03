@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Doctor,Nurse")]
 @implements IDisposable
 @inject NavigationManager Nav
+@inject TokenState Token
 
 <PageTitle>Hàng đợi phòng khám – MediConnect</PageTitle>
 
@@ -274,6 +275,14 @@ else
                     <label class="form-label">Họ và tên bệnh nhân</label>
                     <input class="form-control" placeholder="Nhập đầy đủ họ và tên..." @bind="_walkInName" />
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" placeholder="Nhập email bệnh nhân..." @bind="_walkInEmail" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại <span class="text-muted">(tùy chọn)</span></label>
+                    <input class="form-control" placeholder="Nhập số điện thoại..." @bind="_walkInPhone" />
+                </div>
             }
             else
             {
@@ -295,13 +304,18 @@ else
                                 <option value="@a.Id">[@a.AppointmentTime.ToLocalTime().ToString("HH:mm")] @PatientNameFor(a.PatientId) - @(string.IsNullOrEmpty(a.Reason) ? "Khám tổng quát" : a.Reason)</option>
                             }
                         </select>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" disabled="@(_selectedAppointmentId == "" || _startingCall)"
+                                @onclick="StartVideoCall">
+                            <span class="material-symbols-outlined align-middle" style="font-size:1rem">videocam</span>
+                            @(_startingCall ? "Đang tạo phiên..." : "Bắt đầu gọi video")
+                        </button>
                     }
                 </div>
             }
 
             <div class="d-flex justify-content-end gap-2 mt-3">
                 <button class="btn btn-outline-secondary" @onclick="() => _isCheckInOpen = false">Hủy bỏ</button>
-                <button class="btn btn-primary" disabled="@(_submitting || _checkInClinicId == "" || (_checkInType == "appointment" && _selectedAppointmentId == ""))" @onclick="SubmitCheckIn">
+                <button class="btn btn-primary" disabled="@(_submitting || _checkInClinicId == "" || (_checkInType == "appointment" && _selectedAppointmentId == "") || (_checkInType == "walk-in" && string.IsNullOrWhiteSpace(_walkInEmail)))" @onclick="SubmitCheckIn">
                     @(_submitting ? "Đang xử lý..." : "Xác nhận & phát số")
                 </button>
             </div>
@@ -363,8 +377,11 @@ else
     private bool _isCheckInOpen;
     private string _checkInType = "walk-in";
     private string _walkInName = "";
+    private string _walkInEmail = "";
+    private string _walkInPhone = "";
     private string _selectedAppointmentId = "";
     private string _checkInClinicId = "";
+    private bool _startingCall;
 
     private QueueTicketDetailDto? _transferTicket;
     private string _transferTargetClinicId = "";
@@ -454,6 +471,8 @@ else
         _isCheckInOpen = true;
         _checkInType = "walk-in";
         _walkInName = "";
+        _walkInEmail = "";
+        _walkInPhone = "";
         _selectedAppointmentId = "";
         _checkInClinicId = _selectedClinicId?.ToString() ?? _summaries.FirstOrDefault()?.ClinicId.ToString() ?? "";
     }
@@ -468,7 +487,7 @@ else
     {
         if (_checkInClinicId == "") return;
         if (_checkInType == "appointment" && _selectedAppointmentId == "") return;
-        if (_checkInType == "walk-in" && string.IsNullOrWhiteSpace(_walkInName)) return;
+        if (_checkInType == "walk-in" && (string.IsNullOrWhiteSpace(_walkInName) || string.IsNullOrWhiteSpace(_walkInEmail))) return;
 
         _submitting = true; _error = null;
         try
@@ -476,15 +495,44 @@ else
             var clinicId = Guid.Parse(_checkInClinicId);
             var appointmentId = _checkInType == "appointment" ? Guid.Parse(_selectedAppointmentId) : (Guid?)null;
             var patientName = _checkInType == "walk-in" ? _walkInName.Trim() : null;
-            var ticket = await Api.CheckIn(clinicId, appointmentId, patientName);
+            var patientEmail = _checkInType == "walk-in" ? _walkInEmail.Trim() : null;
+            var patientPhone = _checkInType == "walk-in" && !string.IsNullOrWhiteSpace(_walkInPhone) ? _walkInPhone.Trim() : null;
+            var ticket = await Api.CheckIn(clinicId, appointmentId, patientName, patientEmail, patientPhone);
             ShowSuccess($"Đã phát số {ticket?.Number} cho phòng {ticket?.ClinicName}");
             _isCheckInOpen = false;
-            _walkInName = ""; _selectedAppointmentId = "";
+            _walkInName = ""; _walkInEmail = ""; _walkInPhone = ""; _selectedAppointmentId = "";
             await LoadOverview(false);
         }
         catch (ApiClient.ApiException ex) { _error = ex.Message; }
         catch { _error = "Lỗi khi phát số khám."; }
         finally { _submitting = false; }
+    }
+
+    private async Task StartVideoCall()
+    {
+        if (_selectedAppointmentId == "" || !Guid.TryParse(_selectedAppointmentId, out var appointmentId)) return;
+        var appointment = _pendingAppointments.FirstOrDefault(a => a.Id == appointmentId);
+        if (appointment is null) return;
+
+        _startingCall = true; _error = null;
+        try
+        {
+            var staff = await Api.GetStaffDirectory() ?? new();
+            var doctorId = staff.FirstOrDefault(s => s.UserId == Token.User?.Id)?.Id;
+            if (doctorId is null) { _error = "Không tìm thấy hồ sơ nhân viên cho tài khoản này."; return; }
+
+            var session = await Api.CreateTelemedicineSession(new TelemedicineSessionWriteDto
+            {
+                AppointmentId = appointment.Id,
+                DoctorId = doctorId.Value,
+                PatientId = appointment.PatientId,
+            });
+            if (session is null) { _error = "Không thể tạo phiên khám trực tuyến."; return; }
+
+            Nav.NavigateTo($"/telemedicine/{session.Id}");
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _startingCall = false; }
     }
 
     private async Task CallNext(Guid clinicId)
