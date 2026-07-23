@@ -1,0 +1,290 @@
+@page "/telemedicine/{RoomId}"
+@attribute [Authorize(Roles = "Doctor,Patient")]
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Text.Json
+@inject IJSRuntime JS
+@inject ApiClient Api
+@inject TokenState Token
+@inject NavigationManager Nav
+
+<PageTitle>Khám trực tuyến – MediConnect</PageTitle>
+
+@if (_loading)
+{
+    <div class="d-flex justify-content-center py-5">
+        <span class="material-symbols-outlined spin" style="font-size:2.5rem;color:var(--color-primary)">progress_activity</span>
+    </div>
+}
+else if (_error is not null)
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else
+{
+    <div class="d-flex flex-column flex-lg-row gap-3" style="min-height:70vh">
+        <div class="position-relative flex-grow-1" style="background:#111;border-radius:12px;overflow:hidden;min-height:480px">
+            @if (_mediaError is not null)
+            {
+                <div class="alert alert-warning m-3">@_mediaError</div>
+            }
+            <video id="remoteVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;background:#000"></video>
+            <video id="localVideo" autoplay muted playsinline style="position:absolute;bottom:16px;right:16px;width:160px;border-radius:8px;border:2px solid #fff;background:#000"></video>
+            <div class="d-flex gap-2" style="position:absolute;bottom:16px;left:16px">
+                <button class="btn btn-light btn-sm" disabled="@(_mediaError is not null)" @onclick="ToggleMute">@(_muted ? "Bật mic" : "Tắt mic")</button>
+                <button class="btn btn-light btn-sm" disabled="@(_mediaError is not null)" @onclick="ToggleCamera">@(_cameraOff ? "Bật cam" : "Tắt cam")</button>
+                <button class="btn btn-danger btn-sm" @onclick="EndCall">Kết thúc</button>
+            </div>
+        </div>
+
+        <AuthorizeView Roles="Doctor" Context="doctorCtx">
+            <Authorized>
+                <div style="width:100%;max-width:360px;flex-shrink:0">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="mb-2">Ghi chú bệnh án</h6>
+                            <textarea class="form-control mb-2" rows="5" @bind="_notes" placeholder="Nhập ghi chú trong lúc khám..."></textarea>
+                            <button class="btn btn-outline-primary btn-sm w-100" disabled="@_savingNotes" @onclick="SaveNotes">
+                                @(_savingNotes ? "Đang lưu..." : "Lưu ghi chú")
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (_activeVisitId is not null && _activeDoctorId is not null && _session is not null)
+                    {
+                        <EPrescriptionPanel VisitId="@_activeVisitId" DoctorId="@_activeDoctorId.Value" PatientId="@_session.PatientId" OnClose="ClosePanel" />
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary btn-sm w-100" disabled="@(_creatingVisit || _activeDoctorId is null)" @onclick="OpenPrescription">
+                            @(_creatingVisit ? "Đang chuẩn bị..." : "Mở đơn thuốc điện tử")
+                        </button>
+                    }
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+}
+
+@code {
+    [Parameter] public string RoomId { get; set; } = "";
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private HubConnection? _hub;
+    private DotNetObjectReference<Telemedicine>? _dotnetRef;
+    private TelemedicineSessionReadDto? _session;
+    private Guid _roomGuid;
+
+    private string? _activeVisitId;
+    private Guid? _activeDoctorId;
+
+    private string _notes = "";
+    private bool _muted, _cameraOff, _savingNotes, _creatingVisit, _loading = true, _isInitiator, _isDoctor;
+    private string? _error;
+    private string? _mediaError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Guid.TryParse(RoomId, out _roomGuid))
+        {
+            _error = "Mã phiên khám không hợp lệ.";
+            _loading = false;
+            return;
+        }
+
+        var authState = AuthStateTask is not null ? await AuthStateTask : null;
+        _isDoctor = authState?.User.IsInRole("Doctor") ?? false;
+
+        try
+        {
+            _session = await Api.GetTelemedicineSession(_roomGuid);
+            if (_session is null)
+            {
+                _error = "Không tìm thấy phiên khám.";
+                _loading = false;
+                return;
+            }
+            _notes = _session.Notes ?? "";
+
+            if (_isDoctor)
+            {
+                var staff = await Api.GetStaffDirectory();
+                _activeDoctorId = staff?.FirstOrDefault(s => s.UserId == Token.User?.Id)?.Id;
+            }
+        }
+        catch (ApiClient.ApiException ex)
+        {
+            _error = ex.Message;
+            _loading = false;
+            return;
+        }
+
+        _hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/telemedicine")).Build();
+        _hub.On<string>("ReceiveSignal", HandleSignal);
+        _hub.On<string>("ReceiveIceCandidate", async candidate => await JS.InvokeVoidAsync("telemedicineInterop.addIceCandidate", candidate));
+        _hub.On("CallEnded", async () =>
+        {
+            await JS.InvokeVoidAsync("telemedicineInterop.stopCall");
+            await InvokeAsync(() => Nav.NavigateTo(_isDoctor ? "/clinic-dashboard" : "/appointments"));
+        });
+
+        await _hub.StartAsync();
+        var countBefore = await _hub.InvokeAsync<int>("JoinRoom", RoomId);
+        _isInitiator = countBefore == 0;
+
+        if (!_isInitiator && _session.StartedAt is null)
+        {
+            try { await Api.StartTelemedicineSession(_roomGuid); }
+            catch { /* best-effort — call already works even if this write fails */ }
+        }
+
+        _loading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _error is not null) return;
+
+        _dotnetRef = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("telemedicineInterop.init", _dotnetRef);
+
+        try
+        {
+            await JS.InvokeVoidAsync("telemedicineInterop.startLocalVideo", "localVideo");
+        }
+        catch (JSException)
+        {
+            // getUserMedia throws if the browser has no camera/mic or the user denies permission.
+            // Must not let this propagate — an unhandled exception here kills the whole Blazor
+            // Server circuit (disconnects the page), not just this feature. Video is unusable, but
+            // notes/e-prescription (doctor side) should still work, so this is a banner, not _error.
+            _mediaError = "Không thể truy cập camera/microphone. Vui lòng cấp quyền và tải lại trang.";
+            StateHasChanged();
+            return;
+        }
+
+        if (_isInitiator)
+        {
+            var offer = await JS.InvokeAsync<string>("telemedicineInterop.createOffer");
+            await _hub!.SendAsync("SendSignal", RoomId, JsonSerializer.Serialize(new { type = "offer", sdp = offer }));
+        }
+    }
+
+    private async Task HandleSignal(string signalJson)
+    {
+        using var doc = JsonDocument.Parse(signalJson);
+        var type = doc.RootElement.GetProperty("type").GetString();
+        var sdp = doc.RootElement.GetProperty("sdp").GetString();
+
+        if (type == "offer")
+        {
+            var answer = await JS.InvokeAsync<string>("telemedicineInterop.handleOffer", sdp);
+            await _hub!.SendAsync("SendSignal", RoomId, JsonSerializer.Serialize(new { type = "answer", sdp = answer }));
+        }
+        else if (type == "answer")
+        {
+            await JS.InvokeVoidAsync("telemedicineInterop.handleAnswer", sdp);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnIceCandidateReady(string candidateJson)
+    {
+        if (_hub is not null) await _hub.SendAsync("SendIceCandidate", RoomId, candidateJson);
+    }
+
+    private async Task SaveNotes()
+    {
+        if (_session is null) return;
+        _savingNotes = true;
+        try
+        {
+            var dto = new TelemedicineSessionWriteDto
+            {
+                AppointmentId = _session.AppointmentId,
+                DoctorId = _session.DoctorId,
+                PatientId = _session.PatientId,
+                StartedAt = _session.StartedAt,
+                EndedAt = _session.EndedAt,
+                VideoCallUrl = _session.VideoCallUrl,
+                Notes = _notes,
+            };
+            await Api.UpdateTelemedicineSession(_roomGuid, dto);
+            _session.Notes = _notes;
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _savingNotes = false; }
+    }
+
+    private async Task OpenPrescription()
+    {
+        if (_session is null || _activeDoctorId is null) return;
+        _creatingVisit = true;
+        try
+        {
+            var appointment = await Api.GetAppointment(_session.AppointmentId);
+            if (appointment is null) throw new ApiClient.ApiException(404, "Không tìm thấy lịch hẹn.");
+
+            var visit = await Api.CreateOutpatientVisit(new OutpatientVisitWriteDto
+            {
+                PatientId = _session.PatientId,
+                DoctorId = _activeDoctorId.Value,
+                ClinicId = appointment.ClinicId,
+                VisitDate = DateTime.UtcNow,
+                Status = VisitStatus.InProgress,
+            });
+            if (visit is null) throw new ApiClient.ApiException(500, "Không thể tạo hồ sơ khám mới.");
+            _activeVisitId = visit.Id.ToString();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _creatingVisit = false; }
+    }
+
+    private void ClosePanel() => _activeVisitId = null;
+
+    private async Task ToggleMute()
+    {
+        _muted = !_muted;
+        await JS.InvokeVoidAsync("telemedicineInterop.toggleAudio", !_muted);
+    }
+
+    private async Task ToggleCamera()
+    {
+        _cameraOff = !_cameraOff;
+        await JS.InvokeVoidAsync("telemedicineInterop.toggleVideo", !_cameraOff);
+    }
+
+    private async Task EndCall()
+    {
+        if (_hub is not null)
+        {
+            // Must notify the peer before leaving the group — OthersInGroup only reaches
+            // members still in it, so this has to fire before LeaveRoom removes us.
+            try { await _hub.SendAsync("NotifyCallEnded", RoomId); }
+            catch { /* best-effort — local call already ended regardless */ }
+        }
+
+        await JS.InvokeVoidAsync("telemedicineInterop.stopCall");
+        if (_hub is not null)
+        {
+            await _hub.SendAsync("LeaveRoom", RoomId);
+        }
+        try { await Api.EndTelemedicineSession(_roomGuid); }
+        catch { /* best-effort — local call already ended regardless */ }
+
+        if (_activeVisitId is not null && Guid.TryParse(_activeVisitId, out var visitId))
+        {
+            try { await Api.CompleteOutpatientVisit(visitId); }
+            catch { /* best-effort — local call already ended regardless */ }
+        }
+
+        Nav.NavigateTo(_isDoctor ? "/clinic-dashboard" : "/appointments");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await JS.InvokeVoidAsync("telemedicineInterop.stopCall");
+        if (_hub is not null) await _hub.DisposeAsync();
+        _dotnetRef?.Dispose();
+    }
+}
