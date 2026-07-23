@@ -57,32 +57,29 @@ Sinh viên/nhóm cần ghi lại:
 | 3 | 17/05/2026 | GitHub Copilot | Tao project .NET Web API va them DbContext + Models | Tao project mediconnect, them EF Core, DbContext, Models cho HIS | Da scaffold du an va them models, DbContext, connection string | Có | src/mediconnect; docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
 | 4 | 17/05/2026 | GitHub Copilot | Tao file solution cho du an .NET Web API | Yeu cau co file .sln cho project | Da tao mediconnect.sln va add project | Có | mediconnect.sln; docs/PROMPTS.md; docs/AI_AUDIT_LOG.md |
 | 5 | 03/06/2026 | Claude (Claude Code) | Tham khảo cách tổ chức interface và service pattern cho smart queue | Hỏi cách tổ chức IQueueService trong Clean Architecture | AI gợi ý tên method và cách tổ chức layer; DTO và logic được điều chỉnh theo yêu cầu dự án | Có | src/Mediconnect.Application/Interfaces/IQueueService.cs |
-
 | 6 | 05/06/2026 | Claude | Sinh code Feature 1: Bed Map & Inpatient Transfer | Them endpoints GET /api/beds/map, GET bed-assignments, POST transfer vao BedsController va InpatientAdmissionsController | Da sinh endpoints va DTOs dung clean architecture pattern | Có | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
-
 | 7 | 06/06/2026 | Antigravity | Viết backend modular riêng biệt cho smart clinic | viet backend o folder module rieng biet | Gợi ý cấu trúc module và sinh ClinicDashboard/ClinicManagement Controller | Có | src/mediconnect/Modules/SmartClinic |
 | 8 | 06/06/2026 | Antigravity | Kiểm tra lỗi cơ sở dữ liệu | check for database error | Phân tích DLL lock, giải phóng tiến trình và kiểm tra EF database up-to-date | Có | dotnet ef database update |
 | 9 | 06/06/2026 | Antigravity | Sửa lỗi mất session / đăng nhập lặp | toi khong vao duoc nhung man hinh vua tao, no cu bi mat session bat dang nhap | Phát hiện login redirect loop về /booking và sửa đổi LoginPage/AuthContext | Có | src/mediconnect-web/src/pages/LoginPage.tsx |
 | 10 | 10/06/2026 | Claude (Claude Code) | Xây dựng frontend Feature 2: Hồ sơ sức khỏe điện tử | Làm chức năng PHR cho bệnh nhân: xem lịch sử khám, đơn thuốc, kết quả xét nghiệm, tải file | Tạo PHRPage.tsx với 3 tab + 7 API calls + enrichment dữ liệu client-side | Có | src/mediconnect-web/src/pages/PHRPage.tsx |
 | 11 | 21/06/2026 | Claude (Claude Code) | Viết backend Feature 3: Quản lý viện phí & BHYT | Gom phí khám/xét nghiệm/thuốc thành phiếu thu tổng, nhập mã BHYT tự tính khấu trừ | Tạo BillingService với GenerateInvoiceAsync + CalculateInsuranceAsync, thêm endpoint POST /generate | Có | src/Mediconnect.Application/Services/BillingService.cs |
 | 12 | 02/07/2026 | Claude (Claude Code) | Check lại Feature 1/2/3, viết backend Feature 4: Thanh toán VNPay/Momo & đánh giá dịch vụ | Tích hợp cổng thanh toán, cho phép bệnh nhân rating chất lượng khám | Tạo ServiceRating + IPaymentGatewayService, phát hiện và sửa bug DbUpdateConcurrencyException ở Feature 3 khi test thật | Có | src/Mediconnect.Infrastructure/Payments/; src/Mediconnect.Domain/Entities/ServiceRating.cs |
-| 5 | 05/06/2026 | Claude | Sinh code Feature 1: Bed Map & Inpatient Transfer | Them endpoints GET /api/beds/map, GET bed-assignments, POST transfer vao BedsController va InpatientAdmissionsController | Da sinh endpoints va DTOs dung clean architecture pattern | Có | src/mediconnect/Controllers/EntityControllers.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
-| 6 | 14/06/2026 | Claude | Sinh code Feature 2: Y lenh & cham soc hang ngay | Them endpoints GET vital-signs va GET care-orders theo ca nhap vien (loc theo ngay/loai/trang thai) vao InpatientAdmissionsController | Da sinh 2 nested-route endpoint tai su dung IRepository + SimpleMapper, build sach 0 error | Có | src/mediconnect/Controllers/EntityControllers.cs |
-| 7 | 16/06/2026 | Claude | Sinh code Feature 3 & 4 (lam hai phan) | F3: queue chi dinh, nhap ket qua, upload file that; F4: discharge tong hop chi phi giuong/thuoc/thu thuat thanh invoice gui Thanh toan | Da sinh endpoints F3 (lab-orders/lab-results) va nang cap discharge F4, build sach 0 error | Có | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
-| 9 |  |  |  |  |  | Có / Không |  |
-| 10 |  |  |  |  |  | Có / Không |  |
-| 10 | 14/06/2026 | GitHub Copilot, Claude | Implement Outpatient Record UI and diagnose/create flow | Scaffold OutpatientRecordPage, handle diagnose->create->retry, add local/top search and header link | Implemented OutpatientRecordPage.tsx, header link, ClinicDashboard navigation and payload checks | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
-| 11 | 14/06/2026 | GitHub Copilot | Debug duplicate PatientProfile creation | Avoid duplicate PatientProfile by checking existing profile before create (GET /api/patients/me) | Added getMe() check and fallback create in OutpatientRecordPage.tsx to prevent DB unique index error | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
-| 12 | 28/06/2026 | Antigravity | Tích hợp NLM ICD-10 API thay thế `Icd10Catalog` chưa định nghĩa | `tim hieu ve du an... tiep tuc hoan thien sua doi tim kiem ICD-10 dua theo nlm api` + test E11/Hypertension | Sinh `SearchICD10Async()` inject HttpClient, URL NLM, parse `root[3]`, DTO `ICD10ResultDto`, đăng ký `AddHttpClient()` | Có | `src/Mediconnect.Application/Services/MedicalRecordService.cs`; `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs`; `src/mediconnect/Program.cs` |
-| 13 | 28/06/2026 | Antigravity | Sửa lỗi tên walk-in mất khi navigate sang OutpatientRecord | Cùng session với prompt 12; AI phân tích `QueueTicket` thiếu `PatientName` cột | Sinh `navigate('/outpatient-record', { state: { ticket, clinicId } })` và `useLocation` + `loc.state?.ticket` | Có | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx` |
-| 14 | 29/06/2026 | Claude (claude.ai) | Implement E-Prescription feature: drug autocomplete (GET /api/drugs), allergy validation, pharmacy stock filter, send flow POST /api/prescriptions | Feature 3 E-Prescription: drug autocomplete debounced 250ms, allergy check [Penicillin/Peanuts/Sulfa Drugs], stock filter via GET /api/clinics/active, disabled add khi stock=0, send flow POST /api/prescriptions + /api/prescriptionitems | Sinh EPrescriptionPanel.tsx, EPrescriptionPage.tsx, update OutpatientRecordPage.tsx + services.ts + types/index.ts | Có | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
-| 15 | 29/06/2026 | Claude (claude.ai) | Sidebar UI: nâng E-Prescription lên top-level section, visual parity với Outpatient Records, route /e-prescription | Promote E-Prescription: standalone top-level nav link "Đơn thuốc điện tử", order Queue → Outpatient Records → E-Prescription → Telemedicine, route /e-prescription với RoleProtectedRoute | Sinh Header.tsx nav link (desktop + mobile, isStaff block), App.tsx route với RoleProtectedRoute (Doctor, Nurse) | Có | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` |
-| 10 | 20/06/2026 | Claude (Claude Code) | Kiểm thử end-to-end chức năng Statistics Report bằng Playwright, thêm seed data và xác nhận sửa lỗi | bạn test lại xem đã chạy ổn chức năng report này chưa / thêm data vào database rồi test lại / tất cả đã oke hết chưa | Phát hiện và sửa 2 bug thật: lệch ngày do `toISOString()` lấy giờ UTC ở frontend, và endDate không bao trọn ngày cuối ở backend; seed thêm dữ liệu invoice/khoa phòng để dashboard có số liệu thực tế | Có | C:/tmp/pwtest/*.mjs; src/Mediconnect.Infrastructure/Repositories/ReportQuery.cs; src/mediconnect-web/src/utils/reportUtils.ts |
-| 11 | 20/06/2026 | Claude (Claude Code) | Sinh code Screen 3.1 (Dashboard Doanh thu) và Screen 3.2 (Dashboard Vận hành) từ backend đến frontend theo đặc tả chính xác | Dashboard Thống kê & Báo cáo... Screen 3.1: Dashboard Doanh thu tài chính... Screen 3.2: Dashboard Báo cáo vận hành... hãy làm theo 2 màn hình như này từ backend đến frontend | Sinh DTO/Interface/Query/Controller cho Report module theo pattern CQRS-lite có sẵn; sinh 2 trang React riêng biệt dùng SVG chart tự viết (Bar/Line/Pie), filter theo kỳ và khoa phòng, export CSV | Có | src/Mediconnect.Application/DTOs/ReportDtos.cs; src/mediconnect-web/src/pages/RevenueDashboardPage.tsx; src/mediconnect-web/src/pages/OperationsReportPage.tsx |
-| 12 | 20/06/2026 | Claude (Claude Code) | Đọc checkfile.md để đối chiếu các screen của Admin (Thành viên 4) đã có/chưa có trong project | hãy đọc file này và tổng hợp các screen nào là của admin mà cái nào đã có trong project và cái nào chưa có | Liệt kê 6 screen thuộc Thành viên 4, xác định 3 đã có backend nhưng chưa có UI (Quản lý nhân sự, Cảnh báo tương tác thuốc, Quản lý tài khoản) và 2 chưa làm (Banner cảnh báo quá liều, Cấu hình OTP) | Có | docs (đối chiếu nội bộ, không tạo file mới) |
-| 13 | 20/06/2026 | Claude (Claude Code) | Hoàn thiện frontend cho 3 trang Admin còn thiếu UI: Quản lý nhân sự, Cảnh báo tương tác thuốc (CDSS), Quản lý tài khoản | hãy hoàn thiện các trang đang nửa vời | Sinh 3 trang React đầy đủ CRUD + kiểm thử bằng Playwright (gọi API thật qua fetch để xác nhận persist), phát hiện 1 bug trong chính script test (chọn nhầm nút do selector trùng text) chứ không phải bug ứng dụng | Có | src/mediconnect-web/src/pages/StaffManagementPage.tsx; src/mediconnect-web/src/pages/UserManagementPage.tsx; src/mediconnect-web/src/pages/DrugInteractionPage.tsx |
-| 14 | 01/07/2026 | Claude (Claude Code) | Hoàn thiện 2 Screen còn thiếu của Thành viên 4: Banner cảnh báo quá liều (2.2) và Cấu hình/bảo mật OTP (4.2) | tìm hiểu dự án còn thiếu các screen nào trong các screen này rồi làm cho tôi [kèm đặc tả Thành viên 4] | Xác nhận đúng 2 screen còn thiếu; sinh backend (Drug dose threshold, CdssController.DoseCheck thật, OtpSetting/OtpCode/OtpController) và frontend (tab dose-check + trang OtpSecurityPage); tự tạo migration và test Playwright 15/15 pass | Có | src/mediconnect/Controllers/CdssController.cs; OtpController.cs; src/mediconnect-web/src/pages/OtpSecurityPage.tsx |
-| 15 | 01/07/2026 | Claude (Claude Code) | Tích hợp gửi OTP thật qua Email (SMTP) dùng chung cho Gmail App Password và SendGrid | mình muốn dùng otp thật hãy làm cho mình tích hợp send grid với google app passwords | Thiết kế 1 abstraction IOtpSender + SmtpOtpSender (MailKit) dùng chung cho cả 2 provider vì cùng chuẩn SMTP; che mã khi gửi thật, fallback mô phỏng khi lỗi/chưa cấu hình; tự kiểm chứng bằng host giả để xác nhận code gửi thật có chạy | Có | src/Mediconnect.Infrastructure/Notifications/SmtpOtpSender.cs; src/mediconnect/appsettings.json |
+| 13 | 14/06/2026 | Claude | Sinh code Feature 2: Y lenh & cham soc hang ngay | Them endpoints GET vital-signs va GET care-orders theo ca nhap vien (loc theo ngay/loai/trang thai) vao InpatientAdmissionsController | Da sinh 2 nested-route endpoint tai su dung IRepository + SimpleMapper, build sach 0 error | Có | src/mediconnect/Controllers/EntityControllers.cs |
+| 14 | 16/06/2026 | Claude | Sinh code Feature 3 & 4 (lam hai phan) | F3: queue chi dinh, nhap ket qua, upload file that; F4: discharge tong hop chi phi giuong/thuoc/thu thuat thanh invoice gui Thanh toan | Da sinh endpoints F3 (lab-orders/lab-results) va nang cap discharge F4, build sach 0 error | Có | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
+| 15 | 14/06/2026 | GitHub Copilot, Claude | Implement Outpatient Record UI and diagnose/create flow | Scaffold OutpatientRecordPage, handle diagnose->create->retry, add local/top search and header link | Implemented OutpatientRecordPage.tsx, header link, ClinicDashboard navigation and payload checks | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+| 16 | 14/06/2026 | GitHub Copilot | Debug duplicate PatientProfile creation | Avoid duplicate PatientProfile by checking existing profile before create (GET /api/patients/me) | Added getMe() check and fallback create in OutpatientRecordPage.tsx to prevent DB unique index error | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
+| 17 | 28/06/2026 | Antigravity | Tích hợp NLM ICD-10 API thay thế `Icd10Catalog` chưa định nghĩa | `tim hieu ve du an... tiep tuc hoan thien sua doi tim kiem ICD-10 dua theo nlm api` + test E11/Hypertension | Sinh `SearchICD10Async()` inject HttpClient, URL NLM, parse `root[3]`, DTO `ICD10ResultDto`, đăng ký `AddHttpClient()` | Có | `src/Mediconnect.Application/Services/MedicalRecordService.cs`; `src/mediconnect/Modules/SmartClinic/OutpatientRecordController.cs`; `src/mediconnect/Program.cs` |
+| 18 | 28/06/2026 | Antigravity | Sửa lỗi tên walk-in mất khi navigate sang OutpatientRecord | Cùng session với prompt 17; AI phân tích `QueueTicket` thiếu `PatientName` cột | Sinh `navigate('/outpatient-record', { state: { ticket, clinicId } })` và `useLocation` + `loc.state?.ticket` | Có | `src/mediconnect-web/src/pages/ClinicDashboardPage.tsx`; `src/mediconnect-web/src/pages/OutpatientRecordPage.tsx` |
+| 19 | 29/06/2026 | Claude (claude.ai) | Implement E-Prescription feature: drug autocomplete (GET /api/drugs), allergy validation, pharmacy stock filter, send flow POST /api/prescriptions | Feature 3 E-Prescription: drug autocomplete debounced 250ms, allergy check [Penicillin/Peanuts/Sulfa Drugs], stock filter via GET /api/clinics/active, disabled add khi stock=0, send flow POST /api/prescriptions + /api/prescriptionitems | Sinh EPrescriptionPanel.tsx, EPrescriptionPage.tsx, update OutpatientRecordPage.tsx + services.ts + types/index.ts | Có | `src/mediconnect-web/src/pages/EPrescriptionPanel.tsx`; `src/mediconnect-web/src/pages/EPrescriptionPage.tsx`; `src/mediconnect-web/src/api/services.ts`; `src/mediconnect-web/src/types/index.ts` |
+| 20 | 29/06/2026 | Claude (claude.ai) | Sidebar UI: nâng E-Prescription lên top-level section, visual parity với Outpatient Records, route /e-prescription | Promote E-Prescription: standalone top-level nav link "Đơn thuốc điện tử", order Queue → Outpatient Records → E-Prescription → Telemedicine, route /e-prescription với RoleProtectedRoute | Sinh Header.tsx nav link (desktop + mobile, isStaff block), App.tsx route với RoleProtectedRoute (Doctor, Nurse) | Có | `src/mediconnect-web/src/components/layout/Header.tsx`; `src/mediconnect-web/src/App.tsx` |
+| 21 | 20/06/2026 | Claude (Claude Code) | Kiểm thử end-to-end chức năng Statistics Report bằng Playwright, thêm seed data và xác nhận sửa lỗi | bạn test lại xem đã chạy ổn chức năng report này chưa / thêm data vào database rồi test lại / tất cả đã oke hết chưa | Phát hiện và sửa 2 bug thật: lệch ngày do `toISOString()` lấy giờ UTC ở frontend, và endDate không bao trọn ngày cuối ở backend; seed thêm dữ liệu invoice/khoa phòng để dashboard có số liệu thực tế | Có | C:/tmp/pwtest/*.mjs; src/Mediconnect.Infrastructure/Repositories/ReportQuery.cs; src/mediconnect-web/src/utils/reportUtils.ts |
+| 22 | 20/06/2026 | Claude (Claude Code) | Sinh code Screen 3.1 (Dashboard Doanh thu) và Screen 3.2 (Dashboard Vận hành) từ backend đến frontend theo đặc tả chính xác | Dashboard Thống kê & Báo cáo... Screen 3.1: Dashboard Doanh thu tài chính... Screen 3.2: Dashboard Báo cáo vận hành... hãy làm theo 2 màn hình như này từ backend đến frontend | Sinh DTO/Interface/Query/Controller cho Report module theo pattern CQRS-lite có sẵn; sinh 2 trang React riêng biệt dùng SVG chart tự viết (Bar/Line/Pie), filter theo kỳ và khoa phòng, export CSV | Có | src/Mediconnect.Application/DTOs/ReportDtos.cs; src/mediconnect-web/src/pages/RevenueDashboardPage.tsx; src/mediconnect-web/src/pages/OperationsReportPage.tsx |
+| 23 | 20/06/2026 | Claude (Claude Code) | Đọc checkfile.md để đối chiếu các screen của Admin (Thành viên 4) đã có/chưa có trong project | hãy đọc file này và tổng hợp các screen nào là của admin mà cái nào đã có trong project và cái nào chưa có | Liệt kê 6 screen thuộc Thành viên 4, xác định 3 đã có backend nhưng chưa có UI (Quản lý nhân sự, Cảnh báo tương tác thuốc, Quản lý tài khoản) và 2 chưa làm (Banner cảnh báo quá liều, Cấu hình OTP) | Có | docs (đối chiếu nội bộ, không tạo file mới) |
+| 24 | 20/06/2026 | Claude (Claude Code) | Hoàn thiện frontend cho 3 trang Admin còn thiếu UI: Quản lý nhân sự, Cảnh báo tương tác thuốc (CDSS), Quản lý tài khoản | hãy hoàn thiện các trang đang nửa vời | Sinh 3 trang React đầy đủ CRUD + kiểm thử bằng Playwright (gọi API thật qua fetch để xác nhận persist), phát hiện 1 bug trong chính script test (chọn nhầm nút do selector trùng text) chứ không phải bug ứng dụng | Có | src/mediconnect-web/src/pages/StaffManagementPage.tsx; src/mediconnect-web/src/pages/UserManagementPage.tsx; src/mediconnect-web/src/pages/DrugInteractionPage.tsx |
+| 25 | 01/07/2026 | Claude (Claude Code) | Hoàn thiện 2 Screen còn thiếu của Thành viên 4: Banner cảnh báo quá liều (2.2) và Cấu hình/bảo mật OTP (4.2) | tìm hiểu dự án còn thiếu các screen nào trong các screen này rồi làm cho tôi [kèm đặc tả Thành viên 4] | Xác nhận đúng 2 screen còn thiếu; sinh backend (Drug dose threshold, CdssController.DoseCheck thật, OtpSetting/OtpCode/OtpController) và frontend (tab dose-check + trang OtpSecurityPage); tự tạo migration và test Playwright 15/15 pass | Có | src/mediconnect/Controllers/CdssController.cs; OtpController.cs; src/mediconnect-web/src/pages/OtpSecurityPage.tsx |
+| 26 | 01/07/2026 | Claude (Claude Code) | Tích hợp gửi OTP thật qua Email (SMTP) dùng chung cho Gmail App Password và SendGrid | mình muốn dùng otp thật hãy làm cho mình tích hợp send grid với google app passwords | Thiết kế 1 abstraction IOtpSender + SmtpOtpSender (MailKit) dùng chung cho cả 2 provider vì cùng chuẩn SMTP; che mã khi gửi thật, fallback mô phỏng khi lỗi/chưa cấu hình; tự kiểm chứng bằng host giả để xác nhận code gửi thật có chạy | Có | src/Mediconnect.Infrastructure/Notifications/SmtpOtpSender.cs; src/mediconnect/appsettings.json |
+| 27 | 12/07/2026 - 13/07/2026 | Claude Code (claude-sonnet-5) | Kiểm thử trực tiếp luồng khám vãng lai/kê đơn/CDSS trên browser, phát hiện và sửa 3 bug thật | hãy thử thêm 1 bệnh nhân vãng lai vào hàng đợi, tiếp nhận họ và ghi đơn thuốc, chẩn đoán... queue không phải tôi viết, chỉ viết thêm vào không thay thế | Phát hiện & fix: (1) walk-in không lưu tên + không lưu được bệnh án do thiếu PatientProfile; (2) lỗi 500 khi lưu chẩn đoán lần đầu cho bất kỳ bệnh nhân nào; (3) MedicalServices/Drugs seed rỗng; (4) dropdown nhà thuốc giả + bug autocomplete chọn thuốc; (5) 2 API CDSS có sẵn nhưng chưa nối vào luồng kê đơn; (6) lệch ngày UTC/local ở PHR | Có | Chi tiết đầy đủ: docs/AI_AUDIT_LOG.md, "Lần sử dụng AI số 18" |
+| 28 | 13/07/2026 | Claude Code (claude-sonnet-5) | Viết lại 6 commit của phiên trên sang tiếng Anh theo quy chuẩn, chuẩn bị PR checklist | giờ tôi muốn bạn undo hết commit để sửa về tiếng anh cho đúng quy chuẩn, mỗi commit liệt kê nội dung, file nào bị sửa (nhấn mạnh nếu không phải của tôi), file nào được tạo / giúp tôi làm pull request | Soft-reset 6 commit về base rồi recommit từng nhóm với message tiếng Anh liệt kê rõ file sửa/tạo và đánh dấu file không phải do người dùng viết (dựa trên git blame); tạo branch mới cho bản viết lại; điền sẵn nội dung PR checklist (description, type of change, AI usage, verification, evidence) dựa trên commit thật và AI_AUDIT_LOG #18 | Có | 6 commit viết lại trên `feature/de190123-walkin-cdss-fixes`; nội dung PR checklist đã điền sẵn gửi qua chat (chưa tạo file trong repo) |
 
 ---
 
@@ -1217,6 +1214,223 @@ bằng curl (endpoint chuyển từ 500 sang 200); push branch `feature/ui-fixes
 Prompt "danh gia loi 500" ngắn và không nêu rõ nguyên nhân, nhưng việc curl trực tiếp
 endpoint (thay vì chỉ đọc lại code Blazor vừa sửa) giúp tìm đúng gốc rễ (migration EF
 Core chưa áp dụng) chỉ trong 1 lần thử, tránh sửa nhầm chỗ không liên quan.
+```
+
+---
+
+### Prompt số 17
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 12/07/2026 - 13/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Kiểm thử trực tiếp luồng nghiệp vụ khám vãng lai/kê đơn/CDSS trên browser, sửa các lỗi phát hiện được qua test thực tế |
+| Phần việc liên quan | Backend (QueueService, Controllers) / Frontend (Blazor) / Database (seed data, migration) |
+| Mức độ sử dụng | Sinh code chính + tự phát hiện & fix bug qua test thực tế |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+hãy thử thêm 1 bệnh nhân vãng lai vào hàng đợi, tiếp nhận họ và ghi đơn thuốc, chẩn đoán
+theo như nghiệp vụ thông thường sau đó kiểm tra xem có vấn đề gì với data
+đề xuất luôn hướng fix cho 2 lỗi này
+giờ giả sử tôi muốn làm theo kiểu mỗi lần thêm khách vãng lai là giống như bác sĩ sẽ tạo
+thủ công patient
+tôi muốn tránh việc phải chỉnh sửa vào module mà tôi không làm; hãy giải thích nếu điều đó
+cần thiết
+chốt lại kế hoạch với sửa service — lưu ý: queue không phải tôi viết tôi không kiểm tra
+được, chỉ viết thêm vào không thay thế
+cập nhật file sql mới đó vào db, xóa hết data cũ (vì bản của tôi outdated)
+thêm những seed mà tôi cần trực tiếp vào file sql đó, sau đó chạy lại db
+tôi bị lỗi 500 khi tạo hồ sơ
+tôi không nhập được tên thuốc / không click/focus vào ô được
+gửi đến nhà thuốc là gửi đi đâu
+Bỏ dropdown đi
+đơn thuốc sẽ được chuyển qua cho admin -> tính năng test cảnh báo tương tác thuốc
+hãy tiến hành flow bệnh nhân đặt lịch hẹn -> bác sĩ hoàn thành chẩn đoán và đơn thuốc để
+tôi xem dữ liệu nó có về hồ sơ sức khỏe điện tử khồng, sử dụng tài khoản demo cho sẵn
+cập nhật doc và commit
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Module DE190123 (SmartClinic: hàng đợi, hồ sơ ngoại trú, đơn thuốc điện tử) vừa được merge
+vào develop. Thay vì chỉ đọc code để audit, người dùng yêu cầu chạy thử đúng luồng nghiệp vụ
+thật qua trình duyệt (browser pane) để tìm lỗi thật thay vì lỗi lý thuyết. QueueService.cs là
+module không phải người dùng tự viết nên yêu cầu chỉ được thêm mới, không được sửa/ghi đè logic
+có sẵn.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+1. Check-in vãng lai → tên hiển thị "Bệnh nhân vãng lai" xuyên suốt hàng đợi, và không lưu
+   được bệnh án vì OutpatientVisit.PatientId là FK bắt buộc nhưng walk-in chưa có
+   PatientProfile. Fix: thêm PatientId/PatientName snapshot vào QueueTicket (migration mới,
+   nullable), WalkInCheckInAsync tạo thật UserAccount + PatientProfile, 4 hàm đọc dữ liệu đọc
+   snapshot trước rồi fallback về logic cũ — không sửa nhánh appointment hiện có.
+2. Lưu chẩn đoán lần đầu cho bất kỳ bệnh nhân nào bị 500 vì thiếu try/catch quanh
+   SaveMedicalRecordAsync — fix bằng try/catch giống pattern ClinicDashboardController.
+3. seed_hospital.sql xóa 26 bảng nhưng chỉ insert lại 6 — MedicalServices và Drugs luôn rỗng.
+   Thêm 16 dịch vụ + 14 thuốc (có thuốc trùng tên dị ứng demo để test cảnh báo, 1 thuốc hết
+   hàng, 2 thuốc có MaxDailyDose để test CDSS quá liều).
+4. Bỏ dropdown "Nhà thuốc/Phòng khám" giả trong e-prescription (không lọc theo địa điểm thật),
+   fix bug chọn thuốc gợi ý làm xóa trắng ô tên thuốc, và nối thẳng 2 API CDSS (tương tác
+   thuốc + quá liều) đã viết sẵn nhưng chưa từng dùng ngoài trang Admin riêng vào luồng kê
+   đơn thật.
+5. Chạy full flow demo (đặt lịch → khám → kê đơn → xem PHR) phát hiện thêm bug lệch ngày
+   UTC/local ở tab "Lịch sử khám" của PHR — fix 1 dòng thiếu .ToLocalTime().
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng toàn bộ 6 fix trên sau khi dotnet build sạch (0 Warning/0 Error) và test trực tiếp
+qua Browser pane ở mỗi bước; áp dụng migration EF Core mới và seed_hospital.sql đã sửa vào DB
+dev thật.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Đặt ràng buộc "chỉ thêm code mới, không viết lại logic có sẵn" cho QueueService.cs trước khi
+  cho AI sửa, vì đây không phải module tự viết nên không tự kiểm chứng đúng/sai được.
+- Quyết định bỏ hẳn dropdown "Nhà thuốc" giả và tích hợp CDSS thẳng vào luồng kê đơn, thay vì
+  giữ nguyên hướng route qua Admin duyệt riêng như thiết kế ban đầu.
+- Từ chối yêu cầu AI tự seed thêm dữ liệu DrugInteractions mẫu.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | 49a2141, 51ce622, e26abc2, e664d5d, b0627a5 (sau này viết lại tiếng Anh ở Prompt số 18) |
+| File liên quan | `QueueTicket.cs`, `QueueService.cs`, `SmartQueueDtos.cs`, `ClinicDashboard.razor`, migration `AddQueueTicketPatientSnapshot`; `OutpatientRecordController.cs`; `docs/seed_hospital.sql`; `EPrescriptionPanel.razor`, `OutpatientRecord.razor`, `EPrescription.razor`, `ApiClient.cs`; `PHR.razor` |
+| Screenshot | |
+| Kết quả chạy/test | `dotnet build`: 0 Warning/0 Error sau mỗi bước; test sống qua Browser pane từng bug; full flow đặt lịch → khám → kê đơn → PHR khớp 100% dữ liệu |
+| Link tài liệu/báo cáo | docs/AI_AUDIT_LOG.md, "Lần sử dụng AI số 18" |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Chi tiết đầy đủ hơn (bao gồm cả log lỗi encoding khi seed) đã ghi ở docs/AI_AUDIT_LOG.md,
+"Lần sử dụng AI số 18", tránh lặp lại toàn văn ở đây.
+```
+
+---
+
+### Prompt số 18
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 13/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Viết lại 6 commit của Prompt số 17 sang tiếng Anh theo quy chuẩn, và soạn sẵn nội dung PR checklist |
+| Phần việc liên quan | Git workflow / Documentation |
+| Mức độ sử dụng | Thao tác git + soạn nội dung |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+giờ tôi muốn bạn undo hết commit để sửa về tiếng anh cho đúng quy chuẩn, mỗi commit liệt kê
+nội dung, file nào bị sửa (nhấn mạnh nếu không phải của tôi), file nào được tạo
+rewrite in feature/de190123-walkin-cdss-fixes
+switch feature/de190123-walkin-cdss-fixes to the new history
+delete
+now help me do the pull request [kèm mẫu PR checklist] fill in these info
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+6 commit của Prompt số 17 (walk-in/prescribing/CDSS) đang viết message bằng tiếng Việt,
+không đúng quy chuẩn commit message của môn học/nhóm. Người dùng muốn giữ nguyên nội dung
+thay đổi nhưng viết lại message tiếng Anh, có liệt kê rõ file sửa/tạo và đánh dấu file không
+phải do mình viết để tránh nhận vơ công của người khác. Sau đó cần chuẩn bị PR theo mẫu
+checklist của môn học nhưng máy không cài `gh` CLI.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+- `git reset --soft` về commit trước phiên (giữ nguyên toàn bộ nội dung thay đổi), rồi
+  recommit từng nhóm file đúng như cũ với message tiếng Anh; mỗi message liệt kê rõ "Files
+  modified" / "Files created", và với file không phải người dùng tự viết (dựa theo
+  `git log <base> -1 -- <file>` xem tác giả cuối cùng trước phiên) thì ghi rõ "NOT authored
+  by me (last touched by teammate X)". Xác nhận `git diff` giữa cây thư mục cũ và mới rỗng
+  tuyệt đối trước khi coi là xong.
+- Tạo branch tạm `feature/de190123-walkin-cdss-fixes-en` trỏ vào chuỗi commit viết lại, không
+  đụng vào branch gốc đang checkout ở worktree chia sẻ khác cho tới khi được xác nhận rõ ràng.
+- Khi thao tác `git reset --hard` trên worktree khác bị bộ lọc an toàn chặn lần đầu (do ghi
+  chú cũ trong bộ nhớ về xung đột appsettings.json chưa giải quyết) — kiểm tra lại trạng thái
+  thật (working tree sạch) và hỏi lại người dùng bằng AskUserQuestion trước khi thử lại.
+- Soạn sẵn nội dung PR checklist (Description, Type of change, Related issue, AI Usage
+  Declaration, Main AI Prompt, Verification, Evidence) dựa trên 6 commit thật và
+  docs/AI_AUDIT_LOG.md #18, vì máy không có `gh` CLI nên đưa link "compare" GitHub + nội dung
+  để người dùng tự dán vào, không tự ý push hay tạo PR thay.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng: 6 commit viết lại tiếng Anh trên branch `feature/de190123-walkin-cdss-fixes` (branch
+gốc được chuyển sang trỏ vào lịch sử mới sau khi xác nhận nội dung cây thư mục giống hệt);
+xóa branch tạm `-en` sau khi không còn cần; nội dung PR checklist gửi qua chat để người dùng
+tự dán vào GitHub.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Chỉ định rõ base branch (develop) và từ chối để AI tự push — tự kiểm soát thời điểm đẩy code
+  lên remote.
+- Yêu cầu AI xác nhận cây thư mục (git diff) giống hệt trước khi tin là viết lại commit không
+  làm mất/lệch nội dung.
+- Tự quyết định xóa branch tạm `-en` sau khi xác nhận branch chính đã trỏ đúng lịch sử mới.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [x] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | bbf2a74, 71fbc6d, d60fa4d, 7ac842b, 8f995a0, 00de2c4 trên `feature/de190123-walkin-cdss-fixes` |
+| File liên quan | (không đổi nội dung file so với Prompt số 17, chỉ viết lại message commit) |
+| Screenshot | |
+| Kết quả chạy/test | `git diff <commit cũ> <commit mới> --stat` rỗng — xác nhận nội dung cây thư mục không đổi |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | Chưa tạo PR thật trên GitHub tại thời điểm ghi log — chỉ soạn sẵn nội dung, chờ người dùng tự mở link và dán |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Bộ lọc an toàn (safety classifier) của công cụ chặn 1 lần thao tác git reset --hard trên
+worktree khác vì thấy ghi chú cũ (đã lỗi thời) về xung đột file chưa giải quyết — minh chứng
+việc nên luôn kiểm tra lại trạng thái git thật (git status) ngay trước khi thao tác thay vì
+chỉ tin vào ghi chú/bối cảnh cũ.
 ```
 
 ---

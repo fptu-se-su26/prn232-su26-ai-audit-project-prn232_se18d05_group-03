@@ -79,4 +79,8 @@ public class WalkInCheckInRequestDto
     public Guid? AppointmentId { get; set; }
     /// <summary>Tên bệnh nhân vãng lai (khi không có AppointmentId).</summary>
     public string? PatientName { get; set; }
+    /// <summary>Email thật của bệnh nhân vãng lai — dùng để tạo/tái sử dụng tài khoản Patient.</summary>
+    public string? PatientEmail { get; set; }
+    /// <summary>SĐT bệnh nhân vãng lai (tùy chọn).</summary>
+    public string? PatientPhone { get; set; }
 }
