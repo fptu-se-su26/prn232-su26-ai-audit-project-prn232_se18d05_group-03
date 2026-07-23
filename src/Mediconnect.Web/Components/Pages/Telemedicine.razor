@@ -403,6 +403,12 @@ else
             catch { /* best-effort — local call already ended regardless */ }
         }
 
+        if (_session is not null)
+        {
+            try { await Api.UpdateAppointmentStatus(_session.AppointmentId, AppointmentStatus.Completed); }
+            catch { /* best-effort — local call already ended regardless */ }
+        }
+
         Nav.NavigateTo(_isDoctor ? "/clinic-dashboard" : "/appointments");
     }
 

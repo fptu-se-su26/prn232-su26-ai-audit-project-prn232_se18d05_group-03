@@ -124,6 +124,7 @@ public class ApiClient
     public Task<List<AppointmentReadDto>?> GetAppointments() => SendAsync<List<AppointmentReadDto>>(HttpMethod.Get, "api/appointments");
     public Task<AppointmentReadDto?> CreateAppointment(AppointmentWriteDto dto) => SendAsync<AppointmentReadDto>(HttpMethod.Post, "api/appointments", dto);
     public Task<AppointmentReadDto?> GetAppointment(Guid id) => SendAsync<AppointmentReadDto>(HttpMethod.Get, $"api/appointments/{id}");
+    public Task UpdateAppointmentStatus(Guid id, AppointmentStatus status) => SendAsync(HttpMethod.Patch, $"api/appointments/{id}/status", new { status });
 
     // ---- telemedicine ----
     public Task<TelemedicineSessionReadDto?> CreateTelemedicineSession(TelemedicineSessionWriteDto dto) => SendAsync<TelemedicineSessionReadDto>(HttpMethod.Post, "api/telemedicinesessions", dto);
