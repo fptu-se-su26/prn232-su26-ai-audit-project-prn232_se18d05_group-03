@@ -753,6 +753,10 @@ Viết tại đây...
 | 27 | Bổ sung seed `MedicalServices` (16 dịch vụ) và `Drugs` (14 thuốc) — 2 bảng bị `DELETE` trong `seed_hospital.sql` nhưng chưa từng được `INSERT` lại, khiến ManageServices/E-Prescription trống dữ liệu | Completed | `docs/seed_hospital.sql` | DE190123 |
 | 28 | E-Prescription: bỏ dropdown "Nhà thuốc" không lọc thật theo địa điểm; fix bug chọn thuốc gợi ý không điền tên vào ô tìm kiếm; tích hợp CDSS cảnh báo tương tác thuốc + quá liều ngay lúc kê đơn (2 API đã có sẵn nhưng trước đó chỉ dùng ở trang Admin riêng biệt) | Completed | `EPrescriptionPanel.razor`, `OutpatientRecord.razor`, `EPrescription.razor`, `ApiClient.cs` | DE190123 |
 | 29 | Fix lệch ngày hiển thị (UTC vs local) ở Hồ sơ Sức khỏe Điện tử — tab "Lịch sử khám" thiếu `.ToLocalTime()` nên lùi 1 ngày với mọi lượt khám sau 17:00 giờ VN | Completed | `PHR.razor` | DE190123 |
+| 30 | Feature 4 – Telemedicine: video call SignalR/WebRTC giữa bác sĩ và bệnh nhân (`TelemedicineHub`, `telemedicine.js`, trang `/telemedicine/{RoomId}`), fix crash camera/mic bị từ chối quyền, thông báo cuộc gọi đến cho bệnh nhân (polling), đồng bộ kết thúc cuộc gọi 2 bên | Completed | `TelemedicineHub.cs`, `telemedicine.js`, `Telemedicine.razor`, `Appointments.razor` | DE190123 |
+| 31 | Fix UI đơn thuốc điện tử bị chật khi nhúng cạnh khung video call — đổi từ Bootstrap `col-*`/`row` sang CSS container-query | Completed | `EPrescriptionPanel.razor`, `EPrescriptionPanel.razor.css` | DE190123 |
+| 32 | Thêm ghi Triệu chứng & Chẩn đoán ICD-10 ngay trong lúc gọi video tele (trước đó tele không ghi gì nên không có cơ sở tính bill) | Completed | `Telemedicine.razor` | DE190123 |
+| 33 | Fix bill thiếu phí khám (bug có sẵn của Billing, không riêng tele) bằng dropdown "Dịch vụ khám" lọc theo khoa; fix Appointment.Status không bao giờ đổi khỏi "Chờ xác nhận" — cascade sang Completed từ cả luồng tele và walk-in/hẹn trước | Completed | `Billing.razor`, `ApiClient.cs`, `Telemedicine.razor`, `MedicalRecordService.cs` | DE190123 |
 
 ---
 
