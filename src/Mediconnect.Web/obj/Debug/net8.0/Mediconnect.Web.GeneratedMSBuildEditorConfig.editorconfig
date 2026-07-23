@@ -24,8 +24,76 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/Billing.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xCaWxsaW5nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/Booking.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xCb29raW5nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/ClinicDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xDbGluaWNEYXNoYm9hcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/DrugInteraction.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEcnVnSW50ZXJhY3Rpb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/EPrescription.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xFUHJlc2NyaXB0aW9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/Error.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xFcnJvci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/ManageServices.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xNYW5hZ2VTZXJ2aWNlcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/OperationsReport.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xPcGVyYXRpb25zUmVwb3J0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/OtpSecurity.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xPdHBTZWN1cml0eS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/OutpatientRecord.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xPdXRwYXRpZW50UmVjb3JkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/PHR.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQSFIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/Register.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xSZWdpc3Rlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/RevenueDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xSZXZlbnVlRGFzaGJvYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/Reviews.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xSZXZpZXdzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/ScheduleManagement.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTY2hlZHVsZU1hbmFnZW1lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/StaffManagement.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTdGFmZk1hbmFnZW1lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/Telemedicine.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xUZWxlbWVkaWNpbmUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/UserManagement.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xVc2VyTWFuYWdlbWVudC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/RedirectToLogin.razor]
@@ -34,6 +102,30 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Routes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSb3V0ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Shared/BarChart.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcQmFyQ2hhcnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Shared/KpiCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcS3BpQ2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Shared/LineChart.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcTGluZUNoYXJ0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Shared/PieChart.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcUGllQ2hhcnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Shared/ReportFilterBar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcUmVwb3J0RmlsdGVyQmFyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Shared/Skeleton.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcU2tlbGV0b24ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/_Imports.razor]
@@ -47,6 +139,10 @@ build_metadata.AdditionalFiles.CssScope = b-iucpmfauwz
 [D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Layout/NavMenu.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcTmF2TWVudS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-70h61nq4zt
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/Appointments.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBcHBvaW50bWVudHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-srldnobsdz
 
 [D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/BedMap.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xCZWRNYXAucmF6b3I=
@@ -71,3 +167,7 @@ build_metadata.AdditionalFiles.CssScope = b-8cug3tlfb1
 [D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Pages/Vitals.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xWaXRhbHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-lgascjlayc
+
+[D:/FPTU2026/PRN232/prn232-su26-ai-audit-project-prn232_se18d05_group-03/src/Mediconnect.Web/Components/Shared/EPrescriptionPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcRVByZXNjcmlwdGlvblBhbmVsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-horqcb5htw

@@ -1111,16 +1111,41 @@ public class OutpatientVisitsController : CrudController<OutpatientVisit, Outpat
 public class PaymentsController : CrudController<Payment, PaymentReadDto, PaymentWriteDto>
 {
     private readonly IRepository<Payment> _repository;
+    private readonly IRepository<BillingInvoice> _invoiceRepository;
     private readonly IPaymentGatewayService _gateway;
 
     public PaymentsController(
         ICrudService<Payment, PaymentReadDto, PaymentWriteDto> service,
         IRepository<Payment> repository,
+        IRepository<BillingInvoice> invoiceRepository,
         IPaymentGatewayService gateway)
         : base(service)
     {
         _repository = repository;
+        _invoiceRepository = invoiceRepository;
         _gateway = gateway;
+    }
+
+    // Once a payment succeeds, flip the parent invoice to Paid when its successful payments cover the
+    // total. Without this the invoice stays Pending forever, so the revenue dashboard (which counts
+    // Paid invoices) never reflects money that was actually collected.
+    private async Task SettleInvoiceIfCoveredAsync(Guid invoiceId, CancellationToken cancellationToken)
+    {
+        var invoice = await _invoiceRepository.GetByIdAsync(invoiceId, cancellationToken);
+        if (invoice is null || invoice.Status == InvoiceStatus.Paid)
+        {
+            return;
+        }
+
+        var payments = await _repository.ListAsync(p => p.BillingInvoiceId == invoiceId, cancellationToken);
+        var paidTotal = payments.Where(p => p.Status == PaymentStatus.Paid).Sum(p => p.Amount);
+
+        if (invoice.TotalAmount > 0 && paidTotal >= invoice.TotalAmount)
+        {
+            invoice.Status = InvoiceStatus.Paid;
+            _invoiceRepository.Update(invoice);
+            await _invoiceRepository.SaveChangesAsync(cancellationToken);
+        }
     }
 
     [HttpPost("{id:guid}/confirm")]
@@ -1136,6 +1161,8 @@ public class PaymentsController : CrudController<Payment, PaymentReadDto, Paymen
         payment.PaidAt = DateTime.UtcNow;
         _repository.Update(payment);
         await _repository.SaveChangesAsync(cancellationToken);
+
+        await SettleInvoiceIfCoveredAsync(payment.BillingInvoiceId, cancellationToken);
         return NoContent();
     }
 
@@ -1203,6 +1230,11 @@ public class PaymentsController : CrudController<Payment, PaymentReadDto, Paymen
         }
         _repository.Update(payment);
         await _repository.SaveChangesAsync(cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            await SettleInvoiceIfCoveredAsync(payment.BillingInvoiceId, cancellationToken);
+        }
 
         return Ok(new { message = result.Message, paymentId = payment.Id, status = payment.Status });
     }

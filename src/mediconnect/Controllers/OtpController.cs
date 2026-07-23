@@ -17,7 +17,7 @@ namespace Mediconnect.Api.Controllers;
 /// for demonstration and verification.
 /// </summary>
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Admin")]
 [Route("api/otp")]
 public class OtpController : ControllerBase
 {
