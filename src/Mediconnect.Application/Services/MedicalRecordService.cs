@@ -12,17 +12,20 @@ public class MedicalRecordService : IMedicalRecordService
     private readonly IRepository<OutpatientVisit> _visitRepository;
     private readonly IRepository<LabOrder> _labOrderRepository;
     private readonly IRepository<QueueTicket> _ticketRepository;
+    private readonly IRepository<Appointment> _appointmentRepository;
     private readonly HttpClient _httpClient;
 
     public MedicalRecordService(
         IRepository<OutpatientVisit> visitRepository,
         IRepository<LabOrder> labOrderRepository,
         IRepository<QueueTicket> ticketRepository,
+        IRepository<Appointment> appointmentRepository,
         HttpClient httpClient)
     {
         _visitRepository = visitRepository;
         _labOrderRepository = labOrderRepository;
         _ticketRepository = ticketRepository;
+        _appointmentRepository = appointmentRepository;
         _httpClient = httpClient;
     }
 
@@ -150,6 +153,20 @@ public class MedicalRecordService : IMedicalRecordService
             {
                 ticket.Status = QueueStatus.Completed;
                 _ticketRepository.Update(ticket);
+
+                // Cascade to the scheduled appointment, if this ticket came from one — walk-in
+                // tickets have no AppointmentId and are silently skipped.
+                if (ticket.AppointmentId.HasValue)
+                {
+                    var appointment = await _appointmentRepository.GetByIdAsync(ticket.AppointmentId.Value, ct);
+                    if (appointment is not null
+                        && appointment.Status != AppointmentStatus.Completed
+                        && appointment.Status != AppointmentStatus.Cancelled)
+                    {
+                        appointment.Status = AppointmentStatus.Completed;
+                        _appointmentRepository.Update(appointment);
+                    }
+                }
             }
         }
 

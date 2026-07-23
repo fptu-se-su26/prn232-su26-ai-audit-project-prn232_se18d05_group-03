@@ -123,6 +123,27 @@ public class ApiClient
     // ---- appointments (patient) ----
     public Task<List<AppointmentReadDto>?> GetAppointments() => SendAsync<List<AppointmentReadDto>>(HttpMethod.Get, "api/appointments");
     public Task<AppointmentReadDto?> CreateAppointment(AppointmentWriteDto dto) => SendAsync<AppointmentReadDto>(HttpMethod.Post, "api/appointments", dto);
+    public Task<AppointmentReadDto?> GetAppointment(Guid id) => SendAsync<AppointmentReadDto>(HttpMethod.Get, $"api/appointments/{id}");
+    public Task UpdateAppointmentStatus(Guid id, AppointmentStatus status) => SendAsync(HttpMethod.Patch, $"api/appointments/{id}/status", new { status });
+
+    // ---- telemedicine ----
+    public Task<TelemedicineSessionReadDto?> CreateTelemedicineSession(TelemedicineSessionWriteDto dto) => SendAsync<TelemedicineSessionReadDto>(HttpMethod.Post, "api/telemedicinesessions", dto);
+    public Task<TelemedicineSessionReadDto?> GetTelemedicineSession(Guid id) => SendAsync<TelemedicineSessionReadDto>(HttpMethod.Get, $"api/telemedicinesessions/{id}");
+    public Task UpdateTelemedicineSession(Guid id, TelemedicineSessionWriteDto dto) => SendAsync(HttpMethod.Put, $"api/telemedicinesessions/{id}", dto);
+    public Task StartTelemedicineSession(Guid id) => SendAsync(HttpMethod.Patch, $"api/telemedicinesessions/{id}/start");
+    public Task EndTelemedicineSession(Guid id) => SendAsync(HttpMethod.Patch, $"api/telemedicinesessions/{id}/end");
+
+    // GetAll has no server-side filter (base CrudController.GetAll takes no query params), so this
+    // filters client-side. "Pending" = created but not yet started — StartedAt is only set once the
+    // callee (2nd participant) joins the hub room, so this is the window where a patient should see
+    // an incoming-call prompt.
+    public async Task<TelemedicineSessionReadDto?> GetPendingCallForPatient(Guid patientId)
+    {
+        var all = await SendAsync<List<TelemedicineSessionReadDto>>(HttpMethod.Get, "api/telemedicinesessions") ?? new();
+        return all.FirstOrDefault(s => s.PatientId == patientId && s.StartedAt is null && s.EndedAt is null);
+    }
+
+    public Task CompleteOutpatientVisit(Guid visitId) => SendAsync(HttpMethod.Patch, $"api/outpatientvisits/{visitId}/status", new { status = VisitStatus.Completed });
 
     // ---- service ratings (patient) ----
     public Task<List<ServiceRatingReadDto>?> GetServiceRatings() => SendAsync<List<ServiceRatingReadDto>>(HttpMethod.Get, "api/serviceratings");

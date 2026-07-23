@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Doctor,Nurse")]
 @implements IDisposable
 @inject NavigationManager Nav
+@inject TokenState Token
 
 <PageTitle>Hàng đợi phòng khám – MediConnect</PageTitle>
 
@@ -303,6 +304,11 @@ else
                                 <option value="@a.Id">[@a.AppointmentTime.ToLocalTime().ToString("HH:mm")] @PatientNameFor(a.PatientId) - @(string.IsNullOrEmpty(a.Reason) ? "Khám tổng quát" : a.Reason)</option>
                             }
                         </select>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" disabled="@(_selectedAppointmentId == "" || _startingCall)"
+                                @onclick="StartVideoCall">
+                            <span class="material-symbols-outlined align-middle" style="font-size:1rem">videocam</span>
+                            @(_startingCall ? "Đang tạo phiên..." : "Bắt đầu gọi video")
+                        </button>
                     }
                 </div>
             }
@@ -375,6 +381,7 @@ else
     private string _walkInPhone = "";
     private string _selectedAppointmentId = "";
     private string _checkInClinicId = "";
+    private bool _startingCall;
 
     private QueueTicketDetailDto? _transferTicket;
     private string _transferTargetClinicId = "";
@@ -499,6 +506,33 @@ else
         catch (ApiClient.ApiException ex) { _error = ex.Message; }
         catch { _error = "Lỗi khi phát số khám."; }
         finally { _submitting = false; }
+    }
+
+    private async Task StartVideoCall()
+    {
+        if (_selectedAppointmentId == "" || !Guid.TryParse(_selectedAppointmentId, out var appointmentId)) return;
+        var appointment = _pendingAppointments.FirstOrDefault(a => a.Id == appointmentId);
+        if (appointment is null) return;
+
+        _startingCall = true; _error = null;
+        try
+        {
+            var staff = await Api.GetStaffDirectory() ?? new();
+            var doctorId = staff.FirstOrDefault(s => s.UserId == Token.User?.Id)?.Id;
+            if (doctorId is null) { _error = "Không tìm thấy hồ sơ nhân viên cho tài khoản này."; return; }
+
+            var session = await Api.CreateTelemedicineSession(new TelemedicineSessionWriteDto
+            {
+                AppointmentId = appointment.Id,
+                DoctorId = doctorId.Value,
+                PatientId = appointment.PatientId,
+            });
+            if (session is null) { _error = "Không thể tạo phiên khám trực tuyến."; return; }
+
+            Nav.NavigateTo($"/telemedicine/{session.Id}");
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _startingCall = false; }
     }
 
     private async Task CallNext(Guid clinicId)

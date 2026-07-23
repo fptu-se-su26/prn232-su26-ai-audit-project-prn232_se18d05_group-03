@@ -236,13 +236,26 @@ else
             {
                 <div class="mb-2">
                     <label class="form-label">Chọn lần khám</label>
-                    <select class="form-select" @bind="_createVisitId">
+                    <select class="form-select" @bind="_createVisitId" @bind:after="OnCreateVisitChanged">
                         @foreach (var v in _visits)
                         {
                             <option value="@v.Id">@v.VisitDate.ToLocalTime().ToString("dd/MM/yyyy") · @(v.ClinicName ?? "Phòng khám") · BS @(v.DoctorName ?? "—")</option>
                         }
                     </select>
                 </div>
+                @if (CurrentExamOptions.Count > 0)
+                {
+                    <div class="mb-2">
+                        <label class="form-label">Dịch vụ khám</label>
+                        <select class="form-select" @bind="_createExamServiceId">
+                            <option value="">-- Chọn dịch vụ khám --</option>
+                            @foreach (var s in CurrentExamOptions)
+                            {
+                                <option value="@s.Id">@s.Name (@FmtVnd(s.Price))</option>
+                            }
+                        </select>
+                    </div>
+                }
                 <div class="mb-3">
                     <label class="form-label">Mã thẻ BHYT (tùy chọn)</label>
                     <input class="form-control" placeholder="VD: BHYT-0123456789" @bind="_createInsurance" />
@@ -281,7 +294,7 @@ else
         public bool Busy;
     }
 
-    private record VisitOption(Guid Id, DateTime VisitDate, string? DoctorName, string? ClinicName);
+    private record VisitOption(Guid Id, DateTime VisitDate, string? DoctorName, string? ClinicName, Guid ClinicId, List<MedicalServiceReadDto> ExamOptions);
 
     private bool _loading = true;
     private bool _noProfile;
@@ -295,9 +308,13 @@ else
 
     private bool _showCreate;
     private string _createVisitId = "";
+    private string _createExamServiceId = "";
     private string _createInsurance = "";
     private bool _creating;
     private string? _createError;
+
+    private List<MedicalServiceReadDto> CurrentExamOptions =>
+        _visits.FirstOrDefault(v => v.Id.ToString() == _createVisitId)?.ExamOptions ?? new();
 
     private string? _toastMsg;
 
@@ -332,6 +349,8 @@ else
             var history = await Api.GetPatientHistory(profile.Id);
             var users = (await Api.GetUserAccounts()) ?? new();
             var clinics = (await Api.GetAllClinics()) ?? new();
+            var services = ((await Api.GetMedicalServices()) ?? new()).Where(s => s.IsActive).ToList();
+            var clinicDeptById = clinics.ToDictionary(c => c.Id, c => c.DepartmentId);
 
             var myInvoices = allInvoices.Where(i => i.PatientId == profile.Id)
                 .OrderByDescending(i => i.CreatedAt)
@@ -352,11 +371,19 @@ else
             var clinicNameById = clinics.ToDictionary(c => c.Id, c => c.Name);
             _visits = (history?.Visits ?? Array.Empty<OutpatientVisitReadDto>())
                 .OrderByDescending(v => v.VisitDate)
-                .Select(v => new VisitOption(v.Id, v.VisitDate,
-                    userNameById.GetValueOrDefault(v.DoctorId),
-                    clinicNameById.GetValueOrDefault(v.ClinicId)))
+                .Select(v =>
+                {
+                    var deptId = clinicDeptById.GetValueOrDefault(v.ClinicId);
+                    var candidates = services.Where(s => s.DepartmentId == deptId).ToList();
+                    if (candidates.Count == 0) candidates = services; // fallback so invoice creation is never blocked by bad data
+                    return new VisitOption(v.Id, v.VisitDate,
+                        userNameById.GetValueOrDefault(v.DoctorId),
+                        clinicNameById.GetValueOrDefault(v.ClinicId),
+                        v.ClinicId, candidates);
+                })
                 .ToList();
             _createVisitId = _visits.FirstOrDefault()?.Id.ToString() ?? "";
+            _createExamServiceId = _visits.FirstOrDefault() is { ExamOptions.Count: 1 } first ? first.ExamOptions[0].Id.ToString() : "";
             _createInsurance = _patientInsurance;
         }
         catch { _error = "Không thể tải dữ liệu viện phí. Vui lòng kiểm tra kết nối và thử lại."; }
@@ -422,15 +449,27 @@ else
         finally { inv.Busy = false; }
     }
 
+    private void OnCreateVisitChanged()
+    {
+        var opts = CurrentExamOptions;
+        _createExamServiceId = opts.Count == 1 ? opts[0].Id.ToString() : "";
+    }
+
     private async Task SubmitCreate()
     {
         if (_createVisitId == "") { _createError = "Vui lòng chọn một lần khám."; return; }
+        if (CurrentExamOptions.Count > 0 && _createExamServiceId == "")
+        {
+            _createError = "Vui lòng chọn dịch vụ khám cho lần khám này.";
+            return;
+        }
         _creating = true; _createError = null;
         try
         {
             var result = await Api.GenerateInvoice(new GenerateInvoiceRequestDto
             {
                 OutpatientVisitId = Guid.Parse(_createVisitId),
+                ExamServiceId = string.IsNullOrEmpty(_createExamServiceId) ? null : Guid.Parse(_createExamServiceId),
                 InsuranceNumber = string.IsNullOrWhiteSpace(_createInsurance) ? null : _createInsurance.Trim(),
             });
             if (result is null) throw new ApiClient.ApiException(500, "Không thể tạo phiếu thu.");

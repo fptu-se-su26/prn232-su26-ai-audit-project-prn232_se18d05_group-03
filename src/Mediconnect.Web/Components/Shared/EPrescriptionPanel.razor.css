@@ -1,0 +1,45 @@
+/* Adapts to this component's own rendered size, not the page viewport. */
+.epr-root {
+    container-type: inline-size;
+}
+
+.epr-split {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.epr-split > div {
+    min-width: 0;
+}
+
+.epr-fields {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+.epr-field {
+    min-width: 0;
+}
+
+@container (min-width: 640px) {
+    .epr-split {
+        flex-direction: row;
+    }
+
+    .epr-split > div {
+        flex: 1 1 50%;
+    }
+}
+
+@container (min-width: 360px) {
+    .epr-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .epr-field-full {
+        grid-column: 1 / -1;
+    }
+}
