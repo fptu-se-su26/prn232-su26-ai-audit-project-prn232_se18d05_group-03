@@ -42,6 +42,57 @@ else
                 <div style="width:100%;max-width:360px;flex-shrink:0">
                     <div class="card mb-3">
                         <div class="card-body">
+                            <h6 class="mb-2">Triệu chứng & Chẩn đoán</h6>
+                            <div class="mb-2">
+                                <label class="form-label" style="font-size:.8rem">Lý do khám chính</label>
+                                <textarea class="form-control" rows="2" @bind="_chiefComplaint"></textarea>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label" style="font-size:.8rem">Mô tả triệu chứng</label>
+                                <textarea class="form-control" rows="2" @bind="_symptoms"></textarea>
+                            </div>
+                            <div class="mb-2 position-relative">
+                                <label class="form-label d-flex align-items-center gap-1" style="font-size:.8rem">
+                                    <span class="material-symbols-outlined text-muted" style="font-size:.9rem">search</span>
+                                    Mã ICD-10
+                                    @if (_icdSearching)
+                                    {
+                                        <span class="text-muted ms-auto" style="font-size:.7rem">Đang tìm...</span>
+                                    }
+                                </label>
+                                <input class="form-control" value="@_icdQuery" placeholder="Tìm mã hoặc tên bệnh..." @oninput="OnIcdQueryChanged" autocomplete="off" />
+                                @if (_showIcdDropdown && _icdResults.Count > 0)
+                                {
+                                    <div class="report-card p-0" style="position:absolute;z-index:20;width:100%;max-height:10rem;overflow-y:auto">
+                                        @foreach (var item in _icdResults)
+                                        {
+                                            <button type="button" class="btn w-100 text-start border-0 rounded-0" style="font-size:.8rem" @onclick="() => SelectIcd(item)">
+                                                <span class="fw-bold" style="color:var(--color-primary)">@item.Code</span>
+                                                <span class="text-muted"> — @item.Description</span>
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(_diagnosisCode))
+                                {
+                                    <div class="d-inline-flex align-items-center gap-2 mt-2 px-3 py-1 rounded-pill" style="background:var(--color-primary-container);color:var(--color-on-primary-container);font-size:.78rem">
+                                        <span class="fw-bold">@_diagnosisCode</span>
+                                        @if (!string.IsNullOrEmpty(_diagnosisDescription))
+                                        {
+                                            <span>— @_diagnosisDescription</span>
+                                        }
+                                        <button type="button" class="btn-close btn-close-white" style="font-size:.55rem" @onclick="ClearIcd"></button>
+                                    </div>
+                                }
+                            </div>
+                            <button class="btn btn-outline-primary btn-sm w-100" disabled="@_savingDiagnosis" @onclick="SaveDiagnosis">
+                                @(_savingDiagnosis ? "Đang lưu..." : "Lưu triệu chứng & chẩn đoán")
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-body">
                             <h6 class="mb-2">Ghi chú bệnh án</h6>
                             <textarea class="form-control mb-2" rows="5" @bind="_notes" placeholder="Nhập ghi chú trong lúc khám..."></textarea>
                             <button class="btn btn-outline-primary btn-sm w-100" disabled="@_savingNotes" @onclick="SaveNotes">
@@ -82,6 +133,17 @@ else
     private bool _muted, _cameraOff, _savingNotes, _creatingVisit, _loading = true, _isInitiator, _isDoctor;
     private string? _error;
     private string? _mediaError;
+
+    private string _chiefComplaint = "";
+    private string _symptoms = "";
+    private string _diagnosisCode = "";
+    private string _diagnosisDescription = "";
+    private string _icdQuery = "";
+    private List<ICD10ResultDto> _icdResults = new();
+    private bool _icdSearching;
+    private bool _showIcdDropdown;
+    private CancellationTokenSource? _icdDebounce;
+    private bool _savingDiagnosis;
 
     protected override async Task OnInitializedAsync()
     {
@@ -216,10 +278,11 @@ else
         finally { _savingNotes = false; }
     }
 
-    private async Task OpenPrescription()
+    private async Task<bool> EnsureVisitCreatedAsync()
     {
-        if (_session is null || _activeDoctorId is null) return;
-        _creatingVisit = true;
+        if (_activeVisitId is not null) return true;
+        if (_session is null || _activeDoctorId is null) return false;
+
         try
         {
             var appointment = await Api.GetAppointment(_session.AppointmentId);
@@ -235,12 +298,74 @@ else
             });
             if (visit is null) throw new ApiClient.ApiException(500, "Không thể tạo hồ sơ khám mới.");
             _activeVisitId = visit.Id.ToString();
+            return true;
         }
-        catch (ApiClient.ApiException ex) { _error = ex.Message; }
-        finally { _creatingVisit = false; }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; return false; }
+    }
+
+    private async Task OpenPrescription()
+    {
+        _creatingVisit = true;
+        await EnsureVisitCreatedAsync();
+        _creatingVisit = false;
     }
 
     private void ClosePanel() => _activeVisitId = null;
+
+    private async Task OnIcdQueryChanged(ChangeEventArgs e)
+    {
+        _icdQuery = e.Value?.ToString() ?? "";
+        _icdDebounce?.Cancel();
+        if (_icdQuery.Trim().Length < 2) { _icdResults = new(); _icdSearching = false; return; }
+
+        _icdDebounce = new CancellationTokenSource();
+        var token = _icdDebounce.Token;
+        _icdSearching = true;
+        try
+        {
+            await Task.Delay(300, token);
+            _icdResults = (await Api.SearchIcd10(_icdQuery.Trim())) ?? new();
+            _showIcdDropdown = true;
+        }
+        catch (TaskCanceledException) { return; }
+        catch { _icdResults = new(); }
+        finally { _icdSearching = false; }
+    }
+
+    private void SelectIcd(ICD10ResultDto item)
+    {
+        _diagnosisCode = item.Code;
+        _diagnosisDescription = item.Description;
+        _icdQuery = $"{item.Code} - {item.Description}";
+        _showIcdDropdown = false;
+    }
+
+    private void ClearIcd()
+    {
+        _diagnosisCode = ""; _diagnosisDescription = ""; _icdQuery = "";
+    }
+
+    private async Task SaveDiagnosis()
+    {
+        if (_activeDoctorId is null) { _error = "Không tìm thấy hồ sơ nhân viên cho tài khoản này."; return; }
+        _savingDiagnosis = true;
+        try
+        {
+            if (!await EnsureVisitCreatedAsync()) return;
+
+            await Api.Diagnose(new MedicalRecordDtos
+            {
+                VisitId = Guid.Parse(_activeVisitId!),
+                DoctorId = _activeDoctorId.Value,
+                ChiefComplaint = _chiefComplaint,
+                Symptoms = _symptoms,
+                DiagnosisCode = string.IsNullOrWhiteSpace(_diagnosisCode) ? null : _diagnosisCode,
+                DiagnosisDescription = _diagnosisDescription,
+            });
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _savingDiagnosis = false; }
+    }
 
     private async Task ToggleMute()
     {
