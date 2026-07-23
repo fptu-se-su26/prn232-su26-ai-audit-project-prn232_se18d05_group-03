@@ -47,15 +47,13 @@ public class ApiClient
 
         var auth = await res.Content.ReadFromJsonAsync<AuthResponseDto>(_json)
             ?? throw new ApiException(500, "Phản hồi đăng nhập rỗng.");
-        _state.Set(auth);
-        _auth.NotifyChanged();
+        await _auth.PersistAsync(auth);
     }
 
-    public void Logout()
-    {
-        _state.Clear();
-        _auth.NotifyChanged();
-    }
+    public async Task Logout() => await _auth.ClearAsync();
+
+    public Task<AuthResponseDto?> RegisterAsync(RegisterRequestDto dto) =>
+        SendAsync<AuthResponseDto>(HttpMethod.Post, "api/auth/register", dto);
 
     // ---- core request helpers ----
     private HttpRequestMessage Build(HttpMethod method, string path, object? body = null)
@@ -113,6 +111,28 @@ public class ApiClient
     public Task<List<DepartmentReadDto>?> GetDepartments() => SendAsync<List<DepartmentReadDto>>(HttpMethod.Get, "api/departments");
     public Task<List<StaffProfileReadDto>?> GetStaff() => SendAsync<List<StaffProfileReadDto>>(HttpMethod.Get, "api/staff");
     public Task<List<UserAccountReadDto>?> GetUserAccounts() => SendAsync<List<UserAccountReadDto>>(HttpMethod.Get, "api/users");
+    public Task<List<StaffDirectoryDto>?> GetStaffDirectory() => SendAsync<List<StaffDirectoryDto>>(HttpMethod.Get, "api/staff/directory");
+    public Task<List<ClinicReadDto>?> GetAllClinics() => SendAsync<List<ClinicReadDto>>(HttpMethod.Get, "api/clinics");
+    public Task<List<ClinicReadDto>?> GetActiveClinics() => SendAsync<List<ClinicReadDto>>(HttpMethod.Get, "api/clinics/active");
+    public Task<List<DrugReadDto>?> GetDrugs() => SendAsync<List<DrugReadDto>>(HttpMethod.Get, "api/drugs");
+
+    // ---- patients (self-service) ----
+    public Task<PatientProfileReadDto?> GetMyPatient() => SendAsync<PatientProfileReadDto>(HttpMethod.Get, "api/patients/me");
+    public Task<PatientHistoryDto?> GetPatientHistory(Guid patientId) => SendAsync<PatientHistoryDto>(HttpMethod.Get, $"api/patients/{patientId}/history");
+
+    // ---- appointments (patient) ----
+    public Task<List<AppointmentReadDto>?> GetAppointments() => SendAsync<List<AppointmentReadDto>>(HttpMethod.Get, "api/appointments");
+    public Task<AppointmentReadDto?> CreateAppointment(AppointmentWriteDto dto) => SendAsync<AppointmentReadDto>(HttpMethod.Post, "api/appointments", dto);
+
+    // ---- service ratings (patient) ----
+    public Task<List<ServiceRatingReadDto>?> GetServiceRatings() => SendAsync<List<ServiceRatingReadDto>>(HttpMethod.Get, "api/serviceratings");
+    public Task<ServiceRatingReadDto?> CreateServiceRating(ServiceRatingWriteDto dto) => SendAsync<ServiceRatingReadDto>(HttpMethod.Post, "api/serviceratings", dto);
+
+    // ---- e-prescription (doctor/nurse) ----
+    public Task<PrescriptionReadDto?> CreatePrescription(PrescriptionWriteDto dto) => SendAsync<PrescriptionReadDto>(HttpMethod.Post, "api/prescriptions", dto);
+    public Task<PrescriptionItemReadDto?> CreatePrescriptionItem(PrescriptionItemWriteDto dto) => SendAsync<PrescriptionItemReadDto>(HttpMethod.Post, "api/prescriptionitems", dto);
+    public Task<List<PrescriptionItemReadDto>?> GetPrescriptionItems() => SendAsync<List<PrescriptionItemReadDto>>(HttpMethod.Get, "api/prescriptionitems");
+    public Task<List<LabOrderReadDto>?> GetAllLabOrders() => SendAsync<List<LabOrderReadDto>>(HttpMethod.Get, "api/laborders");
 
     // ---- F1: beds & admissions ----
     public Task<List<BedReadDto>?> GetBeds() => SendAsync<List<BedReadDto>>(HttpMethod.Get, "api/beds");
@@ -161,4 +181,134 @@ public class ApiClient
     // ---- F4: discharge ----
     public Task<DischargeResultDto?> Discharge(Guid admissionId, DischargeRequestDto dto) =>
         SendAsync<DischargeResultDto>(HttpMethod.Post, $"api/inpatientadmissions/{admissionId}/discharge", dto);
+
+    // ---- Users (admin) ----
+    public Task<UserAccountReadDto?> CreateUser(UserAccountWriteDto dto) => SendAsync<UserAccountReadDto>(HttpMethod.Post, "api/users", dto);
+    public Task UpdateUser(Guid id, UserAccountWriteDto dto) => SendAsync(HttpMethod.Put, $"api/users/{id}", dto);
+    public Task DeleteUser(Guid id) => SendAsync(HttpMethod.Delete, $"api/users/{id}");
+    public Task UpdateUserStatus(Guid id, bool isActive) => SendAsync(HttpMethod.Patch, $"api/users/{id}/status", new UserStatusUpdateDto { IsActive = isActive });
+    public Task UpdateUserRole(Guid id, UserRole role) => SendAsync(HttpMethod.Patch, $"api/users/{id}/role", new RoleUpdateDto { Role = role });
+
+    // ---- Staff (admin) ----
+    public Task<StaffProfileReadDto?> CreateStaffProfile(StaffProfileWriteDto dto) => SendAsync<StaffProfileReadDto>(HttpMethod.Post, "api/staff", dto);
+    public Task UpdateStaffProfile(Guid id, StaffProfileWriteDto dto) => SendAsync(HttpMethod.Put, $"api/staff/{id}", dto);
+    public Task DeleteStaffProfile(Guid id) => SendAsync(HttpMethod.Delete, $"api/staff/{id}");
+
+    // ---- Clinic/service management (admin) ----
+    public Task<DepartmentReadDto?> CreateDepartment(DepartmentWriteDto dto) => SendAsync<DepartmentReadDto>(HttpMethod.Post, "api/departments", dto);
+    public Task UpdateDepartment(Guid id, DepartmentWriteDto dto) => SendAsync(HttpMethod.Put, $"api/departments/{id}", dto);
+    public Task DeleteDepartment(Guid id) => SendAsync(HttpMethod.Delete, $"api/departments/{id}");
+    public Task<ClinicReadDto?> CreateClinic(ClinicWriteDto dto) => SendAsync<ClinicReadDto>(HttpMethod.Post, "api/clinics", dto);
+    public Task UpdateClinic(Guid id, ClinicWriteDto dto) => SendAsync(HttpMethod.Put, $"api/clinics/{id}", dto);
+    public Task DeleteClinic(Guid id) => SendAsync(HttpMethod.Delete, $"api/clinics/{id}");
+    public Task<List<MedicalServiceReadDto>?> GetMedicalServices() => SendAsync<List<MedicalServiceReadDto>>(HttpMethod.Get, "api/medicalservices");
+    public Task<MedicalServiceReadDto?> CreateMedicalService(MedicalServiceWriteDto dto) => SendAsync<MedicalServiceReadDto>(HttpMethod.Post, "api/medicalservices", dto);
+    public Task UpdateMedicalService(Guid id, MedicalServiceWriteDto dto) => SendAsync(HttpMethod.Put, $"api/medicalservices/{id}", dto);
+    public Task DeleteMedicalService(Guid id) => SendAsync(HttpMethod.Delete, $"api/medicalservices/{id}");
+    public Task UpdateMedicalServicePrice(Guid id, decimal price) => SendAsync(HttpMethod.Patch, $"api/medicalservices/{id}/price", new PriceUpdateDto { Price = price });
+
+    // ---- Drugs & interactions / CDSS (admin) ----
+    public Task<DrugReadDto?> CreateDrug(DrugWriteDto dto) => SendAsync<DrugReadDto>(HttpMethod.Post, "api/drugs", dto);
+    public Task UpdateDrug(Guid id, DrugWriteDto dto) => SendAsync(HttpMethod.Put, $"api/drugs/{id}", dto);
+    public Task DeleteDrug(Guid id) => SendAsync(HttpMethod.Delete, $"api/drugs/{id}");
+    public Task<List<DrugInteractionReadDto>?> GetDrugInteractions() => SendAsync<List<DrugInteractionReadDto>>(HttpMethod.Get, "api/druginteractions");
+    public Task<DrugInteractionReadDto?> CreateDrugInteraction(DrugInteractionWriteDto dto) => SendAsync<DrugInteractionReadDto>(HttpMethod.Post, "api/druginteractions", dto);
+    public Task DeleteDrugInteraction(Guid id) => SendAsync(HttpMethod.Delete, $"api/druginteractions/{id}");
+    public Task<DrugInteractionCheckResponseDto?> CheckDrugInteractions(IReadOnlyList<Guid> drugIds) =>
+        SendAsync<DrugInteractionCheckResponseDto>(HttpMethod.Post, "api/cdss/drug-interactions/check", new DrugInteractionCheckRequestDto { DrugIds = drugIds });
+    public Task<DoseCheckResponseDto?> CheckDose(Guid patientId, Guid drugId, decimal? doseAmount) =>
+        SendAsync<DoseCheckResponseDto>(HttpMethod.Post, "api/cdss/dose-check", new DoseCheckRequestDto { PatientId = patientId, DrugId = drugId, DoseAmount = doseAmount });
+
+    // ---- Patients (admin) ----
+    public Task<List<PatientProfileReadDto>?> GetAllPatients() => SendAsync<List<PatientProfileReadDto>>(HttpMethod.Get, "api/patients");
+
+    // ---- OTP (admin) ----
+    public Task<OtpSettingDto?> GetOtpSettings() => SendAsync<OtpSettingDto>(HttpMethod.Get, "api/otp/settings");
+    public Task<OtpSettingDto?> UpdateOtpSettings(OtpSettingWriteDto dto) => SendAsync<OtpSettingDto>(HttpMethod.Put, "api/otp/settings", dto);
+    public Task<OtpCodeDto?> IssueOtp(Guid userAccountId) => SendAsync<OtpCodeDto>(HttpMethod.Post, "api/otp/issue", new OtpIssueRequestDto { UserAccountId = userAccountId });
+    public Task<OtpVerifyResponseDto?> VerifyOtp(Guid userAccountId, string code) => SendAsync<OtpVerifyResponseDto>(HttpMethod.Post, "api/otp/verify", new OtpVerifyRequestDto { UserAccountId = userAccountId, Code = code });
+    public Task<List<OtpCodeDto>?> GetOtpCodes() => SendAsync<List<OtpCodeDto>>(HttpMethod.Get, "api/otp/codes");
+
+    // ---- Reports (admin) ----
+    public Task<SummaryReportDto?> GetReportSummary(string period) =>
+        SendAsync<SummaryReportDto>(HttpMethod.Get, "api/reports/summary" + Q(("period", period)));
+    public Task<List<RevenueItemDto>?> GetRevenue(DateTime startDate, DateTime endDate, string groupBy, string? department) =>
+        SendAsync<List<RevenueItemDto>>(HttpMethod.Get, "api/reports/revenue" + Q(
+            ("startDate", startDate.ToString("yyyy-MM-dd")),
+            ("endDate", endDate.ToString("yyyy-MM-dd")),
+            ("groupBy", groupBy),
+            ("department", department)));
+    public Task<BedOccupancyReportDto?> GetBedOccupancy(string? department) =>
+        SendAsync<BedOccupancyReportDto>(HttpMethod.Get, "api/reports/bed-occupancy" + Q(("department", department)));
+    public Task<List<OutpatientVisitItemDto>?> GetOutpatientVisitReport(DateTime startDate, DateTime endDate, string groupBy) =>
+        SendAsync<List<OutpatientVisitItemDto>>(HttpMethod.Get, "api/reports/outpatient-visits" + Q(
+            ("startDate", startDate.ToString("yyyy-MM-dd")),
+            ("endDate", endDate.ToString("yyyy-MM-dd")),
+            ("groupBy", groupBy)));
+
+    // ---- Clinic dashboard (queue) ----
+    public Task<List<ClinicQueueSummaryDto>?> GetClinicQueueOverview() =>
+        SendAsync<List<ClinicQueueSummaryDto>>(HttpMethod.Get, "api/clinic-dashboard/overview");
+    public Task<ClinicQueueDto?> GetClinicQueue(Guid clinicId) =>
+        SendAsync<ClinicQueueDto>(HttpMethod.Get, $"api/clinic-dashboard/clinics/{clinicId}/queue");
+    public Task<QueueTicketDetailDto?> CheckIn(Guid clinicId, Guid? appointmentId, string? patientName, string? patientEmail = null, string? patientPhone = null) =>
+        SendAsync<QueueTicketDetailDto>(HttpMethod.Post, "api/clinic-dashboard/check-in",
+            new WalkInCheckInRequestDto { ClinicId = clinicId, AppointmentId = appointmentId, PatientName = patientName, PatientEmail = patientEmail, PatientPhone = patientPhone });
+    // The call-next endpoint returns either the raw ticket (patient found) or { message, ticket: null } (queue empty) —
+    // this merged shape lets us tell the two apart without guessing at JSON structure.
+    public Task<CallNextResultDto?> CallNext(Guid clinicId) =>
+        SendAsync<CallNextResultDto>(HttpMethod.Post, $"api/clinic-dashboard/clinics/{clinicId}/call-next");
+    public Task<QueueTicketDetailDto?> TransferTicket(Guid ticketId, Guid targetClinicId) =>
+        SendAsync<QueueTicketDetailDto>(HttpMethod.Patch, $"api/clinic-dashboard/tickets/{ticketId}/transfer",
+            new TransferTicketDto { TargetClinicId = targetClinicId });
+
+    // ---- Patients (clinical self-service) ----
+    public Task<PatientProfileReadDto?> GetPatientById(Guid id) => SendAsync<PatientProfileReadDto>(HttpMethod.Get, $"api/patients/{id}");
+    public Task<PatientProfileReadDto?> CreatePatient(PatientProfileWriteDto dto) => SendAsync<PatientProfileReadDto>(HttpMethod.Post, "api/patients", dto);
+
+    // ---- Outpatient visits & medical records ----
+    public Task<OutpatientVisitReadDto?> CreateOutpatientVisit(OutpatientVisitWriteDto dto) => SendAsync<OutpatientVisitReadDto>(HttpMethod.Post, "api/outpatientvisits", dto);
+    public Task<OutpatientVisitReadDto?> GetOutpatientVisit(Guid id) => SendAsync<OutpatientVisitReadDto>(HttpMethod.Get, $"api/outpatientvisits/{id}");
+    public Task Diagnose(MedicalRecordDtos dto) => SendAsync(HttpMethod.Post, "api/medical-records/diagnose", dto);
+    public Task<List<ICD10ResultDto>?> SearchIcd10(string query) => SendAsync<List<ICD10ResultDto>>(HttpMethod.Get, "api/medical-records/icd10/search" + Q(("query", query)));
+    public Task<List<PatientDiagnosisHistoryDto>?> GetDiagnosisHistory(Guid patientId) => SendAsync<List<PatientDiagnosisHistoryDto>>(HttpMethod.Get, $"api/medical-records/patients/{patientId}/diagnosis-history");
+
+    // ---- Staff schedules ----
+    public Task<PagedResult<ScheduleFlatReadDto>?> FilterSchedules(DateOnly startDate, DateOnly endDate, Guid? departmentId, int page = 1, int pageSize = 200) =>
+        SendAsync<PagedResult<ScheduleFlatReadDto>>(HttpMethod.Get, "api/schedules" + Q(
+            ("startDate", startDate.ToString("yyyy-MM-dd")),
+            ("endDate", endDate.ToString("yyyy-MM-dd")),
+            ("departmentId", departmentId?.ToString()),
+            ("page", page.ToString()),
+            ("pageSize", pageSize.ToString())));
+    public Task<ScheduleFlatReadDto?> CreateSchedule(ScheduleWriteDto dto) => SendAsync<ScheduleFlatReadDto>(HttpMethod.Post, "api/schedules", dto);
+    public Task<ScheduleFlatReadDto?> UpdateSchedule(Guid id, ScheduleWriteDto dto) => SendAsync<ScheduleFlatReadDto>(HttpMethod.Put, $"api/schedules/{id}", dto);
+    public Task DeleteSchedule(Guid id) => SendAsync(HttpMethod.Delete, $"api/schedules/{id}");
+
+    // ---- Billing & payments ----
+    public Task<List<BillingInvoiceReadDto>?> GetBillingInvoices() => SendAsync<List<BillingInvoiceReadDto>>(HttpMethod.Get, "api/billinginvoices");
+    public Task<List<BillingItemReadDto>?> GetBillingItems(Guid invoiceId) => SendAsync<List<BillingItemReadDto>>(HttpMethod.Get, $"api/billinginvoices/{invoiceId}/items");
+    public Task<BillingInvoiceDetailDto?> GenerateInvoice(GenerateInvoiceRequestDto dto) => SendAsync<BillingInvoiceDetailDto>(HttpMethod.Post, "api/billinginvoices/generate", dto);
+    public Task<BillingInvoiceDetailDto?> CalculateInsurance(Guid invoiceId, string? insuranceNumber) =>
+        SendAsync<BillingInvoiceDetailDto>(HttpMethod.Post, $"api/billinginvoices/{invoiceId}/calculate-insurance", new InsuranceCalculationRequestDto { InsuranceNumber = insuranceNumber });
+
+    public Task<List<PaymentReadDto>?> GetPayments() => SendAsync<List<PaymentReadDto>>(HttpMethod.Get, "api/payments");
+    public Task<PaymentReadDto?> CreatePayment(PaymentWriteDto dto) => SendAsync<PaymentReadDto>(HttpMethod.Post, "api/payments", dto);
+    public Task<PaymentUrlResultDto?> CreateVnPayUrl(Guid paymentId) => SendAsync<PaymentUrlResultDto>(HttpMethod.Post, $"api/payments/{paymentId}/vnpay-url");
+    public Task<PaymentUrlResultDto?> CreateMomoUrl(Guid paymentId) => SendAsync<PaymentUrlResultDto>(HttpMethod.Post, $"api/payments/{paymentId}/momo-url");
+}
+
+public class CallNextResultDto
+{
+    public string? Message { get; set; }
+    public Guid Id { get; set; }
+    public Guid ClinicId { get; set; }
+    public string ClinicName { get; set; } = string.Empty;
+    public string? ClinicRoomNumber { get; set; }
+    public Guid? AppointmentId { get; set; }
+    public Guid? PatientId { get; set; }
+    public string? PatientName { get; set; }
+    public int Number { get; set; }
+    public DateTime IssuedAt { get; set; }
+    public QueueStatus Status { get; set; }
 }

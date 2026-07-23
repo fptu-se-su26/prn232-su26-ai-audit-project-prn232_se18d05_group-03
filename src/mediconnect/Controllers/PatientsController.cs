@@ -36,6 +36,13 @@ public class PatientsController : ControllerBase
         _prescriptionRepository = prescriptionRepository;
     }
 
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<PatientProfileReadDto>>> GetAll(CancellationToken cancellationToken)
+    {
+        var patients = await _crudService.GetAllAsync(cancellationToken);
+        return Ok(patients);
+    }
+
     [HttpGet("me")]
     public async Task<ActionResult<PatientProfileReadDto>> GetMe(CancellationToken cancellationToken)
     {

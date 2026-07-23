@@ -1,0 +1,448 @@
+@page "/manage-services"
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Quản lý khoa & dịch vụ – MediConnect</PageTitle>
+
+<div class="mb-4">
+    <h4 class="mb-1" style="font-size:1.5rem">Quản lý khoa & dịch vụ</h4>
+    <p class="text-muted mb-0">Cấu hình danh mục khoa phòng, cơ sở vật chất phòng khám và bảng giá dịch vụ.</p>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-3"><span class="material-symbols-outlined">error</span>@_error</div>
+}
+@if (_successMsg is not null)
+{
+    <div class="alert alert-success mb-3"><span class="material-symbols-outlined">check_circle</span>@_successMsg</div>
+}
+
+<div class="tab-bar mb-3">
+    <button class="tab-btn @(_tab == Tab.Departments ? "active" : "")" @onclick='() => _tab = Tab.Departments'>
+        <span class="material-symbols-outlined" style="font-size:1.1rem">domain</span> Chuyên khoa (@_departments.Count)
+    </button>
+    <button class="tab-btn @(_tab == Tab.Clinics ? "active" : "")" @onclick='() => _tab = Tab.Clinics'>
+        <span class="material-symbols-outlined" style="font-size:1.1rem">meeting_room</span> Phòng khám (@_clinics.Count)
+    </button>
+    <button class="tab-btn @(_tab == Tab.Services ? "active" : "")" @onclick='() => _tab = Tab.Services'>
+        <span class="material-symbols-outlined" style="font-size:1.1rem">medical_services</span> Dịch vụ khám (@_services.Count)
+    </button>
+</div>
+
+@if (_loading)
+{
+    <div class="report-card d-flex flex-column align-items-center justify-content-center py-5">
+        <span class="material-symbols-outlined spin" style="font-size:2.5rem;color:var(--color-primary)">progress_activity</span>
+        <p class="text-muted mt-3 mb-0">Đang tải cấu hình...</p>
+    </div>
+}
+else
+{
+    <div class="report-card p-0" style="overflow:hidden">
+        @if (_tab == Tab.Departments)
+        {
+            <div class="p-3 d-flex justify-content-between align-items-center" style="border-bottom:1px solid var(--color-outline-variant)">
+                <h6 class="mb-0">Danh sách khoa chuyên môn</h6>
+                <button class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" @onclick="OpenCreateDept">
+                    <span class="material-symbols-outlined" style="font-size:1rem">add</span> Thêm khoa mới
+                </button>
+            </div>
+            @if (_departments.Count == 0)
+            {
+                <div class="text-center text-muted py-5">
+                    <span class="material-symbols-outlined" style="font-size:2.5rem">domain_disabled</span>
+                    <p class="mt-2 mb-0" style="font-size:.85rem">Chưa có khoa nào trong danh mục.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Mã khoa</th><th>Tên khoa</th><th>Mô tả chi tiết</th><th class="text-end">Thao tác</th></tr></thead>
+                        <tbody>
+                            @foreach (var d in _departments)
+                            {
+                                <tr>
+                                    <td style="font-weight:700;color:var(--color-primary)">@(d.Code ?? "N/A")</td>
+                                    <td style="font-weight:600">@d.Name</td>
+                                    <td class="text-muted text-truncate" style="max-width:320px" title="@d.Description">
+                                        @(string.IsNullOrWhiteSpace(d.Description) ? "Không có mô tả" : d.Description)
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => OpenEditDept(d)"><span class="material-symbols-outlined" style="font-size:1.05rem">edit</span></button>
+                                        <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => DeleteDept(d)"><span class="material-symbols-outlined" style="font-size:1.05rem">delete</span></button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+        else if (_tab == Tab.Clinics)
+        {
+            <div class="p-3 d-flex justify-content-between align-items-center" style="border-bottom:1px solid var(--color-outline-variant)">
+                <h6 class="mb-0">Danh sách phòng khám bệnh</h6>
+                <button class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" disabled="@(_departments.Count == 0)" @onclick="OpenCreateClinic">
+                    <span class="material-symbols-outlined" style="font-size:1rem">add</span> Thêm phòng khám
+                </button>
+            </div>
+            @if (_clinics.Count == 0)
+            {
+                <div class="text-center text-muted py-5">
+                    <span class="material-symbols-outlined" style="font-size:2.5rem">meeting_room</span>
+                    <p class="mt-2 mb-0" style="font-size:.85rem">Chưa có phòng khám nào được cấu hình.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Số phòng</th><th>Tên phòng</th><th>Thuộc khoa</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead>
+                        <tbody>
+                            @foreach (var c in _clinics)
+                            {
+                                <tr>
+                                    <td style="font-weight:700">Phòng @(c.RoomNumber ?? "N/A")</td>
+                                    <td style="font-weight:600">@c.Name</td>
+                                    <td class="text-muted">@DeptName(c.DepartmentId)</td>
+                                    <td>
+                                        <button class="badge d-inline-flex align-items-center gap-1 @(c.IsActive ? "badge-soft-green" : "badge-soft-purple")" style="border:none" @onclick="() => ToggleClinic(c)">
+                                            <span class="material-symbols-outlined" style="font-size:.8rem">@(c.IsActive ? "check_circle" : "pause_circle")</span>
+                                            @(c.IsActive ? "Hoạt động" : "Tạm ngưng")
+                                        </button>
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => OpenEditClinic(c)"><span class="material-symbols-outlined" style="font-size:1.05rem">edit</span></button>
+                                        <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => DeleteClinic(c)"><span class="material-symbols-outlined" style="font-size:1.05rem">delete</span></button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="p-3 d-flex justify-content-between align-items-center" style="border-bottom:1px solid var(--color-outline-variant)">
+                <h6 class="mb-0">Danh mục dịch vụ khám & giá tiền</h6>
+                <button class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" disabled="@(_departments.Count == 0)" @onclick="OpenCreateService">
+                    <span class="material-symbols-outlined" style="font-size:1rem">add</span> Thêm dịch vụ
+                </button>
+            </div>
+            @if (_services.Count == 0)
+            {
+                <div class="text-center text-muted py-5">
+                    <span class="material-symbols-outlined" style="font-size:2.5rem">medical_services</span>
+                    <p class="mt-2 mb-0" style="font-size:.85rem">Chưa cấu hình dịch vụ khám.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Mã DV</th><th>Tên dịch vụ y tế</th><th>Khoa phụ trách</th><th class="text-end">Giá khám</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead>
+                        <tbody>
+                            @foreach (var s in _services)
+                            {
+                                <tr>
+                                    <td class="text-muted" style="font-weight:700">@(s.Code ?? "N/A")</td>
+                                    <td style="font-weight:600">@s.Name</td>
+                                    <td class="text-muted">@DeptName(s.DepartmentId)</td>
+                                    <td class="text-end" style="font-weight:700">
+                                        @s.Price.ToString("#,0") đ
+                                        <button class="btn btn-sm btn-outline-secondary border-0 py-0" title="Sửa giá khám" @onclick="() => OpenPriceModal(s)">
+                                            <span class="material-symbols-outlined" style="font-size:.9rem">edit_square</span>
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button class="badge d-inline-flex align-items-center gap-1 @(s.IsActive ? "badge-soft-green" : "badge-soft-purple")" style="border:none" @onclick="() => ToggleService(s)">
+                                            <span class="material-symbols-outlined" style="font-size:.8rem">@(s.IsActive ? "check_circle" : "pause_circle")</span>
+                                            @(s.IsActive ? "Hoạt động" : "Tạm ngưng")
+                                        </button>
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => OpenEditService(s)"><span class="material-symbols-outlined" style="font-size:1.05rem">edit</span></button>
+                                        <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => DeleteService(s)"><span class="material-symbols-outlined" style="font-size:1.05rem">delete</span></button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </div>
+}
+
+@if (_isDeptModalOpen)
+{
+    <div class="modal-overlay" @onclick="() => _isDeptModalOpen = false">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-3">@(_deptForm.Id is not null ? "Sửa thông tin chuyên khoa" : "Thêm chuyên khoa mới")</h5>
+            <div class="mb-2"><label class="form-label">Mã khoa</label><input class="form-control" @bind="_deptForm.Code" placeholder="Ví dụ: ENT, PED, NEUR..." /></div>
+            <div class="mb-2"><label class="form-label">Tên khoa chuyên môn</label><input class="form-control" @bind="_deptForm.Name" placeholder="Ví dụ: Khoa Tai Mũi Họng..." /></div>
+            <div class="mb-3"><label class="form-label">Mô tả chi tiết</label><textarea class="form-control" rows="3" @bind="_deptForm.Description" placeholder="Nhập mô tả giới thiệu về chuyên khoa..."></textarea></div>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="() => _isDeptModalOpen = false">Hủy bỏ</button>
+                <button class="btn btn-primary" disabled="@_submitting" @onclick="SubmitDept">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_isClinicModalOpen)
+{
+    <div class="modal-overlay" @onclick="() => _isClinicModalOpen = false">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-3">@(_clinicForm.Id is not null ? "Sửa phòng khám" : "Tạo phòng khám mới")</h5>
+            <div class="mb-2">
+                <label class="form-label">Chuyên khoa trực thuộc</label>
+                <select class="form-select" @bind="_clinicForm.DepartmentId">
+                    @foreach (var d in _departments) { <option value="@d.Id">@d.Name</option> }
+                </select>
+            </div>
+            <div class="mb-2"><label class="form-label">Số phòng</label><input class="form-control" @bind="_clinicForm.RoomNumber" placeholder="Ví dụ: Room 101..." /></div>
+            <div class="mb-2"><label class="form-label">Tên phòng khám</label><input class="form-control" @bind="_clinicForm.Name" placeholder="Ví dụ: Phòng Khám Nhi 1..." /></div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="clinic-active" @bind="_clinicForm.IsActive" />
+                <label class="form-check-label" for="clinic-active">Cho phép hoạt động tiếp nhận</label>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="() => _isClinicModalOpen = false">Hủy bỏ</button>
+                <button class="btn btn-primary" disabled="@_submitting" @onclick="SubmitClinic">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_isServiceModalOpen)
+{
+    <div class="modal-overlay" @onclick="() => _isServiceModalOpen = false">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-3">@(_serviceForm.Id is not null ? "Sửa dịch vụ khám" : "Tạo dịch vụ y tế mới")</h5>
+            <div class="mb-2">
+                <label class="form-label">Khoa phụ trách</label>
+                <select class="form-select" @bind="_serviceForm.DepartmentId">
+                    @foreach (var d in _departments) { <option value="@d.Id">@d.Name</option> }
+                </select>
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-4"><label class="form-label">Mã DV</label><input class="form-control" @bind="_serviceForm.Code" placeholder="ENT01" /></div>
+                <div class="col-8"><label class="form-label">Tên dịch vụ y tế</label><input class="form-control" @bind="_serviceForm.Name" placeholder="Khám Tai Mũi Họng thường" /></div>
+            </div>
+            <div class="mb-2"><label class="form-label">Giá khám (VNĐ)</label><input type="number" min="0" step="1000" class="form-control" @bind="_serviceForm.Price" /></div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="service-active" @bind="_serviceForm.IsActive" />
+                <label class="form-check-label" for="service-active">Cho phép đặt khám dịch vụ này</label>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="() => _isServiceModalOpen = false">Hủy bỏ</button>
+                <button class="btn btn-primary" disabled="@_submitting" @onclick="SubmitService">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_isPriceModalOpen)
+{
+    <div class="modal-overlay" @onclick="() => _isPriceModalOpen = false">
+        <div class="modal-card" style="max-width:380px" @onclick:stopPropagation="true">
+            <h5 class="mb-3">Cập nhật giá khám</h5>
+            <p class="text-muted mb-1" style="font-size:.85rem">Dịch vụ điều chỉnh:</p>
+            <p class="mb-3" style="font-weight:700">@_priceForm.Name</p>
+            <div class="mb-3">
+                <label class="form-label">Giá tiền khám mới (VNĐ)</label>
+                <input type="number" min="0" step="1000" class="form-control" style="font-weight:700;font-size:1.1rem" @bind="_priceForm.Price" />
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="() => _isPriceModalOpen = false">Hủy bỏ</button>
+                <button class="btn btn-primary" disabled="@_submitting" @onclick="SubmitPrice">Cập nhật</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private Microsoft.JSInterop.IJSRuntime Js { get; set; } = default!;
+
+    private enum Tab { Departments, Clinics, Services }
+    private Tab _tab = Tab.Departments;
+
+    private List<DepartmentReadDto> _departments = new();
+    private List<ClinicReadDto> _clinics = new();
+    private List<MedicalServiceReadDto> _services = new();
+    private bool _loading = true;
+    private string? _error;
+    private string? _successMsg;
+    private bool _submitting;
+
+    private bool _isDeptModalOpen, _isClinicModalOpen, _isServiceModalOpen, _isPriceModalOpen;
+    private DeptForm _deptForm = new();
+    private ClinicForm _clinicForm = new();
+    private ServiceForm _serviceForm = new();
+    private PriceForm _priceForm = new();
+
+    private string DeptName(Guid id) => _departments.FirstOrDefault(d => d.Id == id)?.Name ?? "Không rõ khoa";
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        _loading = true; _error = null;
+        try
+        {
+            var deptTask = Api.GetDepartments();
+            var clinicTask = Api.GetAllClinics();
+            var serviceTask = Api.GetMedicalServices();
+            _departments = (await deptTask) ?? new();
+            _clinics = (await clinicTask) ?? new();
+            _services = (await serviceTask) ?? new();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Không thể tải dữ liệu quản lý."; }
+        finally { _loading = false; }
+    }
+
+    private void ShowSuccess(string msg) { _successMsg = msg; _ = ClearSuccessAfterDelay(); }
+    private async Task ClearSuccessAfterDelay() { await Task.Delay(4000); _successMsg = null; await InvokeAsync(StateHasChanged); }
+
+    // ---- Departments ----
+    private void OpenCreateDept() { _deptForm = new(); _isDeptModalOpen = true; }
+    private void OpenEditDept(DepartmentReadDto d)
+    {
+        _deptForm = new DeptForm { Id = d.Id, Name = d.Name, Code = d.Code ?? "", Description = d.Description ?? "" };
+        _isDeptModalOpen = true;
+    }
+
+    private async Task SubmitDept()
+    {
+        _submitting = true; _error = null;
+        try
+        {
+            var dto = new DepartmentWriteDto { Name = _deptForm.Name, Code = _deptForm.Code, Description = _deptForm.Description };
+            if (_deptForm.Id is { } id) { await Api.UpdateDepartment(id, dto); ShowSuccess($"Cập nhật khoa \"{_deptForm.Name}\" thành công."); }
+            else { await Api.CreateDepartment(dto); ShowSuccess($"Thêm mới khoa \"{_deptForm.Name}\" thành công."); }
+            _isDeptModalOpen = false;
+            await LoadData();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Lỗi khi xử lý khoa."; }
+        finally { _submitting = false; }
+    }
+
+    private async Task DeleteDept(DepartmentReadDto d)
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", $"Bạn có chắc chắn muốn xóa khoa \"{d.Name}\"?")) return;
+        try { await Api.DeleteDepartment(d.Id); ShowSuccess($"Xóa khoa \"{d.Name}\" thành công."); await LoadData(); }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Không thể xóa khoa. Vui lòng kiểm tra ràng buộc phòng khám."; }
+    }
+
+    // ---- Clinics ----
+    private void OpenCreateClinic() { _clinicForm = new() { DepartmentId = _departments.FirstOrDefault()?.Id.ToString() ?? "" }; _isClinicModalOpen = true; }
+    private void OpenEditClinic(ClinicReadDto c)
+    {
+        _clinicForm = new ClinicForm { Id = c.Id, DepartmentId = c.DepartmentId.ToString(), Name = c.Name, RoomNumber = c.RoomNumber ?? "", IsActive = c.IsActive };
+        _isClinicModalOpen = true;
+    }
+
+    private async Task SubmitClinic()
+    {
+        _submitting = true; _error = null;
+        try
+        {
+            var dto = new ClinicWriteDto { DepartmentId = Guid.Parse(_clinicForm.DepartmentId), Name = _clinicForm.Name, RoomNumber = _clinicForm.RoomNumber, IsActive = _clinicForm.IsActive };
+            if (_clinicForm.Id is { } id) { await Api.UpdateClinic(id, dto); ShowSuccess($"Cập nhật phòng khám \"{_clinicForm.Name}\" thành công."); }
+            else { await Api.CreateClinic(dto); ShowSuccess($"Thêm mới phòng khám \"{_clinicForm.Name}\" thành công."); }
+            _isClinicModalOpen = false;
+            await LoadData();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Lỗi khi xử lý phòng khám."; }
+        finally { _submitting = false; }
+    }
+
+    private async Task ToggleClinic(ClinicReadDto c)
+    {
+        try
+        {
+            await Api.UpdateClinic(c.Id, new ClinicWriteDto { DepartmentId = c.DepartmentId, Name = c.Name, RoomNumber = c.RoomNumber, IsActive = !c.IsActive });
+            ShowSuccess($"Đã chuyển trạng thái phòng \"{c.Name}\" thành {(!c.IsActive ? "Hoạt động" : "Tạm ngưng")}.");
+            await LoadData();
+        }
+        catch { _error = "Lỗi khi thay đổi trạng thái phòng khám."; }
+    }
+
+    private async Task DeleteClinic(ClinicReadDto c)
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", $"Bạn có chắc chắn muốn xóa phòng khám \"{c.Name}\"?")) return;
+        try { await Api.DeleteClinic(c.Id); ShowSuccess($"Xóa phòng khám \"{c.Name}\" thành công."); await LoadData(); }
+        catch { _error = "Không thể xóa phòng khám."; }
+    }
+
+    // ---- Services ----
+    private void OpenCreateService() { _serviceForm = new() { DepartmentId = _departments.FirstOrDefault()?.Id.ToString() ?? "" }; _isServiceModalOpen = true; }
+    private void OpenEditService(MedicalServiceReadDto s)
+    {
+        _serviceForm = new ServiceForm { Id = s.Id, DepartmentId = s.DepartmentId.ToString(), Name = s.Name, Code = s.Code ?? "", Price = s.Price, IsActive = s.IsActive };
+        _isServiceModalOpen = true;
+    }
+
+    private async Task SubmitService()
+    {
+        _submitting = true; _error = null;
+        try
+        {
+            var dto = new MedicalServiceWriteDto { DepartmentId = Guid.Parse(_serviceForm.DepartmentId), Name = _serviceForm.Name, Code = _serviceForm.Code, Price = _serviceForm.Price, IsActive = _serviceForm.IsActive };
+            if (_serviceForm.Id is { } id) { await Api.UpdateMedicalService(id, dto); ShowSuccess($"Cập nhật dịch vụ \"{_serviceForm.Name}\" thành công."); }
+            else { await Api.CreateMedicalService(dto); ShowSuccess($"Thêm mới dịch vụ \"{_serviceForm.Name}\" thành công."); }
+            _isServiceModalOpen = false;
+            await LoadData();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Lỗi khi xử lý dịch vụ."; }
+        finally { _submitting = false; }
+    }
+
+    private async Task ToggleService(MedicalServiceReadDto s)
+    {
+        try
+        {
+            await Api.UpdateMedicalService(s.Id, new MedicalServiceWriteDto { DepartmentId = s.DepartmentId, Name = s.Name, Code = s.Code, Price = s.Price, IsActive = !s.IsActive });
+            ShowSuccess($"Đã chuyển trạng thái dịch vụ \"{s.Name}\" thành {(!s.IsActive ? "Hoạt động" : "Tạm ngưng")}.");
+            await LoadData();
+        }
+        catch { _error = "Lỗi khi thay đổi trạng thái dịch vụ."; }
+    }
+
+    private void OpenPriceModal(MedicalServiceReadDto s) { _priceForm = new PriceForm { Id = s.Id, Name = s.Name, Price = s.Price }; _isPriceModalOpen = true; }
+
+    private async Task SubmitPrice()
+    {
+        _submitting = true; _error = null;
+        try
+        {
+            await Api.UpdateMedicalServicePrice(_priceForm.Id, _priceForm.Price);
+            ShowSuccess($"Cập nhật giá khám dịch vụ \"{_priceForm.Name}\" thành công.");
+            _isPriceModalOpen = false;
+            await LoadData();
+        }
+        catch { _error = "Lỗi khi cập nhật giá dịch vụ."; }
+        finally { _submitting = false; }
+    }
+
+    private async Task DeleteService(MedicalServiceReadDto s)
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", $"Bạn có chắc chắn muốn xóa dịch vụ \"{s.Name}\"?")) return;
+        try { await Api.DeleteMedicalService(s.Id); ShowSuccess($"Xóa dịch vụ \"{s.Name}\" thành công."); await LoadData(); }
+        catch { _error = "Không thể xóa dịch vụ."; }
+    }
+
+    private class DeptForm { public Guid? Id; public string Name = ""; public string Code = ""; public string Description = ""; }
+    private class ClinicForm { public Guid? Id; public string DepartmentId = ""; public string Name = ""; public string RoomNumber = ""; public bool IsActive = true; }
+    private class ServiceForm { public Guid? Id; public string DepartmentId = ""; public string Name = ""; public string Code = ""; public decimal Price; public bool IsActive = true; }
+    private class PriceForm { public Guid Id; public string Name = ""; public decimal Price; }
+}

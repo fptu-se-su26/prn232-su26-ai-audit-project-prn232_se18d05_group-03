@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Mediconnect.Application/1.0.0": {
+        "dependencies": {
+          "Mediconnect.Domain": "1.0.0"
+        },
+        "runtime": {
+          "Mediconnect.Application.dll": {}
+        }
+      },
+      "Mediconnect.Domain/1.0.0": {
+        "runtime": {
+          "Mediconnect.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Mediconnect.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Mediconnect.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

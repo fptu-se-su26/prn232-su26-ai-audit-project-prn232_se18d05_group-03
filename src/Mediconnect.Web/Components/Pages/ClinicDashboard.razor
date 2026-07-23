@@ -1,0 +1,565 @@
+@page "/clinic-dashboard"
+@attribute [Authorize(Roles = "Doctor,Nurse")]
+@implements IDisposable
+@inject NavigationManager Nav
+
+<PageTitle>Hàng đợi phòng khám – MediConnect</PageTitle>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <h4 class="mb-1 d-flex align-items-center gap-2" style="font-size:1.5rem">
+            <span class="material-symbols-outlined text-primary">dashboard</span>
+            Hàng đợi phòng khám
+        </h4>
+        <p class="text-muted mb-0">Quản lý và điều phối luồng bệnh nhân theo thời gian thực.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" @onclick="() => LoadOverview(true)">
+            <span class="material-symbols-outlined" style="font-size:1.1rem">refresh</span>
+            Làm mới
+        </button>
+        <button class="btn btn-primary d-inline-flex align-items-center gap-1" @onclick="OpenCheckIn">
+            <span class="material-symbols-outlined" style="font-size:1.1rem">add_circle</span>
+            Tiếp nhận bệnh nhân
+        </button>
+    </div>
+</div>
+
+@if (_successMsg is not null)
+{
+    <div class="alert alert-success mb-3">
+        <span class="material-symbols-outlined">check_circle</span>
+        @_successMsg
+    </div>
+}
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-3 d-flex align-items-center gap-2">
+        <span class="material-symbols-outlined">error</span>
+        <span class="flex-grow-1">@_error</span>
+        <button class="btn-close" @onclick="() => _error = null"></button>
+    </div>
+}
+
+@if (_loading)
+{
+    <div class="d-flex flex-column align-items-center justify-content-center gap-2 report-card" style="height:240px">
+        <span class="material-symbols-outlined spin" style="font-size:2.5rem;color:var(--color-primary)">progress_activity</span>
+        <p class="text-muted mb-0">Đang tải dữ liệu hàng đợi...</p>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-12 col-lg-5">
+            <h6 class="d-flex align-items-center gap-2 mb-3">
+                <span class="material-symbols-outlined" style="font-size:1.1rem">meeting_room</span>
+                Phòng khám đang hoạt động (@_summaries.Count)
+            </h6>
+            <div class="d-flex flex-column gap-3" style="max-height:70vh;overflow-y:auto;padding-right:.25rem">
+                @foreach (var c in _summaries)
+                {
+                    var isSelected = _selectedClinicId == c.ClinicId;
+                    <div class="report-card @(isSelected ? "border-primary" : "")" style="cursor:pointer;@(isSelected ? "border-width:2px" : "")" @onclick="() => SelectClinic(c.ClinicId)">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span style="width:.6rem;height:.6rem;border-radius:50%;background:@(c.IsActive ? "#22c55e" : "#cbd5e1")"></span>
+                                    <span class="text-muted" style="font-size:.7rem;font-weight:700;text-transform:uppercase">Phòng @(c.RoomNumber ?? "N/A")</span>
+                                </div>
+                                <h6 class="mb-0 mt-1" style="font-size:1.05rem;font-weight:700">@c.ClinicName</h6>
+                            </div>
+                            <span class="badge badge-soft-blue d-inline-flex align-items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size:.8rem">hourglass_empty</span>
+                                Chờ: @c.WaitingCount
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top" style="font-size:.85rem">
+                            <div class="text-muted d-flex align-items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size:1.05rem">play_circle</span>
+                                Đang khám:
+                                @if (c.CurrentNumber is { } num)
+                                {
+                                    <span style="font-weight:700;color:var(--text)">#@num</span>
+                                }
+                                else
+                                {
+                                    <span class="fst-italic text-muted">Trống</span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(c.CurrentPatientName))
+                            {
+                                <span class="fw-semibold" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="@c.CurrentPatientName">@c.CurrentPatientName</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-7">
+            @if (_selectedClinicId is null)
+            {
+                <div class="report-card d-flex flex-column align-items-center justify-content-center text-center text-muted gap-2" style="min-height:50vh;border-style:dashed">
+                    <span class="material-symbols-outlined" style="font-size:3.5rem;opacity:.5">room_service</span>
+                    <h6 class="mb-0">Chọn một phòng khám</h6>
+                    <p class="mb-0" style="font-size:.85rem;max-width:320px">Chọn một phòng khám từ danh sách bên trái để xem chi tiết hàng đợi và bắt đầu điều phối bệnh nhân.</p>
+                </div>
+            }
+            else if (_queueLoading && _queue is null)
+            {
+                <div class="report-card d-flex align-items-center justify-content-center" style="min-height:50vh">
+                    <span class="material-symbols-outlined spin" style="font-size:2.5rem;color:var(--color-primary)">progress_activity</span>
+                </div>
+            }
+            else if (_queue is not null)
+            {
+                <div class="report-card" style="min-height:50vh">
+                    <div class="d-flex justify-content-between align-items-start gap-3 pb-3 border-bottom mb-4">
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-light text-dark" style="font-size:.7rem;font-weight:700;text-transform:uppercase">Phòng @(_queue.RoomNumber ?? "N/A")</span>
+                                <span class="d-inline-flex align-items-center gap-1" style="font-size:.8rem;font-weight:600;color:#22c55e">
+                                    <span style="width:.4rem;height:.4rem;border-radius:50%;background:#22c55e"></span> Hoạt động
+                                </span>
+                            </div>
+                            <h5 class="mb-0 mt-1">@_queue.ClinicName</h5>
+                        </div>
+                        <button class="btn d-inline-flex align-items-center gap-1" style="background:#059669;color:#fff" disabled="@_queueLoading" @onclick="() => CallNext(_queue.ClinicId)">
+                            <span class="material-symbols-outlined" style="font-size:1.1rem">play_arrow</span>
+                            Gọi tiếp theo
+                        </button>
+                    </div>
+
+                    <div class="p-3 rounded-3 mb-4" style="background:var(--color-surface-container-low)">
+                        <h6 class="text-muted d-flex align-items-center gap-1 mb-2" style="font-size:.7rem;font-weight:700;text-transform:uppercase">
+                            <span class="material-symbols-outlined" style="font-size:.9rem">medical_services</span>
+                            Bệnh nhân đang khám
+                        </h6>
+                        @if (CurrentPatient is { } cur)
+                        {
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="d-flex flex-column align-items-center justify-content-center rounded-3" style="width:4rem;height:4rem;background:#d1fae5;color:#065f46;flex-shrink:0">
+                                        <span style="font-size:.65rem;font-weight:700;opacity:.75">SỐ</span>
+                                        <span style="font-size:1.6rem;font-weight:800;line-height:1">@cur.Number</span>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">@(cur.PatientName ?? "Bệnh nhân vãng lai")</h6>
+                                        <p class="text-muted mb-0 d-flex align-items-center gap-1" style="font-size:.8rem">
+                                            <span class="material-symbols-outlined" style="font-size:.9rem">schedule</span>
+                                            Vào khám lúc: @cur.IssuedAt.ToLocalTime().ToString("HH:mm")
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" @onclick="() => OpenTransfer(cur)">
+                                        <span class="material-symbols-outlined" style="font-size:1rem">move_down</span>
+                                        Chuyển phòng
+                                    </button>
+                                    <button class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" @onclick="() => GoToOutpatientRecord(cur)">
+                                        <span class="material-symbols-outlined" style="font-size:1rem">medical_services</span>
+                                        Ghi khám
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center gap-2 text-muted fst-italic py-2">
+                                <span class="material-symbols-outlined" style="font-size:1.8rem">sentiment_dissatisfied</span>
+                                <span style="font-size:.85rem">Hiện tại không có bệnh nhân nào đang trong phòng khám.</span>
+                            </div>
+                        }
+                    </div>
+
+                    <h6 class="d-flex align-items-center gap-2 mb-3">
+                        <span class="material-symbols-outlined" style="font-size:1.1rem">format_list_bulleted</span>
+                        Danh sách chờ khám (@WaitingTickets.Count)
+                    </h6>
+                    @if (WaitingTickets.Count == 0)
+                    {
+                        <div class="text-center text-muted py-4 rounded-3" style="border:1px dashed var(--border)">
+                            <span class="material-symbols-outlined" style="font-size:2.2rem">hourglass_empty</span>
+                            <p class="mb-0 mt-1 fw-semibold" style="font-size:.85rem">Hàng đợi đang trống</p>
+                            <p class="mb-0" style="font-size:.75rem">Sử dụng nút "Tiếp nhận bệnh nhân" để thêm bệnh nhân vào hàng đợi.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Số TT</th>
+                                        <th>Tên bệnh nhân</th>
+                                        <th>Giờ vào hàng</th>
+                                        <th>Trạng thái</th>
+                                        <th class="text-end">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var t in WaitingTickets)
+                                    {
+                                        <tr>
+                                            <td style="font-weight:700">#@t.Number</td>
+                                            <td class="fw-semibold">@(t.PatientName ?? "Bệnh nhân vãng lai")</td>
+                                            <td class="text-muted">@t.IssuedAt.ToLocalTime().ToString("HH:mm")</td>
+                                            <td><span class="badge badge-soft-yellow">Đang chờ</span></td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-secondary border-0" title="Chuyển phòng khám" @onclick="() => OpenTransfer(t)">
+                                                    <span class="material-symbols-outlined" style="font-size:1.05rem">move_down</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="report-card d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="min-height:50vh">
+                    <span class="material-symbols-outlined" style="font-size:2.5rem">warning</span>
+                    <p class="mb-0" style="font-size:.85rem">Đã có lỗi xảy ra khi tải dữ liệu hàng đợi.</p>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (_isCheckInOpen)
+{
+    <div class="modal-overlay" @onclick="() => _isCheckInOpen = false">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-3 d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined" style="color:var(--color-primary)">how_to_reg</span>
+                Tiếp nhận & phát số khám
+            </h5>
+
+            <div class="mb-3">
+                <label class="form-label">Chọn phòng khám tiếp nhận</label>
+                <select class="form-select" @bind="_checkInClinicId">
+                    <option value="">-- Chọn phòng khám --</option>
+                    @foreach (var c in _summaries)
+                    {
+                        <option value="@c.ClinicId">Phòng @(c.RoomNumber ?? "N/A") - @c.ClinicName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label d-block">Loại tiếp nhận</label>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button type="button" class="btn w-100 @(_checkInType == "walk-in" ? "btn-primary" : "btn-outline-secondary")" @onclick='() => _checkInType = "walk-in"'>
+                            <span class="material-symbols-outlined d-block mx-auto" style="font-size:1.2rem">person_add</span>
+                            Bệnh nhân vãng lai
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="btn w-100 @(_checkInType == "appointment" ? "btn-primary" : "btn-outline-secondary")" @onclick="SelectAppointmentType">
+                            <span class="material-symbols-outlined d-block mx-auto" style="font-size:1.2rem">event_available</span>
+                            Theo lịch hẹn trước
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @if (_checkInType == "walk-in")
+            {
+                <div class="mb-3">
+                    <label class="form-label">Họ và tên bệnh nhân</label>
+                    <input class="form-control" placeholder="Nhập đầy đủ họ và tên..." @bind="_walkInName" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" placeholder="Nhập email bệnh nhân..." @bind="_walkInEmail" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại <span class="text-muted">(tùy chọn)</span></label>
+                    <input class="form-control" placeholder="Nhập số điện thoại..." @bind="_walkInPhone" />
+                </div>
+            }
+            else
+            {
+                <div class="mb-3">
+                    <label class="form-label">Chọn lịch hẹn trong ngày</label>
+                    @if (_pendingAppointments.Count == 0)
+                    {
+                        <div class="text-center text-muted p-3 rounded-3" style="border:1px solid var(--border)">
+                            <span class="material-symbols-outlined d-block" style="font-size:1.5rem">event_busy</span>
+                            Không có lịch hẹn nào đang chờ check-in.
+                        </div>
+                    }
+                    else
+                    {
+                        <select class="form-select" @bind="_selectedAppointmentId">
+                            <option value="">-- Chọn lịch hẹn bệnh nhân --</option>
+                            @foreach (var a in _pendingAppointments)
+                            {
+                                <option value="@a.Id">[@a.AppointmentTime.ToLocalTime().ToString("HH:mm")] @PatientNameFor(a.PatientId) - @(string.IsNullOrEmpty(a.Reason) ? "Khám tổng quát" : a.Reason)</option>
+                            }
+                        </select>
+                    }
+                </div>
+            }
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <button class="btn btn-outline-secondary" @onclick="() => _isCheckInOpen = false">Hủy bỏ</button>
+                <button class="btn btn-primary" disabled="@(_submitting || _checkInClinicId == "" || (_checkInType == "appointment" && _selectedAppointmentId == "") || (_checkInType == "walk-in" && string.IsNullOrWhiteSpace(_walkInEmail)))" @onclick="SubmitCheckIn">
+                    @(_submitting ? "Đang xử lý..." : "Xác nhận & phát số")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_transferTicket is not null)
+{
+    <div class="modal-overlay" @onclick="() => _transferTicket = null">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-3 d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined" style="color:var(--color-primary)">move_down</span>
+                Chuyển phòng khám
+            </h5>
+
+            <div class="p-3 rounded-3 mb-3" style="background:var(--color-surface-container-low)">
+                <p class="text-muted mb-1" style="font-size:.85rem">Bệnh nhân cần chuyển:</p>
+                <p class="mb-1" style="font-weight:700;font-size:1.1rem">#@_transferTicket.Number - @(_transferTicket.PatientName ?? "Bệnh nhân vãng lai")</p>
+                <p class="text-muted mb-0" style="font-size:.75rem">Phòng hiện tại: @_transferTicket.ClinicName</p>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Chọn phòng khám chuyển đến</label>
+                <select class="form-select" @bind="_transferTargetClinicId">
+                    <option value="">-- Chọn phòng khám đích --</option>
+                    @foreach (var c in _summaries.Where(c => c.ClinicId != _transferTicket.ClinicId))
+                    {
+                        <option value="@c.ClinicId">Phòng @(c.RoomNumber ?? "N/A") - @c.ClinicName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="() => _transferTicket = null">Hủy bỏ</button>
+                <button class="btn btn-primary" disabled="@(_submitting || _transferTargetClinicId == "")" @onclick="SubmitTransfer">
+                    @(_submitting ? "Đang xử lý..." : "Chuyển phòng")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+
+    private List<ClinicQueueSummaryDto> _summaries = new();
+    private Guid? _selectedClinicId;
+    private ClinicQueueDto? _queue;
+    private List<AppointmentReadDto> _pendingAppointments = new();
+    private Dictionary<Guid, string> _patientNameByProfileId = new();
+
+    private bool _loading = true;
+    private bool _queueLoading;
+    private bool _submitting;
+    private string? _error;
+    private string? _successMsg;
+
+    private bool _isCheckInOpen;
+    private string _checkInType = "walk-in";
+    private string _walkInName = "";
+    private string _walkInEmail = "";
+    private string _walkInPhone = "";
+    private string _selectedAppointmentId = "";
+    private string _checkInClinicId = "";
+
+    private QueueTicketDetailDto? _transferTicket;
+    private string _transferTargetClinicId = "";
+
+    private PeriodicTimer? _timer;
+    private CancellationTokenSource? _cts;
+
+    private QueueTicketDetailDto? CurrentPatient => _queue?.Tickets.FirstOrDefault(t => t.Status == QueueStatus.InProgress);
+    private List<QueueTicketDetailDto> WaitingTickets => _queue?.Tickets.Where(t => t.Status == QueueStatus.Waiting).OrderBy(t => t.Number).ToList() ?? new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOverview(true);
+        await LoadCheckInData();
+        StartAutoRefresh();
+    }
+
+    private void StartAutoRefresh()
+    {
+        _cts = new CancellationTokenSource();
+        _timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        _ = RunAutoRefresh(_cts.Token);
+    }
+
+    private async Task RunAutoRefresh(CancellationToken token)
+    {
+        try
+        {
+            while (await _timer!.WaitForNextTickAsync(token))
+            {
+                await LoadOverview(false);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task LoadOverview(bool showLoading)
+    {
+        if (showLoading) _loading = true;
+        _error = null;
+        try
+        {
+            _summaries = (await Api.GetClinicQueueOverview()) ?? new();
+            if (_selectedClinicId is { } id) await LoadQueue(id);
+        }
+        catch { _error = "Không thể tải danh sách phòng khám."; }
+        finally { if (showLoading) _loading = false; }
+    }
+
+    private async Task LoadQueue(Guid clinicId)
+    {
+        _queueLoading = true;
+        try { _queue = await Api.GetClinicQueue(clinicId); }
+        catch { _error = "Không thể tải chi tiết hàng đợi."; }
+        finally { _queueLoading = false; }
+    }
+
+    private async Task LoadCheckInData()
+    {
+        try
+        {
+            var appointments = (await Api.GetAppointments()) ?? new();
+            _pendingAppointments = appointments.Where(a => a.Status is AppointmentStatus.Requested or AppointmentStatus.Confirmed).ToList();
+
+            var patients = (await Api.GetAllPatients()) ?? new();
+            var users = (await Api.GetUserAccounts()) ?? new();
+            var userNameById = users.ToDictionary(u => u.Id, u => u.FullName);
+            _patientNameByProfileId = patients
+                .Where(p => userNameById.ContainsKey(p.UserAccountId))
+                .ToDictionary(p => p.Id, p => userNameById[p.UserAccountId]);
+        }
+        catch { /* check-in modal degrades to raw IDs; non-fatal */ }
+    }
+
+    private string PatientNameFor(Guid patientProfileId) =>
+        _patientNameByProfileId.TryGetValue(patientProfileId, out var name) ? name : $"Bệnh nhân ({patientProfileId.ToString()[..8]})";
+
+    private async Task SelectClinic(Guid clinicId)
+    {
+        _selectedClinicId = clinicId;
+        await LoadQueue(clinicId);
+    }
+
+    private void OpenCheckIn()
+    {
+        _isCheckInOpen = true;
+        _checkInType = "walk-in";
+        _walkInName = "";
+        _walkInEmail = "";
+        _walkInPhone = "";
+        _selectedAppointmentId = "";
+        _checkInClinicId = _selectedClinicId?.ToString() ?? _summaries.FirstOrDefault()?.ClinicId.ToString() ?? "";
+    }
+
+    private async Task SelectAppointmentType()
+    {
+        _checkInType = "appointment";
+        await LoadCheckInData();
+    }
+
+    private async Task SubmitCheckIn()
+    {
+        if (_checkInClinicId == "") return;
+        if (_checkInType == "appointment" && _selectedAppointmentId == "") return;
+        if (_checkInType == "walk-in" && (string.IsNullOrWhiteSpace(_walkInName) || string.IsNullOrWhiteSpace(_walkInEmail))) return;
+
+        _submitting = true; _error = null;
+        try
+        {
+            var clinicId = Guid.Parse(_checkInClinicId);
+            var appointmentId = _checkInType == "appointment" ? Guid.Parse(_selectedAppointmentId) : (Guid?)null;
+            var patientName = _checkInType == "walk-in" ? _walkInName.Trim() : null;
+            var patientEmail = _checkInType == "walk-in" ? _walkInEmail.Trim() : null;
+            var patientPhone = _checkInType == "walk-in" && !string.IsNullOrWhiteSpace(_walkInPhone) ? _walkInPhone.Trim() : null;
+            var ticket = await Api.CheckIn(clinicId, appointmentId, patientName, patientEmail, patientPhone);
+            ShowSuccess($"Đã phát số {ticket?.Number} cho phòng {ticket?.ClinicName}");
+            _isCheckInOpen = false;
+            _walkInName = ""; _walkInEmail = ""; _walkInPhone = ""; _selectedAppointmentId = "";
+            await LoadOverview(false);
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Lỗi khi phát số khám."; }
+        finally { _submitting = false; }
+    }
+
+    private async Task CallNext(Guid clinicId)
+    {
+        _queueLoading = true; _error = null;
+        try
+        {
+            var result = await Api.CallNext(clinicId);
+            if (!string.IsNullOrEmpty(result?.Message))
+                ShowSuccess(result.Message);
+            else if (result is not null)
+                ShowSuccess($"Đã gọi số thứ tự: {result.Number} ({result.PatientName ?? "Bệnh nhân vãng lai"})");
+            await LoadOverview(false);
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Lỗi khi gọi bệnh nhân tiếp theo."; }
+        finally { _queueLoading = false; }
+    }
+
+    private void OpenTransfer(QueueTicketDetailDto ticket)
+    {
+        _transferTicket = ticket;
+        _transferTargetClinicId = "";
+    }
+
+    private async Task SubmitTransfer()
+    {
+        if (_transferTicket is null || _transferTargetClinicId == "") return;
+        _submitting = true; _error = null;
+        try
+        {
+            var result = await Api.TransferTicket(_transferTicket.Id, Guid.Parse(_transferTargetClinicId));
+            ShowSuccess($"Đã chuyển vé số {result?.Number} sang phòng khám {result?.ClinicName}");
+            _transferTicket = null; _transferTargetClinicId = "";
+            await LoadOverview(false);
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Lỗi khi chuyển phòng khám."; }
+        finally { _submitting = false; }
+    }
+
+    private void GoToOutpatientRecord(QueueTicketDetailDto ticket) =>
+        Nav.NavigateTo($"/outpatient-record?ticketId={ticket.Id}&clinicId={ticket.ClinicId}");
+
+    private void ShowSuccess(string msg)
+    {
+        _successMsg = msg;
+        _ = ClearSuccessAfterDelay();
+    }
+
+    private async Task ClearSuccessAfterDelay()
+    {
+        await Task.Delay(4000);
+        _successMsg = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _timer?.Dispose();
+    }
+}

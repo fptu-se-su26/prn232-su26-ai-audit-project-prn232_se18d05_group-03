@@ -1,0 +1,130 @@
+@page "/e-prescription"
+@attribute [Authorize(Roles = "Doctor,Nurse")]
+
+<PageTitle>Đơn thuốc điện tử – MediConnect</PageTitle>
+
+<div class="mb-4">
+    <h4 class="mb-1 d-flex align-items-center gap-2">
+        <span class="material-symbols-outlined" style="color:var(--color-primary);font-size:1.7rem">medication</span>
+        Đơn thuốc điện tử
+    </h4>
+    <p class="text-muted mb-0">Kê đơn thuốc điện tử kết nối kho dược trực tiếp.</p>
+</div>
+
+@if (_activeVisitId is not null)
+{
+    <EPrescriptionPanel VisitId="@_activeVisitId" DoctorId="@_staffProfileId!.Value" PatientId="@_activePatientId" OnClose="Close" />
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0"
+                             style="width:48px;height:48px;background:var(--color-primary-container)">
+                            <span class="material-symbols-outlined" style="color:var(--color-on-primary-container)">assignment</span>
+                        </div>
+                        <div>
+                            <div style="font-weight:700">Nhập mã phiên khám</div>
+                            <div class="text-muted" style="font-size:.82rem">Lấy Visit ID từ màn hình Hồ sơ ngoại trú.</div>
+                        </div>
+                    </div>
+
+                    <label class="form-label">Visit ID</label>
+                    <input class="form-control mb-3" style="font-family:monospace;font-size:.85rem" @bind="_visitInput" @bind:event="oninput"
+                           @onkeyup="@(async e => { if (e.Key == "Enter") await Open(); })"
+                           placeholder="Dán GUID phiên khám vào đây..." />
+
+                    @if (_error is not null)
+                    {
+                        <div class="alert alert-danger py-2 mb-3">@_error</div>
+                    }
+                    @if (_staffProfileId is null && !_loadingStaff)
+                    {
+                        <div class="alert alert-warning py-2 mb-3">Không tìm thấy hồ sơ nhân viên cho tài khoản này.</div>
+                    }
+
+                    <button class="btn btn-primary btn-pill w-100 d-inline-flex align-items-center justify-content-center gap-1" disabled="@(_staffProfileId is null)" @onclick="Open">
+                        <span class="material-symbols-outlined" style="font-size:1rem">open_in_new</span>
+                        Mở đơn thuốc
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card h-100" style="border-style:dashed">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center text-center p-5" style="min-height:320px">
+                    <span class="material-symbols-outlined mb-3" style="font-size:3.5rem;color:var(--color-outline-variant)">medication</span>
+                    <h5 class="mb-2">Chưa có đơn thuốc nào</h5>
+                    <p class="text-muted mb-4" style="max-width:340px">
+                        Nhập Visit ID từ phiên khám ngoại trú để bắt đầu kê đơn thuốc điện tử có liên kết kho dược.
+                    </p>
+                    <div class="d-flex flex-column gap-2 w-100" style="max-width:280px">
+                        @foreach (var f in _features)
+                        {
+                            <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background:var(--color-surface-container-low)">
+                                <span class="material-symbols-outlined" style="color:var(--color-primary);font-size:1.1rem">@f.Icon</span>
+                                <span style="font-size:.82rem;font-weight:500">@f.Label</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private TokenState Token { get; set; } = default!;
+
+    private Guid? _staffProfileId;
+    private bool _loadingStaff = true;
+    private string? _error;
+    private string _visitInput = "";
+    private string? _activeVisitId;
+    private Guid? _activePatientId;
+
+    private static readonly (string Icon, string Label)[] _features =
+    {
+        ("search", "Tìm thuốc theo kho dược thực tế"),
+        ("warning", "Cảnh báo dị ứng tự động"),
+        ("inventory_2", "Kiểm tra tồn kho trước khi kê"),
+        ("send", "Gửi đơn thuốc trực tiếp đến nhà thuốc"),
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var directory = (await Api.GetStaffDirectory()) ?? new();
+            _staffProfileId = directory.FirstOrDefault(s => s.UserId == Token.User?.Id)?.Id;
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        finally { _loadingStaff = false; }
+    }
+
+    private async Task Open()
+    {
+        var visit = _visitInput.Trim();
+        if (string.IsNullOrEmpty(visit)) { _error = "Vui lòng nhập Visit ID."; return; }
+        _error = null;
+        _activeVisitId = visit;
+
+        _activePatientId = null;
+        if (Guid.TryParse(visit, out var visitGuid))
+        {
+            try { _activePatientId = (await Api.GetOutpatientVisit(visitGuid))?.PatientId; }
+            catch { /* không lấy được PatientId thì bỏ qua — chỉ mất tính năng cảnh báo quá liều, không chặn kê đơn */ }
+        }
+    }
+
+    private void Close()
+    {
+        _activeVisitId = null;
+        _activePatientId = null;
+        _visitInput = "";
+    }
+}

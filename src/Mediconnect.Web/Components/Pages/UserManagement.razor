@@ -1,0 +1,380 @@
+@page "/admin/users"
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Quản lý tài khoản – MediConnect</PageTitle>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <h4 class="mb-1" style="font-size:1.5rem">Trung tâm điều khiển tài khoản</h4>
+        <p class="text-muted mb-0">Quản lý tài khoản hệ thống: khóa/mở khóa và phân quyền theo vai trò.</p>
+    </div>
+    <button class="btn btn-primary d-inline-flex align-items-center gap-1" @onclick="OpenCreateModal">
+        <span class="material-symbols-outlined" style="font-size:1.1rem">person_add</span>
+        Tạo tài khoản
+    </button>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-3">
+        <span class="material-symbols-outlined">error</span>
+        @_error
+    </div>
+}
+@if (_successMsg is not null)
+{
+    <div class="alert alert-success mb-3">
+        <span class="material-symbols-outlined">check_circle</span>
+        @_successMsg
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="report-card py-3">
+            <div class="text-muted d-flex align-items-center gap-1" style="font-size:.7rem;font-weight:700;text-transform:uppercase">
+                <span class="material-symbols-outlined" style="font-size:.9rem">groups</span> Tổng tài khoản
+            </div>
+            <p class="mb-0 mt-1" style="font-size:1.5rem;font-weight:700">@(_loading ? "—" : _users.Count.ToString())</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="report-card py-3">
+            <div class="text-muted d-flex align-items-center gap-1" style="font-size:.7rem;font-weight:700;text-transform:uppercase">
+                <span class="material-symbols-outlined" style="font-size:.9rem">check_circle</span> Đang hoạt động
+            </div>
+            <p class="mb-0 mt-1" style="font-size:1.5rem;font-weight:700">@(_loading ? "—" : _users.Count(u => u.IsActive).ToString())</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="report-card py-3">
+            <div class="text-muted d-flex align-items-center gap-1" style="font-size:.7rem;font-weight:700;text-transform:uppercase">
+                <span class="material-symbols-outlined" style="font-size:.9rem">lock</span> Đã khóa
+            </div>
+            <p class="mb-0 mt-1" style="font-size:1.5rem;font-weight:700">@(_loading ? "—" : _users.Count(u => !u.IsActive).ToString())</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="report-card py-3">
+            <div class="text-muted d-flex align-items-center gap-1" style="font-size:.7rem;font-weight:700;text-transform:uppercase">
+                <span class="material-symbols-outlined" style="font-size:.9rem">shield_person</span> Admin
+            </div>
+            <p class="mb-0 mt-1" style="font-size:1.5rem;font-weight:700">@(_loading ? "—" : _users.Count(u => u.Role == UserRole.Admin).ToString())</p>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <div class="report-filter-chip flex-grow-1" style="max-width:340px">
+        <span class="material-symbols-outlined text-muted" style="font-size:1.1rem">search</span>
+        <input @bind="_search" @bind:event="oninput" placeholder="Tìm theo tên hoặc email..." class="w-100" />
+    </div>
+    <div class="report-filter-chip">
+        <span class="material-symbols-outlined text-muted" style="font-size:1.1rem">filter_list</span>
+        <select @bind="_filterRole">
+            <option value="">Tất cả vai trò</option>
+            @foreach (var r in RoleLabels.Keys)
+            {
+                <option value="@r">@RoleLabels[r]</option>
+            }
+        </select>
+    </div>
+</div>
+
+<div class="report-card p-0" style="overflow:hidden">
+    @if (_loading)
+    {
+        <div class="p-4 d-flex flex-column gap-2">
+            <Skeleton Style="height:3rem" />
+            <Skeleton Style="height:3rem" />
+            <Skeleton Style="height:3rem" />
+        </div>
+    }
+    else if (FilteredUsers.Count == 0)
+    {
+        <div class="d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="height:200px">
+            <span class="material-symbols-outlined" style="font-size:2.5rem">person_off</span>
+            <p class="mb-0" style="font-size:.85rem">Không tìm thấy tài khoản nào</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Người dùng</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in FilteredUsers)
+                    {
+                        var isSelf = u.Id == Token.User?.Id;
+                        <tr>
+                            <td>
+                                <div style="font-weight:600">@u.FullName</div>
+                                <div class="text-muted" style="font-size:.75rem">@u.Email</div>
+                            </td>
+                            <td>
+                                <select class="badge @RoleBadge(u.Role)" style="border:none;cursor:pointer" disabled="@isSelf"
+                                        value="@u.Role" @onchange="e => ChangeRole(u, Enum.Parse<UserRole>(e.Value!.ToString()!))">
+                                    @foreach (var r in RoleLabels.Keys)
+                                    {
+                                        <option value="@r">@RoleLabels[r]</option>
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <button class="badge d-inline-flex align-items-center gap-1 @(u.IsActive ? "badge-soft-tertiary" : "badge-soft-red")"
+                                        style="border:none" disabled="@isSelf" @onclick="() => ToggleActive(u)">
+                                    <span class="material-symbols-outlined" style="font-size:.8rem">@(u.IsActive ? "lock_open" : "lock")</span>
+                                    @(u.IsActive ? "Hoạt động" : "Đã khóa")
+                                </button>
+                            </td>
+                            <td class="text-muted" style="font-size:.78rem">@u.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => OpenEditModal(u)" title="Sửa">
+                                    <span class="material-symbols-outlined" style="font-size:1.05rem">edit</span>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary border-0" disabled="@isSelf" @onclick="() => DeleteUser(u)" title="Xóa">
+                                    <span class="material-symbols-outlined" style="font-size:1.05rem">delete</span>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (_isModalOpen)
+{
+    <div class="modal-overlay" @onclick="CloseModal">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-3">@(_editingId is not null ? "Sửa tài khoản" : "Tạo tài khoản mới")</h5>
+
+            <div class="mb-2">
+                <label class="form-label">Họ tên</label>
+                <input class="form-control" @bind="_form.FullName" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" @bind="_form.Email" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Số điện thoại</label>
+                <input class="form-control" @bind="_form.PhoneNumber" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Mật khẩu @(_editingId is not null ? "(để trống nếu không đổi)" : "")</label>
+                <input type="password" class="form-control" @bind="_form.Password" />
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label">Vai trò</label>
+                    <select class="form-select" @bind="_form.Role">
+                        @foreach (var r in RoleLabels.Keys)
+                        {
+                            <option value="@r">@RoleLabels[r]</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label class="form-label">Trạng thái</label>
+                    <select class="form-select" value="@(_form.IsActive ? "1" : "0")" @onchange="@(e => _form.IsActive = e.Value!.ToString() == "1")">
+                        <option value="1">Hoạt động</option>
+                        <option value="0">Đã khóa</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="CloseModal">Hủy</button>
+                <button class="btn btn-primary" disabled="@_submitting" @onclick="Submit">
+                    @(_submitting ? "Đang lưu..." : "Lưu")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private TokenState Token { get; set; } = default!;
+    [Inject] private Microsoft.JSInterop.IJSRuntime Js { get; set; } = default!;
+
+    private static readonly Dictionary<UserRole, string> RoleLabels = new()
+    {
+        [UserRole.Patient] = "Bệnh nhân",
+        [UserRole.Doctor] = "Bác sĩ",
+        [UserRole.Nurse] = "Y tá",
+        [UserRole.Lab] = "Xét nghiệm",
+        [UserRole.Admin] = "Quản trị viên",
+    };
+
+    private static string RoleBadge(UserRole r) => r switch
+    {
+        UserRole.Doctor => "badge-soft-blue",
+        UserRole.Nurse => "badge-soft-tertiary",
+        UserRole.Lab => "badge-soft-yellow",
+        UserRole.Admin => "badge-soft-red",
+        _ => "badge-soft-purple",
+    };
+
+    private List<UserAccountReadDto> _users = new();
+    private bool _loading = true;
+    private string? _error;
+    private string? _successMsg;
+    private string _search = "";
+    private string _filterRole = "";
+
+    private bool _isModalOpen;
+    private Guid? _editingId;
+    private UserFormState _form = new();
+    private bool _submitting;
+
+    private List<UserAccountReadDto> FilteredUsers => _users.Where(u =>
+        (_search.Length == 0 || u.FullName.Contains(_search, StringComparison.OrdinalIgnoreCase) || u.Email.Contains(_search, StringComparison.OrdinalIgnoreCase)) &&
+        (_filterRole.Length == 0 || u.Role == Enum.Parse<UserRole>(_filterRole))
+    ).ToList();
+
+    protected override async Task OnInitializedAsync() => await LoadUsers();
+
+    private async Task LoadUsers()
+    {
+        _loading = true; _error = null;
+        try { _users = ((await Api.GetUserAccounts()) ?? new()).OrderByDescending(u => u.CreatedAt).ToList(); }
+        catch { _error = "Không thể tải danh sách tài khoản."; }
+        finally { _loading = false; }
+    }
+
+    private void OpenCreateModal()
+    {
+        _editingId = null;
+        _form = new UserFormState();
+        _isModalOpen = true;
+    }
+
+    private void OpenEditModal(UserAccountReadDto u)
+    {
+        _editingId = u.Id;
+        _form = new UserFormState
+        {
+            FullName = u.FullName,
+            Email = u.Email,
+            PhoneNumber = u.PhoneNumber ?? "",
+            Password = "",
+            Role = u.Role,
+            IsActive = u.IsActive,
+        };
+        _isModalOpen = true;
+    }
+
+    private void CloseModal() => _isModalOpen = false;
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(_form.FullName) || string.IsNullOrWhiteSpace(_form.Email))
+        {
+            _error = "Vui lòng nhập đầy đủ họ tên và email.";
+            return;
+        }
+        if (_editingId is null && string.IsNullOrWhiteSpace(_form.Password))
+        {
+            _error = "Vui lòng nhập mật khẩu cho tài khoản mới.";
+            return;
+        }
+
+        _submitting = true; _error = null;
+        try
+        {
+            var dto = new UserAccountWriteDto
+            {
+                FullName = _form.FullName,
+                Email = _form.Email,
+                PhoneNumber = string.IsNullOrWhiteSpace(_form.PhoneNumber) ? null : _form.PhoneNumber,
+                Password = string.IsNullOrWhiteSpace(_form.Password) ? null : _form.Password,
+                Role = _form.Role,
+                IsActive = _form.IsActive,
+            };
+            if (_editingId is { } id)
+            {
+                await Api.UpdateUser(id, dto);
+                ShowSuccess("Đã cập nhật tài khoản.");
+            }
+            else
+            {
+                await Api.CreateUser(dto);
+                ShowSuccess("Đã tạo tài khoản mới.");
+            }
+            _isModalOpen = false;
+            await LoadUsers();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Không thể lưu tài khoản."; }
+        finally { _submitting = false; }
+    }
+
+    private async Task ToggleActive(UserAccountReadDto u)
+    {
+        try
+        {
+            await Api.UpdateUserStatus(u.Id, !u.IsActive);
+            u.IsActive = !u.IsActive;
+            ShowSuccess(u.IsActive ? $"Đã mở khóa \"{u.FullName}\"." : $"Đã khóa \"{u.FullName}\".");
+        }
+        catch { _error = "Không thể thay đổi trạng thái tài khoản."; }
+    }
+
+    private async Task ChangeRole(UserAccountReadDto u, UserRole role)
+    {
+        if (role == u.Role) return;
+        try
+        {
+            await Api.UpdateUserRole(u.Id, role);
+            u.Role = role;
+            ShowSuccess($"Đã đổi quyền của \"{u.FullName}\" thành {RoleLabels[role]}.");
+        }
+        catch { _error = "Không thể đổi quyền tài khoản."; }
+    }
+
+    private async Task DeleteUser(UserAccountReadDto u)
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", $"Xóa tài khoản \"{u.FullName}\" ({u.Email})? Hành động này không thể hoàn tác.")) return;
+        try
+        {
+            await Api.DeleteUser(u.Id);
+            ShowSuccess("Đã xóa tài khoản.");
+            await LoadUsers();
+        }
+        catch { _error = "Không thể xóa tài khoản. Tài khoản có thể đang được tham chiếu ở nơi khác."; }
+    }
+
+    private void ShowSuccess(string msg)
+    {
+        _successMsg = msg;
+        _ = ClearSuccessAfterDelay();
+    }
+
+    private async Task ClearSuccessAfterDelay()
+    {
+        await Task.Delay(3000);
+        _successMsg = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private class UserFormState
+    {
+        public string FullName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string PhoneNumber { get; set; } = "";
+        public string Password { get; set; } = "";
+        public UserRole Role { get; set; } = UserRole.Patient;
+        public bool IsActive { get; set; } = true;
+    }
+}

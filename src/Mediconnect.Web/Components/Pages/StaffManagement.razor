@@ -1,0 +1,326 @@
+@page "/admin/staff"
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Quản lý nhân sự – MediConnect</PageTitle>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <h4 class="mb-1" style="font-size:1.5rem">Quản lý hồ sơ nhân sự</h4>
+        <p class="text-muted mb-0">Thông tin chuyên môn của Bác sĩ, Y tá: chuyên khoa, kinh nghiệm, học vị.</p>
+    </div>
+    <button class="btn btn-primary d-inline-flex align-items-center gap-1" @onclick="OpenCreateModal">
+        <span class="material-symbols-outlined" style="font-size:1.1rem">add</span>
+        Thêm hồ sơ nhân sự
+    </button>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mb-3"><span class="material-symbols-outlined">error</span>@_error</div>
+}
+@if (_successMsg is not null)
+{
+    <div class="alert alert-success mb-3"><span class="material-symbols-outlined">check_circle</span>@_successMsg</div>
+}
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <div class="report-filter-chip flex-grow-1" style="max-width:340px">
+        <span class="material-symbols-outlined text-muted" style="font-size:1.1rem">search</span>
+        <input @bind="_search" @bind:event="oninput" placeholder="Tìm theo tên, email, chuyên khoa..." class="w-100" />
+    </div>
+    <div class="report-filter-chip">
+        <span class="material-symbols-outlined text-muted" style="font-size:1.1rem">filter_list</span>
+        <select @bind="_filterDept">
+            <option value="">Tất cả khoa</option>
+            @foreach (var d in _departments)
+            {
+                <option value="@d.Id">@d.Name</option>
+            }
+        </select>
+    </div>
+</div>
+
+<div class="report-card p-0" style="overflow:hidden">
+    @if (_loading)
+    {
+        <div class="p-4 d-flex flex-column gap-2">
+            <Skeleton Style="height:3rem" /><Skeleton Style="height:3rem" /><Skeleton Style="height:3rem" />
+        </div>
+    }
+    else if (FilteredStaff.Count == 0)
+    {
+        <div class="d-flex flex-column align-items-center justify-content-center text-muted gap-2" style="height:200px">
+            <span class="material-symbols-outlined" style="font-size:2.5rem">badge</span>
+            <p class="mb-0" style="font-size:.85rem">Không có hồ sơ nhân sự nào</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Họ tên</th><th>Loại</th><th>Khoa</th><th>Chuyên khoa</th>
+                        <th class="text-end">Kinh nghiệm</th><th>Học vị</th><th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in FilteredStaff)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight:600">@s.Name</div>
+                                <div class="text-muted" style="font-size:.75rem">@s.Email</div>
+                            </td>
+                            <td class="text-muted">@StaffTypeLabels.GetValueOrDefault(s.StaffType, "—")</td>
+                            <td class="text-muted">@s.Department</td>
+                            <td class="text-muted">@(s.Specialty ?? "—")</td>
+                            <td class="text-end text-muted">@s.YearsExperience năm</td>
+                            <td class="text-muted">@(s.Degree ?? "—")</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => OpenEditModal(s)" title="Sửa">
+                                    <span class="material-symbols-outlined" style="font-size:1.05rem">edit</span>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary border-0" @onclick="() => DeleteStaff(s)" title="Xóa">
+                                    <span class="material-symbols-outlined" style="font-size:1.05rem">delete</span>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (_isModalOpen)
+{
+    <div class="modal-overlay" @onclick="CloseModal">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-3">@(_editingId is not null ? "Sửa hồ sơ nhân sự" : "Thêm hồ sơ nhân sự")</h5>
+
+            <div class="mb-2">
+                <label class="form-label">Tài khoản nhân viên</label>
+                <select class="form-select" value="@_form.UserAccountId" disabled="@(_editingId is not null)"
+                        @onchange="e => _form.UserAccountId = e.Value!.ToString()!">
+                    <option value="">— Chọn tài khoản (Doctor/Nurse) —</option>
+                    @if (_editingId is not null)
+                    {
+                        <option value="@_form.UserAccountId">@(_users.FirstOrDefault(u => u.Id.ToString() == _form.UserAccountId)?.FullName ?? _form.UserAccountId)</option>
+                    }
+                    @foreach (var u in EligibleUsers)
+                    {
+                        <option value="@u.Id">@u.FullName (@u.Email)</option>
+                    }
+                </select>
+                @if (_editingId is null && EligibleUsers.Count == 0)
+                {
+                    <div class="text-danger mt-1" style="font-size:.75rem">Không có tài khoản Doctor/Nurse nào chưa gán hồ sơ. Tạo tài khoản mới ở Quản lý tài khoản.</div>
+                }
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Loại nhân sự</label>
+                <select class="form-select" @bind="_form.StaffType">
+                    @foreach (var t in StaffTypeLabels.Keys)
+                    {
+                        <option value="@t">@StaffTypeLabels[t]</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Khoa</label>
+                <select class="form-select" @bind="_form.DepartmentId">
+                    <option value="">— Chọn khoa —</option>
+                    @foreach (var d in _departments)
+                    {
+                        <option value="@d.Id">@d.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Chuyên khoa</label>
+                <input class="form-control" @bind="_form.Specialty" placeholder="Ví dụ: Tim mạch can thiệp" />
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label">Năm kinh nghiệm</label>
+                    <input type="number" min="0" class="form-control" @bind="_form.YearsExperience" />
+                </div>
+                <div class="col-6">
+                    <label class="form-label">Học vị</label>
+                    <input class="form-control" @bind="_form.Degree" placeholder="Ví dụ: ThS.BS" />
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="CloseModal">Hủy</button>
+                <button class="btn btn-primary" disabled="@(_submitting || (_editingId is null && string.IsNullOrEmpty(_form.UserAccountId)) || string.IsNullOrEmpty(_form.DepartmentId))" @onclick="Submit">
+                    @(_submitting ? "Đang lưu..." : "Lưu")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private Microsoft.JSInterop.IJSRuntime Js { get; set; } = default!;
+
+    private static readonly Dictionary<StaffType, string> StaffTypeLabels = new()
+    {
+        [StaffType.Doctor] = "Bác sĩ",
+        [StaffType.Nurse] = "Y tá",
+        [StaffType.Admin] = "Quản trị",
+        [StaffType.Caregiver] = "Hộ lý",
+    };
+
+    private List<StaffDirectoryDto> _staff = new();
+    private List<UserAccountReadDto> _users = new();
+    private List<DepartmentReadDto> _departments = new();
+    private bool _loading = true;
+    private string? _error;
+    private string? _successMsg;
+    private string _search = "";
+    private string _filterDept = "";
+
+    private bool _isModalOpen;
+    private Guid? _editingId;
+    private StaffFormState _form = new();
+    private bool _submitting;
+
+    private List<UserAccountReadDto> EligibleUsers
+    {
+        get
+        {
+            var staffUserIds = _staff.Select(s => s.UserId).ToHashSet();
+            return _users.Where(u => (u.Role == UserRole.Doctor || u.Role == UserRole.Nurse) && !staffUserIds.Contains(u.Id)).ToList();
+        }
+    }
+
+    private List<StaffDirectoryDto> FilteredStaff => _staff.Where(s =>
+        (_search.Length == 0 ||
+            s.Name.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+            s.Email.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+            (s.Specialty ?? "").Contains(_search, StringComparison.OrdinalIgnoreCase)) &&
+        (_filterDept.Length == 0 || s.DepartmentId.ToString() == _filterDept)
+    ).ToList();
+
+    protected override async Task OnInitializedAsync() => await LoadAll();
+
+    private async Task LoadAll()
+    {
+        _loading = true; _error = null;
+        try
+        {
+            var staffTask = Api.GetStaffDirectory();
+            var usersTask = Api.GetUserAccounts();
+            var deptTask = Api.GetDepartments();
+            _staff = (await staffTask) ?? new();
+            _users = (await usersTask) ?? new();
+            _departments = (await deptTask) ?? new();
+        }
+        catch { _error = "Không thể tải dữ liệu nhân sự."; }
+        finally { _loading = false; }
+    }
+
+    private void OpenCreateModal()
+    {
+        _editingId = null;
+        _form = new StaffFormState();
+        _isModalOpen = true;
+    }
+
+    private void OpenEditModal(StaffDirectoryDto s)
+    {
+        _editingId = s.Id;
+        _form = new StaffFormState
+        {
+            UserAccountId = s.UserId.ToString(),
+            StaffType = s.StaffType,
+            DepartmentId = s.DepartmentId.ToString(),
+            Specialty = s.Specialty ?? "",
+            YearsExperience = s.YearsExperience,
+            Degree = s.Degree ?? "",
+        };
+        _isModalOpen = true;
+    }
+
+    private void CloseModal() => _isModalOpen = false;
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrEmpty(_form.UserAccountId) || string.IsNullOrEmpty(_form.DepartmentId))
+        {
+            _error = "Vui lòng chọn tài khoản và khoa.";
+            return;
+        }
+
+        _submitting = true; _error = null;
+        try
+        {
+            var dto = new StaffProfileWriteDto
+            {
+                UserAccountId = Guid.Parse(_form.UserAccountId),
+                StaffType = _form.StaffType,
+                DepartmentId = Guid.Parse(_form.DepartmentId),
+                Specialty = string.IsNullOrWhiteSpace(_form.Specialty) ? null : _form.Specialty,
+                YearsExperience = _form.YearsExperience,
+                Degree = string.IsNullOrWhiteSpace(_form.Degree) ? null : _form.Degree,
+            };
+            if (_editingId is { } id)
+            {
+                await Api.UpdateStaffProfile(id, dto);
+                ShowSuccess("Đã cập nhật hồ sơ nhân sự.");
+            }
+            else
+            {
+                await Api.CreateStaffProfile(dto);
+                ShowSuccess("Đã thêm hồ sơ nhân sự mới.");
+            }
+            _isModalOpen = false;
+            await LoadAll();
+        }
+        catch (ApiClient.ApiException ex) { _error = ex.Message; }
+        catch { _error = "Không thể lưu hồ sơ nhân sự."; }
+        finally { _submitting = false; }
+    }
+
+    private async Task DeleteStaff(StaffDirectoryDto s)
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", $"Xóa hồ sơ nhân sự của \"{s.Name}\"?")) return;
+        try
+        {
+            await Api.DeleteStaffProfile(s.Id);
+            ShowSuccess("Đã xóa hồ sơ nhân sự.");
+            await LoadAll();
+        }
+        catch { _error = "Không thể xóa hồ sơ nhân sự."; }
+    }
+
+    private void ShowSuccess(string msg)
+    {
+        _successMsg = msg;
+        _ = ClearSuccessAfterDelay();
+    }
+
+    private async Task ClearSuccessAfterDelay()
+    {
+        await Task.Delay(3000);
+        _successMsg = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private class StaffFormState
+    {
+        public string UserAccountId { get; set; } = "";
+        public StaffType StaffType { get; set; } = StaffType.Doctor;
+        public string DepartmentId { get; set; } = "";
+        public string Specialty { get; set; } = "";
+        public int YearsExperience { get; set; }
+        public string Degree { get; set; } = "";
+    }
+}

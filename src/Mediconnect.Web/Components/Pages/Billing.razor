@@ -1,0 +1,506 @@
+@page "/billing"
+@attribute [Authorize(Roles = "Patient")]
+@inject IJSRuntime Js
+
+<PageTitle>Viện phí & Thanh toán – MediConnect</PageTitle>
+
+@if (_loading)
+{
+    <div class="d-flex flex-column align-items-center justify-content-center gap-2" style="min-height:50vh">
+        <span class="material-symbols-outlined spin" style="font-size:2.5rem;color:var(--color-primary)">progress_activity</span>
+        <p class="text-muted mb-0">Đang tải dữ liệu viện phí...</p>
+    </div>
+}
+else if (_noProfile)
+{
+    <div class="text-center mx-auto py-5" style="max-width:520px">
+        <span class="material-symbols-outlined d-block mb-3" style="font-size:4rem;color:var(--color-primary)">receipt_long</span>
+        <h4 class="mb-2">Chưa có hồ sơ bệnh nhân</h4>
+        <p class="text-muted mb-4">Bạn cần đặt lịch khám để tạo hồ sơ bệnh nhân trước khi xem viện phí.</p>
+        <a href="booking" class="btn btn-primary d-inline-flex align-items-center gap-1">
+            <span class="material-symbols-outlined" style="font-size:1.1rem">event</span> Đặt lịch khám
+        </a>
+    </div>
+}
+else if (_error is not null)
+{
+    <div class="text-center mx-auto py-5" style="max-width:520px">
+        <span class="material-symbols-outlined d-block mb-3" style="font-size:4rem;color:var(--color-error)">error</span>
+        <p class="text-muted mb-4">@_error</p>
+        <button class="btn btn-primary d-inline-flex align-items-center gap-1" @onclick="LoadData">
+            <span class="material-symbols-outlined" style="font-size:1.1rem">refresh</span> Thử lại
+        </button>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h4 class="mb-1 d-flex align-items-center gap-2" style="font-size:1.5rem">
+                <span class="material-symbols-outlined text-primary">receipt_long</span>
+                Viện phí & Thanh toán
+            </h4>
+            <p class="text-muted mb-0">Xem phiếu thu, khấu trừ BHYT và thanh toán trực tuyến.</p>
+        </div>
+        <button class="btn btn-primary d-inline-flex align-items-center gap-1" @onclick="() => _showCreate = true">
+            <span class="material-symbols-outlined" style="font-size:1.1rem">add</span> Tạo phiếu thu
+        </button>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-4">
+            <div class="report-card" style="background:var(--color-primary-container)">
+                <p class="mb-0" style="font-size:.8rem;color:var(--color-on-primary-container);opacity:.85">Tổng số phiếu thu</p>
+                <p class="mb-0 mt-1" style="font-size:1.8rem;font-weight:800;color:var(--color-on-primary-container)">@_invoices.Count</p>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="report-card" style="background:var(--color-tertiary-container)">
+                <p class="mb-0" style="font-size:.8rem;color:var(--color-on-tertiary-container);opacity:.85">Đã thanh toán</p>
+                <p class="mb-0 mt-1" style="font-size:1.8rem;font-weight:800;color:var(--color-on-tertiary-container)">@_invoices.Count(i => i.Status == InvoiceStatus.Paid)</p>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="report-card">
+                <p class="text-muted mb-0" style="font-size:.8rem">Còn phải thanh toán</p>
+                <p class="mb-0 mt-1" style="font-size:1.4rem;font-weight:800">@FmtVnd(TotalOutstanding)</p>
+            </div>
+        </div>
+    </div>
+
+    @if (_toastMsg is not null)
+    {
+        <div class="alert alert-success mb-3">@_toastMsg</div>
+    }
+
+    @if (_invoices.Count == 0)
+    {
+        <div class="report-card text-center text-muted py-5">
+            <span class="material-symbols-outlined d-block mb-2" style="font-size:3rem">receipt</span>
+            Chưa có phiếu thu nào. Nhấn "Tạo phiếu thu" để gom chi phí từ một lần khám.
+        </div>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-3">
+            @foreach (var inv in _invoices)
+            {
+                var st = InvoiceStatusInfo(inv.Status);
+                var isPaid = inv.Status == InvoiceStatus.Paid;
+                var canPay = !isPaid && inv.TotalAmount > 0;
+                <div class="report-card p-0" style="overflow:hidden">
+                    <button type="button" class="btn w-100 text-start d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 border-0 rounded-0" @onclick="() => ToggleExpand(inv)">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge @st.Badge d-inline-flex align-items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size:.85rem">@st.Icon</span>@st.Label
+                            </span>
+                            <div>
+                                <div class="fw-semibold" style="font-size:.9rem">Phiếu #@inv.Id.ToString()[..8].ToUpper()</div>
+                                <div class="text-muted" style="font-size:.72rem">@inv.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="text-end">
+                                <div class="fw-bold" style="color:var(--color-primary)">@FmtVnd(inv.TotalAmount)</div>
+                                @if (inv.InsuranceDeduction > 0)
+                                {
+                                    <div style="font-size:.7rem;color:var(--color-tertiary)">BHYT giảm @FmtVnd(inv.InsuranceDeduction)</div>
+                                }
+                            </div>
+                            <span class="material-symbols-outlined text-muted">@(inv.Expanded ? "expand_less" : "expand_more")</span>
+                        </div>
+                    </button>
+
+                    @if (inv.Expanded)
+                    {
+                        <div class="p-3 border-top">
+                            @if (inv.ItemsLoading)
+                            {
+                                <div class="text-center text-muted py-3">
+                                    <span class="material-symbols-outlined spin">progress_activity</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Khoản mục</th>
+                                                <th>Loại</th>
+                                                <th class="text-end">SL</th>
+                                                <th class="text-end">Đơn giá</th>
+                                                <th class="text-end">Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (inv.Items.Count == 0)
+                                            {
+                                                <tr><td colspan="5" class="text-center text-muted py-3">Phiếu thu không có khoản mục chi phí.</td></tr>
+                                            }
+                                            else
+                                            {
+                                                @foreach (var item in inv.Items)
+                                                {
+                                                    <tr>
+                                                        <td>@item.Description</td>
+                                                        <td class="text-muted">@ItemTypeLabel(item.ItemType)</td>
+                                                        <td class="text-end text-muted">@item.Quantity</td>
+                                                        <td class="text-end text-muted">@FmtVnd(item.UnitPrice)</td>
+                                                        <td class="text-end fw-semibold">@FmtVnd(item.Amount)</td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="d-flex flex-column align-items-end gap-1 mb-3" style="font-size:.85rem">
+                                    <div class="d-flex justify-content-between" style="width:16rem">
+                                        <span class="text-muted">Tạm tính</span><span>@FmtVnd(inv.Subtotal)</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between" style="width:16rem">
+                                        <span class="text-muted">Khấu trừ BHYT</span><span style="color:var(--color-tertiary)">- @FmtVnd(inv.InsuranceDeduction)</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between pt-1 border-top" style="width:16rem">
+                                        <span class="fw-semibold">Phải thanh toán</span><span class="fw-bold" style="color:var(--color-primary)">@FmtVnd(inv.TotalAmount)</span>
+                                    </div>
+                                </div>
+
+                                @if (!isPaid)
+                                {
+                                    <div class="p-3 rounded-3 mb-3" style="background:var(--color-surface-container-low)">
+                                        <label class="form-label" style="font-size:.82rem">Mã thẻ BHYT (nhập ≥ 10 ký tự để được khấu trừ 80%)</label>
+                                        <div class="d-flex gap-2">
+                                            <input class="form-control" placeholder="VD: BHYT-0123456789" @bind="inv.InsuranceInput" />
+                                            <button class="btn btn-outline-primary d-inline-flex align-items-center gap-1 text-nowrap" disabled="@inv.Busy" @onclick="() => RecalcInsurance(inv)">
+                                                <span class="material-symbols-outlined" style="font-size:1.05rem">calculate</span> Tính khấu trừ
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+
+                                @if (canPay)
+                                {
+                                    <div class="d-flex flex-wrap gap-2 mb-3">
+                                        <button class="btn btn-primary d-inline-flex align-items-center gap-1" disabled="@inv.Busy" @onclick="() => Pay(inv, PaymentMethod.VnPay)">
+                                            <span class="material-symbols-outlined" style="font-size:1.05rem">account_balance</span> Thanh toán VNPay
+                                        </button>
+                                        <button class="btn text-white d-inline-flex align-items-center gap-1" style="background:#a50064" disabled="@inv.Busy" @onclick="() => Pay(inv, PaymentMethod.Momo)">
+                                            <span class="material-symbols-outlined" style="font-size:1.05rem">wallet</span> Thanh toán Momo
+                                        </button>
+                                    </div>
+                                }
+
+                                @if (PaymentsFor(inv.Id).Count > 0)
+                                {
+                                    <p class="fw-semibold mb-2" style="font-size:.85rem">Lịch sử giao dịch</p>
+                                    <div class="d-flex flex-column gap-1">
+                                        @foreach (var p in PaymentsFor(inv.Id))
+                                        {
+                                            var ps = PaymentStatusInfo(p.Status);
+                                            <div class="d-flex justify-content-between align-items-center rounded-3 px-2 py-1" style="background:var(--color-surface-container-low);font-size:.82rem">
+                                                <span class="d-flex align-items-center gap-1 text-muted">
+                                                    <span class="material-symbols-outlined" style="font-size:1.05rem">@(p.Method == PaymentMethod.VnPay ? "account_balance" : p.Method == PaymentMethod.Momo ? "wallet" : "payments")</span>
+                                                    @PaymentMethodLabel(p.Method) · @FmtVnd(p.Amount)
+                                                </span>
+                                                <span class="badge @ps.Badge">@ps.Label</span>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+}
+
+@if (_showCreate)
+{
+    <div class="modal-overlay" @onclick="() => _showCreate = false">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h5 class="mb-2 d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined" style="color:var(--color-primary)">add_card</span>
+                Tạo phiếu thu tổng
+            </h5>
+            <p class="text-muted mb-3" style="font-size:.85rem">Hệ thống tự động gom chi phí khám, xét nghiệm và thuốc của lần khám đã chọn thành một phiếu thu tổng.</p>
+
+            @if (_visits.Count == 0)
+            {
+                <div class="alert alert-warning">Bạn chưa có lần khám nào để tạo phiếu thu.</div>
+            }
+            else
+            {
+                <div class="mb-2">
+                    <label class="form-label">Chọn lần khám</label>
+                    <select class="form-select" @bind="_createVisitId">
+                        @foreach (var v in _visits)
+                        {
+                            <option value="@v.Id">@v.VisitDate.ToLocalTime().ToString("dd/MM/yyyy") · @(v.ClinicName ?? "Phòng khám") · BS @(v.DoctorName ?? "—")</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mã thẻ BHYT (tùy chọn)</label>
+                    <input class="form-control" placeholder="VD: BHYT-0123456789" @bind="_createInsurance" />
+                </div>
+            }
+
+            @if (_createError is not null)
+            {
+                <div class="alert alert-danger">@_createError</div>
+            }
+
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="() => _showCreate = false">Hủy</button>
+                <button class="btn btn-primary" disabled="@(_creating || _visits.Count == 0)" @onclick="SubmitCreate">
+                    @(_creating ? "Đang tạo..." : "Tạo phiếu thu")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+
+    private class InvoiceVm
+    {
+        public Guid Id;
+        public InvoiceStatus Status;
+        public decimal Subtotal, InsuranceDeduction, TotalAmount;
+        public string? InsuranceNumber;
+        public DateTime CreatedAt;
+        public bool Expanded;
+        public bool ItemsLoading;
+        public List<BillingItemReadDto> Items = new();
+        public string InsuranceInput = "";
+        public bool Busy;
+    }
+
+    private record VisitOption(Guid Id, DateTime VisitDate, string? DoctorName, string? ClinicName);
+
+    private bool _loading = true;
+    private bool _noProfile;
+    private string? _error;
+    private Guid _patientId;
+    private string _patientInsurance = "";
+
+    private List<InvoiceVm> _invoices = new();
+    private List<PaymentReadDto> _payments = new();
+    private List<VisitOption> _visits = new();
+
+    private bool _showCreate;
+    private string _createVisitId = "";
+    private string _createInsurance = "";
+    private bool _creating;
+    private string? _createError;
+
+    private string? _toastMsg;
+
+    private decimal TotalOutstanding => _invoices.Where(i => i.Status is InvoiceStatus.Pending or InvoiceStatus.Draft).Sum(i => i.TotalAmount);
+    private List<PaymentReadDto> PaymentsFor(Guid invoiceId) => _payments.Where(p => p.BillingInvoiceId == invoiceId).ToList();
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        _loading = true; _error = null; _noProfile = false;
+        try
+        {
+            PatientProfileReadDto profile;
+            try
+            {
+                var me = await Api.GetMyPatient();
+                if (me is null) throw new ApiClient.ApiException(404, "not found");
+                profile = me;
+            }
+            catch (ApiClient.ApiException)
+            {
+                _noProfile = true;
+                _loading = false;
+                return;
+            }
+            _patientId = profile.Id;
+            _patientInsurance = profile.InsuranceNumber ?? "";
+
+            var allInvoices = (await Api.GetBillingInvoices()) ?? new();
+            var allPayments = (await Api.GetPayments()) ?? new();
+            var history = await Api.GetPatientHistory(profile.Id);
+            var users = (await Api.GetUserAccounts()) ?? new();
+            var clinics = (await Api.GetAllClinics()) ?? new();
+
+            var myInvoices = allInvoices.Where(i => i.PatientId == profile.Id)
+                .OrderByDescending(i => i.CreatedAt)
+                .Select(i => new InvoiceVm
+                {
+                    Id = i.Id, Status = i.Status, Subtotal = i.Subtotal,
+                    InsuranceDeduction = i.InsuranceDeduction, TotalAmount = i.TotalAmount,
+                    InsuranceNumber = i.InsuranceNumber, CreatedAt = i.CreatedAt,
+                    InsuranceInput = i.InsuranceNumber ?? _patientInsurance,
+                })
+                .ToList();
+            var myInvoiceIds = myInvoices.Select(i => i.Id).ToHashSet();
+
+            _invoices = myInvoices;
+            _payments = allPayments.Where(p => myInvoiceIds.Contains(p.BillingInvoiceId)).ToList();
+
+            var userNameById = users.ToDictionary(u => u.Id, u => u.FullName);
+            var clinicNameById = clinics.ToDictionary(c => c.Id, c => c.Name);
+            _visits = (history?.Visits ?? Array.Empty<OutpatientVisitReadDto>())
+                .OrderByDescending(v => v.VisitDate)
+                .Select(v => new VisitOption(v.Id, v.VisitDate,
+                    userNameById.GetValueOrDefault(v.DoctorId),
+                    clinicNameById.GetValueOrDefault(v.ClinicId)))
+                .ToList();
+            _createVisitId = _visits.FirstOrDefault()?.Id.ToString() ?? "";
+            _createInsurance = _patientInsurance;
+        }
+        catch { _error = "Không thể tải dữ liệu viện phí. Vui lòng kiểm tra kết nối và thử lại."; }
+        finally { _loading = false; }
+    }
+
+    private async Task ToggleExpand(InvoiceVm inv)
+    {
+        inv.Expanded = !inv.Expanded;
+        if (inv.Expanded && inv.Items.Count == 0 && !inv.ItemsLoading)
+        {
+            inv.ItemsLoading = true;
+            try { inv.Items = (await Api.GetBillingItems(inv.Id)) ?? new(); }
+            catch { inv.Items = new(); }
+            finally { inv.ItemsLoading = false; }
+        }
+    }
+
+    private async Task RecalcInsurance(InvoiceVm inv)
+    {
+        inv.Busy = true;
+        try
+        {
+            var result = await Api.CalculateInsurance(inv.Id, string.IsNullOrWhiteSpace(inv.InsuranceInput) ? null : inv.InsuranceInput.Trim());
+            if (result is not null)
+            {
+                inv.Subtotal = result.Subtotal;
+                inv.InsuranceDeduction = result.InsuranceDeduction;
+                inv.TotalAmount = result.TotalAmount;
+                inv.InsuranceNumber = result.InsuranceNumber;
+                inv.Items = result.Items;
+            }
+            ShowToast("Đã cập nhật mức khấu trừ BHYT.");
+        }
+        catch { ShowToast("Không thể tính khấu trừ BHYT. Vui lòng thử lại."); }
+        finally { inv.Busy = false; }
+    }
+
+    private async Task Pay(InvoiceVm inv, PaymentMethod method)
+    {
+        inv.Busy = true;
+        try
+        {
+            var payment = await Api.CreatePayment(new PaymentWriteDto
+            {
+                BillingInvoiceId = inv.Id,
+                Method = method,
+                Amount = inv.TotalAmount,
+                Status = PaymentStatus.Pending,
+            });
+            if (payment is null) throw new ApiClient.ApiException(500, "Không thể tạo giao dịch.");
+
+            var urlResult = method == PaymentMethod.VnPay
+                ? await Api.CreateVnPayUrl(payment.Id)
+                : await Api.CreateMomoUrl(payment.Id);
+
+            _payments.Add(payment);
+            if (urlResult is not null)
+                await Js.InvokeVoidAsync("open", urlResult.PaymentUrl, "_blank", "noopener");
+            ShowToast("Đã mở cổng thanh toán ở tab mới. Hoàn tất giao dịch rồi tải lại trang.");
+        }
+        catch { ShowToast("Không thể tạo giao dịch thanh toán. Vui lòng thử lại."); }
+        finally { inv.Busy = false; }
+    }
+
+    private async Task SubmitCreate()
+    {
+        if (_createVisitId == "") { _createError = "Vui lòng chọn một lần khám."; return; }
+        _creating = true; _createError = null;
+        try
+        {
+            var result = await Api.GenerateInvoice(new GenerateInvoiceRequestDto
+            {
+                OutpatientVisitId = Guid.Parse(_createVisitId),
+                InsuranceNumber = string.IsNullOrWhiteSpace(_createInsurance) ? null : _createInsurance.Trim(),
+            });
+            if (result is null) throw new ApiClient.ApiException(500, "Không thể tạo phiếu thu.");
+
+            var vm = new InvoiceVm
+            {
+                Id = result.Id, Status = result.Status, Subtotal = result.Subtotal,
+                InsuranceDeduction = result.InsuranceDeduction, TotalAmount = result.TotalAmount,
+                InsuranceNumber = result.InsuranceNumber, CreatedAt = result.CreatedAt,
+                InsuranceInput = result.InsuranceNumber ?? _patientInsurance,
+                Items = result.Items, Expanded = true,
+            };
+            _invoices.Insert(0, vm);
+            _showCreate = false;
+            ShowToast("Đã tạo phiếu thu tổng.");
+        }
+        catch (ApiClient.ApiException) { _createError = "Không thể tạo phiếu thu. Lần khám có thể chưa có chi phí hoặc đã có lỗi xảy ra."; }
+        catch { _createError = "Không thể tạo phiếu thu. Lần khám có thể chưa có chi phí hoặc đã có lỗi xảy ra."; }
+        finally { _creating = false; }
+    }
+
+    private void ShowToast(string msg)
+    {
+        _toastMsg = msg;
+        _ = ClearToastAfterDelay();
+    }
+
+    private async Task ClearToastAfterDelay()
+    {
+        await Task.Delay(4000);
+        _toastMsg = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static string FmtVnd(decimal v) => v.ToString("#,##0", System.Globalization.CultureInfo.InvariantCulture) + " đ";
+
+    private static (string Label, string Badge, string Icon) InvoiceStatusInfo(InvoiceStatus s) => s switch
+    {
+        InvoiceStatus.Draft => ("Nháp", "bg-light text-dark", "draft"),
+        InvoiceStatus.Pending => ("Chờ thanh toán", "badge-soft-yellow", "schedule"),
+        InvoiceStatus.Paid => ("Đã thanh toán", "badge-soft-tertiary", "task_alt"),
+        InvoiceStatus.Cancelled => ("Đã hủy", "badge-soft-red", "cancel"),
+        _ => ("Không rõ", "bg-light text-dark", "help"),
+    };
+
+    private static string ItemTypeLabel(BillingItemType t) => t switch
+    {
+        BillingItemType.Service => "Khám",
+        BillingItemType.Lab => "Xét nghiệm",
+        BillingItemType.Drug => "Thuốc",
+        BillingItemType.Bed => "Giường",
+        BillingItemType.Procedure => "Thủ thuật",
+        _ => "Khác",
+    };
+
+    private static string PaymentMethodLabel(PaymentMethod m) => m switch
+    {
+        PaymentMethod.VnPay => "VNPay",
+        PaymentMethod.Momo => "Momo",
+        PaymentMethod.BankTransfer => "Chuyển khoản",
+        PaymentMethod.Cash => "Tiền mặt",
+        _ => "Khác",
+    };
+
+    private static (string Label, string Badge) PaymentStatusInfo(PaymentStatus s) => s switch
+    {
+        PaymentStatus.Paid => ("Thành công", "badge-soft-tertiary"),
+        PaymentStatus.Pending => ("Đang xử lý", "badge-soft-yellow"),
+        PaymentStatus.Failed => ("Thất bại", "badge-soft-red"),
+        PaymentStatus.Refunded => ("Đã hoàn tiền", "bg-light text-dark"),
+        _ => ("—", "bg-light text-dark"),
+    };
+}

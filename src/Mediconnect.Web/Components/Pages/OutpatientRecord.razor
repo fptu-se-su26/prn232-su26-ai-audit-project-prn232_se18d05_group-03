@@ -1,0 +1,481 @@
+@page "/outpatient-record"
+@attribute [Authorize(Roles = "Doctor,Nurse")]
+@inject NavigationManager Nav
+
+<PageTitle>Hồ sơ ngoại trú – MediConnect</PageTitle>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h4 class="mb-1 d-flex align-items-center gap-2" style="font-size:1.5rem">
+            <span class="material-symbols-outlined text-primary">folder_shared</span>
+            Ghi nhận hồ sơ ngoại trú
+        </h4>
+        <p class="text-muted mb-0">Chẩn đoán, ghi hồ sơ và chỉ định xét nghiệm cho bệnh nhân.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <input class="form-control" style="max-width:260px" placeholder="Tìm nhanh theo tên hoặc số..." @bind="_topQuery" @bind:event="oninput" @onkeydown="OnTopSearchKeyDown" />
+        <button class="btn btn-primary" @onclick="RunTopSearch">Tìm</button>
+    </div>
+</div>
+
+@if (_message is not null)
+{
+    <div class="alert @(_messageIsError ? "alert-danger" : "alert-success") mb-3">
+        <span class="material-symbols-outlined">@(_messageIsError ? "error" : "check_circle")</span>
+        @_message
+    </div>
+}
+
+@if (_savedVisitId is not null && _staffProfileId is not null)
+{
+    <EPrescriptionPanel VisitId="@_savedVisitId" DoctorId="@_staffProfileId.Value" PatientId="@_savedPatientId" PatientName="@_savedPatientName" OnClose="CloseEPrescription" />
+}
+
+<div class="row g-4">
+    <div class="col-12 col-md-4">
+        <div class="report-card">
+            <h6 class="d-flex align-items-center gap-2 mb-3">
+                <span class="material-symbols-outlined text-muted" style="font-size:1.1rem">format_list_bulleted</span>
+                Danh sách đang chờ
+                @if (_queue is not null)
+                {
+                    <span class="badge badge-soft-blue ms-auto">@WaitingCount</span>
+                }
+            </h6>
+
+            <div class="report-filter-chip mb-3">
+                <span class="material-symbols-outlined text-muted" style="font-size:1.1rem">search</span>
+                <input @bind="_localQuery" @bind:event="oninput" placeholder="Lọc theo tên hoặc số..." class="w-100" />
+            </div>
+
+            <div class="d-flex flex-column gap-2" style="max-height:65vh;overflow-y:auto;padding-right:.25rem">
+                @if (FilteredWaiting.Count == 0)
+                {
+                    <div class="text-center text-muted py-4 rounded-3" style="border:1px dashed var(--border)">
+                        <span class="material-symbols-outlined" style="font-size:2rem">hourglass_empty</span>
+                        <p class="mb-0 mt-1" style="font-size:.85rem;font-weight:600">Hàng đợi trống</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var t in FilteredWaiting)
+                    {
+                        var isSelected = _selectedTicket?.Id == t.Id;
+                        <div class="report-card @(isSelected ? "border-primary" : "")" style="cursor:pointer;padding:.85rem;@(isSelected ? "border-width:2px" : "")" @onclick="() => SelectTicket(t)">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="d-flex align-items-center justify-content-center rounded-3" style="width:2.5rem;height:2.5rem;background:var(--color-primary-container);color:var(--color-on-primary-container);font-weight:800;flex-shrink:0">
+                                    #@t.Number
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="fw-bold text-truncate">@(t.PatientName ?? "Bệnh nhân vãng lai")</div>
+                                    <div class="text-muted d-flex align-items-center gap-1" style="font-size:.75rem">
+                                        <span class="material-symbols-outlined" style="font-size:.85rem">schedule</span>
+                                        @t.IssuedAt.ToLocalTime().ToString("HH:mm")
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-8">
+        @if (_selectedTicket is null)
+        {
+            <div class="report-card d-flex flex-column align-items-center justify-content-center text-center text-muted gap-2" style="min-height:50vh;border-style:dashed">
+                <span class="material-symbols-outlined" style="font-size:3.5rem;opacity:.5">person_search</span>
+                <h6 class="mb-0">Chọn một bệnh nhân</h6>
+                <p class="mb-0" style="font-size:.85rem;max-width:280px">Chọn bệnh nhân từ danh sách bên trái để bắt đầu ghi nhận hồ sơ khám.</p>
+            </div>
+        }
+        else
+        {
+            <div class="report-card">
+                <div class="row g-4">
+                    <div class="col-12 col-lg-4 d-flex flex-column gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="d-flex align-items-center justify-content-center rounded-3" style="width:4rem;height:4rem;background:var(--color-primary-container);color:var(--color-on-primary-container);font-size:1.5rem;font-weight:800;flex-shrink:0">
+                                @((_selectedTicket.PatientName ?? "?").Substring(0, 1).ToUpper())
+                            </div>
+                            <div>
+                                <div class="fw-bold" style="font-size:1.05rem">@(_selectedTicket.PatientName ?? "Bệnh nhân")</div>
+                                <div class="text-muted" style="font-size:.72rem">Số TT: #@_selectedTicket.Number</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h6 class="text-muted d-flex align-items-center gap-1 mb-2" style="font-size:.7rem;font-weight:700;text-transform:uppercase">
+                                <span class="material-symbols-outlined" style="font-size:.9rem">history</span>
+                                Lịch sử ICD-10
+                            </h6>
+                            <div class="d-flex flex-column gap-2" style="max-height:11rem;overflow-y:auto">
+                                @if (_diagnosisHistory.Count == 0)
+                                {
+                                    <div class="text-muted fst-italic text-center p-2 rounded-3" style="font-size:.75rem;background:var(--color-surface-container-low)">
+                                        @(_selectedTicket.PatientId is not null ? "Chưa có chẩn đoán trước đây." : "Bệnh nhân vãng lai chưa có hồ sơ.")
+                                    </div>
+                                }
+                                else
+                                {
+                                    @foreach (var item in _diagnosisHistory)
+                                    {
+                                        <button type="button" class="btn btn-outline-secondary text-start p-2" style="font-size:.78rem" @onclick="() => SelectHistoryDiagnosis(item)">
+                                            <div class="fw-bold" style="color:var(--color-primary)">
+                                                @(item.DiagnosisCode ?? "—")@(string.IsNullOrEmpty(item.DiagnosisDescription) ? "" : $" — {item.DiagnosisDescription}")
+                                            </div>
+                                            <div class="text-muted" style="font-size:.7rem">@item.VisitDate.ToLocalTime().ToString("dd/MM/yyyy")</div>
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-8">
+                        <h6 class="d-flex align-items-center gap-2 mb-3 pb-3 border-bottom">
+                            <span class="material-symbols-outlined" style="color:var(--color-primary)">description</span>
+                            Chi tiết khám bệnh
+                        </h6>
+
+                        <div class="mb-3">
+                            <label class="form-label">Lý do khám chính</label>
+                            <textarea class="form-control" rows="3" @bind="_chiefComplaint"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả triệu chứng</label>
+                            <textarea class="form-control" rows="3" @bind="_symptoms"></textarea>
+                        </div>
+
+                        <div class="mb-3 position-relative">
+                            <label class="form-label d-flex align-items-center gap-1">
+                                <span class="material-symbols-outlined text-muted" style="font-size:1rem">search</span>
+                                Mã ICD-10
+                                @if (_icdSearching)
+                                {
+                                    <span class="text-muted ms-auto" style="font-size:.72rem">Đang tìm...</span>
+                                }
+                            </label>
+                            <input class="form-control" value="@_icdQuery" placeholder="Tìm mã hoặc tên bệnh (vd: I10, diabetes)..." @oninput="OnIcdQueryChanged" autocomplete="off" />
+                            @if (_showIcdDropdown && _icdResults.Count > 0)
+                            {
+                                <div class="report-card p-0" style="position:absolute;z-index:20;width:100%;max-height:12rem;overflow-y:auto">
+                                    @foreach (var item in _icdResults)
+                                    {
+                                        <button type="button" class="btn w-100 text-start border-0 rounded-0" style="font-size:.85rem" @onclick="() => SelectIcd(item)">
+                                            <span class="fw-bold" style="color:var(--color-primary)">@item.Code</span>
+                                            <span class="text-muted"> — @item.Description</span>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(_diagnosisCode))
+                            {
+                                <div class="d-inline-flex align-items-center gap-2 mt-2 px-3 py-1 rounded-pill" style="background:var(--color-primary-container);color:var(--color-on-primary-container);font-size:.82rem">
+                                    <span class="fw-bold">@_diagnosisCode</span>
+                                    @if (!string.IsNullOrEmpty(_diagnosisDescription))
+                                    {
+                                        <span>— @_diagnosisDescription</span>
+                                    }
+                                    <button type="button" class="btn-close btn-close-white" style="font-size:.6rem" @onclick="ClearIcd"></button>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả chẩn đoán</label>
+                            <textarea class="form-control" rows="3" placeholder="Mô tả chi tiết chẩn đoán lâm sàng..." @bind="_diagnosisDescription"></textarea>
+                        </div>
+
+                        <div class="p-3 rounded-3 mb-3" style="background:var(--color-surface-container-low)">
+                            <h6 class="d-flex align-items-center gap-1 mb-2" style="font-size:.85rem">
+                                <span class="material-symbols-outlined text-muted" style="font-size:1rem">biotech</span>
+                                Chỉ định xét nghiệm / Chẩn đoán hình ảnh
+                            </h6>
+                            <div class="row g-2">
+                                @foreach (var opt in LabTests)
+                                {
+                                    var checked_ = _orderedTests.Contains(opt);
+                                    <div class="col-6">
+                                        <label class="d-flex align-items-center gap-2 p-2 rounded-3 report-card @(checked_ ? "border-primary" : "")" style="cursor:pointer;font-size:.78rem;margin-bottom:0">
+                                            <input type="checkbox" checked="@checked_" @onchange="() => ToggleTest(opt)" />
+                                            @opt
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary d-inline-flex align-items-center gap-1" disabled="@_submitting" @onclick="Submit">
+                                <span class="material-symbols-outlined" style="font-size:1.1rem">save</span>
+                                @(_submitting ? "Đang lưu..." : "Lưu hồ sơ")
+                            </button>
+                            <button class="btn btn-outline-secondary" @onclick="() => _selectedTicket = null">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Inject] private ApiClient Api { get; set; } = default!;
+    [Inject] private TokenState Token { get; set; } = default!;
+
+    [SupplyParameterFromQuery(Name = "ticketId")]
+    public string? TicketIdQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "clinicId")]
+    public string? ClinicIdQuery { get; set; }
+
+    private static readonly string[] LabTests =
+    {
+        "Complete Blood Count (CBC)", "Basic Metabolic Panel (BMP)", "Chest X-Ray (PA/Lateral)",
+        "HbA1c Glycated Hgb", "Lipid Profile", "Urinalysis", "Liver Function Tests (LFT)", "Custom Order",
+    };
+
+    private List<ClinicQueueSummaryDto> _clinics = new();
+    private Guid? _clinicId;
+    private ClinicQueueDto? _queue;
+    private QueueTicketDetailDto? _selectedTicket;
+    private Guid? _staffProfileId;
+
+    private string _topQuery = "";
+    private string _localQuery = "";
+
+    private string _chiefComplaint = "";
+    private string _symptoms = "";
+    private string _diagnosisCode = "";
+    private string _diagnosisDescription = "";
+    private string _icdQuery = "";
+    private List<ICD10ResultDto> _icdResults = new();
+    private bool _icdSearching;
+    private bool _showIcdDropdown;
+    private CancellationTokenSource? _icdDebounce;
+    private List<PatientDiagnosisHistoryDto> _diagnosisHistory = new();
+    private List<string> _orderedTests = new();
+
+    private bool _submitting;
+    private string? _message;
+    private bool _messageIsError;
+    private string? _savedVisitId;
+    private Guid? _savedPatientId;
+    private string _savedPatientName = "";
+
+    private int WaitingCount => _queue?.Tickets.Count(t => t.Status == QueueStatus.Waiting) ?? 0;
+    private List<QueueTicketDetailDto> FilteredWaiting =>
+        (_queue?.Tickets.Where(t => t.Status == QueueStatus.Waiting) ?? Enumerable.Empty<QueueTicketDetailDto>())
+        .Where(t => _localQuery.Length == 0 ||
+                    (t.PatientName ?? "").Contains(_localQuery, StringComparison.OrdinalIgnoreCase) ||
+                    t.Number.ToString().Contains(_localQuery))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStaffProfile();
+        _clinics = (await Api.GetClinicQueueOverview()) ?? new();
+
+        if (Guid.TryParse(ClinicIdQuery, out var clinicIdFromQuery)) _clinicId = clinicIdFromQuery;
+        else if (_clinics.Count > 0) _clinicId = _clinics[0].ClinicId;
+
+        if (_clinicId is { } cid) await LoadQueue(cid);
+
+        if (Guid.TryParse(TicketIdQuery, out var ticketId) && _queue is not null)
+        {
+            var match = _queue.Tickets.FirstOrDefault(t => t.Id == ticketId);
+            if (match is not null) await SelectTicket(match);
+        }
+    }
+
+    private async Task LoadStaffProfile()
+    {
+        try
+        {
+            var directory = (await Api.GetStaffDirectory()) ?? new();
+            _staffProfileId = directory.FirstOrDefault(s => s.UserId == Token.User?.Id)?.Id;
+        }
+        catch { _staffProfileId = null; }
+    }
+
+    private async Task LoadQueue(Guid clinicId)
+    {
+        try { _queue = await Api.GetClinicQueue(clinicId); }
+        catch { _queue = null; }
+    }
+
+    private async Task SelectTicket(QueueTicketDetailDto ticket)
+    {
+        _selectedTicket = ticket;
+        _chiefComplaint = ""; _symptoms = ""; _diagnosisCode = ""; _diagnosisDescription = "";
+        _icdQuery = ""; _icdResults = new(); _showIcdDropdown = false; _orderedTests = new();
+        _diagnosisHistory = new();
+        _message = null;
+
+        if (ticket.PatientId is { } patientId)
+        {
+            try { _diagnosisHistory = (await Api.GetDiagnosisHistory(patientId)) ?? new(); }
+            catch { _diagnosisHistory = new(); }
+        }
+    }
+
+    private void SelectHistoryDiagnosis(PatientDiagnosisHistoryDto item)
+    {
+        _diagnosisCode = item.DiagnosisCode ?? "";
+        _diagnosisDescription = item.DiagnosisDescription ?? "";
+        _icdQuery = !string.IsNullOrEmpty(_diagnosisCode) && !string.IsNullOrEmpty(_diagnosisDescription)
+            ? $"{_diagnosisCode} - {_diagnosisDescription}"
+            : (_diagnosisCode.Length > 0 ? _diagnosisCode : _diagnosisDescription);
+    }
+
+    private void SelectIcd(ICD10ResultDto item)
+    {
+        _diagnosisCode = item.Code;
+        _diagnosisDescription = item.Description;
+        _icdQuery = $"{item.Code} - {item.Description}";
+        _showIcdDropdown = false;
+    }
+
+    private void ClearIcd()
+    {
+        _diagnosisCode = ""; _diagnosisDescription = ""; _icdQuery = "";
+    }
+
+    private async Task OnIcdQueryChanged(ChangeEventArgs e)
+    {
+        _icdQuery = e.Value?.ToString() ?? "";
+        _icdDebounce?.Cancel();
+        if (_icdQuery.Trim().Length < 2) { _icdResults = new(); _icdSearching = false; return; }
+
+        _icdDebounce = new CancellationTokenSource();
+        var token = _icdDebounce.Token;
+        _icdSearching = true;
+        try
+        {
+            await Task.Delay(300, token);
+            _icdResults = (await Api.SearchIcd10(_icdQuery.Trim())) ?? new();
+            _showIcdDropdown = true;
+        }
+        catch (TaskCanceledException) { return; }
+        catch { _icdResults = new(); }
+        finally { _icdSearching = false; }
+    }
+
+    private void ToggleTest(string test)
+    {
+        if (!_orderedTests.Remove(test)) _orderedTests.Add(test);
+    }
+
+    private async Task OnTopSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await RunTopSearch();
+    }
+
+    private async Task RunTopSearch()
+    {
+        if (string.IsNullOrWhiteSpace(_topQuery)) return;
+        var q = _topQuery.Trim();
+
+        var localMatch = _queue?.Tickets.FirstOrDefault(t =>
+            (t.PatientName ?? "").Contains(q, StringComparison.OrdinalIgnoreCase) || t.Number.ToString() == q);
+        if (localMatch is not null) { await SelectTicket(localMatch); _topQuery = ""; return; }
+
+        foreach (var c in _clinics)
+        {
+            var cq = await Api.GetClinicQueue(c.ClinicId);
+            var matched = cq?.Tickets.FirstOrDefault(t =>
+                (t.PatientName ?? "").Contains(q, StringComparison.OrdinalIgnoreCase) || t.Number.ToString() == q);
+            if (matched is not null)
+            {
+                _clinicId = c.ClinicId;
+                _queue = cq;
+                await SelectTicket(matched);
+                _topQuery = "";
+                return;
+            }
+        }
+        _message = "Không tìm thấy bệnh nhân."; _messageIsError = true;
+        _ = ClearMessageAfterDelay(3000);
+    }
+
+    private async Task Submit()
+    {
+        if (_selectedTicket is null) return;
+        if (_selectedTicket.PatientId is null)
+        {
+            _message = "Bệnh nhân vãng lai chưa có hồ sơ tài khoản — không thể lưu bệnh án.";
+            _messageIsError = true;
+            return;
+        }
+
+        _submitting = true; _message = null;
+        try
+        {
+            var doctorId = _staffProfileId ?? Token.User!.Id;
+            var visitId = _selectedTicket.AppointmentId ?? _selectedTicket.Id;
+
+            var dto = new MedicalRecordDtos
+            {
+                VisitId = visitId,
+                DoctorId = doctorId,
+                ChiefComplaint = _chiefComplaint,
+                Symptoms = _symptoms,
+                DiagnosisCode = string.IsNullOrWhiteSpace(_diagnosisCode) ? null : _diagnosisCode,
+                DiagnosisDescription = _diagnosisDescription,
+                OrderedTests = _orderedTests.ToList(),
+            };
+
+            try
+            {
+                await Api.Diagnose(dto);
+            }
+            catch (ApiClient.ApiException ex) when (ex.Message.Contains("Outpatient visit not found", StringComparison.OrdinalIgnoreCase))
+            {
+                var visit = await Api.CreateOutpatientVisit(new OutpatientVisitWriteDto
+                {
+                    PatientId = _selectedTicket.PatientId.Value,
+                    DoctorId = doctorId,
+                    ClinicId = _selectedTicket.ClinicId,
+                    QueueTicketId = _selectedTicket.Id,
+                    VisitDate = DateTime.UtcNow,
+                    Status = VisitStatus.InProgress,
+                });
+                if (visit is null) throw new ApiClient.ApiException(500, "Không thể tạo hồ sơ khám mới.");
+                dto.VisitId = visit.Id;
+                await Api.Diagnose(dto);
+            }
+
+            _message = "Đã lưu hồ sơ khám cho bệnh nhân.";
+            _messageIsError = false;
+            _savedVisitId = dto.VisitId.ToString();
+            _savedPatientId = _selectedTicket.PatientId;
+            _savedPatientName = _selectedTicket.PatientName ?? "Bệnh nhân";
+
+            if (_clinicId is { } cid) await LoadQueue(cid);
+            _selectedTicket = null;
+        }
+        catch (ApiClient.ApiException ex) { _message = ex.Message; _messageIsError = true; }
+        catch { _message = "Lỗi khi lưu hồ sơ khám."; _messageIsError = true; }
+        finally
+        {
+            _submitting = false;
+            _ = ClearMessageAfterDelay(5000);
+        }
+    }
+
+    private void CloseEPrescription()
+    {
+        _savedVisitId = null;
+        _savedPatientId = null;
+        _savedPatientName = "";
+    }
+
+    private async Task ClearMessageAfterDelay(int ms)
+    {
+        await Task.Delay(ms);
+        _message = null;
+        await InvokeAsync(StateHasChanged);
+    }
+}

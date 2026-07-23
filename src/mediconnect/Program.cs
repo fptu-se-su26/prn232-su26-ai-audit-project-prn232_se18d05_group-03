@@ -1,6 +1,7 @@
 using System.Text;
 using Mediconnect.Application.DTOs;
 using Mediconnect.Application.Interfaces;
+using Mediconnect.Application.Options;
 using Mediconnect.Application.Services;
 using Mediconnect.Domain.Entities;
 using Mediconnect.Infrastructure;
@@ -44,10 +45,18 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+var scheduleSettings = builder.Configuration.GetSection(ScheduleSettings.SectionName).Get<ScheduleSettings>()
+    ?? new ScheduleSettings();
+builder.Services.AddSingleton(scheduleSettings);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped(typeof(ICrudService<,,>), typeof(CrudService<,,>));
 builder.Services.AddScoped<ICrudService<UserAccount, UserAccountReadDto, UserAccountWriteDto>, UserAccountService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IQueueService, QueueService>();
+builder.Services.AddScoped<IBillingService, BillingService>();
+builder.Services.AddScoped<IMedicalRecordService, MedicalRecordService>();
+builder.Services.AddHttpClient();
+
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>() ?? new JwtSettings();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -67,6 +76,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -81,8 +101,7 @@ if (!string.IsNullOrWhiteSpace(httpsPort))
     app.UseHttpsRedirection();
 }
 
-app.UseStaticFiles();
-
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 

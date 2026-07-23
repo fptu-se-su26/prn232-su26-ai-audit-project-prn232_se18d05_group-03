@@ -23,6 +23,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<DischargeSummary>().Property(x => x.TotalCost).HasPrecision(18, 2);
         modelBuilder.Entity<Drug>().Property(x => x.UnitPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<Drug>().Property(x => x.MaxDailyDose).HasPrecision(18, 3);
+        modelBuilder.Entity<Drug>().Property(x => x.MaxDosePerKg).HasPrecision(18, 3);
         modelBuilder.Entity<MedicalService>().Property(x => x.Price).HasPrecision(18, 2);
         modelBuilder.Entity<Payment>().Property(x => x.Amount).HasPrecision(18, 2);
 
@@ -34,6 +36,10 @@ public class AppDbContext : DbContext
         {
             foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
         }
+
+        modelBuilder.Entity<StaffSchedule>()
+            .HasIndex(s => new { s.StaffId, s.ShiftDate, s.ShiftType })
+            .IsUnique();
     }
 
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
@@ -62,4 +68,7 @@ public class AppDbContext : DbContext
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<TelemedicineSession> TelemedicineSessions => Set<TelemedicineSession>();
     public DbSet<StaffSchedule> StaffSchedules => Set<StaffSchedule>();
+    public DbSet<ServiceRating> ServiceRatings => Set<ServiceRating>();
+    public DbSet<OtpSetting> OtpSettings => Set<OtpSetting>();
+    public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
 }

@@ -183,17 +183,36 @@ public class BedAssignmentsController : CrudController<BedAssignment, BedAssignm
 
 public class BillingInvoicesController : CrudController<BillingInvoice, BillingInvoiceReadDto, BillingInvoiceWriteDto>
 {
-    private readonly IRepository<BillingInvoice> _invoiceRepository;
     private readonly IRepository<BillingItem> _billingItemRepository;
+    private readonly IBillingService _billingService;
 
     public BillingInvoicesController(
         ICrudService<BillingInvoice, BillingInvoiceReadDto, BillingInvoiceWriteDto> service,
-        IRepository<BillingInvoice> invoiceRepository,
-        IRepository<BillingItem> billingItemRepository)
+        IRepository<BillingItem> billingItemRepository,
+        IBillingService billingService)
         : base(service)
     {
-        _invoiceRepository = invoiceRepository;
         _billingItemRepository = billingItemRepository;
+        _billingService = billingService;
+    }
+
+    /// <summary>
+    /// Tự động gom chi phí khám + xét nghiệm + thuốc của một lần khám thành phiếu thu tổng.
+    /// </summary>
+    [HttpPost("generate")]
+    public async Task<ActionResult<BillingInvoiceDetailDto>> Generate(
+        GenerateInvoiceRequestDto dto,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _billingService.GenerateInvoiceAsync(dto, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("{id:guid}/items")]
@@ -220,23 +239,24 @@ public class BillingInvoicesController : CrudController<BillingInvoice, BillingI
         return CreatedAtAction(nameof(GetItems), new { id }, result);
     }
 
+    /// <summary>
+    /// Nhập/cập nhật mã thẻ BHYT và tính lại mức khấu trừ bảo hiểm cho phiếu thu.
+    /// </summary>
     [HttpPost("{id:guid}/calculate-insurance")]
-    public async Task<ActionResult<BillingInvoiceReadDto>> CalculateInsurance(
+    public async Task<ActionResult<BillingInvoiceDetailDto>> CalculateInsurance(
         Guid id,
+        InsuranceCalculationRequestDto dto,
         CancellationToken cancellationToken)
     {
-        var invoice = await _invoiceRepository.GetByIdAsync(id, cancellationToken);
-        if (invoice is null)
+        try
         {
-            return NotFound();
+            var result = await _billingService.CalculateInsuranceAsync(id, dto.InsuranceNumber, cancellationToken);
+            return Ok(result);
         }
-
-        invoice.InsuranceDeduction = 0m;
-        invoice.TotalAmount = invoice.Subtotal - invoice.InsuranceDeduction;
-        _invoiceRepository.Update(invoice);
-        await _invoiceRepository.SaveChangesAsync(cancellationToken);
-
-        return Ok(SimpleMapper.Map<BillingInvoice, BillingInvoiceReadDto>(invoice));
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
     }
 }
 
@@ -289,9 +309,57 @@ public class CareOrdersController : CrudController<CareOrder, CareOrderReadDto, 
 
 public class ClinicsController : CrudController<Clinic, ClinicReadDto, ClinicWriteDto>
 {
-    public ClinicsController(ICrudService<Clinic, ClinicReadDto, ClinicWriteDto> service)
+    private readonly IRepository<Clinic> _clinicRepository;
+    private readonly IRepository<MedicalService> _serviceRepository;
+
+    public ClinicsController(
+        ICrudService<Clinic, ClinicReadDto, ClinicWriteDto> service,
+        IRepository<Clinic> clinicRepository,
+        IRepository<MedicalService> serviceRepository)
         : base(service)
     {
+        _clinicRepository = clinicRepository;
+        _serviceRepository = serviceRepository;
+    }
+
+    /// <summary>
+    /// Lấy danh sách phòng khám đang hoạt động.
+    /// </summary>
+    [HttpGet("active")]
+    public async Task<ActionResult<IReadOnlyList<ClinicReadDto>>> GetActive(CancellationToken cancellationToken)
+    {
+        var clinics = await _clinicRepository.ListAsync(c => c.IsActive, cancellationToken);
+        var result = clinics.Select(SimpleMapper.Map<Clinic, ClinicReadDto>).ToList();
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Lấy danh sách dịch vụ thuộc phòng khám (theo khoa của phòng khám).
+    /// </summary>
+    [HttpGet("{id:guid}/services")]
+    public async Task<ActionResult<ClinicWithServicesDto>> GetServices(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var clinic = await _clinicRepository.GetByIdAsync(id, cancellationToken);
+        if (clinic is null)
+            return NotFound();
+
+        var services = await _serviceRepository.ListAsync(
+            s => s.DepartmentId == clinic.DepartmentId && s.IsActive,
+            cancellationToken);
+
+        var result = new ClinicWithServicesDto
+        {
+            Id = clinic.Id,
+            DepartmentId = clinic.DepartmentId,
+            Name = clinic.Name,
+            RoomNumber = clinic.RoomNumber,
+            IsActive = clinic.IsActive,
+            Services = services.Select(SimpleMapper.Map<MedicalService, MedicalServiceReadDto>).ToList()
+        };
+
+        return Ok(result);
     }
 }
 
@@ -341,6 +409,7 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
     private readonly IRepository<BillingInvoice> _invoiceRepository;
     private readonly IRepository<BillingItem> _billingItemRepository;
     private readonly IRepository<PatientProfile> _patientProfileRepository;
+    private readonly IInpatientQuery _inpatientQuery;
 
     public InpatientAdmissionsController(
         ICrudService<InpatientAdmission, InpatientAdmissionReadDto, InpatientAdmissionWriteDto> service,
@@ -352,7 +421,8 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         IRepository<Bed> bedRepository,
         IRepository<BillingInvoice> invoiceRepository,
         IRepository<BillingItem> billingItemRepository,
-        IRepository<PatientProfile> patientProfileRepository)
+        IRepository<PatientProfile> patientProfileRepository,
+        IInpatientQuery inpatientQuery)
         : base(service)
     {
         _repository = repository;
@@ -364,6 +434,16 @@ public class InpatientAdmissionsController : CrudController<InpatientAdmission, 
         _invoiceRepository = invoiceRepository;
         _billingItemRepository = billingItemRepository;
         _patientProfileRepository = patientProfileRepository;
+        _inpatientQuery = inpatientQuery;
+    }
+
+    // Enriched with patient name / department name / current bed — see InpatientQuery.
+    [HttpGet]
+    public override async Task<ActionResult<IReadOnlyList<InpatientAdmissionReadDto>>> GetAll(
+        CancellationToken cancellationToken)
+    {
+        var result = await _inpatientQuery.GetAllAsync(cancellationToken);
+        return Ok(result);
     }
 
     [HttpPatch("{id:guid}/status")]
@@ -737,15 +817,27 @@ public class LabOrdersController : CrudController<LabOrder, LabOrderReadDto, Lab
 {
     private readonly IRepository<LabOrder> _repository;
     private readonly IRepository<LabResult> _resultRepository;
+    private readonly IRepository<OutpatientVisit> _visitRepository;
+    private readonly IRepository<PatientProfile> _patientProfileRepository;
+    private readonly IRepository<StaffProfile> _staffProfileRepository;
+    private readonly IRepository<UserAccount> _userAccountRepository;
 
     public LabOrdersController(
         ICrudService<LabOrder, LabOrderReadDto, LabOrderWriteDto> service,
         IRepository<LabOrder> repository,
-        IRepository<LabResult> resultRepository)
+        IRepository<LabResult> resultRepository,
+        IRepository<OutpatientVisit> visitRepository,
+        IRepository<PatientProfile> patientProfileRepository,
+        IRepository<StaffProfile> staffProfileRepository,
+        IRepository<UserAccount> userAccountRepository)
         : base(service)
     {
         _repository = repository;
         _resultRepository = resultRepository;
+        _visitRepository = visitRepository;
+        _patientProfileRepository = patientProfileRepository;
+        _staffProfileRepository = staffProfileRepository;
+        _userAccountRepository = userAccountRepository;
     }
 
     // F3: doctors (Bác sĩ) raise the lab / imaging order.
@@ -757,6 +849,9 @@ public class LabOrdersController : CrudController<LabOrder, LabOrderReadDto, Lab
         => base.Create(dto, cancellationToken);
 
     // Lab department receives incoming orders; ordering doctor polls their own results.
+    // Enriches each order with the patient's name (via OutpatientVisit → PatientProfile → UserAccount)
+    // and the ordering doctor's name (via OrderedById → StaffProfile → UserAccount) so the Lab screen
+    // shows real identities instead of bare GUIDs.
     [HttpGet("filter")]
     public async Task<ActionResult<IReadOnlyList<LabOrderReadDto>>> Filter(
         [FromQuery] LabOrderStatus? status,
@@ -775,10 +870,40 @@ public class LabOrdersController : CrudController<LabOrder, LabOrderReadDto, Lab
             query = query.Where(o => o.OrderedById == orderedById.Value);
         }
 
-        var result = query
-            .OrderByDescending(o => o.OrderedAt)
-            .Select(SimpleMapper.Map<LabOrder, LabOrderReadDto>)
+        var filtered = query.OrderByDescending(o => o.OrderedAt).ToList();
+
+        var visitIds = filtered.Select(o => o.OutpatientVisitId).Distinct().ToList();
+        var visits = await _visitRepository.ListAsync(v => visitIds.Contains(v.Id), cancellationToken);
+        var patientIds = visits.Select(v => v.PatientId).Distinct().ToList();
+        var patientProfiles = await _patientProfileRepository.ListAsync(p => patientIds.Contains(p.Id), cancellationToken);
+
+        var staffIds = filtered.Select(o => o.OrderedById).Distinct().ToList();
+        var staffProfiles = await _staffProfileRepository.ListAsync(s => staffIds.Contains(s.Id), cancellationToken);
+
+        var userIds = patientProfiles.Select(p => p.UserAccountId)
+            .Concat(staffProfiles.Select(s => s.UserAccountId))
+            .Distinct()
             .ToList();
+        var users = await _userAccountRepository.ListAsync(u => userIds.Contains(u.Id), cancellationToken);
+        var userNameById = users.ToDictionary(u => u.Id, u => u.FullName);
+
+        var patientNameByVisitId = visits.ToDictionary(
+            v => v.Id,
+            v => patientProfiles.FirstOrDefault(p => p.Id == v.PatientId) is { } profile
+                && userNameById.TryGetValue(profile.UserAccountId, out var name) ? name : null);
+
+        var orderedByNameByStaffId = staffProfiles.ToDictionary(
+            s => s.Id,
+            s => userNameById.TryGetValue(s.UserAccountId, out var name) ? name : null);
+
+        var result = filtered.Select(o =>
+        {
+            var dto = SimpleMapper.Map<LabOrder, LabOrderReadDto>(o);
+            dto.PatientName = patientNameByVisitId.TryGetValue(o.OutpatientVisitId, out var patientName) ? patientName : null;
+            dto.OrderedByName = orderedByNameByStaffId.TryGetValue(o.OrderedById, out var doctorName) ? doctorName : null;
+            return dto;
+        }).ToList();
+
         return Ok(result);
     }
 
@@ -922,9 +1047,33 @@ public class LabResultsController : CrudController<LabResult, LabResultReadDto, 
 
 public class MedicalServicesController : CrudController<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto>
 {
-    public MedicalServicesController(ICrudService<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto> service)
+    private readonly IRepository<MedicalService> _serviceRepository;
+
+    public MedicalServicesController(
+        ICrudService<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto> service,
+        IRepository<MedicalService> serviceRepository)
         : base(service)
     {
+        _serviceRepository = serviceRepository;
+    }
+
+    /// <summary>
+    /// Cập nhật giá khám cho một dịch vụ y tế.
+    /// </summary>
+    [HttpPatch("{id:guid}/price")]
+    public async Task<IActionResult> UpdatePrice(
+        Guid id,
+        [FromBody] PriceUpdateDto dto,
+        CancellationToken cancellationToken)
+    {
+        var service = await _serviceRepository.GetByIdAsync(id, cancellationToken);
+        if (service is null)
+            return NotFound();
+
+        service.Price = dto.Price;
+        _serviceRepository.Update(service);
+        await _serviceRepository.SaveChangesAsync(cancellationToken);
+        return NoContent();
     }
 }
 
@@ -962,11 +1111,16 @@ public class OutpatientVisitsController : CrudController<OutpatientVisit, Outpat
 public class PaymentsController : CrudController<Payment, PaymentReadDto, PaymentWriteDto>
 {
     private readonly IRepository<Payment> _repository;
+    private readonly IPaymentGatewayService _gateway;
 
-    public PaymentsController(ICrudService<Payment, PaymentReadDto, PaymentWriteDto> service, IRepository<Payment> repository)
+    public PaymentsController(
+        ICrudService<Payment, PaymentReadDto, PaymentWriteDto> service,
+        IRepository<Payment> repository,
+        IPaymentGatewayService gateway)
         : base(service)
     {
         _repository = repository;
+        _gateway = gateway;
     }
 
     [HttpPost("{id:guid}/confirm")]
@@ -983,6 +1137,74 @@ public class PaymentsController : CrudController<Payment, PaymentReadDto, Paymen
         _repository.Update(payment);
         await _repository.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+
+    /// <summary>Tạo link thanh toán VNPay cho một Payment đã tồn tại (Method = VnPay).</summary>
+    [HttpPost("{id:guid}/vnpay-url")]
+    public async Task<ActionResult<PaymentUrlResultDto>> CreateVnPayUrl(Guid id, CancellationToken cancellationToken)
+    {
+        var payment = await _repository.GetByIdAsync(id, cancellationToken);
+        if (payment is null)
+        {
+            return NotFound();
+        }
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var url = _gateway.CreateVnPayUrl(payment, ip);
+        return Ok(new PaymentUrlResultDto { PaymentId = payment.Id, PaymentUrl = url });
+    }
+
+    /// <summary>Tạo link thanh toán Momo cho một Payment đã tồn tại (Method = Momo).</summary>
+    [HttpPost("{id:guid}/momo-url")]
+    public async Task<ActionResult<PaymentUrlResultDto>> CreateMomoUrl(Guid id, CancellationToken cancellationToken)
+    {
+        var payment = await _repository.GetByIdAsync(id, cancellationToken);
+        if (payment is null)
+        {
+            return NotFound();
+        }
+
+        var url = _gateway.CreateMomoUrl(payment);
+        return Ok(new PaymentUrlResultDto { PaymentId = payment.Id, PaymentUrl = url });
+    }
+
+    /// <summary>
+    /// VNPay redirect trình duyệt về endpoint này sau khi thanh toán (không có Bearer token).
+    /// Xác thực chữ ký, cập nhật trạng thái Payment tương ứng.
+    /// </summary>
+    [HttpGet("vnpay-return")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VnPayReturn(CancellationToken cancellationToken)
+    {
+        var queryParams = Request.Query.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+        var result = _gateway.ValidateVnPayReturn(queryParams);
+
+        if (!result.IsValidSignature)
+        {
+            return BadRequest(new { message = result.Message });
+        }
+
+        if (!Guid.TryParse(result.TxnRef, out var paymentId))
+        {
+            return BadRequest(new { message = "Invalid vnp_TxnRef" });
+        }
+
+        var payment = await _repository.GetByIdAsync(paymentId, cancellationToken);
+        if (payment is null)
+        {
+            return NotFound();
+        }
+
+        payment.Status = result.IsSuccess ? PaymentStatus.Paid : PaymentStatus.Failed;
+        payment.TransactionRef = result.TransactionNo;
+        if (result.IsSuccess)
+        {
+            payment.PaidAt = DateTime.UtcNow;
+        }
+        _repository.Update(payment);
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        return Ok(new { message = result.Message, paymentId = payment.Id, status = payment.Status });
     }
 }
 
@@ -1030,6 +1252,33 @@ public class QueueTicketsController : CrudController<QueueTicket, QueueTicketRea
         _repository.Update(ticket);
         await _repository.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+}
+
+public class ServiceRatingsController : CrudController<ServiceRating, ServiceRatingReadDto, ServiceRatingWriteDto>
+{
+    private readonly IRepository<ServiceRating> _repository;
+
+    public ServiceRatingsController(
+        ICrudService<ServiceRating, ServiceRatingReadDto, ServiceRatingWriteDto> service,
+        IRepository<ServiceRating> repository)
+        : base(service)
+    {
+        _repository = repository;
+    }
+
+    /// <summary>Điểm đánh giá trung bình và tổng số lượt đánh giá của một bác sĩ.</summary>
+    [HttpGet("doctor/{doctorId:guid}/summary")]
+    public async Task<ActionResult<DoctorRatingSummaryDto>> GetDoctorSummary(Guid doctorId, CancellationToken cancellationToken)
+    {
+        var ratings = await _repository.ListAsync(r => r.DoctorId == doctorId, cancellationToken);
+
+        return Ok(new DoctorRatingSummaryDto
+        {
+            DoctorId = doctorId,
+            TotalRatings = ratings.Count,
+            AverageScore = ratings.Count == 0 ? 0 : Math.Round(ratings.Average(r => r.Score), 2)
+        });
     }
 }
 

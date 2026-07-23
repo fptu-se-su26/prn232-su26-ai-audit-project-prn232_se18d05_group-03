@@ -1,0 +1,14 @@
+.dc-admission-item[b-vxi2y5q5c6] { font-size: .82rem; }
+
+.dc-invoice[b-vxi2y5q5c6] {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+.dc-invoice tfoot tr:last-child td[b-vxi2y5q5c6] {
+    padding-top: .6rem;
+    border-top: 2px solid var(--border);
+}
+
+.fw-600[b-vxi2y5q5c6] { font-weight: 600; }
+.fw-700[b-vxi2y5q5c6] { font-weight: 700; }

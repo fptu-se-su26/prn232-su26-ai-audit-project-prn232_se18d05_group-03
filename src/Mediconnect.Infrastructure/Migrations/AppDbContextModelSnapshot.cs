@@ -332,6 +332,14 @@ namespace Mediconnect.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<decimal?>("MaxDailyDose")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<decimal?>("MaxDosePerKg")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -507,6 +515,80 @@ namespace Mediconnect.Infrastructure.Migrations
                     b.HasIndex("DepartmentId");
 
                     b.ToTable("MedicalServices");
+                });
+
+            modelBuilder.Entity("Mediconnect.Domain.Entities.OtpCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
+
+                    b.Property<DateTime?>("ConsumedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Delivered")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OtpCodes");
+                });
+
+            modelBuilder.Entity("Mediconnect.Domain.Entities.OtpSetting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CodeLength")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExpiryMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MaxAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OtpSettings");
                 });
 
             modelBuilder.Entity("Mediconnect.Domain.Entities.OutpatientVisit", b =>
@@ -723,6 +805,12 @@ namespace Mediconnect.Infrastructure.Migrations
                     b.Property<int>("Number")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("PatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PatientName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -732,7 +820,45 @@ namespace Mediconnect.Infrastructure.Migrations
 
                     b.HasIndex("ClinicId");
 
+                    b.HasIndex("PatientId");
+
                     b.ToTable("QueueTickets");
+                });
+
+            modelBuilder.Entity("Mediconnect.Domain.Entities.ServiceRating", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DoctorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OutpatientVisitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("OutpatientVisitId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("ServiceRatings");
                 });
 
             modelBuilder.Entity("Mediconnect.Domain.Entities.StaffProfile", b =>
@@ -783,15 +909,23 @@ namespace Mediconnect.Infrastructure.Migrations
                     b.Property<DateOnly>("ShiftDate")
                         .HasColumnType("date");
 
+                    b.Property<int>("ShiftType")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("StaffId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time");
 
+                    b.Property<string>("WorkRoom")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("StaffId");
+                    b.HasIndex("StaffId", "ShiftDate", "ShiftType")
+                        .IsUnique();
 
                     b.ToTable("StaffSchedules");
                 });
@@ -1229,9 +1363,43 @@ namespace Mediconnect.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Mediconnect.Domain.Entities.PatientProfile", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Appointment");
 
                     b.Navigation("Clinic");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("Mediconnect.Domain.Entities.ServiceRating", b =>
+                {
+                    b.HasOne("Mediconnect.Domain.Entities.StaffProfile", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Mediconnect.Domain.Entities.OutpatientVisit", "OutpatientVisit")
+                        .WithMany()
+                        .HasForeignKey("OutpatientVisitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Mediconnect.Domain.Entities.PatientProfile", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("OutpatientVisit");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("Mediconnect.Domain.Entities.StaffProfile", b =>

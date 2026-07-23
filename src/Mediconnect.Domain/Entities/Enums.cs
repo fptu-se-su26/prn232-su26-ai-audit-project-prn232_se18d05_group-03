@@ -13,7 +13,15 @@ public enum StaffType
 {
     Doctor,
     Nurse,
-    Admin
+    Admin,
+    Caregiver
+}
+
+public enum ShiftType
+{
+    Morning,
+    Afternoon,
+    Evening
 }
 
 public enum Gender
@@ -115,4 +123,18 @@ public enum BillingItemType
     Bed,
     Procedure,
     Other
+}
+
+public enum OtpChannel
+{
+    Email,
+    Sms
+}
+
+public enum OtpStatus
+{
+    Pending,
+    Verified,
+    Expired,
+    Failed
 }
