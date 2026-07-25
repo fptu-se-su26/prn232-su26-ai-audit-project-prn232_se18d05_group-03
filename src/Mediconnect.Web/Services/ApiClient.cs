@@ -290,6 +290,7 @@ public class ApiClient
     // ---- Outpatient visits & medical records ----
     public Task<OutpatientVisitReadDto?> CreateOutpatientVisit(OutpatientVisitWriteDto dto) => SendAsync<OutpatientVisitReadDto>(HttpMethod.Post, "api/outpatientvisits", dto);
     public Task<OutpatientVisitReadDto?> GetOutpatientVisit(Guid id) => SendAsync<OutpatientVisitReadDto>(HttpMethod.Get, $"api/outpatientvisits/{id}");
+    public Task<List<OutpatientVisitReadDto>?> GetOutpatientVisits() => SendAsync<List<OutpatientVisitReadDto>>(HttpMethod.Get, "api/outpatientvisits");
     public Task Diagnose(MedicalRecordDtos dto) => SendAsync(HttpMethod.Post, "api/medical-records/diagnose", dto);
     public Task<List<ICD10ResultDto>?> SearchIcd10(string query) => SendAsync<List<ICD10ResultDto>>(HttpMethod.Get, "api/medical-records/icd10/search" + Q(("query", query)));
     public Task<List<PatientDiagnosisHistoryDto>?> GetDiagnosisHistory(Guid patientId) => SendAsync<List<PatientDiagnosisHistoryDto>>(HttpMethod.Get, $"api/medical-records/patients/{patientId}/diagnosis-history");

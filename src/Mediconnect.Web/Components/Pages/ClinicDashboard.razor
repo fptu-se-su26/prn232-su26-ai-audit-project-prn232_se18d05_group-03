@@ -276,8 +276,12 @@ else
                     <input class="form-control" placeholder="Nhập đầy đủ họ và tên..." @bind="_walkInName" />
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Email</label>
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
                     <input type="email" class="form-control" placeholder="Nhập email bệnh nhân..." @bind="_walkInEmail" />
+                    @if (_submitted && string.IsNullOrWhiteSpace(_walkInEmail))
+                    {
+                        <div class="text-danger small">Vui lòng nhập email.</div>
+                    }
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Số điện thoại <span class="text-muted">(tùy chọn)</span></label>
@@ -371,6 +375,7 @@ else
     private bool _loading = true;
     private bool _queueLoading;
     private bool _submitting;
+    private bool _submitted;
     private string? _error;
     private string? _successMsg;
 
@@ -485,6 +490,7 @@ else
 
     private async Task SubmitCheckIn()
     {
+        _submitted = true;
         if (_checkInClinicId == "") return;
         if (_checkInType == "appointment" && _selectedAppointmentId == "") return;
         if (_checkInType == "walk-in" && (string.IsNullOrWhiteSpace(_walkInName) || string.IsNullOrWhiteSpace(_walkInEmail))) return;

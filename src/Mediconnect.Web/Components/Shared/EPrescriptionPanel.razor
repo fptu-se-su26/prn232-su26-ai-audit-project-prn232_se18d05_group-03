@@ -27,6 +27,25 @@
             }
         </div>
 
+        <div class="allergy-input-section mb-3">
+            <label class="form-label">Dị ứng thuốc (bác sĩ nhập)</label>
+            <input type="text"
+                   @bind="_allergyInput"
+                   @bind:event="oninput"
+                   @onblur="ParseAllergyInput"
+                   placeholder="VD: Penicillin, Aspirin, Sulfa"
+                   class="form-control form-control-sm" />
+            @if (_localAllergies.Count > 0)
+            {
+                <div class="allergy-tags mt-2">
+                    @foreach (var a in _localAllergies)
+                    {
+                        <span class="badge bg-warning text-dark me-1">⚠️ @a</span>
+                    }
+                </div>
+            }
+        </div>
+
         <div class="epr-split">
             <div>
                 <div class="p-3 rounded-3" style="background:var(--color-surface-container-low)">
@@ -245,8 +264,18 @@
     private bool _saving;
     private string? _error;
     private string? _toast;
+    private string _allergyInput = "";
+    private List<string> _localAllergies = new();
 
-    private List<string> _knownAllergies => KnownAllergies ?? new List<string> { "Penicillin", "Peanuts", "Sulfa" };
+    private List<string> _knownAllergies => (KnownAllergies?.Count > 0) ? KnownAllergies : _localAllergies;
+
+    private void ParseAllergyInput()
+    {
+        _localAllergies = _allergyInput
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(s => s.Length > 0)
+            .ToList();
+    }
 
     private IEnumerable<DrugReadDto> SearchResults
     {
@@ -255,8 +284,9 @@
             var pool = _allDrugs.AsEnumerable();
             var term = _search.Trim();
             if (term.Length == 0) return Enumerable.Empty<DrugReadDto>();
-            return pool.Where(d => d.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
-                                 || (d.Code ?? "").Contains(term, StringComparison.OrdinalIgnoreCase))
+            return pool.Where(d => d.StockQuantity > 0 &&
+                                 (d.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+                                 || (d.Code ?? "").Contains(term, StringComparison.OrdinalIgnoreCase)))
                        .Take(10);
         }
     }
