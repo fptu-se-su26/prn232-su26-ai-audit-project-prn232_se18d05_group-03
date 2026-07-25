@@ -64,6 +64,14 @@ Sinh viên/nhóm cần ghi lại:
 | 10 | 10/06/2026 | Claude (Claude Code) | Xây dựng frontend Feature 2: Hồ sơ sức khỏe điện tử | Làm chức năng PHR cho bệnh nhân: xem lịch sử khám, đơn thuốc, kết quả xét nghiệm, tải file | Tạo PHRPage.tsx với 3 tab + 7 API calls + enrichment dữ liệu client-side | Có | src/mediconnect-web/src/pages/PHRPage.tsx |
 | 11 | 21/06/2026 | Claude (Claude Code) | Viết backend Feature 3: Quản lý viện phí & BHYT | Gom phí khám/xét nghiệm/thuốc thành phiếu thu tổng, nhập mã BHYT tự tính khấu trừ | Tạo BillingService với GenerateInvoiceAsync + CalculateInsuranceAsync, thêm endpoint POST /generate | Có | src/Mediconnect.Application/Services/BillingService.cs |
 | 12 | 02/07/2026 | Claude (Claude Code) | Check lại Feature 1/2/3, viết backend Feature 4: Thanh toán VNPay/Momo & đánh giá dịch vụ | Tích hợp cổng thanh toán, cho phép bệnh nhân rating chất lượng khám | Tạo ServiceRating + IPaymentGatewayService, phát hiện và sửa bug DbUpdateConcurrencyException ở Feature 3 khi test thật | Có | src/Mediconnect.Infrastructure/Payments/; src/Mediconnect.Domain/Entities/ServiceRating.cs |
+| 33 | 25/07/2026 | Claude Code (claude-sonnet-5) | Đối chiếu feature completion matrix cho SmartClinic (DE190123) | Đối chiếu 40 feature với đặc tả gốc | 28 hoàn thành, 2 cảnh báo, 9 chưa làm, 1 cần xác minh thêm | Có | [DE190123 cần bổ sung] |
+| 34 | 25/07/2026 | Claude Code (claude-sonnet-5) | Integration audit Pass 1+2 (functional smoke + convention) | Chạy thử các luồng chính; đối chiếu style/pattern với phần còn lại dự án | Xác nhận các luồng chạy được; ghi nhận điểm lệch convention để đưa vào fix | Có | [DE190123 cần bổ sung] |
+| 35 | 25/07/2026 | Claude Code (claude-sonnet-5) | Integration audit Pass 3+4 (cross-module regression + runtime/DB verification) | Kiểm tra thay đổi SmartClinic không phá vỡ Billing/Inpatient/Queue; chạy app thật + query SQL xác nhận hành vi | Xác nhận không có regression rõ ràng ở pass đọc-code; danh sách điểm cần verify runtime cho session test sau | Có | [DE190123 cần bổ sung] |
+| 36 | 25/07/2026 | Claude Code (claude-sonnet-5) | Fix Group A: Duplicate OutpatientVisit prevention | Existence-check trước khi tạo visit ở OutpatientRecord.razor + Telemedicine.razor | Thêm ApiClient.GetOutpatientVisits(), query theo QueueTicketId / PatientId+DoctorId+ngày trước khi create | Có | `OutpatientRecord.razor`, `Telemedicine.razor`, `ApiClient.cs` |
+| 37 | 25/07/2026 | Claude Code (claude-sonnet-5) | Fix Group B: Allergy input do bác sĩ tự nhập | Bỏ hardcoded {"Penicillin","Peanuts","Sulfa"}, thêm local state | `_allergyInput` + `_localAllergies` (List\<string\>) + `ParseAllergyInput()` | Có | `EPrescriptionPanel.razor` |
+| 38 | 25/07/2026 | Claude Code (claude-sonnet-5) | Fix Group C/D/E/F: Billing redirect + DisposeAsync cleanup + race + stock filter + nav | `?visitId=` auto-open Billing modal, DisposeAsync đủ 5 bước cleanup, xác nhận JoinRoom race an toàn, NavMenu Telemedicine | `SupplyParameterFromQuery`, `OnParametersSetAsync`, `canPay` fix, DisposeAsync + `_callEnded` guard, NavMenu entry | Có | `Billing.razor`, `Telemedicine.razor`, `NavMenu.razor` |
+| 39 | 25/07/2026 – 26/07/2026 | Claude Code (claude-sonnet-5) | End-to-end test SmartClinic: Flow 1-4, edge case, performance, regression | Test qua browser thật + verify SQL trực tiếp, không sửa code | 28/31 bước PASS, 2 SKIP môi trường, 3 finding mới, 0 blocking bug | Có | Test report 2026-07-25/26 |
+| 40 | 26/07/2026 | Claude Code (claude-sonnet-5) | Fix 3 finding nhỏ từ test report | Email required marker, unique constraint DB, stock filter autocomplete | Label Email *, migration AddUniqueConstraintOutpatientVisitQueueTicketId, `d.StockQuantity > 0` filter | Có | `ClinicDashboard.razor`, `EPrescriptionPanel.razor`, migration |
 | 13 | 14/06/2026 | Claude | Sinh code Feature 2: Y lenh & cham soc hang ngay | Them endpoints GET vital-signs va GET care-orders theo ca nhap vien (loc theo ngay/loai/trang thai) vao InpatientAdmissionsController | Da sinh 2 nested-route endpoint tai su dung IRepository + SimpleMapper, build sach 0 error | Có | src/mediconnect/Controllers/EntityControllers.cs |
 | 14 | 16/06/2026 | Claude | Sinh code Feature 3 & 4 (lam hai phan) | F3: queue chi dinh, nhap ket qua, upload file that; F4: discharge tong hop chi phi giuong/thuoc/thu thuat thanh invoice gui Thanh toan | Da sinh endpoints F3 (lab-orders/lab-results) va nang cap discharge F4, build sach 0 error | Có | src/mediconnect/Controllers/EntityControllers.cs; src/mediconnect/Program.cs; src/Mediconnect.Application/DTOs/EntityDtos.cs |
 | 15 | 14/06/2026 | GitHub Copilot, Claude | Implement Outpatient Record UI and diagnose/create flow | Scaffold OutpatientRecordPage, handle diagnose->create->retry, add local/top search and header link | Implemented OutpatientRecordPage.tsx, header link, ClinicDashboard navigation and payload checks | Có | mediconnect-web/src/pages/OutpatientRecordPage.tsx |
@@ -1752,6 +1760,648 @@ billing sẵn có.
 | Kết quả chạy/test | `dotnet build` cả 2 project: 0 Warning/0 Error; test sống: hoá đơn sau khám tele có đúng phí khám; Appointment.Status chuyển Completed đúng ở cả 2 luồng |
 | Link video demo | |
 | Ghi chú khác | `Billing.razor` do teammate `minhPJ2812` viết ban đầu — thay đổi lần này sửa logic `LoadData`/`SubmitCreate` có sẵn, không phải chỉ thêm mới. `MedicalRecordService.cs` — thay đổi thêm dependency vào constructor có sẵn, không phải chỉ thêm mới. |
+
+---
+
+### Prompt số 23
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 25/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Đối chiếu feature completion matrix cho SmartClinic (DE190123) |
+| Phần việc liên quan | Requirement / Audit |
+| Mức độ sử dụng | Hỏi phân tích |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+[DE190123 cần bổ sung — prompt nguyên văn của phiên audit/matrix trước session hiện tại không
+còn trong cửa sổ hội thoại hiện tại]
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Cần xác định chính xác module SmartClinic (DE190123) đã hoàn thành bao nhiêu % so với đặc tả
+trước khi lên kế hoạch fix, tránh sửa nhầm phạm vi hoặc bỏ sót gap.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Đối chiếu 40 feature với đặc tả gốc, phân loại: 28 hoàn thành (✅), 2 cảnh báo/chưa trọn vẹn (⚠️),
+9 chưa làm (❌), 1 cần xác minh thêm (🔍).
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Dùng làm checklist ưu tiên cho các prompt fix tiếp theo (Group A-F).
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+[DE190123 cần bổ sung]
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [ ] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [ ] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | [DE190123 cần bổ sung] |
+| File liên quan | Không có file code thay đổi (session audit đọc-only) |
+| Screenshot | |
+| Kết quả chạy/test | |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Kết quả chi tiết 40 feature không lưu thành file riêng trong repo tại thời điểm ghi log.
+```
+
+---
+
+### Prompt số 24
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 25/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Integration audit Pass 1+2 (functional smoke + convention) |
+| Phần việc liên quan | Backend / Frontend / Audit |
+| Mức độ sử dụng | Hỏi phân tích |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+[DE190123 cần bổ sung — prompt nguyên văn của phiên audit Pass 1+2 không còn trong cửa sổ hội
+thoại hiện tại]
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Sau feature completion matrix, cần audit sâu hơn xem các luồng đã "hoàn thành" có thực sự chạy
+được (Pass 1 — smoke) và có tuân theo convention chung của dự án (Pass 2) hay không.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Pass 1 (Functional smoke): gọi thử các luồng chính của SmartClinic, xác nhận chạy được ở mức cơ bản.
+Pass 2 (Convention): đối chiếu style/pattern code (đặt tên, cấu trúc DTO, cách gọi ApiClient) với
+phần còn lại của dự án, ghi nhận điểm lệch để đưa vào danh sách fix.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Dùng làm input bổ sung cho danh sách fix cùng với feature completion matrix.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+[DE190123 cần bổ sung]
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [ ] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [ ] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | [DE190123 cần bổ sung] |
+| File liên quan | Không có file code thay đổi (session audit đọc-only) |
+| Screenshot | |
+| Kết quả chạy/test | |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Viết tại đây...
+```
+
+---
+
+### Prompt số 25
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 25/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Integration audit Pass 3+4 (cross-module regression + runtime/DB verification) |
+| Phần việc liên quan | Backend / Frontend / Database / Audit |
+| Mức độ sử dụng | Hỏi phân tích |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+[DE190123 cần bổ sung — prompt nguyên văn của phiên audit Pass 3+4 không còn trong cửa sổ hội
+thoại hiện tại]
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Cần xác nhận thay đổi ở SmartClinic không phá vỡ các module khác (Billing DE180526, Inpatient
+DE190580, Queue dùng chung) và hành vi thực tế khi chạy app + query DB có khớp với đọc code hay không.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Pass 3 (Cross-module regression): rà các điểm chạm giữa SmartClinic và Billing/Inpatient/Queue,
+xác nhận không có regression rõ ràng ở mức đọc-code.
+Pass 4 (Runtime/DB verification): liệt kê danh sách điểm cần verify bằng cách chạy app thật +
+query SQL trực tiếp — chuyển thành checklist cho session end-to-end test sau đó.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Danh sách checklist Pass 4 trở thành khung sườn cho session End-to-end test (Prompt số 29).
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+[DE190123 cần bổ sung]
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [ ] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [ ] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | [DE190123 cần bổ sung] |
+| File liên quan | Không có file code thay đổi (session audit đọc-only) |
+| Screenshot | |
+| Kết quả chạy/test | |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Viết tại đây...
+```
+
+---
+
+### Prompt số 26
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 25/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Fix Group A: Duplicate OutpatientVisit prevention |
+| Phần việc liên quan | Backend / Frontend / Coding |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Fix duplicate OutpatientVisit creation ở 2 chỗ: OutpatientRecord.razor retry-after-failure, và
+Telemedicine.razor panel reopen. Cùng nguyên nhân gốc — không có kiểm tra tồn tại phía server
+trước khi tạo visit.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Kết quả audit trước đó xác định 2 chỗ này có cùng gốc bug: chỉ kiểm tra tồn tại ở phía client
+(nếu có), không có existence-check thật trước khi gọi CreateOutpatientVisit.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+OutpatientRecord.razor.Submit(): đọc code thật phát hiện VisitId thực tế = AppointmentId ??
+_selectedTicket.Id (không phải chỉ .Id như brief giả định) — Submit() đã thử Diagnose() trước,
+chỉ catch "Outpatient visit not found" mới tạo mới; thêm existence-check (query theo
+QueueTicketId) ngay trong nhánh catch đó trước khi CreateOutpatientVisit.
+Telemedicine.razor.EnsureVisitCreatedAsync(): thêm existence-check theo PatientId+DoctorId+ngày
+hôm nay trước khi tạo visit mới.
+Thêm ApiClient.GetOutpatientVisits() (list) — brief đoán sai tên method (GetAsync<List<T>>
+không tồn tại), dùng đúng pattern SendAsync<List<T>> giống GetAppointments() có sẵn.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng sau khi dotnet build sạch cả 2 project; test retry qua browser + verify SQL: count visit
+vẫn = 1 sau khi submit lại hoặc đóng/mở lại panel đơn thuốc.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu AI đọc code thật (Pre-Task) trước khi viết thay vì tin theo giả định trong brief — phát
+hiện brief sai về VisitId thật và tên method ApiClient trước khi code.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [x] Kết quả AI có lỗi hoặc chưa chính xác (brief giả định sai tên field/method, phải tự đọc code sửa lại)
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | [DE190123 cần bổ sung] |
+| File liên quan | `src/Mediconnect.Web/Components/Pages/OutpatientRecord.razor`; `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Web/Services/ApiClient.cs` |
+| Screenshot | |
+| Kết quả chạy/test | dotnet build: 0 Warning/0 Error; test retry: COUNT(*) WHERE QueueTicketId=... = 1 |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Fix client-side này chỉ đóng được race sequential-retry, chưa đóng race concurrent thật — được
+bổ sung bằng unique constraint DB ở Prompt số 30.
+```
+
+---
+
+### Prompt số 27
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 25/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Fix Group B: Allergy input do bác sĩ tự nhập (Phương án B) |
+| Phần việc liên quan | Frontend / Coding |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Replace fake hardcoded allergy list trong EPrescriptionPanel bằng doctor-entered allergy field.
+Không sửa backend, không migration, không thêm API call mới.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+PatientProfile không có trường Allergies trong schema, không muốn thêm migration cho việc này —
+quyết định dùng Phương án B (bác sĩ tự nhập mỗi phiên khám, không lưu DB).
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Đọc code thật phát hiện KnownAllergies param thực tế là List<string>? (không phải string[] như
+brief giả định). Bỏ hardcoded fallback {"Penicillin","Peanuts","Sulfa"}; thêm `_allergyInput`
+(string), `_localAllergies` (List<string>), `ParseAllergyInput()` split theo dấu phẩy/khoảng
+trắng; `_knownAllergies` ưu tiên KnownAllergies param nếu có, fallback về `_localAllergies`.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng sau khi dotnet build sạch; test qua browser: nhập "Penicillin" → tag hiện đúng, cảnh báo
+dị ứng hiện khi search thuốc trùng tên, biến mất khi xoá input, không còn hardcoded fallback nào.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu AI xác nhận type thật của KnownAllergies trước khi viết Change 1 — brief giả định sai
+string[], thực tế là List<string>, phải điều chỉnh logic .Length thành .Count.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [x] Kết quả AI có lỗi hoặc chưa chính xác (brief giả định sai kiểu string[])
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | [DE190123 cần bổ sung] |
+| File liên quan | `src/Mediconnect.Web/Components/Shared/EPrescriptionPanel.razor` |
+| Screenshot | |
+| Kết quả chạy/test | dotnet build: 0 Warning/0 Error; test browser: tag/cảnh báo dị ứng đúng |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Viết tại đây...
+```
+
+---
+
+### Prompt số 28
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 25/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Fix Group C/D/E/F: Billing redirect, DisposeAsync cleanup, race condition, stock filter + nav |
+| Phần việc liên quan | Backend / Frontend / SignalR Hub |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Fix 6 gap còn lại trong luồng billing redirect của Telemedicine, tab-close cleanup, và NavMenu
+entry. Tất cả cô lập trong Telemedicine.razor, Billing.razor và NavMenu.razor.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Sau khi bác sĩ kết thúc cuộc gọi tele, bệnh nhân luôn bị điều hướng về /appointments dù đã có
+visit cần thanh toán; Billing.razor không có cách nhận query param để tự mở đúng hoá đơn; đóng
+tab giữa chừng không cleanup gì (session/visit/appointment status đứng yên); chưa có mục nav
+cho Telemedicine.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Billing.razor: thêm `[SupplyParameterFromQuery(Name="visitId")]`, `OnParametersSetAsync` tự chọn
+visit đúng + mở modal tạo hoá đơn (brief giả định sai tên biến `_showCreateModal`/`_createVisitId`
+kiểu Guid — thực tế là `_showCreate`/`_createVisitId` kiểu string); sửa `canPay = !isPaid` bỏ hẳn
+điều kiện `TotalAmount > 0`.
+Telemedicine.razor: `EndCall()`/`CallEnded` điều hướng bệnh nhân sang `/billing?visitId=` nếu có
+visit đang mở; `DisposeAsync` gọi đủ NotifyCallEnded+LeaveRoom+EndTelemedicineSession+
+CompleteOutpatientVisit+UpdateAppointmentStatus (mỗi bước try/catch riêng, không để 1 bước lỗi
+chặn các bước sau); thêm field `_callEnded` set true ngay đầu `EndCall()` để `DisposeAsync` không
+gọi lại các API đã gọi rồi.
+NavMenu.razor: thêm mục "Telemedicine (khởi động từ hàng đợi)" trỏ `/clinic-dashboard` cho vai
+trò Doctor/Nurse (không có route tĩnh `/telemedicine` riêng, chỉ có `/telemedicine/{RoomId}`).
+Group E (JoinRoom race): xác nhận code hiện tại (`TelemedicineHub.cs`) đã dùng
+`ConcurrentDictionary.GetOrAdd` + `countBefore` atomic, đúng 1 peer thành initiator — không cần
+sửa thêm, chỉ xác nhận lại.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng sau khi dotnet build sạch cả 2 project; test qua browser + SQL: đóng tab không bấm "Kết
+thúc" vẫn cascade đúng (EndedAt set, Appointment.Status → Completed); điều hướng đến
+/billing?visitId=X đúng visit tự chọn sẵn + modal tự mở.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu AI đọc code thật của Billing.razor trước khi viết Fix C — brief giả định sai 2 tên biến
+(`_showCreateModal`, kiểu Guid cho `_createVisitId`) so với thực tế (`_showCreate`, string).
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [ ] Prompt có đủ bối cảnh
+- [x] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [x] Kết quả AI có lỗi hoặc chưa chính xác (brief sai tên biến Billing.razor)
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | [DE190123 cần bổ sung] |
+| File liên quan | `src/Mediconnect.Web/Components/Pages/Billing.razor`; `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Web/Components/Layout/NavMenu.razor` |
+| Screenshot | |
+| Kết quả chạy/test | dotnet build: 0 Warning/0 Error; test tab-close cascade đúng; billing redirect đúng |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Viết tại đây...
+```
+
+---
+
+### Prompt số 29
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 25/07/2026 – 26/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | End-to-end test SmartClinic: Flow 1-4, edge case, performance, regression |
+| Phần việc liên quan | Testing (browser thật + SQL trực tiếp) |
+| Mức độ sử dụng | Tự chạy test hoàn toàn |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+End-to-end functional, performance, and regression test của module SmartClinic (DE190123) trên
+branch feature/de190123-smartclinic-fixes. Mô phỏng luồng người dùng thật, cover edge case với
+dữ liệu test có cấu trúc, báo cáo bug và hồi quy. Chỉ phân tích + kiểm tra tự động DB/build,
+không sửa code.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Sau khi fix 6 nhóm (Group A-F) cần kiểm chứng lại toàn bộ bằng test thật thay vì chỉ tin
+dotnet build sạch — đặc biệt các luồng liên module (walk-in → khám → kê đơn → hoá đơn → tele).
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Trước khi test được: phát hiện 2 blocker môi trường — API crash do obj/bin cũ chứa đường dẫn
+repo cũ (xoá + rebuild); connection string sai instance SQL Server (chỉ cần set
+ASPNETCORE_ENVIRONMENT=Development, override đã đúng sẵn trong appsettings.Development.json).
+Sau đó test qua browser thật (Nurse/Doctor/Patient) + verify SQL sau mỗi bước:
+Flow 1 (Walk-in): 5/5 PASS.
+Flow 2 (Appointment+E-Prescription): 10/11 PASS (1 fail nhẹ — stock=0 vẫn hiện trong autocomplete).
+Flow 3 (Telemedicine): 7 PASS + 2 SKIP (môi trường: không có 2 phiên đăng nhập đồng thời, không camera).
+Flow 4 (Edge case): 4 PASS + 1 fail (cùng nguyên nhân Flow 2) + 1 SKIP.
+Performance: 5/5 PASS. Regression: 3/3 module PASS.
+Tổng: 0 blocking bug, 0 regression, READY FOR PR.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Kết quả dùng làm test report chính thức; 3 finding phát hiện được chuyển thành Prompt số 30.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+Từ chối để AI đăng nhập vào tài khoản bệnh nhân thật của thành viên nhóm khi phát hiện trùng
+email thật trong seed data — chỉ dùng tài khoản demo có sẵn cho các bước không thể verify được.
+Yêu cầu AI verify mọi bước qua SQL trực tiếp, không chỉ tin UI.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Không có (session test-only, không sửa code) |
+| File liên quan | Không có file code thay đổi |
+| Screenshot | |
+| Kết quả chạy/test | Flow 1: 5/5; Flow 2: 10/11; Flow 3: 7 PASS+2 SKIP; Flow 4: 4 PASS+1 fail+1 SKIP; Performance 5/5; Regression 3/3 |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | `.claude/launch.json` tạo mới để chạy 2 dev server phục vụ test |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Enum ordinal thật của AppointmentStatus.Completed = 3 (không phải 4 như brief giả định) — chỉ
+phát hiện được nhờ query SQL trực tiếp, không thể suy luận đúng chỉ bằng đọc tên enum.
+```
+
+---
+
+### Prompt số 30
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 26/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Fix 3 finding nhỏ từ test report |
+| Phần việc liên quan | Frontend / Database (EF migration) |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Fix 3 finding nhỏ, độc lập nhau, từ test report. Không cần migration cho fix 1/2. Fix 3 cần
+migration + kiểm tra duplicate data trước khi thêm unique constraint.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Test report tìm ra 3 gap nhỏ: email walk-in bắt buộc nhưng label không đánh dấu, DB không có
+unique constraint chặn duplicate QueueTicketId thật, stock=0 vẫn hiện trong autocomplete dù nút
+Thêm đã disable đúng.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Fix 1: ClinicDashboard.razor — thêm dấu * đỏ vào label Email, thêm `_submitted` + dòng lỗi
+"Vui lòng nhập email." khi submit với email rỗng.
+Fix 2: EPrescriptionPanel.razor.SearchResults — thêm `d.StockQuantity > 0` vào Where.
+Fix 3: Migration AddUniqueConstraintOutpatientVisitQueueTicketId — kiểm tra trước: 0 dòng
+QueueTicketId trùng dù session test trước tạo nhiều visit; drop index cũ
+IX_OutpatientVisits_QueueTicketId, tạo lại unique filtered index
+WHERE [QueueTicketId] IS NOT NULL (cú pháp SQL Server, không phải Postgres như ví dụ trong brief).
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng sau khi dotnet build sạch cả 2 project + dotnet ef database update thành công; verify
+browser (label Email *, stock=0 không còn trong autocomplete) + SQL (sys.indexes is_unique=1).
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Phát hiện dev server giữ lock file .exe khiến dotnet build/dotnet ef thất bại — tự dừng
+  server trước khi build, khởi động lại sau.
+- Ghi nhận rõ giới hạn: dòng lỗi email vẫn chưa thể kích hoạt qua click chuột thường vì nút
+  submit vẫn disable khi email rỗng (đúng phạm vi yêu cầu, không đổi disabled condition).
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | [DE190123 cần bổ sung] |
+| File liên quan | `src/Mediconnect.Web/Components/Pages/ClinicDashboard.razor`; `src/Mediconnect.Web/Components/Shared/EPrescriptionPanel.razor`; `src/Mediconnect.Infrastructure/Migrations/20260725183033_AddUniqueConstraintOutpatientVisitQueueTicketId.cs` |
+| Screenshot | |
+| Kết quả chạy/test | dotnet build: 0 Warning/0 Error; dotnet ef database update: thành công; sys.indexes xác nhận is_unique=1 |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Kiểm tra duplicate data trước khi thêm unique constraint là bước bắt buộc — nếu có dữ liệu
+trùng, migration sẽ fail giữa chừng và để DB ở trạng thái nửa vời.
+```
 
 ---
 
