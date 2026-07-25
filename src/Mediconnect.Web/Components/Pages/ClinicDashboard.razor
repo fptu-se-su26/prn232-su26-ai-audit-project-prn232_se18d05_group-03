@@ -504,7 +504,19 @@ else
             var patientEmail = _checkInType == "walk-in" ? _walkInEmail.Trim() : null;
             var patientPhone = _checkInType == "walk-in" && !string.IsNullOrWhiteSpace(_walkInPhone) ? _walkInPhone.Trim() : null;
             var ticket = await Api.CheckIn(clinicId, appointmentId, patientName, patientEmail, patientPhone);
-            ShowSuccess($"Đã phát số {ticket?.Number} cho phòng {ticket?.ClinicName}");
+
+            if (ticket?.PatientUserAccountId is { } newAccountId)
+            {
+                // Walk-in accounts are created with an unrecoverable random password — an OTP
+                // login email is the only way that patient can ever reach their own billing later.
+                try { await Api.IssueOtp(newAccountId); } catch { /* best-effort — check-in itself already succeeded */ }
+                ShowSuccess($"Đã phát số {ticket?.Number} cho phòng {ticket?.ClinicName}. Đã gửi email đăng nhập (mã OTP) cho bệnh nhân.");
+            }
+            else
+            {
+                ShowSuccess($"Đã phát số {ticket?.Number} cho phòng {ticket?.ClinicName}");
+            }
+
             _isCheckInOpen = false;
             _walkInName = ""; _walkInEmail = ""; _walkInPhone = ""; _selectedAppointmentId = "";
             await LoadOverview(false);

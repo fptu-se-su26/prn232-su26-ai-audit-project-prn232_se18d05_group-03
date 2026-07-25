@@ -17,6 +17,9 @@ public class QueueTicketDetailDto
     public Guid? AppointmentId { get; set; }
     public Guid? PatientId { get; set; }
     public string? PatientName { get; set; }
+    // Only set right after a walk-in account is (re)created during check-in — lets the caller
+    // trigger an OTP login email for that account without a second lookup round-trip.
+    public Guid? PatientUserAccountId { get; set; }
     public int Number { get; set; }
     public DateTime IssuedAt { get; set; }
     public QueueStatus Status { get; set; }

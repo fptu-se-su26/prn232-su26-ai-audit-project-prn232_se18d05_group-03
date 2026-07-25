@@ -25,17 +25,20 @@ public class OtpController : ControllerBase
     private readonly IRepository<OtpCode> _codeRepository;
     private readonly IRepository<UserAccount> _userRepository;
     private readonly IOtpSender _otpSender;
+    private readonly ITokenService _tokenService;
 
     public OtpController(
         IRepository<OtpSetting> settingRepository,
         IRepository<OtpCode> codeRepository,
         IRepository<UserAccount> userRepository,
-        IOtpSender otpSender)
+        IOtpSender otpSender,
+        ITokenService tokenService)
     {
         _settingRepository = settingRepository;
         _codeRepository = codeRepository;
         _userRepository = userRepository;
         _otpSender = otpSender;
+        _tokenService = tokenService;
     }
 
     // ── Configuration ────────────────────────────────────────────────────────
@@ -184,6 +187,70 @@ public class OtpController : ControllerBase
         await _codeRepository.SaveChangesAsync(cancellationToken);
 
         return Ok(new OtpVerifyResponseDto { Success = true, Message = "Xác thực OTP thành công. Tài khoản đã được kích hoạt." });
+    }
+
+    // ── Self-service login (no password known, e.g. walk-in accounts) ──────────
+
+    // Overrides the class-level [Authorize] — this is the one entry point an
+    // unauthenticated caller is meant to hit: they have no token yet, that's the point.
+    [AllowAnonymous]
+    [HttpPost("login")]
+    public async Task<ActionResult<AuthResponseDto>> LoginWithOtp(
+        OtpLoginRequestDto request, CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+        if (user is null)
+        {
+            return Unauthorized(new { message = "Email hoặc mã OTP không đúng." });
+        }
+
+        var setting = await GetOrCreateSettingAsync(cancellationToken);
+        var pending = await _codeRepository.ListAsync(
+            c => c.UserAccountId == user.Id && c.Status == OtpStatus.Pending,
+            cancellationToken);
+        var otp = pending.OrderByDescending(c => c.CreatedAt).FirstOrDefault();
+
+        if (otp is null)
+        {
+            return Unauthorized(new { message = "Không có mã OTP đang chờ xác thực." });
+        }
+
+        if (DateTime.UtcNow > otp.ExpiresAt)
+        {
+            otp.Status = OtpStatus.Expired;
+            _codeRepository.Update(otp);
+            await _codeRepository.SaveChangesAsync(cancellationToken);
+            return Unauthorized(new { message = "Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại." });
+        }
+
+        otp.AttemptCount++;
+        if (otp.Code != request.Code.Trim())
+        {
+            if (otp.AttemptCount >= setting.MaxAttempts)
+            {
+                otp.Status = OtpStatus.Failed;
+            }
+            _codeRepository.Update(otp);
+            await _codeRepository.SaveChangesAsync(cancellationToken);
+            return Unauthorized(new { message = "Sai mã OTP." });
+        }
+
+        otp.Status = OtpStatus.Verified;
+        otp.ConsumedAt = DateTime.UtcNow;
+        _codeRepository.Update(otp);
+
+        user.VerifiedAt ??= DateTime.UtcNow;
+        user.IsActive = true;
+        _userRepository.Update(user);
+        await _codeRepository.SaveChangesAsync(cancellationToken);
+
+        var (token, expiresAt) = _tokenService.CreateToken(user);
+        return Ok(new AuthResponseDto
+        {
+            AccessToken = token,
+            ExpiresAt = expiresAt,
+            User = SimpleMapper.Map<UserAccount, UserAccountReadDto>(user)
+        });
     }
 
     // ── Monitor / demo log ───────────────────────────────────────────────────

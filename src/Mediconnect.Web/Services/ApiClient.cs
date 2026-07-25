@@ -52,6 +52,24 @@ public class ApiClient
 
     public async Task Logout() => await _auth.ClearAsync();
 
+    // Self-service login for accounts with no known password (walk-in patients) — verifies the
+    // OTP emailed at check-in and, on success, persists the returned JWT the same way LoginAsync does.
+    public async Task LoginWithOtp(string email, string code)
+    {
+        var res = await _http.PostAsJsonAsync("api/otp/login", new OtpLoginRequestDto { Email = email, Code = code }, _json);
+        if (res.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var problem = await res.Content.ReadFromJsonAsync<Dictionary<string, string>>(_json);
+            throw new ApiException(401, problem?.GetValueOrDefault("message") ?? "Email hoặc mã OTP không đúng.");
+        }
+        if (!res.IsSuccessStatusCode)
+            throw new ApiException((int)res.StatusCode, $"Đăng nhập thất bại ({(int)res.StatusCode}).");
+
+        var auth = await res.Content.ReadFromJsonAsync<AuthResponseDto>(_json)
+            ?? throw new ApiException(500, "Phản hồi đăng nhập rỗng.");
+        await _auth.PersistAsync(auth);
+    }
+
     public Task<AuthResponseDto?> RegisterAsync(RegisterRequestDto dto) =>
         SendAsync<AuthResponseDto>(HttpMethod.Post, "api/auth/register", dto);
 

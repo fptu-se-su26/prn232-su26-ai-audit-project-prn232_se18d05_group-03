@@ -35,6 +35,15 @@ public class OtpVerifyRequestDto
     public string Code { get; set; } = string.Empty;
 }
 
+// Self-service login for accounts with no known password (e.g. walk-in patients created
+// with a random unrecoverable password hash) — verifies an OTP sent to the account's email
+// and, on success, issues a normal JWT instead of just flagging the account as verified.
+public class OtpLoginRequestDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+}
+
 public class OtpVerifyResponseDto
 {
     public bool Success { get; set; }
