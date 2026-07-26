@@ -1901,6 +1901,84 @@ quả hơn test từng tính năng riêng lẻ trong việc phát hiện lỗ h�
 
 ---
 
+### Lần sử dụng AI số 23
+
+| Nội dung            | Thông tin                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Ngày sử dụng        | 26/07/2026                                                                           |
+| Công cụ AI          | Claude Code (claude-opus-4-8)                                                       |
+| Mục đích sử dụng    | Kéo code mới từ `develop`, build + chạy thử phát hiện lỗi, khôi phục kết nối SQL Server, dọn cấu hình dự án và viết bộ tài liệu giải thích code theo 4 thành viên |
+| Phần việc liên quan | Documentation / Backend (cấu hình) / DevOps (build, Docker SQL)                     |
+| Mức độ sử dụng      | AI chạy build/test, chẩn đoán lỗi và viết tài liệu; người dùng xác nhận từng bước    |
+
+#### 23.1. Prompt đã sử dụng
+
+```text
+kéo code mới từ git về chạy thử, coi có lỗi gì không nếu có thì sửa, code nào bị lỗi chưa đúng
+cấu trúc hoặc thiếu gì thì liệt kê ra, cuối cùng tạo file md giải thích code theo từng chức năng
+sửa lại mk sql server
+sử lý hết
+file code overview xóa đi, tạo folder doc trong folder mediconnect. Làm nhiều file md giải thích
+từng dòng code của các chức năng chính và các file giải thích UI tương tự [kèm phân chia 4 thành viên]
+```
+
+#### 23.2. Kết quả AI gợi ý
+
+```text
+1. Fast-forward branch sang develop (19 commit mới). Build cả solution: 0 Warning/0 Error.
+   Chạy API (5079) + Web (5104): Web /,/login trả 200; API startup lỗi kết nối DB.
+2. Chẩn đoán: SQL 'sa' Login failed dù mật khẩu trong appsettings khớp biến env container —
+   xác định mật khẩu 'sa' thật trong volume cũ khác env. Reset mật khẩu 'sa' về Minh@@2812 bằng
+   cách commit backup → mssql-conf set-sa-password ở container tạm → dựng lại container, GIỮ
+   nguyên toàn bộ 7 database. Sau reset: sa login OK, API seed thành công, /api/auth/login trả
+   401 với sai mật khẩu (auth + query DB chạy đúng), Swagger 200.
+3. Dọn cấu hình: gỡ 146 file bin/obj khỏi git index (đã gitignore, gây nhiễu diff + hỏng
+   'dotnet run --no-build' do manifest static-web-assets cũ); sửa CORS 5173→5104; cập nhật README
+   (React/mediconnect-web/5173 → Blazor/Mediconnect.Web/5104).
+4. Viết 9 file .md trong src/mediconnect/doc/ (00-README + memberN-code/ui) giải thích logic
+   backend từng dòng của các hàm chính và trang Blazor/UI theo phân chia 4 thành viên, dựa trên
+   đọc trực tiếp source (QueueService, MedicalRecordService, BillingService, PaymentGatewayService,
+   StaffScheduleService, CdssController, ReportQuery, InpatientAdmissionsController, các trang .razor).
+```
+
+#### 23.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng sau khi xác nhận: dotnet build mediconnect.sln sạch (0 Warning/0 Error); API + Web chạy
+được thật với DB đã khôi phục; tài liệu đối chiếu đúng với source code thực tế của từng feature.
+Toàn bộ được đóng thành branch docs/mediconnect-code-guides (2 commit) và push lên remote.
+```
+
+#### 23.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Xác nhận từng quyết định có rủi ro trước khi cho AI thực thi: chọn nhánh kéo (develop), mức chạy
+thử (build + khởi động), và đặc biệt cách khôi phục SQL (yêu cầu recreate container GIỮ data thay
+vì tạo mới). Không cho commit thẳng vào develop mà tách sang nhánh riêng.
+```
+
+#### 23.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Link commit       | `1e2afc3` (chore: untrack build artifacts, fix stale frontend refs), `b0af778` (docs: add per-member code & UI guides) trên branch `docs/mediconnect-code-guides` |
+| File liên quan    | `src/mediconnect/doc/` (9 file .md); `README.md`; `src/mediconnect/Program.cs`; gỡ track `**/bin/`, `**/obj/`; xóa `docs/CODE_OVERVIEW.md` |
+| Screenshot        |                                                                                                |
+| Kết quả chạy/test | `dotnet build mediconnect.sln`: 0 Warning/0 Error. API (5079) seed DB OK, `/api/auth/login` sai mật khẩu → 401, Swagger 200. Web (5104): `/`, `/login` → 200, không lỗi startup |
+| Link video demo   |                                                                                                |
+| Ghi chú khác      | Việc reset mật khẩu `sa` chỉ tác động môi trường local (Docker container `sqlserver`), không thay đổi source. Tài liệu là mô tả code có sẵn của cả nhóm, không sinh code mới cho tính năng |
+
+#### 23.6. Nhận xét cá nhân/nhóm
+
+```text
+Lỗi "chạy không được" thực chất không nằm ở code mà ở môi trường (mật khẩu sa của container không
+khớp do volume cũ) — nhấn mạnh giá trị của việc phân biệt lỗi code với lỗi cấu hình/hạ tầng trước
+khi sửa. Việc gỡ bin/obj khỏi git cũng cho thấy commit build-artifact gây lỗi thật (hỏng manifest
+static-web-assets khi checkout ở máy khác), không chỉ là vấn đề "diff bẩn".
+```
+
+---
+
 ## 10. Cam kết học thuật
 
 Sinh viên/nhóm cam kết rằng:

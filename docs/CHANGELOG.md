@@ -718,6 +718,61 @@ Viết tại đây...
 
 ---
 
+# [Phase 08] Tài liệu giải thích code & dọn cấu hình
+
+## Ngày thực hiện
+
+```text
+26/07/2026
+```
+
+## Đã hoàn thành
+
+- [x] Kéo code mới từ `develop` (fast-forward 19 commit) và build sạch (0 Warning/0 Error)
+- [x] Chạy thử API (5079) + Web (5104); khôi phục kết nối SQL Server (reset mật khẩu `sa`, giữ nguyên 7 DB)
+- [x] Gỡ 146 file `bin/`/`obj/` khỏi git index (đã gitignore)
+- [x] Sửa CORS API `5173` → `5104`; cập nhật README (React/`mediconnect-web` → Blazor/`Mediconnect.Web`)
+- [x] Viết 9 file tài liệu trong `src/mediconnect/doc/` giải thích code + UI theo 4 thành viên
+- [x] Cập nhật `AI_AUDIT_LOG.md`, `PROMPTS.md`, `CHANGELOG.md`
+
+## Thay đổi chi tiết
+
+| STT | Nội dung thay đổi | Người thực hiện | File/Module liên quan | Minh chứng |
+| --: | ----------------- | --------------- | --------------------- | ---------- |
+|   1 | Gỡ track build artifacts + sửa CORS + README | minhPJ2812 (AI hỗ trợ) | `**/bin`, `**/obj`, `src/mediconnect/Program.cs`, `README.md` | `1e2afc3` |
+|   2 | Viết bộ tài liệu giải thích code/UI theo 4 thành viên | minhPJ2812 (AI hỗ trợ) | `src/mediconnect/doc/` (9 file .md) | `b0af778` |
+
+## AI có hỗ trợ không?
+
+- [x] Có
+- [ ] Không
+
+Nếu có, mô tả AI đã hỗ trợ phần nào:
+
+```text
+Claude Code (claude-opus-4-8): chạy build/test, chẩn đoán lỗi kết nối SQL (là lỗi cấu hình
+container, không phải lỗi code) và khôi phục an toàn, dọn cấu hình, viết tài liệu dựa trên đọc
+trực tiếp source. Chi tiết: docs/AI_AUDIT_LOG.md "Lần sử dụng AI số 23".
+```
+
+## Commit/Screenshot minh chứng
+
+```text
+Branch: docs/mediconnect-code-guides
+- 1e2afc3  chore: untrack build artifacts, fix stale frontend refs
+- b0af778  docs: add per-member code & UI guides under src/mediconnect/doc
+Kết quả: dotnet build 0 error; API /api/auth/login sai mật khẩu → 401; Web /,/login → 200.
+```
+
+## Ghi chú
+
+```text
+Việc reset mật khẩu SQL 'sa' chỉ tác động môi trường local (Docker container), không đổi source.
+Tài liệu mô tả code có sẵn của cả nhóm, không sinh code mới cho tính năng.
+```
+
+---
+
 # 4. Tổng kết thay đổi cuối project
 
 ## 4.1. Các chức năng đã hoàn thành
