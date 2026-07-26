@@ -1979,6 +1979,77 @@ static-web-assets khi checkout ở máy khác), không chỉ là vấn đề "di
 
 ---
 
+### Lần sử dụng AI số 24
+
+| Nội dung            | Thông tin                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Ngày sử dụng        | 26/07/2026                                                                           |
+| Công cụ AI          | Claude Code (claude-opus-4-8)                                                       |
+| Mục đích sử dụng    | Tạo dữ liệu demo phủ toàn bộ chức năng và sửa lại giao diện trang đăng nhập          |
+| Phần việc liên quan | Database (seed data) / Frontend (Blazor UI)                                          |
+| Mức độ sử dụng      | AI phân tích schema/enum/FK, sinh script seed và sửa UI; người dùng xác nhận kết quả |
+
+#### 24.1. Prompt đã sử dụng
+
+```text
+tại sao email mk không đúng
+tạo cho tôi data ở các chức năng được không
+với lại sửa lại UI login
+```
+
+#### 24.2. Kết quả AI gợi ý
+
+```text
+1. "Sai email/mật khẩu" thực chất do connection string trong appsettings.json bị đổi thành "cc"
+   (chuỗi rác) → mọi login ném exception parse chuỗi kết nối; UI hiển thị chung chung thành sai
+   mật khẩu. Khôi phục connection string; xác minh 5 tài khoản demo login đều trả HTTP 200.
+2. Kiểm tra DB thấy hầu hết bảng chức năng trống. Đọc schema (INFORMATION_SCHEMA), enum (Enums.cs)
+   và FK (DoctorId→StaffProfiles, PatientId→PatientProfiles) rồi sinh script seed T-SQL tham chiếu
+   ID theo email/code (bền vững), có guard chống chạy trùng. Tạo dữ liệu phủ mọi chức năng: dịch vụ
+   khám, kho thuốc + ngưỡng liều, cặp tương tác thuốc, lịch trực, lịch hẹn, hàng đợi, lượt khám +
+   ICD-10, đơn thuốc, xét nghiệm + kết quả, sinh tồn + y lệnh nội trú, hoá đơn + thanh toán, đánh
+   giá, phiên telemedicine — dựng sẵn 3 kịch bản bệnh nhân (đã thanh toán / chưa thanh toán / tele).
+3. Trang login hiển thị bị kéo ngang do bundle scoped-css cũ (bản .login-card dùng flex hàng ngang).
+   Viết lại Login.razor + Login.razor.css thành card căn giữa (max-width 420px, display:block rõ ràng),
+   thêm bấm-để-điền tài khoản demo; rebuild để sinh lại bundle Mediconnect.Web.styles.css.
+```
+
+#### 24.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Data demo áp dụng thẳng vào DB NewMediconnect (đã kiểm số dòng từng bảng khớp mong đợi). Sửa UI
+login: build Web 0 error, xác nhận bundle sinh lại chứa CSS đúng; restart Web để hiển thị bản mới.
+```
+
+#### 24.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+Yêu cầu seed phải tham chiếu ID có sẵn theo email/code thay vì hardcode GUID, và có guard tránh
+tạo trùng khi chạy lại. Với login, yêu cầu tìm đúng nguyên nhân (bundle cũ) chứ không chỉ sửa CSS
+file nguồn — nếu không rebuild thì bản served vẫn hỏng.
+```
+
+#### 24.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Link commit       | `fix(ui): redesign login page, regenerate stale scoped-css bundle` trên branch `docs/mediconnect-code-guides` (data demo chỉ nằm trong DB, không commit) |
+| File liên quan    | `src/Mediconnect.Web/Components/Pages/Login.razor`, `Login.razor.css`; DB `NewMediconnect` (seed) |
+| Screenshot        |                                                                                                |
+| Kết quả chạy/test | 5 tài khoản demo login → HTTP 200. Seed: MedicalServices=6, Drugs=10, Appointments=4, OutpatientVisits=2, Prescriptions=2, LabResults=1, VitalSigns=3, CareOrders=4, Payments=1, ServiceRatings=1, TelemedicineSessions=1. Build Web: 0 error |
+| Link video demo   |                                                                                                |
+| Ghi chú khác      | Connection string (`appsettings.json`) nằm trong `.gitignore` nên việc khôi phục không ảnh hưởng git. Dữ liệu seed là dữ liệu mẫu để demo, không phải logic mới |
+
+#### 24.6. Nhận xét cá nhân/nhóm
+
+```text
+Hai lỗi người dùng gặp ("sai mật khẩu", "login vỡ giao diện") đều KHÔNG phải lỗi logic: một do
+config bị sửa nhầm, một do artifact build cũ được phục vụ. Củng cố bài học phải phân biệt lỗi
+code với lỗi cấu hình/artifact trước khi sửa, và luôn rebuild để bản served khớp source.
+```
+
+---
+
 ## 10. Cam kết học thuật
 
 Sinh viên/nhóm cam kết rằng:
