@@ -97,67 +97,73 @@
 
                     @if (_selected.Status == LabOrderStatus.Ordered)
                     {
-                        <button class="btn btn-sm btn-outline-primary" @onclick="MoveToInProgress" disabled="@_saving">
-                            <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">play_circle</span>
-                            Bắt đầu xử lý
-                        </button>
+                        <AuthorizeView Roles="Lab,Admin">
+                            <button class="btn btn-sm btn-outline-primary" @onclick="MoveToInProgress" disabled="@_saving">
+                                <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">play_circle</span>
+                                Bắt đầu xử lý
+                            </button>
+                        </AuthorizeView>
                     }
                 </div>
             </div>
 
             @if (_selected.Status == LabOrderStatus.InProgress || _selected.Status == LabOrderStatus.Completed)
             {
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">science</span> Nhập kết quả
-                    </div>
-                    <div class="card-body">
-                        @if (_resultError is not null) { <div class="alert alert-danger py-1 mb-2" style="font-size:.78rem">@_resultError</div> }
-                        <div class="mb-3">
-                            <label class="form-label">Kết quả xét nghiệm</label>
-                            <textarea class="form-control" rows="4" @bind="_resultText"
-                                      placeholder="Nhập kết quả chi tiết..."></textarea>
+                <AuthorizeView Roles="Lab,Admin">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">science</span> Nhập kết quả
                         </div>
-                        <button class="btn btn-success" @onclick="SubmitResult" disabled="@(_saving || string.IsNullOrWhiteSpace(_resultText))">
-                            <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">check_circle</span>
-                            @(_saving ? "Đang lưu..." : "Lưu kết quả")
-                        </button>
+                        <div class="card-body">
+                            @if (_resultError is not null) { <div class="alert alert-danger py-1 mb-2" style="font-size:.78rem">@_resultError</div> }
+                            <div class="mb-3">
+                                <label class="form-label">Kết quả xét nghiệm</label>
+                                <textarea class="form-control" rows="4" @bind="_resultText"
+                                          placeholder="Nhập kết quả chi tiết..."></textarea>
+                            </div>
+                            <button class="btn btn-success" @onclick="SubmitResult" disabled="@(_saving || string.IsNullOrWhiteSpace(_resultText))">
+                                <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle">check_circle</span>
+                                @(_saving ? "Đang lưu..." : "Lưu kết quả")
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </AuthorizeView>
 
                 <div class="card">
                     <div class="card-header">
                         <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">attach_file</span> Tải file kết quả
                     </div>
                     <div class="card-body">
-                        @if (_fileError is not null) { <div class="alert alert-danger py-1 mb-2" style="font-size:.78rem">@_fileError</div> }
-                        @if (_results.Any())
-                        {
-                            <div class="mb-3">
-                                <label class="form-label">Gắn vào kết quả</label>
-                                <select class="form-select form-select-sm" @bind="_uploadResultId">
-                                    @foreach (var r in _results)
-                                    {
-                                        <option value="@r.Id">@(r.ResultedAt?.ToString("dd/MM HH:mm") ?? "?") – @(r.ResultText?[..Math.Min(40, r.ResultText?.Length ?? 0)])...</option>
-                                    }
-                                </select>
+                        <AuthorizeView Roles="Lab,Admin">
+                            @if (_fileError is not null) { <div class="alert alert-danger py-1 mb-2" style="font-size:.78rem">@_fileError</div> }
+                            @if (_results.Any())
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Gắn vào kết quả</label>
+                                    <select class="form-select form-select-sm" @bind="_uploadResultId">
+                                        @foreach (var r in _results)
+                                        {
+                                            <option value="@r.Id">@(r.ResultedAt?.ToString("dd/MM HH:mm") ?? "?") – @(r.ResultText?[..Math.Min(40, r.ResultText?.Length ?? 0)])...</option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+                            <div class="lab-dropzone">
+                                <span class="material-symbols-outlined mb-1" style="font-size:2rem;color:var(--brand)">cloud_upload</span>
+                                <div style="font-size:.8rem;color:var(--text-muted)">PDF, JPG, PNG (tối đa 10MB)</div>
+                                <InputFile OnChange="HandleFile" accept=".pdf,.jpg,.jpeg,.png" class="file-input" />
                             </div>
-                        }
-                        <div class="lab-dropzone">
-                            <span class="material-symbols-outlined mb-1" style="font-size:2rem;color:var(--brand)">cloud_upload</span>
-                            <div style="font-size:.8rem;color:var(--text-muted)">PDF, JPG, PNG (tối đa 10MB)</div>
-                            <InputFile OnChange="HandleFile" accept=".pdf,.jpg,.jpeg,.png" class="file-input" />
-                        </div>
-                        @if (_pendingFile is not null)
-                        {
-                            <div class="d-flex align-items-center gap-2 mt-2">
-                                <span class="material-symbols-outlined" style="font-size:1rem;color:var(--brand)">description</span>
-                                <span style="font-size:.8rem">@_pendingFile.Name (@(_pendingFile.Size / 1024) KB)</span>
-                                <button class="btn btn-sm btn-success ms-auto" @onclick="UploadFile" disabled="@_uploading">
-                                    @(_uploading ? "Đang tải..." : "Upload")
-                                </button>
-                            </div>
-                        }
+                            @if (_pendingFile is not null)
+                            {
+                                <div class="d-flex align-items-center gap-2 mt-2">
+                                    <span class="material-symbols-outlined" style="font-size:1rem;color:var(--brand)">description</span>
+                                    <span style="font-size:.8rem">@_pendingFile.Name (@(_pendingFile.Size / 1024) KB)</span>
+                                    <button class="btn btn-sm btn-success ms-auto" @onclick="UploadFile" disabled="@_uploading">
+                                        @(_uploading ? "Đang tải..." : "Upload")
+                                    </button>
+                                </div>
+                            }
+                        </AuthorizeView>
 
                         @if (_results.Any())
                         {

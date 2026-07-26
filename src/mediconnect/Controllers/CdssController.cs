@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Mediconnect.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Admin,Doctor,Nurse")]
 [Route("api/cdss")]
 public class CdssController : ControllerBase
 {

@@ -13,7 +13,7 @@ namespace Mediconnect.Api.Modules.SmartClinic;
 /// Chỉ dành cho Admin.
 /// </summary>
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Admin")]
 [Route("api/clinic-management")]
 [Tags("Smart Clinic — Management")]
 public class ClinicManagementController : ControllerBase

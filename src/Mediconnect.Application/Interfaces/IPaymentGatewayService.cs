@@ -7,7 +7,9 @@ public interface IPaymentGatewayService
 {
     string CreateVnPayUrl(Payment payment, string clientIpAddress);
 
-    string CreateMomoUrl(Payment payment);
+    Task<string> CreateMomoUrlAsync(Payment payment, CancellationToken cancellationToken = default);
 
     PaymentGatewayReturnResult ValidateVnPayReturn(IReadOnlyDictionary<string, string> queryParams);
+
+    PaymentGatewayReturnResult ValidateMomoReturn(IReadOnlyDictionary<string, string> queryParams);
 }

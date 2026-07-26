@@ -29,7 +29,10 @@ public static class DependencyInjection
 
         services.Configure<VnPaySettings>(configuration.GetSection("VnPaySettings"));
         services.Configure<MomoSettings>(configuration.GetSection("MomoSettings"));
-        services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
+        services.Configure<FrontendSettings>(configuration.GetSection("Frontend"));
+        services.AddHttpClient<IPaymentGatewayService, PaymentGatewayService>();
+        services.Configure<PaymentExpirySettings>(configuration.GetSection("PaymentExpiry"));
+        services.AddHostedService<PaymentExpiryBackgroundService>();
         services.Configure<OtpEmailOptions>(configuration.GetSection(OtpEmailOptions.SectionName));
         services.AddScoped<IOtpSender, SmtpOtpSender>();
 

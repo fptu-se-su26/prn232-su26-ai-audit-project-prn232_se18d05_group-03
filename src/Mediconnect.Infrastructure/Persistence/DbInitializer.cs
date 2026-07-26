@@ -157,7 +157,7 @@ public class DbInitializer
             HeightCm = 172.5m,
             WeightKg = 68.3m,
             Address = "Hanoi",
-            InsuranceNumber = "BHYT-0001"
+            InsuranceNumber = "BHYT-0000000001"
         };
 
         await _context.Departments.AddRangeAsync(departments, cancellationToken);

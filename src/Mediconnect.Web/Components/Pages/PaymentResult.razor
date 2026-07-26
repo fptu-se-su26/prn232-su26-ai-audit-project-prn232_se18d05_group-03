@@ -1,0 +1,41 @@
+@page "/payment-result"
+@attribute [AllowAnonymous]
+@inject IJSRuntime Js
+
+<PageTitle>Kết quả thanh toán – MediConnect</PageTitle>
+
+<div class="d-flex flex-column align-items-center justify-content-center text-center gap-3" style="min-height:80vh;padding:0 1rem">
+    @if (Status == "success")
+    {
+        <span class="material-symbols-outlined" style="font-size:4rem;color:var(--color-tertiary)">task_alt</span>
+        <h4 class="mb-0">Thanh toán thành công</h4>
+    }
+    else
+    {
+        <span class="material-symbols-outlined" style="font-size:4rem;color:var(--color-error)">error</span>
+        <h4 class="mb-0">Thanh toán không thành công</h4>
+    }
+    <p class="text-muted mb-0">Bạn có thể đóng tab này và quay lại trang Viện phí.</p>
+    <button class="btn btn-outline-secondary mt-2" @onclick="CloseTab">Đóng tab</button>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "status")]
+    public string? Status { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Best-effort: the tab was opened via window.open from our own app, so script-close
+            // is normally allowed. Falls back to the manual button if the browser blocks it.
+            await Task.Delay(2500);
+            await CloseTab();
+        }
+    }
+
+    private async Task CloseTab()
+    {
+        try { await Js.InvokeVoidAsync("close"); } catch { /* ignore — user can close manually */ }
+    }
+}

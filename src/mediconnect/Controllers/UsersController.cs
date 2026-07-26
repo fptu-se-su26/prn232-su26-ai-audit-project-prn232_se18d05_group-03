@@ -39,6 +39,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<UserAccountReadDto>> Create(UserAccountWriteDto dto, CancellationToken cancellationToken)
     {
         var created = await _crudService.CreateAsync(dto, cancellationToken);
@@ -46,6 +47,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, UserAccountWriteDto dto, CancellationToken cancellationToken)
     {
         var updated = await _crudService.UpdateAsync(id, dto, cancellationToken);
@@ -53,6 +55,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var deleted = await _crudService.DeleteAsync(id, cancellationToken);
@@ -78,6 +81,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/status")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateStatus(Guid id, UserStatusUpdateDto dto, CancellationToken cancellationToken)
     {
         var user = await _repository.GetByIdAsync(id, cancellationToken);
@@ -93,6 +97,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/role")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateRole(Guid id, RoleUpdateDto dto, CancellationToken cancellationToken)
     {
         var user = await _repository.GetByIdAsync(id, cancellationToken);
