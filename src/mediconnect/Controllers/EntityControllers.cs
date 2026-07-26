@@ -2,8 +2,10 @@ using Mediconnect.Application.DTOs;
 using Mediconnect.Application.Interfaces;
 using Mediconnect.Application.Mapping;
 using Mediconnect.Domain.Entities;
+using Mediconnect.Infrastructure.Payments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Mediconnect.Api.Controllers;
 
@@ -196,10 +198,30 @@ public class BillingInvoicesController : CrudController<BillingInvoice, BillingI
         _billingService = billingService;
     }
 
+    // Base CrudController Create/Update/Delete write raw Status/TotalAmount/InsuranceDeduction —
+    // if left open, any authenticated Patient could mark their own invoice Paid or zero it out
+    // directly, bypassing /generate and payment confirmation entirely. Staff-only.
+    [HttpPost]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
+    public override Task<ActionResult<BillingInvoiceReadDto>> Create([FromBody] BillingInvoiceWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
+    public override Task<IActionResult> Update(Guid id, [FromBody] BillingInvoiceWriteDto dto, CancellationToken cancellationToken)
+        => base.Update(id, dto, cancellationToken);
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
+    public override Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        => base.Delete(id, cancellationToken);
+
     /// <summary>
     /// Tự động gom chi phí khám + xét nghiệm + thuốc của một lần khám thành phiếu thu tổng.
+    /// Chỉ nhân viên (thu ngân) mới được chốt hoá đơn.
     /// </summary>
     [HttpPost("generate")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
     public async Task<ActionResult<BillingInvoiceDetailDto>> Generate(
         GenerateInvoiceRequestDto dto,
         CancellationToken cancellationToken)
@@ -226,6 +248,7 @@ public class BillingInvoicesController : CrudController<BillingInvoice, BillingI
     }
 
     [HttpPost("{id:guid}/items")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
     public async Task<ActionResult<BillingItemReadDto>> AddItem(
         Guid id,
         BillingItemWriteDto dto,
@@ -243,6 +266,7 @@ public class BillingInvoicesController : CrudController<BillingInvoice, BillingI
     /// Nhập/cập nhật mã thẻ BHYT và tính lại mức khấu trừ bảo hiểm cho phiếu thu.
     /// </summary>
     [HttpPost("{id:guid}/calculate-insurance")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
     public async Task<ActionResult<BillingInvoiceDetailDto>> CalculateInsurance(
         Guid id,
         InsuranceCalculationRequestDto dto,
@@ -260,6 +284,7 @@ public class BillingInvoicesController : CrudController<BillingInvoice, BillingI
     }
 }
 
+[Authorize(Roles = "Admin,Doctor,Nurse")]
 public class BillingItemsController : CrudController<BillingItem, BillingItemReadDto, BillingItemWriteDto>
 {
     public BillingItemsController(ICrudService<BillingItem, BillingItemReadDto, BillingItemWriteDto> service)
@@ -322,6 +347,21 @@ public class ClinicsController : CrudController<Clinic, ClinicReadDto, ClinicWri
         _serviceRepository = serviceRepository;
     }
 
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public override Task<ActionResult<ClinicReadDto>> Create([FromBody] ClinicWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Update(Guid id, [FromBody] ClinicWriteDto dto, CancellationToken cancellationToken)
+        => base.Update(id, dto, cancellationToken);
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        => base.Delete(id, cancellationToken);
+
     /// <summary>
     /// Lấy danh sách phòng khám đang hoạt động.
     /// </summary>
@@ -369,6 +409,21 @@ public class DepartmentsController : CrudController<Department, DepartmentReadDt
         : base(service)
     {
     }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public override Task<ActionResult<DepartmentReadDto>> Create([FromBody] DepartmentWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Update(Guid id, [FromBody] DepartmentWriteDto dto, CancellationToken cancellationToken)
+        => base.Update(id, dto, cancellationToken);
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        => base.Delete(id, cancellationToken);
 }
 
 public class DischargeSummariesController : CrudController<DischargeSummary, DischargeSummaryReadDto, DischargeSummaryWriteDto>
@@ -377,6 +432,21 @@ public class DischargeSummariesController : CrudController<DischargeSummary, Dis
         : base(service)
     {
     }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
+    public override Task<ActionResult<DischargeSummaryReadDto>> Create([FromBody] DischargeSummaryWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
+    public override Task<IActionResult> Update(Guid id, [FromBody] DischargeSummaryWriteDto dto, CancellationToken cancellationToken)
+        => base.Update(id, dto, cancellationToken);
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
+    public override Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        => base.Delete(id, cancellationToken);
 }
 
 public class DrugsController : CrudController<Drug, DrugReadDto, DrugWriteDto>
@@ -385,6 +455,21 @@ public class DrugsController : CrudController<Drug, DrugReadDto, DrugWriteDto>
         : base(service)
     {
     }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public override Task<ActionResult<DrugReadDto>> Create([FromBody] DrugWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Update(Guid id, [FromBody] DrugWriteDto dto, CancellationToken cancellationToken)
+        => base.Update(id, dto, cancellationToken);
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        => base.Delete(id, cancellationToken);
 }
 
 public class DrugInteractionsController : CrudController<DrugInteraction, DrugInteractionReadDto, DrugInteractionWriteDto>
@@ -393,6 +478,21 @@ public class DrugInteractionsController : CrudController<DrugInteraction, DrugIn
         : base(service)
     {
     }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public override Task<ActionResult<DrugInteractionReadDto>> Create([FromBody] DrugInteractionWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Update(Guid id, [FromBody] DrugInteractionWriteDto dto, CancellationToken cancellationToken)
+        => base.Update(id, dto, cancellationToken);
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        => base.Delete(id, cancellationToken);
 }
 
 public class InpatientAdmissionsController : CrudController<InpatientAdmission, InpatientAdmissionReadDto, InpatientAdmissionWriteDto>
@@ -1057,10 +1157,26 @@ public class MedicalServicesController : CrudController<MedicalService, MedicalS
         _serviceRepository = serviceRepository;
     }
 
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public override Task<ActionResult<MedicalServiceReadDto>> Create([FromBody] MedicalServiceWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Update(Guid id, [FromBody] MedicalServiceWriteDto dto, CancellationToken cancellationToken)
+        => base.Update(id, dto, cancellationToken);
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public override Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        => base.Delete(id, cancellationToken);
+
     /// <summary>
     /// Cập nhật giá khám cho một dịch vụ y tế.
     /// </summary>
     [HttpPatch("{id:guid}/price")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdatePrice(
         Guid id,
         [FromBody] PriceUpdateDto dto,
@@ -1089,6 +1205,11 @@ public class OutpatientVisitsController : CrudController<OutpatientVisit, Outpat
         _repository = repository;
     }
 
+    [HttpPost]
+    [Authorize(Roles = "Doctor,Nurse")]
+    public override Task<ActionResult<OutpatientVisitReadDto>> Create([FromBody] OutpatientVisitWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
     [HttpPatch("{id:guid}/status")]
     public async Task<IActionResult> UpdateStatus(
         Guid id,
@@ -1111,19 +1232,27 @@ public class OutpatientVisitsController : CrudController<OutpatientVisit, Outpat
 public class PaymentsController : CrudController<Payment, PaymentReadDto, PaymentWriteDto>
 {
     private readonly IRepository<Payment> _repository;
+    private readonly IRepository<BillingInvoice> _invoiceRepository;
     private readonly IPaymentGatewayService _gateway;
+    private readonly FrontendSettings _frontendSettings;
 
     public PaymentsController(
         ICrudService<Payment, PaymentReadDto, PaymentWriteDto> service,
         IRepository<Payment> repository,
-        IPaymentGatewayService gateway)
+        IRepository<BillingInvoice> invoiceRepository,
+        IPaymentGatewayService gateway,
+        IOptions<FrontendSettings> frontendOptions)
         : base(service)
     {
         _repository = repository;
+        _invoiceRepository = invoiceRepository;
         _gateway = gateway;
+        _frontendSettings = frontendOptions.Value;
     }
 
+    /// <summary>Xác nhận đã thu tiền thủ công (tiền mặt tại quầy) — không đi qua cổng thanh toán.</summary>
     [HttpPost("{id:guid}/confirm")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
     public async Task<IActionResult> Confirm(Guid id, CancellationToken cancellationToken)
     {
         var payment = await _repository.GetByIdAsync(id, cancellationToken);
@@ -1135,6 +1264,7 @@ public class PaymentsController : CrudController<Payment, PaymentReadDto, Paymen
         payment.Status = PaymentStatus.Paid;
         payment.PaidAt = DateTime.UtcNow;
         _repository.Update(payment);
+        await MarkInvoicePaidAsync(payment.BillingInvoiceId, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
@@ -1164,13 +1294,21 @@ public class PaymentsController : CrudController<Payment, PaymentReadDto, Paymen
             return NotFound();
         }
 
-        var url = _gateway.CreateMomoUrl(payment);
-        return Ok(new PaymentUrlResultDto { PaymentId = payment.Id, PaymentUrl = url });
+        try
+        {
+            var url = await _gateway.CreateMomoUrlAsync(payment, cancellationToken);
+            return Ok(new PaymentUrlResultDto { PaymentId = payment.Id, PaymentUrl = url });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or HttpRequestException)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new { message = ex.Message });
+        }
     }
 
     /// <summary>
     /// VNPay redirect trình duyệt về endpoint này sau khi thanh toán (không có Bearer token).
-    /// Xác thực chữ ký, cập nhật trạng thái Payment tương ứng.
+    /// Xác thực chữ ký, cập nhật trạng thái Payment rồi chuyển hướng trình duyệt về app
+    /// (endpoint này chỉ trả JSON thô, không phải trang cho người dùng xem trực tiếp).
     /// </summary>
     [HttpGet("vnpay-return")]
     [AllowAnonymous]
@@ -1178,7 +1316,53 @@ public class PaymentsController : CrudController<Payment, PaymentReadDto, Paymen
     {
         var queryParams = Request.Query.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
         var result = _gateway.ValidateVnPayReturn(queryParams);
+        return await RedirectAfterGatewayResultAsync(result, cancellationToken);
+    }
 
+    /// <summary>
+    /// Momo redirect trình duyệt về endpoint này sau khi thanh toán (không có Bearer token).
+    /// </summary>
+    [HttpGet("momo-return")]
+    [AllowAnonymous]
+    public async Task<IActionResult> MomoReturn(CancellationToken cancellationToken)
+    {
+        var queryParams = Request.Query.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+        var result = _gateway.ValidateMomoReturn(queryParams);
+        return await RedirectAfterGatewayResultAsync(result, cancellationToken);
+    }
+
+    /// <summary>
+    /// Áp dụng kết quả gateway rồi chuyển hướng trình duyệt về trang Viện phí của app,
+    /// kèm cờ kết quả — tránh hiển thị JSON thô cho người dùng cuối.
+    /// </summary>
+    private async Task<IActionResult> RedirectAfterGatewayResultAsync(
+        PaymentGatewayReturnResult result,
+        CancellationToken cancellationToken)
+    {
+        await ApplyGatewayResultAsync(result, cancellationToken);
+        var flag = result.IsValidSignature && result.IsSuccess ? "success" : "failed";
+        return Redirect($"{_frontendSettings.BaseUrl.TrimEnd('/')}/payment-result?status={flag}");
+    }
+
+    /// <summary>
+    /// IPN server-to-server của Momo. Đây mới là nguồn chốt trạng thái vì redirect có thể
+    /// không xảy ra (người dùng đóng tab). Momo yêu cầu trả 204 No Content.
+    /// </summary>
+    [HttpPost("momo-notify")]
+    [AllowAnonymous]
+    public async Task<IActionResult> MomoNotify([FromBody] Dictionary<string, object> body, CancellationToken cancellationToken)
+    {
+        var queryParams = body.ToDictionary(kv => kv.Key, kv => kv.Value?.ToString() ?? string.Empty);
+        var result = _gateway.ValidateMomoReturn(queryParams);
+        await ApplyGatewayResultAsync(result, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>Cập nhật Payment theo kết quả đã xác thực chữ ký từ cổng thanh toán.</summary>
+    private async Task<IActionResult> ApplyGatewayResultAsync(
+        PaymentGatewayReturnResult result,
+        CancellationToken cancellationToken)
+    {
         if (!result.IsValidSignature)
         {
             return BadRequest(new { message = result.Message });
@@ -1186,7 +1370,7 @@ public class PaymentsController : CrudController<Payment, PaymentReadDto, Paymen
 
         if (!Guid.TryParse(result.TxnRef, out var paymentId))
         {
-            return BadRequest(new { message = "Invalid vnp_TxnRef" });
+            return BadRequest(new { message = "Invalid transaction reference" });
         }
 
         var payment = await _repository.GetByIdAsync(paymentId, cancellationToken);
@@ -1200,11 +1384,23 @@ public class PaymentsController : CrudController<Payment, PaymentReadDto, Paymen
         if (result.IsSuccess)
         {
             payment.PaidAt = DateTime.UtcNow;
+            await MarkInvoicePaidAsync(payment.BillingInvoiceId, cancellationToken);
         }
         _repository.Update(payment);
         await _repository.SaveChangesAsync(cancellationToken);
 
         return Ok(new { message = result.Message, paymentId = payment.Id, status = payment.Status });
+    }
+
+    private async Task MarkInvoicePaidAsync(Guid invoiceId, CancellationToken cancellationToken)
+    {
+        var invoice = await _invoiceRepository.GetByIdAsync(invoiceId, cancellationToken);
+        if (invoice is null)
+        {
+            return;
+        }
+        invoice.Status = InvoiceStatus.Paid;
+        _invoiceRepository.Update(invoice);
     }
 }
 
@@ -1214,6 +1410,11 @@ public class PrescriptionsController : CrudController<Prescription, Prescription
         : base(service)
     {
     }
+
+    [HttpPost]
+    [Authorize(Roles = "Doctor,Nurse")]
+    public override Task<ActionResult<PrescriptionReadDto>> Create([FromBody] PrescriptionWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
 }
 
 public class PrescriptionItemsController : CrudController<PrescriptionItem, PrescriptionItemReadDto, PrescriptionItemWriteDto>
@@ -1222,6 +1423,11 @@ public class PrescriptionItemsController : CrudController<PrescriptionItem, Pres
         : base(service)
     {
     }
+
+    [HttpPost]
+    [Authorize(Roles = "Doctor,Nurse")]
+    public override Task<ActionResult<PrescriptionItemReadDto>> Create([FromBody] PrescriptionItemWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
 }
 
 public class QueueTicketsController : CrudController<QueueTicket, QueueTicketReadDto, QueueTicketWriteDto>
@@ -1267,6 +1473,11 @@ public class ServiceRatingsController : CrudController<ServiceRating, ServiceRat
         _repository = repository;
     }
 
+    [HttpPost]
+    [Authorize(Roles = "Patient")]
+    public override Task<ActionResult<ServiceRatingReadDto>> Create([FromBody] ServiceRatingWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
+
     /// <summary>Điểm đánh giá trung bình và tổng số lượt đánh giá của một bác sĩ.</summary>
     [HttpGet("doctor/{doctorId:guid}/summary")]
     public async Task<ActionResult<DoctorRatingSummaryDto>> GetDoctorSummary(Guid doctorId, CancellationToken cancellationToken)
@@ -1293,6 +1504,11 @@ public class TelemedicineSessionsController : CrudController<TelemedicineSession
     {
         _repository = repository;
     }
+
+    [HttpPost]
+    [Authorize(Roles = "Doctor,Nurse")]
+    public override Task<ActionResult<TelemedicineSessionReadDto>> Create([FromBody] TelemedicineSessionWriteDto dto, CancellationToken cancellationToken)
+        => base.Create(dto, cancellationToken);
 
     [HttpPatch("{id:guid}/start")]
     public async Task<IActionResult> Start(Guid id, CancellationToken cancellationToken)

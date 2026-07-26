@@ -12,7 +12,7 @@ namespace Mediconnect.Api.Modules.SmartClinic;
 /// Route: /api/clinic-dashboard
 /// </summary>
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Doctor,Nurse")]
 [Route("api/clinic-dashboard")]
 [Tags("Smart Clinic — Dashboard")]
 public class ClinicDashboardController : ControllerBase

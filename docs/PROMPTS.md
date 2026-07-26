@@ -90,6 +90,8 @@ Sinh viên/nhóm cần ghi lại:
 | 32 | 23/07/2026 | Claude Code (claude-sonnet-5) | Fix bill thiếu phí khám (bug có sẵn của Billing, không riêng tele) + Appointment.Status không bao giờ đổi khỏi "Chờ xác nhận" | sao khám xong hoá đơn ra 0đ, đâu có tính phí khám... lịch hẹn khám xong rồi mà status vẫn còn chờ xác nhận | Thêm dropdown "Dịch vụ khám" lọc theo khoa trong `Billing.razor` để hoá đơn luôn kèm phí khám (`ExamServiceId`); thêm `UpdateAppointmentStatus`, cascade `Appointment.Status = Completed` từ cả luồng tele (`EndCall`) và luồng walk-in/hẹn trước (`MedicalRecordService.SaveMedicalRecordAsync`) | Có | `3f21e3f` trên `feature/de190123-telemedicine` |
 | 33 | 26/07/2026 | Claude Code (claude-opus-4-8) | Kéo code develop, build + chạy thử, khôi phục kết nối SQL, dọn cấu hình và viết tài liệu giải thích code theo 4 thành viên | kéo code mới từ git về chạy thử... cuối cùng tạo file md giải thích code theo từng chức năng / sửa lại mk sql server / sử lý hết / tạo folder doc trong folder mediconnect, làm nhiều file md giải thích từng dòng code + UI theo phân chia 4 thành viên | Build sạch 0 lỗi; chẩn đoán lỗi là do mật khẩu `sa` container (không phải code) và reset giữ nguyên 7 DB; gỡ 146 file bin/obj khỏi git, sửa CORS 5173→5104, cập nhật README React→Blazor; viết 9 file .md (00-README + memberN-code/ui) | Có | `1e2afc3`, `b0af778` trên `docs/mediconnect-code-guides`; chi tiết: docs/AI_AUDIT_LOG.md "Lần sử dụng AI số 23" |
 | 34 | 26/07/2026 | Claude Code (claude-opus-4-8) | Tạo dữ liệu demo phủ toàn bộ chức năng + sửa UI trang đăng nhập | tại sao email mk không đúng / tạo cho tôi data ở các chức năng được không / với lại sửa lại UI login / tạo thêm file sql cho data | Chẩn đoán "sai mật khẩu" là do connection string bị sửa thành "cc" (không phải sai tài khoản); sinh script seed T-SQL (`src/mediconnect/doc/seed_demo_data.sql`) tham chiếu ID theo email/code + guard chống trùng, phủ mọi chức năng với 3 kịch bản bệnh nhân; sửa login vỡ layout do bundle scoped-css cũ (rewrite Login.razor/css + rebuild) | Có | `src/mediconnect/doc/seed_demo_data.sql`; `Login.razor(.css)`; chi tiết: docs/AI_AUDIT_LOG.md "Lần sử dụng AI số 24" |
+| 37 | 26/07/2026 | Claude Code (claude-sonnet-5) | Audit phân quyền + đóng IDOR toàn hệ thống, màn Thu ngân, fix thanh toán Momo/VNPay | tại sao patient thấy hết chức năng trên nav / sửa luôn cho mình / kéo update develop, làm màn thu ngân, authorize 10 controller / tại sao momo bật 2 trang / set phút tự huỷ Pending / patient vẫn tạo được phiếu thu | Sửa nav theo role; grep "ai gọi endpoint" trước khi khoá Role từng controller; tự phát hiện thêm 2 IDOR (invoice PUT/DELETE gốc, xem hồ sơ bệnh nhân khác); màn Thu ngân dùng role có sẵn; fix Momo/VNPay 2 vòng (JSON thô → 2 tab); PaymentExpiryBackgroundService | Có | Chi tiết: docs/AI_AUDIT_LOG.md, "Lần sử dụng AI số 25" |
+| 38 | 26/07/2026 | Claude Code (claude-sonnet-5) | Xóa frontend React trùng lặp, fix phân quyền Lab.razor, gộp + mở rộng seed script Nội trú | khi tôi vào trang bác sĩ tất cả cái này đều hiện, có phải vậy không / bỏ folder react luôn đi / bác sĩ có thực hiện hết 4 chức năng không / hãy sửa đi / gộp 2 file sql / cho data nhiều lên tí, tản ra thêm mấy tuần | Xác nhận React chưa làm 4 trang Nội trú (0% UI); xoá hẳn src/mediconnect-web sau khi hỏi rõ phạm vi; bọc AuthorizeView ẩn 3 nút Lab-only khỏi Doctor/Nurse; gộp seed_demo_data.sql vào seed_hospital.sql, tự phát hiện 2 bug thứ tự DELETE qua chạy thật trên SQL Server; thêm đủ data Nội trú 4 feature + trải ±3 tuần | Có | Chi tiết: docs/AI_AUDIT_LOG.md, "Lần sử dụng AI số 26" |
 
 ---
 
@@ -2091,6 +2093,199 @@ browser (label Email *, stock=0 không còn trong autocomplete) + SQL (sys.index
 ```text
 Kiểm tra duplicate data trước khi thêm unique constraint là bước bắt buộc — nếu có dữ liệu
 trùng, migration sẽ fail giữa chừng và để DB ở trạng thái nửa vời.
+```
+
+---
+
+### Prompt số 27
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 26/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Audit phân quyền + đóng IDOR toàn hệ thống, màn Thu ngân, fix thanh toán Momo/VNPay |
+| Phần việc liên quan | Backend (ASP.NET Core) / Frontend (Blazor) |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Tại sao patient có thể thấy hết các chức năng trên đây (kèm ảnh nav bar)? Sao bạn cứ hướng dẫn
+vậy, sửa luôn cho mình đi. Đầu tiên kéo update từ develop, check thay đổi rồi làm tiếp, thứ hai
+làm màn thu ngân, thứ ba authorize 10 controller.
+Tại sao ấn nút momo nó bật lại một trang mới, ở trang mới nó hiện mã QR và đã trả về đúng
+nhưng nó bị thành hai trang?
+Đã nhận thanh toán, còn máy thanh toán trước nên set bao nhiêu phút đó thì đổi thành trạng huỷ.
+Patient vẫn có thể tạo phiếu thu.
+Trang thu ngân được làm như nào, thêm role mới hay sao?
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Phát hiện qua ảnh chụp màn hình: đăng nhập Patient vẫn thấy mục "Lịch trực" (chỉ dành cho
+Doctor/Nurse) trên nav bar — dấu hiệu cho thấy có thể còn nhiều chỗ khác cũng bị lộ tương tự.
+Yêu cầu mở rộng thành 3 việc song song trong cùng phiên, rồi phát sinh thêm các vấn đề khi test
+thử luồng thanh toán thật (Momo mở tab mới bị nhân đôi trang, hoá đơn Pending không tự huỷ khi
+khách đổi ý không thanh toán).
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Sửa nav bar lọc đúng theo role. Grep ApiClient.cs/services.ts để biết endpoint nào thực sự
+được gọi từ đâu trước khi khoá Role cho từng controller trong số ~10 controller còn thiếu —
+tránh khoá nhầm làm gãy flow hợp lệ đang chạy. Trong lúc audit, tự phát hiện thêm 2 lỗ hổng
+IDOR nghiêm trọng ngoài yêu cầu ban đầu: BillingInvoicesController cho Patient tự PUT/DELETE
+hoá đơn của chính mình (sửa trực tiếp Status/TotalAmount), PatientsController cho xem lịch
+sử/XN/đơn thuốc của bệnh nhân khác qua đổi ID trên URL — cả hai đều đóng lại trong cùng phiên.
+Màn Thu ngân dùng lại role Admin/Doctor/Nurce có sẵn, không tạo role mới. Fix Momo/VNPay qua 2
+vòng: vòng 1 sửa ReturnUrl trỏ đúng vào frontend thay vì API (hết JSON thô); vòng 2 (sau khi
+người dùng chỉ ra vẫn còn lỗi 2 tab) đổi sang trang PaymentResult.razor tối giản tự đóng +
+focus-reload cho tab gốc. Thêm PaymentExpiryBackgroundService tự huỷ Pending quá hạn cấu hình
+được theo phút.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng sau khi dotnet build sạch 0 Warning/0 Error ở từng nhóm việc; xác nhận qua đọc lại từng
+Role thực sự được phép ở mỗi controller trước khi khoá, không suy đoán.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Dùng AskUserQuestion để chốt Patient có được tự tạo phiếu thu hay không, vì đây là quyết định
+  nghiệp vụ/bảo mật ảnh hưởng thiết kế lâu dài, không phải chi tiết kỹ thuật AI có thể tự quyết.
+- Sau khi chọn "Bỏ hẳn, chỉ nhân viên/thu ngân tạo", yêu cầu AI đảo ngược đúng phần thiết kế đã
+  làm trước đó (giữ tính năng có hardening) thay vì giữ cả hai hướng.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [x] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Branch `docs/mediconnect-code-guides` |
+| File liên quan | `EntityControllers.cs`, `PatientsController.cs`, `CashierBilling.razor`, `PaymentResult.razor`, `wwwroot/js/paymentFocus.js`, `PaymentExpiryBackgroundService.cs` |
+| Screenshot | |
+| Kết quả chạy/test | dotnet build 0 Warning/0 Error; test browser: Momo/VNPay hết JSON/2 tab, invoice chuyển Paid đúng |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+"Cần hỏi lại AI nhiều lần" không tick vì mỗi vấn đề chỉ cần 1-2 lượt phản hồi chỉnh hướng
+(Momo là 2 vòng: JSON thô → 2 tab), nhưng "cần tự kiểm tra và chỉnh sửa nhiều" có tick vì phải
+đọc lại role thực tế được phép ở từng controller trước khi đồng ý khoá, tránh khoá nhầm.
+```
+
+---
+
+### Prompt số 28
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 26/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | Xóa frontend React trùng lặp, fix phân quyền Lab.razor, gộp + mở rộng seed script Nội trú |
+| Phần việc liên quan | Frontend (Blazor) / Database (seed script) |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Khi tôi vào trang bác sĩ tất cả cái này đều hiện, trên thực tế có phải vậy không?
+Bỏ folder react luôn đi.
+[Sau khi hỏi rõ] Xoá hẳn (Recommended nếu không dùng nữa).
+Bác sĩ bình thường thì có thực hiện hết 4 chức năng này không hay như nào?
+Hãy sửa đi.
+Sửa lại seed này và thêm data cho các chức năng của dev 3 (nội trú & điều phối lâm sàng).
+Gộp hai file sql seed_demo_data.sql và seed_hospital.sql.
+Cho data nhiều lên tí, cái nào theo ngày hay gì đó thì cho nó tản ra thêm mấy tuần về trước và
+về sau.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Đặt câu hỏi để kiểm chứng lại tuyên bố "4 trang Nội trú đã hoạt động" — nghi ngờ đúng vì hai
+frontend (Blazor/React) không đồng bộ tính năng với nhau. Sau khi biết React chưa làm gì cho 4
+tính năng này (0% UI dù backend đủ), quyết định bỏ hẳn React thay vì làm thêm 4 trang mới. Sau
+đó hỏi tiếp về phân công vai trò trong từng trang Nội trú, phát hiện Lab.razor có lỗ hổng hiển
+thị UI không khớp phân quyền backend.
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Báo cáo trung thực: BedMap/Vitals/Lab/Discharge đã đủ ở Blazor, hoàn toàn chưa có ở React.
+Trước khi xoá, dùng AskUserQuestion xác nhận phạm vi rõ ràng (có thay đổi chưa commit trong đó)
+vì đây là hành động khó đảo ngược. Phát hiện Lab.razor cho Doctor/Nurse thấy 3 nút chỉ role Lab
+được phép ở backend — bọc lại bằng AuthorizeView. Gộp 2 file seed SQL thành 1, test chạy thật
+nhiều lần trên SQL Server sống qua sqlcmd, tự phát hiện 2 bug thứ tự DELETE có sẵn từ trước
+(ServiceRatings thiếu hẳn trong danh sách xoá; InpatientAdmissions xoá sau OutpatientVisits dù
+là bảng con tham chiếu FromOutpatientVisitId) khiến script vốn chỉ chạy đúng đúng ở lần đầu.
+Thêm đủ dữ liệu demo Nội trú 4 feature + mở rộng Appointments/StaffSchedules trải ±3 tuần.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng sau khi dotnet build sạch 0 Warning/0 Error; chạy sqlcmd toàn bộ seed_hospital.sql 3
+lần liên tiếp trên container sqlserver sống, không lỗi, số dòng ổn định qua các lần chạy.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Yêu cầu AI kiểm tra git status trước khi xoá thư mục lớn (mediconnect-web) để biết rõ có thay
+  đổi chưa commit hay không, tránh mất việc mà không hay biết.
+- Yêu cầu AI test script SQL bằng cách chạy thật trên container thay vì chỉ đọc — cách này lộ
+  ra bug thứ tự DELETE mà đọc code tĩnh không thấy (chỉ lỗi khi có dữ liệu tham chiếu ở lần chạy
+  lại thứ 2).
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [ ] Cần tự kiểm tra và chỉnh sửa nhiều
+- [x] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | Branch `docs/mediconnect-code-guides` |
+| File liên quan | `Lab.razor`; `seed_hospital.sql` (đã xoá `seed_demo_data.sql`); đã xoá toàn bộ `src/mediconnect-web/**` |
+| Screenshot | |
+| Kết quả chạy/test | dotnet build 0 Error; sqlcmd chạy 3 lần liên tiếp không lỗi; đếm dòng ổn định |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | |
+
+#### 5.8. Ghi chú thêm
+
+```text
+"Kết quả AI có lỗi" được tick vì lần chạy thử seed script đầu tiên (sau khi gộp file) vẫn lỗi 2
+lần liên tiếp (thiếu DELETE ServiceRatings, rồi thứ tự InpatientAdmissions/OutpatientVisits sai)
+— chỉ phát hiện được nhờ chạy thật trên SQL Server chứ không phải tự nhận ra khi viết code.
 ```
 
 ---

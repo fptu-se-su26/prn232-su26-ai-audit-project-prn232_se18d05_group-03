@@ -112,7 +112,8 @@ public enum PaymentStatus
     Pending,
     Paid,
     Failed,
-    Refunded
+    Refunded,
+    Cancelled
 }
 
 public enum BillingItemType

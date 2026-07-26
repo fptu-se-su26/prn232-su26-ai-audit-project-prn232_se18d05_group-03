@@ -18,6 +18,8 @@ public class Payment
 
     public decimal Amount { get; set; }
 
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     public DateTime? PaidAt { get; set; }
 
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;

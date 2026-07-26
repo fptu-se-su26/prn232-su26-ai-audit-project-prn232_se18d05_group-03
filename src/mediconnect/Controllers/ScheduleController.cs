@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Mediconnect.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Doctor,Nurse,Lab,Admin")]
 [Route("api/schedules")]
 public class ScheduleController : ControllerBase
 {
@@ -20,6 +20,7 @@ public class ScheduleController : ControllerBase
 
     /// <summary>POST /api/schedules — Tạo mới ca trực với validation ràng buộc nghiệp vụ.</summary>
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ScheduleFlatReadDto>> Create(
         [FromBody] ScheduleWriteDto dto,
         CancellationToken cancellationToken)
@@ -37,6 +38,7 @@ public class ScheduleController : ControllerBase
 
     /// <summary>PUT /api/schedules/{id} — Cập nhật ca trực, kiểm tra ràng buộc trùng lịch.</summary>
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ScheduleFlatReadDto>> Update(
         Guid id,
         [FromBody] ScheduleWriteDto dto,
@@ -57,6 +59,7 @@ public class ScheduleController : ControllerBase
 
     /// <summary>DELETE /api/schedules/{id} — Xóa ca trực.</summary>
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var deleted = await _scheduleService.DeleteAsync(id, cancellationToken);

@@ -1,5 +1,6 @@
 @page "/billing"
 @attribute [Authorize(Roles = "Patient")]
+@implements IAsyncDisposable
 @inject IJSRuntime Js
 
 <PageTitle>Viện phí & Thanh toán – MediConnect</PageTitle>
@@ -42,9 +43,6 @@ else
             </h4>
             <p class="text-muted mb-0">Xem phiếu thu, khấu trừ BHYT và thanh toán trực tuyến.</p>
         </div>
-        <button class="btn btn-primary d-inline-flex align-items-center gap-1" @onclick="() => _showCreate = true">
-            <span class="material-symbols-outlined" style="font-size:1.1rem">add</span> Tạo phiếu thu
-        </button>
     </div>
 
     <div class="row g-3 mb-4">
@@ -77,7 +75,7 @@ else
     {
         <div class="report-card text-center text-muted py-5">
             <span class="material-symbols-outlined d-block mb-2" style="font-size:3rem">receipt</span>
-            Chưa có phiếu thu nào. Nhấn "Tạo phiếu thu" để gom chi phí từ một lần khám.
+            Chưa có phiếu thu nào. Phiếu thu sẽ xuất hiện sau khi bộ phận thu ngân chốt chi phí lần khám của bạn.
         </div>
     }
     else
@@ -167,16 +165,11 @@ else
                                     </div>
                                 </div>
 
-                                @if (!isPaid)
+                                @if (!string.IsNullOrWhiteSpace(inv.InsuranceNumber))
                                 {
-                                    <div class="p-3 rounded-3 mb-3" style="background:var(--color-surface-container-low)">
-                                        <label class="form-label" style="font-size:.82rem">Mã thẻ BHYT (nhập ≥ 10 ký tự để được khấu trừ 80%)</label>
-                                        <div class="d-flex gap-2">
-                                            <input class="form-control" placeholder="VD: BHYT-0123456789" @bind="inv.InsuranceInput" />
-                                            <button class="btn btn-outline-primary d-inline-flex align-items-center gap-1 text-nowrap" disabled="@inv.Busy" @onclick="() => RecalcInsurance(inv)">
-                                                <span class="material-symbols-outlined" style="font-size:1.05rem">calculate</span> Tính khấu trừ
-                                            </button>
-                                        </div>
+                                    <div class="p-3 rounded-3 mb-3 text-muted" style="background:var(--color-surface-container-low);font-size:.82rem">
+                                        <span class="material-symbols-outlined align-middle" style="font-size:1rem">badge</span>
+                                        Đã áp dụng thẻ BHYT @inv.InsuranceNumber. Cần điều chỉnh, vui lòng liên hệ quầy thu ngân.
                                     </div>
                                 }
 
@@ -218,70 +211,8 @@ else
     }
 }
 
-@if (_showCreate)
-{
-    <div class="modal-overlay" @onclick="() => _showCreate = false">
-        <div class="modal-card" @onclick:stopPropagation="true">
-            <h5 class="mb-2 d-flex align-items-center gap-2">
-                <span class="material-symbols-outlined" style="color:var(--color-primary)">add_card</span>
-                Tạo phiếu thu tổng
-            </h5>
-            <p class="text-muted mb-3" style="font-size:.85rem">Hệ thống tự động gom chi phí khám, xét nghiệm và thuốc của lần khám đã chọn thành một phiếu thu tổng.</p>
-
-            @if (_visits.Count == 0)
-            {
-                <div class="alert alert-warning">Bạn chưa có lần khám nào để tạo phiếu thu.</div>
-            }
-            else
-            {
-                <div class="mb-2">
-                    <label class="form-label">Chọn lần khám</label>
-                    <select class="form-select" @bind="_createVisitId" @bind:after="OnCreateVisitChanged">
-                        @foreach (var v in _visits)
-                        {
-                            <option value="@v.Id">@v.VisitDate.ToLocalTime().ToString("dd/MM/yyyy") · @(v.ClinicName ?? "Phòng khám") · BS @(v.DoctorName ?? "—")</option>
-                        }
-                    </select>
-                </div>
-                @if (CurrentExamOptions.Count > 0)
-                {
-                    <div class="mb-2">
-                        <label class="form-label">Dịch vụ khám</label>
-                        <select class="form-select" @bind="_createExamServiceId">
-                            <option value="">-- Chọn dịch vụ khám --</option>
-                            @foreach (var s in CurrentExamOptions)
-                            {
-                                <option value="@s.Id">@s.Name (@FmtVnd(s.Price))</option>
-                            }
-                        </select>
-                    </div>
-                }
-                <div class="mb-3">
-                    <label class="form-label">Mã thẻ BHYT (tùy chọn)</label>
-                    <input class="form-control" placeholder="VD: BHYT-0123456789" @bind="_createInsurance" />
-                </div>
-            }
-
-            @if (_createError is not null)
-            {
-                <div class="alert alert-danger">@_createError</div>
-            }
-
-            <div class="d-flex justify-content-end gap-2">
-                <button class="btn btn-outline-secondary" @onclick="() => _showCreate = false">Hủy</button>
-                <button class="btn btn-primary" disabled="@(_creating || _visits.Count == 0)" @onclick="SubmitCreate">
-                    @(_creating ? "Đang tạo..." : "Tạo phiếu thu")
-                </button>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
     [Inject] private ApiClient Api { get; set; } = default!;
-
-    [SupplyParameterFromQuery(Name = "visitId")]
-    public string? PreselectedVisitId { get; set; }
 
     private class InvoiceVm
     {
@@ -293,54 +224,47 @@ else
         public bool Expanded;
         public bool ItemsLoading;
         public List<BillingItemReadDto> Items = new();
-        public string InsuranceInput = "";
         public bool Busy;
     }
-
-    private record VisitOption(Guid Id, DateTime VisitDate, string? DoctorName, string? ClinicName, Guid ClinicId, List<MedicalServiceReadDto> ExamOptions);
 
     private bool _loading = true;
     private bool _noProfile;
     private string? _error;
-    private Guid _patientId;
-    private string _patientInsurance = "";
 
     private List<InvoiceVm> _invoices = new();
     private List<PaymentReadDto> _payments = new();
-    private List<VisitOption> _visits = new();
-
-    private bool _showCreate;
-    private string _createVisitId = "";
-    private string _createExamServiceId = "";
-    private string _createInsurance = "";
-    private bool _creating;
-    private string? _createError;
-
-    private List<MedicalServiceReadDto> CurrentExamOptions =>
-        _visits.FirstOrDefault(v => v.Id.ToString() == _createVisitId)?.ExamOptions ?? new();
 
     private string? _toastMsg;
 
     private decimal TotalOutstanding => _invoices.Where(i => i.Status is InvoiceStatus.Pending or InvoiceStatus.Draft).Sum(i => i.TotalAmount);
     private List<PaymentReadDto> PaymentsFor(Guid invoiceId) => _payments.Where(p => p.BillingInvoiceId == invoiceId).ToList();
 
-    private bool _autoOpenHandled;
+    private DotNetObjectReference<Billing>? _dotNetRef;
 
     protected override async Task OnInitializedAsync() => await LoadData();
 
-    protected override Task OnParametersSetAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!string.IsNullOrEmpty(PreselectedVisitId) && !_autoOpenHandled && _visits.Count > 0)
+        if (firstRender)
         {
-            _autoOpenHandled = true;
-            var match = _visits.FirstOrDefault(v => v.Id.ToString() == PreselectedVisitId);
-            if (match is not null)
-            {
-                _createVisitId = match.Id.ToString();
-                _showCreate = true;
-            }
+            // VNPay/Momo là mở tab riêng để thanh toán; tab này không tự biết khi nào xong.
+            // Tự tải lại khi người dùng quay lại tab (focus) thay vì bắt họ F5 thủ công.
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await Js.InvokeVoidAsync("mediconnectFocusReload.register", _dotNetRef);
         }
-        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public async Task OnWindowFocus()
+    {
+        await LoadData();
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await Js.InvokeVoidAsync("mediconnectFocusReload.unregister"); } catch { /* circuit may already be gone */ }
+        _dotNetRef?.Dispose();
     }
 
     private async Task LoadData()
@@ -361,16 +285,9 @@ else
                 _loading = false;
                 return;
             }
-            _patientId = profile.Id;
-            _patientInsurance = profile.InsuranceNumber ?? "";
 
             var allInvoices = (await Api.GetBillingInvoices()) ?? new();
             var allPayments = (await Api.GetPayments()) ?? new();
-            var history = await Api.GetPatientHistory(profile.Id);
-            var users = (await Api.GetUserAccounts()) ?? new();
-            var clinics = (await Api.GetAllClinics()) ?? new();
-            var services = ((await Api.GetMedicalServices()) ?? new()).Where(s => s.IsActive).ToList();
-            var clinicDeptById = clinics.ToDictionary(c => c.Id, c => c.DepartmentId);
 
             var myInvoices = allInvoices.Where(i => i.PatientId == profile.Id)
                 .OrderByDescending(i => i.CreatedAt)
@@ -379,32 +296,12 @@ else
                     Id = i.Id, Status = i.Status, Subtotal = i.Subtotal,
                     InsuranceDeduction = i.InsuranceDeduction, TotalAmount = i.TotalAmount,
                     InsuranceNumber = i.InsuranceNumber, CreatedAt = i.CreatedAt,
-                    InsuranceInput = i.InsuranceNumber ?? _patientInsurance,
                 })
                 .ToList();
             var myInvoiceIds = myInvoices.Select(i => i.Id).ToHashSet();
 
             _invoices = myInvoices;
             _payments = allPayments.Where(p => myInvoiceIds.Contains(p.BillingInvoiceId)).ToList();
-
-            var userNameById = users.ToDictionary(u => u.Id, u => u.FullName);
-            var clinicNameById = clinics.ToDictionary(c => c.Id, c => c.Name);
-            _visits = (history?.Visits ?? Array.Empty<OutpatientVisitReadDto>())
-                .OrderByDescending(v => v.VisitDate)
-                .Select(v =>
-                {
-                    var deptId = clinicDeptById.GetValueOrDefault(v.ClinicId);
-                    var candidates = services.Where(s => s.DepartmentId == deptId).ToList();
-                    if (candidates.Count == 0) candidates = services; // fallback so invoice creation is never blocked by bad data
-                    return new VisitOption(v.Id, v.VisitDate,
-                        userNameById.GetValueOrDefault(v.DoctorId),
-                        clinicNameById.GetValueOrDefault(v.ClinicId),
-                        v.ClinicId, candidates);
-                })
-                .ToList();
-            _createVisitId = _visits.FirstOrDefault()?.Id.ToString() ?? "";
-            _createExamServiceId = _visits.FirstOrDefault() is { ExamOptions.Count: 1 } first ? first.ExamOptions[0].Id.ToString() : "";
-            _createInsurance = _patientInsurance;
         }
         catch { _error = "Không thể tải dữ liệu viện phí. Vui lòng kiểm tra kết nối và thử lại."; }
         finally { _loading = false; }
@@ -420,26 +317,6 @@ else
             catch { inv.Items = new(); }
             finally { inv.ItemsLoading = false; }
         }
-    }
-
-    private async Task RecalcInsurance(InvoiceVm inv)
-    {
-        inv.Busy = true;
-        try
-        {
-            var result = await Api.CalculateInsurance(inv.Id, string.IsNullOrWhiteSpace(inv.InsuranceInput) ? null : inv.InsuranceInput.Trim());
-            if (result is not null)
-            {
-                inv.Subtotal = result.Subtotal;
-                inv.InsuranceDeduction = result.InsuranceDeduction;
-                inv.TotalAmount = result.TotalAmount;
-                inv.InsuranceNumber = result.InsuranceNumber;
-                inv.Items = result.Items;
-            }
-            ShowToast("Đã cập nhật mức khấu trừ BHYT.");
-        }
-        catch { ShowToast("Không thể tính khấu trừ BHYT. Vui lòng thử lại."); }
-        finally { inv.Busy = false; }
     }
 
     private async Task Pay(InvoiceVm inv, PaymentMethod method)
@@ -467,48 +344,6 @@ else
         }
         catch { ShowToast("Không thể tạo giao dịch thanh toán. Vui lòng thử lại."); }
         finally { inv.Busy = false; }
-    }
-
-    private void OnCreateVisitChanged()
-    {
-        var opts = CurrentExamOptions;
-        _createExamServiceId = opts.Count == 1 ? opts[0].Id.ToString() : "";
-    }
-
-    private async Task SubmitCreate()
-    {
-        if (_createVisitId == "") { _createError = "Vui lòng chọn một lần khám."; return; }
-        if (CurrentExamOptions.Count > 0 && _createExamServiceId == "")
-        {
-            _createError = "Vui lòng chọn dịch vụ khám cho lần khám này.";
-            return;
-        }
-        _creating = true; _createError = null;
-        try
-        {
-            var result = await Api.GenerateInvoice(new GenerateInvoiceRequestDto
-            {
-                OutpatientVisitId = Guid.Parse(_createVisitId),
-                ExamServiceId = string.IsNullOrEmpty(_createExamServiceId) ? null : Guid.Parse(_createExamServiceId),
-                InsuranceNumber = string.IsNullOrWhiteSpace(_createInsurance) ? null : _createInsurance.Trim(),
-            });
-            if (result is null) throw new ApiClient.ApiException(500, "Không thể tạo phiếu thu.");
-
-            var vm = new InvoiceVm
-            {
-                Id = result.Id, Status = result.Status, Subtotal = result.Subtotal,
-                InsuranceDeduction = result.InsuranceDeduction, TotalAmount = result.TotalAmount,
-                InsuranceNumber = result.InsuranceNumber, CreatedAt = result.CreatedAt,
-                InsuranceInput = result.InsuranceNumber ?? _patientInsurance,
-                Items = result.Items, Expanded = true,
-            };
-            _invoices.Insert(0, vm);
-            _showCreate = false;
-            ShowToast("Đã tạo phiếu thu tổng.");
-        }
-        catch (ApiClient.ApiException) { _createError = "Không thể tạo phiếu thu. Lần khám có thể chưa có chi phí hoặc đã có lỗi xảy ra."; }
-        catch { _createError = "Không thể tạo phiếu thu. Lần khám có thể chưa có chi phí hoặc đã có lỗi xảy ra."; }
-        finally { _creating = false; }
     }
 
     private void ShowToast(string msg)
@@ -560,6 +395,7 @@ else
         PaymentStatus.Pending => ("Đang xử lý", "badge-soft-yellow"),
         PaymentStatus.Failed => ("Thất bại", "badge-soft-red"),
         PaymentStatus.Refunded => ("Đã hoàn tiền", "bg-light text-dark"),
+        PaymentStatus.Cancelled => ("Đã hủy (quá hạn)", "bg-light text-dark"),
         _ => ("—", "bg-light text-dark"),
     };
 }

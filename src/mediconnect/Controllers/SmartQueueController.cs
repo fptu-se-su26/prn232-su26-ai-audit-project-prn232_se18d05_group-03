@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Mediconnect.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Doctor,Nurse")]
 [Route("api/queue")]
 public class SmartQueueController : ControllerBase
 {
