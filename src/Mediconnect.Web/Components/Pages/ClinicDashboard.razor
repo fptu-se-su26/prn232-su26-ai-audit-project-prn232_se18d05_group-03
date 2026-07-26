@@ -308,11 +308,23 @@ else
                                 <option value="@a.Id">[@a.AppointmentTime.ToLocalTime().ToString("HH:mm")] @PatientNameFor(a.PatientId) - @(string.IsNullOrEmpty(a.Reason) ? "Khám tổng quát" : a.Reason)</option>
                             }
                         </select>
-                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" disabled="@(_selectedAppointmentId == "" || _startingCall)"
-                                @onclick="StartVideoCall">
-                            <span class="material-symbols-outlined align-middle" style="font-size:1rem">videocam</span>
-                            @(_startingCall ? "Đang tạo phiên..." : "Bắt đầu gọi video")
-                        </button>
+                        @* Telemedicine.razor is [Authorize(Roles = "Doctor,Patient")] — showing this to Nurse used to
+                           silently bounce them to /login after creating an orphan TelemedicineSession. Gate it here instead. *@
+                        <AuthorizeView Roles="Doctor" Context="videoCallCtx">
+                            <Authorized>
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-2" disabled="@(_selectedAppointmentId == "" || _startingCall)"
+                                        @onclick="StartVideoCall">
+                                    <span class="material-symbols-outlined align-middle" style="font-size:1rem">videocam</span>
+                                    @(_startingCall ? "Đang tạo phiên..." : "Bắt đầu gọi video")
+                                </button>
+                            </Authorized>
+                            <NotAuthorized>
+                                <button type="button" class="btn btn-outline-secondary btn-sm mt-2" disabled title="Chỉ bác sĩ mới có thể bắt đầu cuộc gọi video.">
+                                    <span class="material-symbols-outlined align-middle" style="font-size:1rem">videocam</span>
+                                    Bắt đầu gọi video
+                                </button>
+                            </NotAuthorized>
+                        </AuthorizeView>
                     }
                 </div>
             }

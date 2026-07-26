@@ -2056,6 +2056,88 @@ trạng thái nửa vời.
 
 ---
 
+### Lần sử dụng AI số 25
+
+| Nội dung            | Thông tin                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| Ngày sử dụng        | 26/07/2026                                                                                     |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                                  |
+| Mục đích sử dụng    | E2E test billing + SmartClinic sau merge PR #21 (post-merge regression), fix bug phát hiện được |
+| Phần việc liên quan | Frontend (Blazor) / Testing                                                                    |
+| Mức độ sử dụng      | Tự chạy test toàn bộ qua browser thật + viết code fix                                          |
+
+#### 25.1. Prompt đã sử dụng
+
+```text
+End-to-end billing + SmartClinic integration test trên develop (post-merge). Verify tất cả
+flow billing DE190123 đụng tới hoạt động đúng, và SmartClinic không bị regression sau merge. DB
+verification sau mỗi bước. Không sửa code trong lúc test.
+
+Sau khi có báo cáo: fix Bug #2 (EnsureVisitCreatedAsync sai key match) và Bug #3 (Nurse bị
+redirect /login) trên branch mới tạo từ develop. Bug #1 (double billing) — hỏi trước khi đụng
+entity/migration.
+```
+
+#### 25.2. Kết quả AI trả về
+
+```text
+Test report: 6 billing flow + 4 SmartClinic flow + 3 performance check, tự tạo test data qua SQL
+khi seed thiếu (Appointments=0, không có MedicalService giá 0đ). Phát hiện 3 bug: (1) double
+billing — cùng dịch vụ khám bị tính tiền 2 lần cho 1 visit, (2) Telemedicine
+EnsureVisitCreatedAsync match theo PatientId+DoctorId+ngày, tái sử dụng nhầm visit cũ (đã
+invoice) sang encounter tele mới, (3) Nurse bấm "Bắt đầu gọi video" bị redirect /login thay vì
+thông báo rõ ràng ([Authorize(Roles="Doctor,Patient")] ở Telemedicine.razor không có gate ở
+phía Nurse-facing UI).
+
+Fix Bug #2: bỏ hẳn match theo ngày, thay bằng bridge AppointmentId → QueueTicket → OutpatientVisit
+(OutpatientVisit không có cột AppointmentId); thêm `_prescriptionPanelOpen` tách khỏi
+`_activeVisitId` để đóng/mở panel không còn tạo visit trùng.
+Fix Bug #3: bọc nút "Bắt đầu gọi video" trong `AuthorizeView Roles="Doctor"`.
+Bug #1: xác nhận BillingInvoice/BillingItem không có field nào để trace ngược "đã invoice
+chưa" — cần thêm cột mới (đụng entity + migration của bạn cùng nhóm) — dừng lại, không tự fix,
+báo cáo làm known limitation.
+```
+
+#### 25.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng fix Bug #2 và Bug #3 sau khi `dotnet build` sạch cả 2 project. Bug #1 chủ động yêu cầu
+AI dừng lại, không áp dụng bất kỳ thay đổi entity/migration nào.
+```
+
+#### 25.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Yêu cầu AI query trực tiếp DB (INFORMATION_SCHEMA.COLUMNS) + cat entity file để tự verify lại
+  claim "BillingInvoice không có OutpatientVisitId" trước khi tin — AI lần fix đầu tự bịa thêm
+  giả định cột này có tồn tại theo brief, phải revert và làm lại sau khi verify.
+- Yêu cầu revert file bị fix sai (Telemedicine.razor, ApiClient.cs) về develop rồi làm lại từ
+  đầu, giữ nguyên file đã đúng (ClinicDashboard.razor) — tách rõ phần đúng khỏi phần cần sửa lại
+  thay vì sửa đè lên code đã sai.
+```
+
+#### 25.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| Link commit       |                                                                                                              |
+| File liên quan    | `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Web/Services/ApiClient.cs`; `src/Mediconnect.Web/Components/Pages/ClinicDashboard.razor` |
+| Screenshot        |                                                                                                                |
+| Kết quả chạy/test | `dotnet build` cả 2 project sau mỗi fix: 0 Warning/0 Error; verify browser 10 flow + SQL trực tiếp (bao gồm test duplicate INSERT bị chặn: Msg 2601) |
+| Link video demo   |                                                                                                                |
+| Ghi chú khác      | Bug #1 (double billing) cố tình để lại chưa fix — cần xác nhận thêm cột `OutpatientVisitId`/FK trước khi làm tiếp |
+
+#### 25.6. Nhận xét cá nhân/nhóm
+
+```text
+Brief tự chuẩn bị trước dựa trên trí nhớ phiên trước (memory) khẳng định BillingInvoice đã có
+cột OutpatientVisitId — sai hoàn toàn so với entity thật. Bài học: memory/brief chỉ là điểm
+khởi đầu, luôn phải cat file thật + query DB thật trước khi tin, đặc biệt khi brief đó sẽ dẫn
+tới việc sửa entity/migration của người khác.
+```
+
+---
+
 ## 10. Cam kết học thuật
 
 Sinh viên/nhóm cam kết rằng:
