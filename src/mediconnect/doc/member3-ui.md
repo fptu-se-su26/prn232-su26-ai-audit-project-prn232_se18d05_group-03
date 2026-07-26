@@ -34,6 +34,11 @@ Bản đồ giường trực quan (Trống / Đang có người / Đang dọn �
 - **Nhập kết quả**: `Api.EnterLabResult` (237) tạo `LabResult`; **tải file ảnh/PDF**: `Api.UploadLabFile` (258).
 - **Cập nhật trạng thái chỉ định**: `Api.UpdateLabOrderStatus` (227) (Ordered → InProgress → Completed).
 - Xem kết quả đã có: `Api.GetLabResults` (218). Kết quả tự hiển thị lại cho bác sĩ ra chỉ định và ở PHR (TV2).
+- Trang cho cả Lab/Doctor/Nurse cùng vào, nhưng 3 nút thao tác ("Bắt đầu xử lý", "Lưu kết quả",
+  "Upload file") chỉ **Lab/Admin** thấy (`<AuthorizeView Roles="Lab,Admin">`) — trước đó các nút này
+  hiện cho cả Doctor/Nurse dù backend chỉ cho role Lab thực hiện (`LabOrdersController`/
+  `LabResultsController` đều `[Authorize(Roles = "Lab,Admin")]`), khiến Doctor/Nurse bấm vào bị 403.
+  Doctor/Nurse vẫn xem được kết quả/file đã lưu, chỉ không sửa/upload thêm được.
 
 ## `Discharge.razor` (F4 — xuất viện) — Doctor/Nurse
 - `Api.GetAdmissions` (188): danh sách ca đủ điều kiện xuất viện.
