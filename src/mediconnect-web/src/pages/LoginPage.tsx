@@ -129,14 +129,22 @@ export default function ClinicDashboardPage() {
 
   const handleCheckInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkInClinicId) return;
 
     setSubmitting(true);
     setError(null);
     try {
-      let payload: any = { clinicId: checkInClinicId };
+      let targetClinicId = checkInClinicId;
       if (checkInType === "appointment") {
         if (!selectedAppointmentId) return;
+        const selectedApt = appointments.find((a) => a.id === selectedAppointmentId);
+        if (selectedApt && selectedApt.clinicId) {
+          targetClinicId = selectedApt.clinicId;
+        }
+      }
+      if (!targetClinicId) return;
+
+      let payload: any = { clinicId: targetClinicId };
+      if (checkInType === "appointment") {
         payload.appointmentId = selectedAppointmentId;
       } else {
         if (!walkInName.trim()) return;
@@ -576,8 +584,14 @@ export default function ClinicDashboardPage() {
                   ) : (
                     <select
                       required
-                      value={selectedAppointmentId}
-                      onChange={(e) => setSelectedAppointmentId(e.target.value)}
+                      onChange={(e) => {
+                        const apptId = e.target.value;
+                        setSelectedAppointmentId(apptId);
+                        const selectedApt = appointments.find((a) => a.id === apptId);
+                        if (selectedApt && selectedApt.clinicId) {
+                          setCheckInClinicId(selectedApt.clinicId);
+                        }
+                      }}
                       className="w-full rounded-xl border-slate-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 text-slate-700 py-3"
                     >
                       <option value="" disabled>-- Chọn lịch hẹn bệnh nhân --</option>

@@ -45,6 +45,7 @@ Nguyên tắc ghi changelog:
 | Phase 07 | 11/06/2026 – 20/06/2026 | Thành viên 4: Dashboard Thống kê & Quản trị Hệ thống | Completed |
 | Phase 10 | 25/07/2026 – 26/07/2026 | DE190123: SmartClinic fixes (dedup visit, allergy, billing redirect, dispose cleanup, stock filter) + walk-in OTP login | Completed |
 | Phase 11 | 26/07/2026 | Post-merge E2E test (billing + SmartClinic) trên develop — phát hiện 3 bug, fix 2/3 | Completed |
+| Phase 12 | 26/07/2026 | Fix check-in sai phòng khám khi chọn theo lịch hẹn (Blazor + React + backend) + seed script thiếu InpatientAdmissions | Completed |
 | Phase 06 |  | Hoàn thiện báo cáo và demo | In Progress |
 
 ---
@@ -839,6 +840,58 @@ Test report đầy đủ: 6 billing flow + 4 SmartClinic flow + 3 performance ch
   fix STT 1 xong thì đường dẫn thường ngày gây trùng bill (khám vãng lai sáng, gọi tele chiều
   cùng bác sĩ) đã bị chặn, nhưng lỗ hổng gốc ở tầng billing (không có gì ngăn tạo 2 hoá đơn cho
   cùng 1 visit) vẫn còn tồn tại nếu ai đó chủ động tạo hoá đơn 2 lần.
+```
+
+---
+
+# [Phase 12] Fix check-in sai phòng khám theo lịch hẹn + seed script thiếu InpatientAdmissions
+
+## Ngày thực hiện
+
+```text
+26/07/2026
+```
+
+## Đã hoàn thành
+
+- [x] Check-in theo lịch hẹn (appointment) giờ ưu tiên `ClinicId` thật của appointment thay vì
+      dropdown phòng khám người dùng chọn tay — đồng bộ cả backend (`QueueService`), Blazor
+      (`ClinicDashboard.razor`) và React (`LoginPage.tsx`)
+- [x] Appointment tự chuyển `Status = CheckedIn` ngay khi check-in (trước đây `QueueService`
+      không cập nhật status này)
+- [x] `seed_demo_data.sql`: thêm INSERT `InpatientAdmissions` bị thiếu cho `@admGen`/`@admER`
+      (trước đây `VitalSigns`/`CareOrders` tham chiếu 2 admission này nhưng dòng cha chưa từng
+      được insert) + thêm cờ `-f 65001 -I` vào ví dụ lệnh sqlcmd (UTF-8 + quoted identifiers cho
+      tiếng Việt có dấu)
+
+## Thay đổi chi tiết
+
+| STT | Nội dung thay đổi | File/Module liên quan | Minh chứng |
+|---:|---|---|---|
+| 1 | `CheckInAsync`/`WalkInCheckInAsync`: khi có `AppointmentId`, tra `Appointment.ClinicId` — nếu phòng khám đó đang active thì dùng thay cho `dto.ClinicId`; đồng thời set `appointment.Status = CheckedIn` và lưu | `QueueService.cs` | Code review: guard `appointment.ClinicId != Guid.Empty` + `apptClinic.IsActive` trước khi override, không phá vỡ luồng walk-in (không có AppointmentId thì bỏ qua khối này) |
+| 2 | Đổi `<select>` từ `@bind` sang `@onchange="OnAppointmentSelected"` để đồng bộ `_checkInClinicId` ngay khi chọn lịch hẹn; `SubmitCheckIn()` tự sửa lại `_checkInClinicId` một lần nữa trước khi gửi (fallback), dời check `_checkInClinicId == ""` xuống sau bước tự sửa để không chặn nhầm check-in theo lịch hẹn chưa có dropdown phòng khám nào được chọn tay | `ClinicDashboard.razor` | Code review: logic khớp với `QueueService.cs`, không đổi luồng walk-in |
+| 3 | Mirror cùng fix cho bản React (`handleCheckInSubmit`, dropdown lịch hẹn) — tự set `targetClinicId`/`checkInClinicId` từ appointment đã chọn trước khi validate | `LoginPage.tsx` (`src/mediconnect-web`) | Code review: pattern giống hệt bản Blazor |
+| 4 | Thêm `INSERT INTO InpatientAdmissions` cho `@admGen`/`@admER` trước khối `VitalSigns`/`CareOrders` đang tham chiếu 2 Id này | `seed_demo_data.sql` | Xác nhận thứ tự: biến khai báo dòng 64-65, INSERT admission dòng 183-184, INSERT VitalSigns/CareOrders tham chiếu dòng 187-194 — đúng thứ tự phụ thuộc |
+| 5 | Thêm `-f 65001 -I` vào 2 ví dụ lệnh sqlcmd trong comment đầu file | `seed_demo_data.sql` | — |
+
+## AI có hỗ trợ không?
+
+- [ ] Có
+- [x] Không
+
+```text
+Phase này do sinh viên tự viết trực tiếp, không qua AI sinh code. Claude Code chỉ được yêu cầu
+đọc lại (git diff) để xác nhận logic đúng (guard null/empty, thứ tự phụ thuộc biến trong SQL)
+và ghi log vào CHANGELOG — không tham gia viết code.
+```
+
+## Ghi chú
+
+```text
+Bug gốc: trước fix này, khi lễ tân check-in bệnh nhân theo lịch hẹn có sẵn nhưng dropdown phòng
+khám tiếp nhận đang trỏ phòng khác (giá trị mặc định hoặc chưa đổi tay), hệ thống ghi nhận sai
+phòng khám so với appointment gốc. Fix áp dụng đồng bộ ở cả 2 frontend (Blazor đang dùng chính +
+React cũ) và backend để không lệch hành vi giữa các client.
 ```
 
 ---

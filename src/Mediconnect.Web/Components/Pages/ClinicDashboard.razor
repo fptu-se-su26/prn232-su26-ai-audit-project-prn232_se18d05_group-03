@@ -301,7 +301,7 @@ else
                     }
                     else
                     {
-                        <select class="form-select" @bind="_selectedAppointmentId">
+                        <select class="form-select" value="@_selectedAppointmentId" @onchange="OnAppointmentSelected">
                             <option value="">-- Chọn lịch hẹn bệnh nhân --</option>
                             @foreach (var a in _pendingAppointments)
                             {
@@ -494,24 +494,55 @@ else
         _checkInClinicId = _selectedClinicId?.ToString() ?? _summaries.FirstOrDefault()?.ClinicId.ToString() ?? "";
     }
 
+    private void OnAppointmentSelected(ChangeEventArgs e)
+    {
+        _selectedAppointmentId = e.Value?.ToString() ?? "";
+        if (Guid.TryParse(_selectedAppointmentId, out var apptId))
+        {
+            var appt = _pendingAppointments.FirstOrDefault(a => a.Id == apptId);
+            if (appt != null && appt.ClinicId != Guid.Empty)
+            {
+                _checkInClinicId = appt.ClinicId.ToString();
+            }
+        }
+    }
+
     private async Task SelectAppointmentType()
     {
         _checkInType = "appointment";
         await LoadCheckInData();
+        if (Guid.TryParse(_selectedAppointmentId, out var apptId))
+        {
+            var appt = _pendingAppointments.FirstOrDefault(a => a.Id == apptId);
+            if (appt != null && appt.ClinicId != Guid.Empty)
+            {
+                _checkInClinicId = appt.ClinicId.ToString();
+            }
+        }
     }
 
     private async Task SubmitCheckIn()
     {
         _submitted = true;
-        if (_checkInClinicId == "") return;
         if (_checkInType == "appointment" && _selectedAppointmentId == "") return;
         if (_checkInType == "walk-in" && (string.IsNullOrWhiteSpace(_walkInName) || string.IsNullOrWhiteSpace(_walkInEmail))) return;
+
+        var appointmentId = _checkInType == "appointment" ? Guid.Parse(_selectedAppointmentId) : (Guid?)null;
+        if (_checkInType == "appointment" && appointmentId.HasValue)
+        {
+            var appt = _pendingAppointments.FirstOrDefault(a => a.Id == appointmentId.Value);
+            if (appt != null && appt.ClinicId != Guid.Empty)
+            {
+                _checkInClinicId = appt.ClinicId.ToString();
+            }
+        }
+
+        if (_checkInClinicId == "") return;
 
         _submitting = true; _error = null;
         try
         {
             var clinicId = Guid.Parse(_checkInClinicId);
-            var appointmentId = _checkInType == "appointment" ? Guid.Parse(_selectedAppointmentId) : (Guid?)null;
             var patientName = _checkInType == "walk-in" ? _walkInName.Trim() : null;
             var patientEmail = _checkInType == "walk-in" ? _walkInEmail.Trim() : null;
             var patientPhone = _checkInType == "walk-in" && !string.IsNullOrWhiteSpace(_walkInPhone) ? _walkInPhone.Trim() : null;

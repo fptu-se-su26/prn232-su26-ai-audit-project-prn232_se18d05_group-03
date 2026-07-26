@@ -34,6 +34,25 @@ public class QueueService : IQueueService
         var clinic = await _clinicRepository.GetByIdAsync(dto.ClinicId, cancellationToken)
             ?? throw new InvalidOperationException("Clinic not found.");
 
+        if (dto.AppointmentId.HasValue)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(dto.AppointmentId.Value, cancellationToken);
+            if (appointment != null)
+            {
+                if (appointment.ClinicId != Guid.Empty)
+                {
+                    var apptClinic = await _clinicRepository.GetByIdAsync(appointment.ClinicId, cancellationToken);
+                    if (apptClinic != null && apptClinic.IsActive)
+                    {
+                        clinic = apptClinic;
+                    }
+                }
+                appointment.Status = AppointmentStatus.CheckedIn;
+                _appointmentRepository.Update(appointment);
+                await _appointmentRepository.SaveChangesAsync(cancellationToken);
+            }
+        }
+
         if (!clinic.IsActive)
             throw new InvalidOperationException("Clinic is not currently active.");
 
@@ -47,6 +66,25 @@ public class QueueService : IQueueService
     {
         var clinic = await _clinicRepository.GetByIdAsync(dto.ClinicId, cancellationToken)
             ?? throw new InvalidOperationException("Clinic not found.");
+
+        if (dto.AppointmentId.HasValue)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(dto.AppointmentId.Value, cancellationToken);
+            if (appointment != null)
+            {
+                if (appointment.ClinicId != Guid.Empty)
+                {
+                    var apptClinic = await _clinicRepository.GetByIdAsync(appointment.ClinicId, cancellationToken);
+                    if (apptClinic != null && apptClinic.IsActive)
+                    {
+                        clinic = apptClinic;
+                    }
+                }
+                appointment.Status = AppointmentStatus.CheckedIn;
+                _appointmentRepository.Update(appointment);
+                await _appointmentRepository.SaveChangesAsync(cancellationToken);
+            }
+        }
 
         if (!clinic.IsActive)
             throw new InvalidOperationException("Clinic is not currently active.");
