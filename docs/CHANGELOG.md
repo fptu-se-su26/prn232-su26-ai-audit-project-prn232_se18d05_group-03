@@ -43,6 +43,7 @@ Nguyên tắc ghi changelog:
 | Phase 04 | 06/06/2026 – 10/06/2026 | Implementation | Completed |
 | Phase 05 | 10/06/2026 | Testing & Debug | Completed |
 | Phase 07 | 11/06/2026 – 20/06/2026 | Thành viên 4: Dashboard Thống kê & Quản trị Hệ thống | Completed |
+| Phase 10 | 25/07/2026 – 26/07/2026 | DE190123: SmartClinic fixes (dedup visit, allergy, billing redirect, dispose cleanup, stock filter) + walk-in OTP login | Completed |
 | Phase 06 |  | Hoàn thiện báo cáo và demo | In Progress |
 
 ---
@@ -664,6 +665,94 @@ và kiểm thử end-to-end bằng Playwright (15/15 pass) trước khi báo ho�
 
 ---
 
+# [Phase 10] DE190123: SmartClinic fixes + walk-in OTP login
+
+## Ngày thực hiện
+
+```text
+25/07/2026 – 26/07/2026
+```
+
+## Đã hoàn thành
+
+- [x] Fix duplicate OutpatientVisit (existence-check client-side + unique filtered index DB-side)
+- [x] Allergy input do bác sĩ tự nhập, bỏ hardcoded fallback
+- [x] Billing redirect flow đầy đủ (`?visitId=` auto-select + auto-open modal, $0 invoice Pay button)
+- [x] DisposeAsync cleanup đầy đủ khi đóng tab giữa chừng cuộc gọi tele
+- [x] Stock=0 loại khỏi autocomplete kê đơn
+- [x] Walk-in check-in: email bắt buộc + validate
+- [x] OTP-based login cho tài khoản walk-in (không biết mật khẩu ngẫu nhiên đã tạo)
+- [x] End-to-end test: 4 flow (31 bước), 6 edge case, 5 performance check, 3 regression check
+
+## Thay đổi chi tiết
+
+| STT | Nội dung thay đổi | File/Module liên quan | Minh chứng |
+|---:|---|---|---|
+| 1 | Existence-check trước khi tạo OutpatientVisit mới (retry ở OutpatientRecord, panel reopen ở Telemedicine) | `OutpatientRecord.razor`, `Telemedicine.razor`, `ApiClient.cs` (`GetOutpatientVisits`) | Test retry: COUNT(*) WHERE QueueTicketId=... = 1 |
+| 2 | Bỏ hardcoded allergy `{"Penicillin","Peanuts","Sulfa"}`, thêm input bác sĩ tự nhập | `EPrescriptionPanel.razor` | Test browser: tag/cảnh báo dị ứng đúng, không còn hardcoded fallback |
+| 3 | `?visitId=` query param tự chọn visit + mở modal tạo hoá đơn; `canPay` bỏ điều kiện `TotalAmount > 0` | `Billing.razor` | Test: `/billing?visitId=X` chọn đúng visit, modal tự mở; hoá đơn 0đ vẫn có nút Thanh toán |
+| 4 | `EndCall`/`CallEnded` điều hướng bệnh nhân sang `/billing?visitId=`; `DisposeAsync` cascade đủ 5 bước (best-effort, guard `_callEnded` chống gọi đôi) | `Telemedicine.razor` | Test: đóng tab không bấm "Kết thúc" vẫn cascade đúng EndedAt/visit/appointment status |
+| 5 | Thêm `d.StockQuantity > 0` vào filter `SearchResults` | `EPrescriptionPanel.razor` | Test: thuốc stock=0 không còn trong autocomplete, thuốc còn hàng vẫn hiện |
+| 6 | Mục nav Telemedicine cho Doctor/Nurse | `NavMenu.razor` | — |
+| 7 | Email bắt buộc + dòng lỗi khi walk-in check-in để trống | `ClinicDashboard.razor` | Test: label "Email *" hiển thị đúng |
+| 8 | Unique filtered index `WHERE QueueTicketId IS NOT NULL` trên `OutpatientVisits.QueueTicketId` (đóng nốt race concurrent mà existence-check client-side chưa đóng hết) | Migration `AddUniqueConstraintOutpatientVisitQueueTicketId` | `sys.indexes`: `is_unique=1`; kiểm tra 0 dòng trùng trước khi migrate |
+| 9 | `POST api/otp/login` (anonymous) — xác thực OTP theo email, thành công thì cấp JWT thật (`ITokenService.CreateToken`) thay vì chỉ đánh dấu `VerifiedAt`; không đụng `AuthController`/`AuthService`/`Login.razor`/`TokenState` | `OtpController.cs`, `OtpDtos.cs` (`OtpLoginRequestDto`) | Test sống: đăng nhập bằng OTP thành công, vào được `/billing` |
+| 10 | Walk-in check-in tự động gửi OTP đăng nhập cho tài khoản mới (re)tạo; trang đăng nhập bằng OTP mới | `ClinicDashboard.razor`, `QueueService.cs` (`PatientUserAccountId` trên `QueueTicketDetailDto`), `ApiClient.cs` (`LoginWithOtp`), `OtpLogin.razor` (trang mới) | Test sống: check-in → email OTP → `/otp-login` → đăng nhập → vào được `/billing` |
+
+## Kết quả kiểm thử end-to-end
+
+```text
+Flow 1 — Walk-in (5 bước): 5/5 PASS
+Flow 2 — Appointment + E-Prescription (11 bước): 10/11 PASS
+  (1 fail nhẹ, đã fix ở STT 5 trên: stock=0 từng vẫn hiện trong autocomplete)
+Flow 3 — Telemedicine (9 bước): 7 PASS + 2 SKIP (môi trường: không có 2 phiên đăng nhập đồng
+  thời + không có camera thật)
+Flow 4 — Edge cases (6 bước): 4 PASS + 1 fail (cùng nguyên nhân Flow 2) + 1 SKIP (môi trường)
+Performance: 5/5 check PASS (ICD-10 ~1s, autocomplete tức thời, API ~80ms)
+Regression: 3/3 module PASS (Billing, Inpatient, Queue)
+Tổng: 0 blocking bug, 0 regression
+```
+
+## AI có hỗ trợ không?
+
+- [x] Có
+- [ ] Không
+
+Nếu có, mô tả AI đã hỗ trợ phần nào:
+
+```text
+Claude Code (claude-sonnet-5) đọc code thật trước khi sửa từng nhóm (phát hiện brief giả định
+sai nhiều chỗ: VisitId thật, kiểu KnownAllergies, tên biến Billing.razor, enum
+AppointmentStatus.Completed thật=3 không phải 4), sinh code cho toàn bộ Phase này, tự chạy
+dotnet build sau mỗi nhóm, tự chạy end-to-end test qua browser thật + verify SQL trực tiếp,
+tự phát hiện và fix 2 blocker môi trường trước khi test được (obj/bin cũ, connection string
+sai), và tự thiết kế + verify sống tính năng đăng nhập OTP cho walk-in mà không đụng vào
+stack đăng nhập bằng mật khẩu có sẵn.
+```
+
+## Commit/Screenshot minh chứng
+
+```text
+Branch: feature/de190123-smartclinic-fixes
+253d324 — fix(smartclinic): dedup visit, allergy input, billing redirect, dispose cleanup, stock filter
+2c431d5 — feat(auth): OTP-based login for walk-in patients with no known password
+dotnet build (cả 2 project) sau mỗi nhóm fix: 0 Warning, 0 Error
+dotnet ef database update: migration AddUniqueConstraintOutpatientVisitQueueTicketId áp dụng thành công
+Test report: Flow 1 5/5, Flow 2 10/11, Flow 3 7 PASS+2 SKIP, Flow 4 4 PASS+1 fail+1 SKIP,
+  Performance 5/5, Regression 3/3
+```
+
+## Ghi chú
+
+```text
+- Fix client-side dedup (existence-check) chỉ đóng được race sequential-retry; unique index
+  DB-side (STT 8) đóng nốt race concurrent thật.
+- OTP login là đường vào thứ hai, cộng thêm vào cơ chế token/session có sẵn — không sửa
+  AuthController.cs, AuthService.cs, IAuthService.cs, Login.razor, TokenState.cs.
+```
+
+---
+
 # [Phase 06] Hoàn thiện báo cáo và demo
 
 ## Ngày thực hiện
@@ -757,6 +846,10 @@ Viết tại đây...
 | 31 | Fix UI đơn thuốc điện tử bị chật khi nhúng cạnh khung video call — đổi từ Bootstrap `col-*`/`row` sang CSS container-query | Completed | `EPrescriptionPanel.razor`, `EPrescriptionPanel.razor.css` | DE190123 |
 | 32 | Thêm ghi Triệu chứng & Chẩn đoán ICD-10 ngay trong lúc gọi video tele (trước đó tele không ghi gì nên không có cơ sở tính bill) | Completed | `Telemedicine.razor` | DE190123 |
 | 33 | Fix bill thiếu phí khám (bug có sẵn của Billing, không riêng tele) bằng dropdown "Dịch vụ khám" lọc theo khoa; fix Appointment.Status không bao giờ đổi khỏi "Chờ xác nhận" — cascade sang Completed từ cả luồng tele và walk-in/hẹn trước | Completed | `Billing.razor`, `ApiClient.cs`, `Telemedicine.razor`, `MedicalRecordService.cs` | DE190123 |
+| 34 | Duplicate OutpatientVisit prevention hoàn thiện: existence-check client-side + unique filtered index DB-side; Allergy input do bác sĩ tự nhập (bỏ hardcoded); Stock=0 loại khỏi autocomplete kê đơn | Completed | `OutpatientRecord.razor`, `Telemedicine.razor`, `ApiClient.cs`, `EPrescriptionPanel.razor`, migration `AddUniqueConstraintOutpatientVisitQueueTicketId` | DE190123 |
+| 35 | Billing redirect flow hoàn thiện (`?visitId=` auto-select + auto-open modal, $0 invoice Pay button); DisposeAsync cleanup đầy đủ khi đóng tab giữa cuộc gọi tele | Completed | `Billing.razor`, `Telemedicine.razor` | DE190123 |
+| 36 | OTP-based login cho tài khoản walk-in (mật khẩu ngẫu nhiên không ai biết) — đường vào thứ hai bên cạnh đăng nhập mật khẩu có sẵn, không sửa stack đăng nhập gốc | Completed | `OtpController.cs`, `OtpLogin.razor`, `QueueService.cs`, `ClinicDashboard.razor`, `ApiClient.cs` | DE190123 |
+| 37 | End-to-end test SmartClinic: 4 flow (31 bước), 6 edge case, 5 performance check, 3 regression check qua browser thật + verify SQL trực tiếp — 0 blocking bug, 0 regression | Completed | Xem chi tiết [Phase 10] | DE190123 |
 
 ---
 
