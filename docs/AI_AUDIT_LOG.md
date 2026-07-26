@@ -882,6 +882,8 @@ không thấy — cần luôn test end-to-end với dữ liệu thật.
 | Tối ưu code |  | x |  |  | Tách shared components/utils tránh trùng code giữa 2 trang report |
 | Viết báo cáo |  |  | x |  | Hỗ trợ điền CHANGELOG.md, AI_AUDIT_LOG.md, PROMPTS.md |
 | Làm slide thuyết trình |  |  |  |  |  |
+| Code frontend |  |  |  | x | 2026-07-25/26 (DE190123): fix Billing.razor (visitId query param + auto-open modal), Telemedicine.razor (EndCall/CallEnded redirect, DisposeAsync cleanup), EPrescriptionPanel.razor (allergy input, stock filter), ClinicDashboard.razor (email required marker), NavMenu.razor |
+| Code backend |  |  |  | x | 2026-07-25/26 (DE190123): OutpatientRecord.razor + ApiClient.cs existence-check dedup; EF migration AddUniqueConstraintOutpatientVisitQueueTicketId (unique filtered index) |
 
 ---
 
@@ -893,6 +895,10 @@ Ghi lại các trường hợp AI trả lời sai, thiếu, chưa phù hợp ho�
 |---:|---|---|---|
 | 1 | LabResultReadDto từ GET /history chỉ có labOrderId, thiếu testName | Đọc EntityDtos.cs và so sánh với DTO thực tế | Gọi thêm GET /api/lab-orders client-side, dùng Map tra testName theo labOrderId |
 | 2 | PHRPage dùng color token MD3 chưa khai báo (on-secondary-container, tertiary-container...) | Kiểm tra index.css thấy thiếu 4 biến CSS | Bổ sung 4 token còn thiếu vào index.css |
+| 3 | PatientProfile.Allergies không tồn tại trong schema — không thể lưu danh sách dị ứng gắn với hồ sơ bệnh nhân | Đọc entity PatientProfile.cs xác nhận không có trường này; không muốn thêm migration mới cho việc này | Chuyển sang Phương án B: bác sĩ tự nhập danh sách dị ứng vào local state (`_localAllergies`) trong `EPrescriptionPanel.razor` mỗi phiên khám, không lưu DB |
+| 4 | Fix client-side (query-then-create) cho duplicate OutpatientVisit chỉ đóng được race sequential-retry, không đóng được race concurrent thật (2 request gần như đồng thời cùng vượt qua bước kiểm tra tồn tại trước khi 1 trong 2 kịp tạo visit) | Kiểm tra `sys.indexes` trên `OutpatientVisits.QueueTicketId` thấy index tồn tại nhưng `is_unique=0`; double-click thật qua browser bị serialize bởi độ trễ mạng nên không tái hiện được race, chỉ suy luận từ cấu trúc code | Thêm migration `AddUniqueConstraintOutpatientVisitQueueTicketId`: drop index cũ, tạo lại unique filtered index (`WHERE QueueTicketId IS NOT NULL`) — chặn duplicate ở tầng DB bất kể race timing |
+| 5 | `EPrescriptionPanel.SearchResults` chỉ lọc theo `IsActive`, chưa từng lọc theo `StockQuantity` — thuốc hết hàng (stock=0) vẫn hiện trong autocomplete (dù nút Thêm đã bị disable đúng) | Test trực tiếp: search "Hết Hàng Demo 100mg" (stock=0) vẫn ra kết quả trong dropdown | Thêm điều kiện `d.StockQuantity > 0` vào `Where` clause của `SearchResults` |
+| 6 | **[Severity: High]** Walk-in patient không có cách nào đăng nhập để xem/thanh toán hoá đơn của chính mình: `QueueService.GetOrCreateWalkInPatientProfileAsync` tạo `UserAccount` với `PasswordHasher.Hash(Guid.NewGuid())` (mật khẩu ngẫu nhiên không ai biết); không có `ForgotPassword`/`ResetPassword` endpoint nào trong toàn bộ codebase; `OtpController.Verify` chỉ set `VerifiedAt`/`IsActive`, không cấp token đăng nhập; `Billing.razor` chỉ `[Authorize(Roles="Patient")]` và không có màn hình nào cho staff tạo/xem hoá đơn thay bệnh nhân — bệnh nhân vãng lai thực tế không bao giờ chạm được `/billing` của chính mình | Đọc `QueueService.cs` (GetOrCreateWalkInPatientProfileAsync), grep toàn repo "ForgotPassword\|ResetPassword" (0 kết quả), đọc `OtpController.cs` (Verify chỉ đổi flag, không trả JWT), đọc `Billing.razor` (`[Authorize(Roles="Patient")]`, `Api.GetMyPatient()`) | Đề xuất: tái dùng hạ tầng OTP đã có — khi check-in walk-in, gửi email chứa OTP; thêm bước `OtpController.Verify` (hoặc endpoint mới `POST /api/otp/login`) trả về `AuthResponseDto` (JWT) thẳng cho `UserId` gắn với mã đó thay vì chỉ set `VerifiedAt` — biến OTP thành "magic-link đăng nhập" cho tài khoản walk-in, không cần mật khẩu. Cách khác: thêm `ForgotPassword` chuẩn (gửi link/OTP đặt lại mật khẩu qua `IOtpSender`/`SmtpOtpSender` đã có sẵn từ Phase 09) |
 | --: | ----------------- | -------------- | ------------------- |
 |   1 |                   |                |                     |
 |   2 |                   |                |                     |
@@ -1903,149 +1909,149 @@ quả hơn test từng tính năng riêng lẻ trong việc phát hiện lỗ h�
 
 ### Lần sử dụng AI số 23
 
-| Nội dung            | Thông tin                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------ |
-| Ngày sử dụng        | 26/07/2026                                                                           |
-| Công cụ AI          | Claude Code (claude-opus-4-8)                                                       |
-| Mục đích sử dụng    | Kéo code mới từ `develop`, build + chạy thử phát hiện lỗi, khôi phục kết nối SQL Server, dọn cấu hình dự án và viết bộ tài liệu giải thích code theo 4 thành viên |
-| Phần việc liên quan | Documentation / Backend (cấu hình) / DevOps (build, Docker SQL)                     |
-| Mức độ sử dụng      | AI chạy build/test, chẩn đoán lỗi và viết tài liệu; người dùng xác nhận từng bước    |
+| Nội dung            | Thông tin                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| Ngày sử dụng        | 25/07/2026                                                                                     |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                                  |
+| Mục đích sử dụng    | Fix 6 nhóm lỗi SmartClinic từ kết quả audit: duplicate visit, allergy input giả lập, billing redirect, DisposeAsync cleanup, race condition JoinRoom, stock filter + nav |
+| Phần việc liên quan | Backend (Application/ApiClient) / Frontend (Blazor) / SignalR Hub                              |
+| Mức độ sử dụng      | Viết code toàn bộ theo 6 prompt fix riêng biệt                                                 |
 
 #### 23.1. Prompt đã sử dụng
 
 ```text
-kéo code mới từ git về chạy thử, coi có lỗi gì không nếu có thì sửa, code nào bị lỗi chưa đúng
-cấu trúc hoặc thiếu gì thì liệt kê ra, cuối cùng tạo file md giải thích code theo từng chức năng
-sửa lại mk sql server
-sử lý hết
-file code overview xóa đi, tạo folder doc trong folder mediconnect. Làm nhiều file md giải thích
-từng dòng code của các chức năng chính và các file giải thích UI tương tự [kèm phân chia 4 thành viên]
+Prompt 1 (Group A): Fix duplicate OutpatientVisit creation ở OutpatientRecord.razor retry-after-
+failure và Telemedicine.razor panel reopen — thêm existence-check trước khi tạo visit mới.
+Prompt 2 (Group B): Replace fake hardcoded allergy list trong EPrescriptionPanel bằng doctor-
+entered allergy field (Phương án B, không migration).
+Prompt 3 (Group C+D+F): Fix billing redirect flow (Telemedicine → Billing?visitId=xxx), tab-close
+cleanup (DisposeAsync), NavMenu Telemedicine entry, $0 invoice Pay button.
 ```
 
 #### 23.2. Kết quả AI gợi ý
 
 ```text
-1. Fast-forward branch sang develop (19 commit mới). Build cả solution: 0 Warning/0 Error.
-   Chạy API (5079) + Web (5104): Web /,/login trả 200; API startup lỗi kết nối DB.
-2. Chẩn đoán: SQL 'sa' Login failed dù mật khẩu trong appsettings khớp biến env container —
-   xác định mật khẩu 'sa' thật trong volume cũ khác env. Reset mật khẩu 'sa' về Minh@@2812 bằng
-   cách commit backup → mssql-conf set-sa-password ở container tạm → dựng lại container, GIỮ
-   nguyên toàn bộ 7 database. Sau reset: sa login OK, API seed thành công, /api/auth/login trả
-   401 với sai mật khẩu (auth + query DB chạy đúng), Swagger 200.
-3. Dọn cấu hình: gỡ 146 file bin/obj khỏi git index (đã gitignore, gây nhiễu diff + hỏng
-   'dotnet run --no-build' do manifest static-web-assets cũ); sửa CORS 5173→5104; cập nhật README
-   (React/mediconnect-web/5173 → Blazor/Mediconnect.Web/5104).
-4. Viết 9 file .md trong src/mediconnect/doc/ (00-README + memberN-code/ui) giải thích logic
-   backend từng dòng của các hàm chính và trang Blazor/UI theo phân chia 4 thành viên, dựa trên
-   đọc trực tiếp source (QueueService, MedicalRecordService, BillingService, PaymentGatewayService,
-   StaffScheduleService, CdssController, ReportQuery, InpatientAdmissionsController, các trang .razor).
+Group A: OutpatientRecord.razor.Submit() — query GetOutpatientVisits() lọc theo QueueTicketId
+trước khi CreateOutpatientVisit trong nhánh catch "not found"; Telemedicine.razor.
+EnsureVisitCreatedAsync() — query theo PatientId+DoctorId+ngày hôm nay trước khi tạo mới; thêm
+ApiClient.GetOutpatientVisits() (list, chưa có trước đó — dùng SendAsync<List<T>> đúng pattern
+GetAppointments(), không phải GetAsync<List<T>> như brief đoán).
+Group B: Xoá fallback hardcoded {"Penicillin","Peanuts","Sulfa"}; thêm `_allergyInput` (string),
+`_localAllergies` (List<string> — không phải string[] như brief giả định vì KnownAllergies param
+thực tế là List<string>?), `ParseAllergyInput()` split theo dấu phẩy; `_knownAllergies` ưu tiên
+KnownAllergies param nếu có, fallback về `_localAllergies`.
+Group C/D/F: Billing.razor thêm `[SupplyParameterFromQuery(Name="visitId")]`, `OnParametersSetAsync`
+tự chọn visit + mở modal tạo hoá đơn; sửa `canPay = !isPaid` (bỏ điều kiện TotalAmount>0).
+Telemedicine.razor: EndCall()/CallEnded điều hướng bệnh nhân sang `/billing?visitId=` nếu có visit;
+DisposeAsync gọi NotifyCallEnded+LeaveRoom+EndTelemedicineSession+CompleteOutpatientVisit+
+UpdateAppointmentStatus (best-effort try/catch từng bước), guard `_callEnded` tránh gọi đôi khi
+EndCall() đã chạy trước đó. NavMenu.razor: thêm mục Telemedicine trỏ /clinic-dashboard (không có
+route tĩnh /telemedicine riêng, chỉ có /telemedicine/{RoomId}).
 ```
 
 #### 23.3. Phần sinh viên/nhóm đã sử dụng từ AI
 
 ```text
-Áp dụng sau khi xác nhận: dotnet build mediconnect.sln sạch (0 Warning/0 Error); API + Web chạy
-được thật với DB đã khôi phục; tài liệu đối chiếu đúng với source code thực tế của từng feature.
-Toàn bộ được đóng thành branch docs/mediconnect-code-guides (2 commit) và push lên remote.
+Áp dụng toàn bộ 3 prompt sau khi xác nhận `dotnet build` sạch cho cả `src/Mediconnect.Web` và
+`src/mediconnect` sau mỗi nhóm fix.
 ```
 
 #### 23.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
 
 ```text
-Xác nhận từng quyết định có rủi ro trước khi cho AI thực thi: chọn nhánh kéo (develop), mức chạy
-thử (build + khởi động), và đặc biệt cách khôi phục SQL (yêu cầu recreate container GIỮ data thay
-vì tạo mới). Không cho commit thẳng vào develop mà tách sang nhánh riêng.
+- Yêu cầu AI đọc code thật trước khi sửa (Pre-Task) thay vì tin brief — phát hiện brief sai ở
+  nhiều điểm: VisitId thật = AppointmentId ?? Id (không phải chỉ .Id), KnownAllergies là
+  List<string> (không phải string[]), không có method GetAsync<List<T>> trong ApiClient.
+- Yêu cầu build sau mỗi nhóm fix riêng biệt, không gộp build cuối cùng để dễ khoanh vùng lỗi.
 ```
 
 #### 23.5. Minh chứng
 
-| Loại minh chứng   | Nội dung                                                                                     |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| Link commit       | `1e2afc3` (chore: untrack build artifacts, fix stale frontend refs), `b0af778` (docs: add per-member code & UI guides) trên branch `docs/mediconnect-code-guides` |
-| File liên quan    | `src/mediconnect/doc/` (9 file .md); `README.md`; `src/mediconnect/Program.cs`; gỡ track `**/bin/`, `**/obj/`; xóa `docs/CODE_OVERVIEW.md` |
-| Screenshot        |                                                                                                |
-| Kết quả chạy/test | `dotnet build mediconnect.sln`: 0 Warning/0 Error. API (5079) seed DB OK, `/api/auth/login` sai mật khẩu → 401, Swagger 200. Web (5104): `/`, `/login` → 200, không lỗi startup |
-| Link video demo   |                                                                                                |
-| Ghi chú khác      | Việc reset mật khẩu `sa` chỉ tác động môi trường local (Docker container `sqlserver`), không thay đổi source. Tài liệu là mô tả code có sẵn của cả nhóm, không sinh code mới cho tính năng |
+| Loại minh chứng   | Nội dung                                                                                                                                                                                                                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Link commit       | `253d324` trên branch `feature/de190123-smartclinic-fixes`                                                                                                                                                                                                                                                                     |
+| File liên quan    | `src/Mediconnect.Web/Components/Pages/OutpatientRecord.razor`; `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Web/Services/ApiClient.cs`; `src/Mediconnect.Web/Components/Shared/EPrescriptionPanel.razor`; `src/Mediconnect.Web/Components/Pages/Billing.razor`; `src/Mediconnect.Web/Components/Layout/NavMenu.razor` |
+| Screenshot        |                                                                                                                                                                                                                                                                                              |
+| Kết quả chạy/test | `dotnet build` cả 2 project sau mỗi nhóm fix: 0 Warning/0 Error                                                                                                                                                                                                                             |
+| Link video demo   |                                                                                                                                                                                                                                                                                              |
+| Ghi chú khác      | Group E (JoinRoom race condition, `TelemedicineHub.cs`) đã được xác nhận đúng trong code hiện tại (`ConcurrentDictionary.GetOrAdd` + `countBefore` atomic) nhưng không phải công việc trực tiếp của các prompt 1-3 trong phiên này |
 
 #### 23.6. Nhận xét cá nhân/nhóm
 
 ```text
-Lỗi "chạy không được" thực chất không nằm ở code mà ở môi trường (mật khẩu sa của container không
-khớp do volume cũ) — nhấn mạnh giá trị của việc phân biệt lỗi code với lỗi cấu hình/hạ tầng trước
-khi sửa. Việc gỡ bin/obj khỏi git cũng cho thấy commit build-artifact gây lỗi thật (hỏng manifest
-static-web-assets khi checkout ở máy khác), không chỉ là vấn đề "diff bẩn".
+Brief chuẩn bị sẵn (giả định tên field, kiểu dữ liệu, method có sẵn) sai khá nhiều so với code
+thật — luôn cần bước Pre-Task đọc code thật trước khi viết, không tin brief 100%.
 ```
 
 ---
 
 ### Lần sử dụng AI số 24
 
-| Nội dung            | Thông tin                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------ |
-| Ngày sử dụng        | 26/07/2026                                                                           |
-| Công cụ AI          | Claude Code (claude-opus-4-8)                                                       |
-| Mục đích sử dụng    | Tạo dữ liệu demo phủ toàn bộ chức năng và sửa lại giao diện trang đăng nhập          |
-| Phần việc liên quan | Database (seed data) / Frontend (Blazor UI)                                          |
-| Mức độ sử dụng      | AI phân tích schema/enum/FK, sinh script seed và sửa UI; người dùng xác nhận kết quả |
+| Nội dung            | Thông tin                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| Ngày sử dụng        | 26/07/2026                                                                                     |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                                  |
+| Mục đích sử dụng    | Fix 3 finding nhỏ từ test report: email required chưa đánh dấu, thiếu unique constraint DB cho QueueTicketId, stock=0 chưa bị lọc khỏi autocomplete |
+| Phần việc liên quan | Frontend (Blazor) / Database (EF migration)                                                   |
+| Mức độ sử dụng      | Viết code toàn bộ                                                                              |
 
 #### 24.1. Prompt đã sử dụng
 
 ```text
-tại sao email mk không đúng
-tạo cho tôi data ở các chức năng được không
-với lại sửa lại UI login
+Fix 3 finding nhỏ từ test report trên branch feature/de190123-smartclinic-fixes. Độc lập nhau,
+không cần migration cho fix 1/2, fix 3 cần migration + kiểm tra duplicate data trước khi thêm
+unique constraint.
 ```
 
 #### 24.2. Kết quả AI gợi ý
 
 ```text
-1. "Sai email/mật khẩu" thực chất do connection string trong appsettings.json bị đổi thành "cc"
-   (chuỗi rác) → mọi login ném exception parse chuỗi kết nối; UI hiển thị chung chung thành sai
-   mật khẩu. Khôi phục connection string; xác minh 5 tài khoản demo login đều trả HTTP 200.
-2. Kiểm tra DB thấy hầu hết bảng chức năng trống. Đọc schema (INFORMATION_SCHEMA), enum (Enums.cs)
-   và FK (DoctorId→StaffProfiles, PatientId→PatientProfiles) rồi sinh script seed T-SQL tham chiếu
-   ID theo email/code (bền vững), có guard chống chạy trùng. Tạo dữ liệu phủ mọi chức năng: dịch vụ
-   khám, kho thuốc + ngưỡng liều, cặp tương tác thuốc, lịch trực, lịch hẹn, hàng đợi, lượt khám +
-   ICD-10, đơn thuốc, xét nghiệm + kết quả, sinh tồn + y lệnh nội trú, hoá đơn + thanh toán, đánh
-   giá, phiên telemedicine — dựng sẵn 3 kịch bản bệnh nhân (đã thanh toán / chưa thanh toán / tele).
-3. Trang login hiển thị bị kéo ngang do bundle scoped-css cũ (bản .login-card dùng flex hàng ngang).
-   Viết lại Login.razor + Login.razor.css thành card căn giữa (max-width 420px, display:block rõ ràng),
-   thêm bấm-để-điền tài khoản demo; rebuild để sinh lại bundle Mediconnect.Web.styles.css.
+Fix 1: ClinicDashboard.razor — thêm dấu * đỏ vào label Email, thêm field `_submitted` + dòng
+lỗi "Vui lòng nhập email." khi `_submitted && string.IsNullOrWhiteSpace(_walkInEmail)`.
+Fix 2: EPrescriptionPanel.razor.SearchResults — thêm điều kiện `d.StockQuantity > 0` vào Where.
+Fix 3: Migration `AddUniqueConstraintOutpatientVisitQueueTicketId` — drop index cũ
+`IX_OutpatientVisits_QueueTicketId`, tạo lại unique filtered index
+`WHERE [QueueTicketId] IS NOT NULL` (cú pháp SQL Server, không phải Postgres). Kiểm tra
+duplicate QueueTicketId trước: 0 dòng trùng dù session test trước đó tạo nhiều visit — an toàn
+để migrate.
 ```
 
 #### 24.3. Phần sinh viên/nhóm đã sử dụng từ AI
 
 ```text
-Data demo áp dụng thẳng vào DB NewMediconnect (đã kiểm số dòng từng bảng khớp mong đợi). Sửa UI
-login: build Web 0 error, xác nhận bundle sinh lại chứa CSS đúng; restart Web để hiển thị bản mới.
+Áp dụng cả 3 fix sau khi xác nhận `dotnet build` sạch cả 2 project và verify trực tiếp qua
+browser (label Email có dấu *; search "Hết Hàng Demo 100mg" không còn ra kết quả, "Penicillin"
+vẫn ra đúng) + qua SQL (`sys.indexes` xác nhận `is_unique=1` với `filter_definition` đúng).
 ```
 
 #### 24.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
 
 ```text
-Yêu cầu seed phải tham chiếu ID có sẵn theo email/code thay vì hardcode GUID, và có guard tránh
-tạo trùng khi chạy lại. Với login, yêu cầu tìm đúng nguyên nhân (bundle cũ) chứ không chỉ sửa CSS
-file nguồn — nếu không rebuild thì bản served vẫn hỏng.
+- Phát hiện dev server (API/Web) giữ lock file .exe khiến `dotnet build`/`dotnet ef` thất bại —
+  tự dừng server trước khi build, khởi động lại sau khi xong.
+- Ghi nhận rõ giới hạn: dòng lỗi "Vui lòng nhập email." được nối dây đúng nhưng nút submit vẫn
+  bị disable khi email rỗng (theo đúng scope không được đổi disabled condition) nên đường dẫn
+  kích hoạt thực tế của dòng lỗi này hiện chưa thể xảy ra qua click chuột thường — chỉ có tác
+  dụng phòng hờ nếu điều kiện disabled thay đổi sau này.
 ```
 
 #### 24.5. Minh chứng
 
-| Loại minh chứng   | Nội dung                                                                                     |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| Link commit       | `fix(ui): redesign login page, regenerate stale scoped-css bundle` trên branch `docs/mediconnect-code-guides` (data demo chỉ nằm trong DB, không commit) |
-| File liên quan    | `src/Mediconnect.Web/Components/Pages/Login.razor`, `Login.razor.css`; DB `NewMediconnect` (seed) |
-| Screenshot        |                                                                                                |
-| Kết quả chạy/test | 5 tài khoản demo login → HTTP 200. Seed: MedicalServices=6, Drugs=10, Appointments=4, OutpatientVisits=2, Prescriptions=2, LabResults=1, VitalSigns=3, CareOrders=4, Payments=1, ServiceRatings=1, TelemedicineSessions=1. Build Web: 0 error |
-| Link video demo   |                                                                                                |
-| Ghi chú khác      | Connection string (`appsettings.json`) nằm trong `.gitignore` nên việc khôi phục không ảnh hưởng git. Dữ liệu seed là dữ liệu mẫu để demo, không phải logic mới |
+| Loại minh chứng   | Nội dung                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| Link commit       | `253d324` trên branch `feature/de190123-smartclinic-fixes`                                                                                       |
+| File liên quan    | `src/Mediconnect.Web/Components/Pages/ClinicDashboard.razor`; `src/Mediconnect.Web/Components/Shared/EPrescriptionPanel.razor`; `src/Mediconnect.Infrastructure/Migrations/20260725183033_AddUniqueConstraintOutpatientVisitQueueTicketId.cs` |
+| Screenshot        |                                                                                                                |
+| Kết quả chạy/test | `dotnet build` cả 2 project: 0 Warning/0 Error; `dotnet ef database update`: áp dụng thành công; verify browser + SQL đúng như mong đợi |
+| Link video demo   |                                                                                                                |
+| Ghi chú khác      | Migration chỉ đổi index (drop + create unique filtered), không đụng dữ liệu hiện có                          |
 
 #### 24.6. Nhận xét cá nhân/nhóm
 
 ```text
-Hai lỗi người dùng gặp ("sai mật khẩu", "login vỡ giao diện") đều KHÔNG phải lỗi logic: một do
-config bị sửa nhầm, một do artifact build cũ được phục vụ. Củng cố bài học phải phân biệt lỗi
-code với lỗi cấu hình/artifact trước khi sửa, và luôn rebuild để bản served khớp source.
+Việc kiểm tra duplicate data trước khi thêm unique constraint là bước bắt buộc không thể bỏ qua
+— nếu có dữ liệu trùng từ các session test trước, migration sẽ fail giữa chừng và để lại DB ở
+trạng thái nửa vời.
 ```
 
 ---

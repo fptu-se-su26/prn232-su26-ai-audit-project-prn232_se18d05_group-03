@@ -433,7 +433,10 @@
             }
             catch (ApiClient.ApiException ex) when (ex.Message.Contains("Outpatient visit not found", StringComparison.OrdinalIgnoreCase))
             {
-                var visit = await Api.CreateOutpatientVisit(new OutpatientVisitWriteDto
+                var allVisits = await Api.GetOutpatientVisits();
+                var existingVisit = allVisits?.FirstOrDefault(v => v.QueueTicketId == _selectedTicket.Id);
+
+                var visit = existingVisit ?? await Api.CreateOutpatientVisit(new OutpatientVisitWriteDto
                 {
                     PatientId = _selectedTicket.PatientId.Value,
                     DoctorId = doctorId,

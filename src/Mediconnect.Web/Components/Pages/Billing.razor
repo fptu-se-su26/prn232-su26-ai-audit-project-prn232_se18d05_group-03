@@ -87,7 +87,7 @@ else
             {
                 var st = InvoiceStatusInfo(inv.Status);
                 var isPaid = inv.Status == InvoiceStatus.Paid;
-                var canPay = !isPaid && inv.TotalAmount > 0;
+                var canPay = !isPaid;
                 <div class="report-card p-0" style="overflow:hidden">
                     <button type="button" class="btn w-100 text-start d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 border-0 rounded-0" @onclick="() => ToggleExpand(inv)">
                         <div class="d-flex align-items-center gap-2">
@@ -280,6 +280,9 @@ else
 @code {
     [Inject] private ApiClient Api { get; set; } = default!;
 
+    [SupplyParameterFromQuery(Name = "visitId")]
+    public string? PreselectedVisitId { get; set; }
+
     private class InvoiceVm
     {
         public Guid Id;
@@ -321,7 +324,24 @@ else
     private decimal TotalOutstanding => _invoices.Where(i => i.Status is InvoiceStatus.Pending or InvoiceStatus.Draft).Sum(i => i.TotalAmount);
     private List<PaymentReadDto> PaymentsFor(Guid invoiceId) => _payments.Where(p => p.BillingInvoiceId == invoiceId).ToList();
 
+    private bool _autoOpenHandled;
+
     protected override async Task OnInitializedAsync() => await LoadData();
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(PreselectedVisitId) && !_autoOpenHandled && _visits.Count > 0)
+        {
+            _autoOpenHandled = true;
+            var match = _visits.FirstOrDefault(v => v.Id.ToString() == PreselectedVisitId);
+            if (match is not null)
+            {
+                _createVisitId = match.Id.ToString();
+                _showCreate = true;
+            }
+        }
+        return Task.CompletedTask;
+    }
 
     private async Task LoadData()
     {

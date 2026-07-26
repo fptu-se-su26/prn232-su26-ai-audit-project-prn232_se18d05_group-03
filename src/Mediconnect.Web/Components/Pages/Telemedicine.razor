@@ -130,7 +130,7 @@ else
     private Guid? _activeDoctorId;
 
     private string _notes = "";
-    private bool _muted, _cameraOff, _savingNotes, _creatingVisit, _loading = true, _isInitiator, _isDoctor;
+    private bool _muted, _cameraOff, _savingNotes, _creatingVisit, _loading = true, _isInitiator, _isDoctor, _callEnded;
     private string? _error;
     private string? _mediaError;
 
@@ -187,7 +187,10 @@ else
         _hub.On("CallEnded", async () =>
         {
             await JS.InvokeVoidAsync("telemedicineInterop.stopCall");
-            await InvokeAsync(() => Nav.NavigateTo(_isDoctor ? "/clinic-dashboard" : "/appointments"));
+            var dest = _isDoctor
+                ? "/clinic-dashboard"
+                : (_activeVisitId != null ? $"/billing?visitId={_activeVisitId}" : "/appointments");
+            await InvokeAsync(() => Nav.NavigateTo(dest));
         });
 
         await _hub.StartAsync();
@@ -285,6 +288,17 @@ else
 
         try
         {
+            var allVisits = await Api.GetOutpatientVisits();
+            var existingVisit = allVisits?.FirstOrDefault(v =>
+                v.PatientId == _session.PatientId &&
+                v.DoctorId == _activeDoctorId.Value &&
+                v.VisitDate.Date == DateTime.UtcNow.Date);
+            if (existingVisit is not null)
+            {
+                _activeVisitId = existingVisit.Id.ToString();
+                return true;
+            }
+
             var appointment = await Api.GetAppointment(_session.AppointmentId);
             if (appointment is null) throw new ApiClient.ApiException(404, "Không tìm thấy lịch hẹn.");
 
@@ -381,6 +395,8 @@ else
 
     private async Task EndCall()
     {
+        _callEnded = true;
+
         if (_hub is not null)
         {
             // Must notify the peer before leaving the group — OthersInGroup only reaches
@@ -409,12 +425,32 @@ else
             catch { /* best-effort — local call already ended regardless */ }
         }
 
-        Nav.NavigateTo(_isDoctor ? "/clinic-dashboard" : "/appointments");
+        Nav.NavigateTo(_isDoctor
+            ? "/clinic-dashboard"
+            : (_activeVisitId != null ? $"/billing?visitId={_activeVisitId}" : "/appointments"));
     }
 
     public async ValueTask DisposeAsync()
     {
-        await JS.InvokeVoidAsync("telemedicineInterop.stopCall");
+        if (!_callEnded)
+        {
+            if (_hub?.State == HubConnectionState.Connected)
+            {
+                try { await _hub.SendAsync("NotifyCallEnded", RoomId); } catch { }
+                try { await _hub.SendAsync("LeaveRoom", RoomId); } catch { }
+            }
+            try { await Api.EndTelemedicineSession(_roomGuid); } catch { }
+            if (_activeVisitId is not null && Guid.TryParse(_activeVisitId, out var visitId))
+            {
+                try { await Api.CompleteOutpatientVisit(visitId); } catch { }
+            }
+            if (_session is not null)
+            {
+                try { await Api.UpdateAppointmentStatus(_session.AppointmentId, AppointmentStatus.Completed); } catch { }
+            }
+        }
+
+        try { await JS.InvokeVoidAsync("telemedicineInterop.stopCall"); } catch { }
         if (_hub is not null) await _hub.DisposeAsync();
         _dotnetRef?.Dispose();
     }

@@ -64,10 +64,12 @@ public class QueueService : IQueueService
 
         // Vãng lai có tên + email: tạo (hoặc tái sử dụng) tài khoản Patient thật, y hệt cách
         // Admin tạo user thủ công, để có PatientId hợp lệ cho toàn bộ luồng khám/kê đơn phía sau.
+        Guid? patientUserAccountId = null;
         if (!dto.AppointmentId.HasValue && !string.IsNullOrWhiteSpace(dto.PatientName) && !string.IsNullOrWhiteSpace(dto.PatientEmail))
         {
             var profile = await GetOrCreateWalkInPatientProfileAsync(dto.PatientName, dto.PatientEmail, dto.PatientPhone, cancellationToken);
             patientId = profile.Id;
+            patientUserAccountId = profile.UserAccountId;
 
             ticket.PatientId = profile.Id;
             ticket.PatientName = dto.PatientName;
@@ -75,7 +77,7 @@ public class QueueService : IQueueService
             await _ticketRepository.SaveChangesAsync(cancellationToken);
         }
 
-        return MapToDetail(ticket, clinic, patientId, patientName);
+        return MapToDetail(ticket, clinic, patientId, patientName, patientUserAccountId);
     }
 
     public async Task<ClinicQueueDto> GetClinicQueueAsync(Guid clinicId, CancellationToken cancellationToken = default)
@@ -434,7 +436,8 @@ public class QueueService : IQueueService
         QueueTicket ticket,
         Clinic clinic,
         Guid? patientId,
-        string? patientName) => new()
+        string? patientName,
+        Guid? patientUserAccountId = null) => new()
     {
         Id = ticket.Id,
         ClinicId = clinic.Id,
@@ -443,6 +446,7 @@ public class QueueService : IQueueService
         AppointmentId = ticket.AppointmentId,
         PatientId = patientId,
         PatientName = patientName,
+        PatientUserAccountId = patientUserAccountId,
         Number = ticket.Number,
         IssuedAt = ticket.IssuedAt,
         Status = ticket.Status
