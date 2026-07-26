@@ -5,10 +5,10 @@
 
 <div class="login-wrap">
     <div class="login-card">
-        <div class="text-center mb-4">
-            <span class="material-symbols-outlined" style="font-size:3rem;color:var(--color-primary)">local_hospital</span>
-            <h4 class="mt-3 mb-1">Đăng nhập</h4>
-            <p class="text-muted mb-0" style="font-size:.85rem">Nhập thông tin tài khoản để tiếp tục</p>
+        <div class="login-brand">
+            <span class="login-logo material-symbols-outlined">local_hospital</span>
+            <h4 class="mb-1">Đăng nhập</h4>
+            <p class="text-muted mb-0">Nhập thông tin tài khoản để tiếp tục</p>
         </div>
 
         @if (!string.IsNullOrEmpty(_error))
@@ -20,11 +20,11 @@
             <DataAnnotationsValidator />
             <div class="mb-3">
                 <label class="form-label">Email</label>
-                <InputText class="form-control" @bind-Value="_model.Email" placeholder="email@mediconnect.local" />
+                <InputText class="form-control" @bind-Value="_model.Email" placeholder="email@mediconnect.local" autocomplete="username" />
             </div>
             <div class="mb-4">
                 <label class="form-label">Mật khẩu</label>
-                <InputText type="password" class="form-control" @bind-Value="_model.Password" />
+                <InputText type="password" class="form-control" @bind-Value="_model.Password" autocomplete="current-password" />
             </div>
             <button type="submit" class="btn btn-primary btn-pill w-100" style="height:44px;font-size:.9rem" disabled="@_loading">
                 @if (_loading)
@@ -33,21 +33,24 @@
                 }
                 @(_loading ? "Đang đăng nhập..." : "Đăng nhập")
             </button>
-
-            <p class="text-center text-muted mt-4 mb-0" style="font-size:.85rem">
-                Chưa có tài khoản?
-                <a href="register" style="font-weight:600">Đăng ký</a>
-            </p>
         </EditForm>
 
-        <div class="login-hint mt-4">
-            <div class="text-muted mb-2" style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Tài khoản demo</div>
-            @foreach (var a in new[]{ ("admin@mediconnect.local","Admin@123","Admin"), ("doctor@mediconnect.local","Doctor@123","Doctor"), ("nurse@mediconnect.local","Nurse@123","Nurse"), ("lab@mediconnect.local","Lab@123","Lab"), ("patient@mediconnect.local","Patient@123","Patient") })
-            {
-                <div style="font-size:.72rem;color:var(--color-on-surface-variant);line-height:1.8">
-                    <span style="font-weight:600;color:var(--color-on-surface)">@a.Item3:</span> @a.Item1 / @a.Item2
-                </div>
-            }
+        <p class="text-center text-muted mt-4 mb-0" style="font-size:.85rem">
+            Chưa có tài khoản?
+            <a href="register" style="font-weight:600">Đăng ký</a>
+        </p>
+
+        <div class="login-hint">
+            <div class="login-hint-title">Tài khoản demo — bấm để điền nhanh</div>
+            <div class="login-hint-grid">
+                @foreach (var a in _demoAccounts)
+                {
+                    <button type="button" class="login-hint-item" @onclick="() => Fill(a.Email, a.Password)">
+                        <span class="login-hint-role">@a.Role</span>
+                        <span class="login-hint-email">@a.Email</span>
+                    </button>
+                }
+            </div>
         </div>
     </div>
 </div>
@@ -59,6 +62,23 @@
     private LoginModel _model = new();
     private string? _error;
     private bool _loading;
+
+    private record DemoAccount(string Role, string Email, string Password);
+
+    private static readonly DemoAccount[] _demoAccounts =
+    {
+        new("Admin",   "admin@mediconnect.local",   "Admin@123"),
+        new("Doctor",  "doctor@mediconnect.local",  "Doctor@123"),
+        new("Nurse",   "nurse@mediconnect.local",   "Nurse@123"),
+        new("Lab",     "lab@mediconnect.local",     "Lab@123"),
+        new("Patient", "patient@mediconnect.local", "Patient@123"),
+    };
+
+    private void Fill(string email, string password)
+    {
+        _model.Email = email;
+        _model.Password = password;
+    }
 
     private async Task HandleLogin()
     {

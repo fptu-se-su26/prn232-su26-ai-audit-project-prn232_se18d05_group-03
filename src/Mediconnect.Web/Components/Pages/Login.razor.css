@@ -7,8 +7,9 @@
 }
 
 .login-card {
+    display: block;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     background: var(--color-surface-container-lowest);
     border: 1px solid var(--color-outline-variant);
     border-radius: 1.25rem;
@@ -16,8 +17,77 @@
     box-shadow: var(--shadow);
 }
 
+.login-brand {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.login-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: .75rem;
+    border-radius: 1rem;
+    font-size: 2rem;
+    color: var(--color-primary);
+    background: var(--color-primary-container);
+}
+
 .login-hint {
+    margin-top: 1.75rem;
     background: var(--color-surface-container-low);
     border-radius: .85rem;
-    padding: .75rem 1rem;
+    padding: .85rem 1rem 1rem;
+}
+
+.login-hint-title {
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--color-on-surface-variant);
+    margin-bottom: .6rem;
+}
+
+.login-hint-grid {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.login-hint-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    width: 100%;
+    text-align: left;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: .55rem;
+    padding: .4rem .55rem;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+
+.login-hint-item:hover {
+    background: var(--color-surface-container-lowest);
+    border-color: var(--color-outline-variant);
+}
+
+.login-hint-role {
+    flex-shrink: 0;
+    min-width: 3.75rem;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.login-hint-email {
+    font-size: .74rem;
+    color: var(--color-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
