@@ -741,6 +741,8 @@ Viết tại đây...
 | --: | ----------------- | --------------- | --------------------- | ---------- |
 |   1 | Gỡ track build artifacts + sửa CORS + README | minhPJ2812 (AI hỗ trợ) | `**/bin`, `**/obj`, `src/mediconnect/Program.cs`, `README.md` | `1e2afc3` |
 |   2 | Viết bộ tài liệu giải thích code/UI theo 4 thành viên | minhPJ2812 (AI hỗ trợ) | `src/mediconnect/doc/` (9 file .md) | `b0af778` |
+|   3 | Tạo dữ liệu demo phủ mọi chức năng + script seed | minhPJ2812 (AI hỗ trợ) | `src/mediconnect/doc/seed_demo_data.sql`; DB `NewMediconnect` | seed script |
+|   4 | Sửa UI trang đăng nhập (card căn giữa, bấm điền demo) + rebuild bundle scoped-css | minhPJ2812 (AI hỗ trợ) | `src/Mediconnect.Web/Components/Pages/Login.razor(.css)` | `fix(ui): redesign login page` |
 
 ## AI có hỗ trợ không?
 
