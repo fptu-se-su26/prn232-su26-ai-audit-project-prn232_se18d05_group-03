@@ -193,17 +193,15 @@ src/
 │   │   └── 20260606053017_AddStaffScheduleShiftType.cs
 │   └── Repositories/
 │       └── StaffScheduleQuery.cs       # Flat LINQ projection (no .Include, uses .Select)
-└── mediconnect-web/                    # React 19 + TypeScript + TailwindCSS v4
-    └── src/
-        ├── pages/
-        │   ├── ScheduleManagementPage.tsx  # KPI bar + Staff Grid + Day/Week Gantt
-        │   ├── BookingPage.tsx
-        │   ├── AppointmentsPage.tsx
-        │   └── ...
-        ├── api/
-        │   ├── client.ts               # Axios instance với JWT interceptor
-        │   └── services.ts             # staffApi, scheduleApi, departmentApi, ...
-        └── types/index.ts              # StaffDirectory, ScheduleFlat, ShiftType, StaffType, ...
+└── Mediconnect.Web/                    # Frontend Blazor Server (.NET 8) — port 5104
+    ├── Components/
+    │   ├── Pages/                      # Booking, Appointments, ScheduleManagement, Billing, ...
+    │   ├── Layout/                     # MainLayout, NavMenu (lọc menu theo role)
+    │   └── Shared/                     # BarChart, LineChart, PieChart, KpiCard, EPrescriptionPanel, ...
+    ├── Services/
+    │   ├── ApiClient.cs                # Wrapper HttpClient + JWT, dùng chung DTO với API
+    │   └── ApiAuthStateProvider.cs     # Auth state từ JWT theo SignalR circuit
+    └── Hubs/TelemedicineHub.cs         # SignalR signaling cho WebRTC (khám từ xa)
 docs/
 .github/
 README.md
@@ -305,15 +303,13 @@ Swagger UI: **http://localhost:5079/swagger**
 > "Server=.;uid=sa;pwd=<password>;Database=NewMediconnect;TrustServerCertificate=True"
 > ```
 
-### 2. Frontend (React + TypeScript)
+### 2. Frontend (Blazor Server)
 
 ```bash
-cd src/mediconnect-web
-npm install
-npm run dev
+dotnet run --project src/Mediconnect.Web
 ```
 
-Frontend chạy tại: **http://localhost:5173**
+Frontend chạy tại: **http://localhost:5104**
 
 ### 3. Tài khoản mặc định (seed data)
 
