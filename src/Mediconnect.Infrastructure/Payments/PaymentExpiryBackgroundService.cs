@@ -33,18 +33,25 @@ public class PaymentExpiryBackgroundService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(PollInterval);
-        do
+        try
         {
-            try
+            do
             {
-                await ExpireStalePaymentsAsync(stoppingToken);
+                try
+                {
+                    await ExpireStalePaymentsAsync(stoppingToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger.LogError(ex, "Payment expiry sweep failed.");
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Payment expiry sweep failed.");
-            }
+            while (await timer.WaitForNextTickAsync(stoppingToken));
         }
-        while (await timer.WaitForNextTickAsync(stoppingToken));
+        catch (OperationCanceledException)
+        {
+            // Normal shutdown — stoppingToken was cancelled while awaiting the next tick.
+        }
     }
 
     private async Task ExpireStalePaymentsAsync(CancellationToken cancellationToken)

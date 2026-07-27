@@ -92,6 +92,7 @@ Sinh viên/nhóm cần ghi lại:
 | 34 | 26/07/2026 | Claude Code (claude-opus-4-8) | Tạo dữ liệu demo phủ toàn bộ chức năng + sửa UI trang đăng nhập | tại sao email mk không đúng / tạo cho tôi data ở các chức năng được không / với lại sửa lại UI login / tạo thêm file sql cho data | Chẩn đoán "sai mật khẩu" là do connection string bị sửa thành "cc" (không phải sai tài khoản); sinh script seed T-SQL (`src/mediconnect/doc/seed_demo_data.sql`) tham chiếu ID theo email/code + guard chống trùng, phủ mọi chức năng với 3 kịch bản bệnh nhân; sửa login vỡ layout do bundle scoped-css cũ (rewrite Login.razor/css + rebuild) | Có | `src/mediconnect/doc/seed_demo_data.sql`; `Login.razor(.css)`; chi tiết: docs/AI_AUDIT_LOG.md "Lần sử dụng AI số 24" |
 | 37 | 26/07/2026 | Claude Code (claude-sonnet-5) | Audit phân quyền + đóng IDOR toàn hệ thống, màn Thu ngân, fix thanh toán Momo/VNPay | tại sao patient thấy hết chức năng trên nav / sửa luôn cho mình / kéo update develop, làm màn thu ngân, authorize 10 controller / tại sao momo bật 2 trang / set phút tự huỷ Pending / patient vẫn tạo được phiếu thu | Sửa nav theo role; grep "ai gọi endpoint" trước khi khoá Role từng controller; tự phát hiện thêm 2 IDOR (invoice PUT/DELETE gốc, xem hồ sơ bệnh nhân khác); màn Thu ngân dùng role có sẵn; fix Momo/VNPay 2 vòng (JSON thô → 2 tab); PaymentExpiryBackgroundService | Có | Chi tiết: docs/AI_AUDIT_LOG.md, "Lần sử dụng AI số 25" |
 | 38 | 26/07/2026 | Claude Code (claude-sonnet-5) | Xóa frontend React trùng lặp, fix phân quyền Lab.razor, gộp + mở rộng seed script Nội trú | khi tôi vào trang bác sĩ tất cả cái này đều hiện, có phải vậy không / bỏ folder react luôn đi / bác sĩ có thực hiện hết 4 chức năng không / hãy sửa đi / gộp 2 file sql / cho data nhiều lên tí, tản ra thêm mấy tuần | Xác nhận React chưa làm 4 trang Nội trú (0% UI); xoá hẳn src/mediconnect-web sau khi hỏi rõ phạm vi; bọc AuthorizeView ẩn 3 nút Lab-only khỏi Doctor/Nurse; gộp seed_demo_data.sql vào seed_hospital.sql, tự phát hiện 2 bug thứ tự DELETE qua chạy thật trên SQL Server; thêm đủ data Nội trú 4 feature + trải ±3 tuần | Có | Chi tiết: docs/AI_AUDIT_LOG.md, "Lần sử dụng AI số 26" |
+| 41 | 27/07/2026 | Claude Code (claude-sonnet-5) | OData scoped cho dữ liệu tĩnh, fix crash PaymentExpiryBackgroundService, defensive CSS trang Giường bệnh | mình đã áp dụng odata chưa / áp dụng nhanh ở đâu / áp dụng bình thường thì sao / sửa đi / áp dụng cho tất cả / chỉ áp dụng dữ liệu tĩnh / làm thư mục odata riêng / [log crash] / UI lỗi kéo mất sidebar / kéo develop về / dừng lại, commit push nếu ko lỗi | Cảnh báo rủi ro bảo mật trước khi mở rộng OData ra toàn bộ entity, chốt scope qua AskUserQuestion; 6 endpoint OData verify bằng SQL log thật; tự chẩn đoán đúng bug crash background service từ log người dùng dán; báo trung thực chưa xác nhận được root cause bug UI, chỉ thêm fix phòng vệ | Có | Chi tiết: docs/AI_AUDIT_LOG.md, "Lần sử dụng AI số 28" |
 
 ---
 
@@ -2446,6 +2447,99 @@ trong CHANGELOG — cần thêm cột OutpatientVisitId/FK mới xử lý đư�
 ```text
 Bài học lớn nhất phiên này: đừng tin schema/field theo trí nhớ hay brief tự viết trước — luôn
 verify lại bằng cách đọc file/DB thật, nhất là trước khi định sửa code do người khác viết.
+```
+
+---
+
+### Prompt số 30
+
+| Nội dung | Thông tin |
+|---|---|
+| Ngày sử dụng | 27/07/2026 |
+| Công cụ AI | Claude Code (claude-sonnet-5) |
+| Mục đích | OData scoped cho dữ liệu tĩnh, fix crash background service, defensive CSS |
+| Phần việc liên quan | Backend (ASP.NET Core) / Frontend (Blazor CSS) |
+| Mức độ sử dụng | Sinh code chính |
+
+#### 5.1. Prompt nguyên văn
+
+```text
+Mình đã áp dụng odata chưa? Có thể áp dụng nhanh ở đâu? Áp dụng bình thường thì sao? Sửa nhanh.
+Áp dụng cho tất cả. [chọn] Chỉ áp dụng cho dữ liệu tĩnh/công khai. Làm có thư mục odata riêng.
+[dán log crash server]. UI bị lỗi, khi kéo mất nút sidebar kế bên, ở chức năng giường bệnh. Kéo
+từ develop về. Dừng lại. Commit và push nếu ko lỗi.
+```
+
+#### 5.2. Bối cảnh khi viết prompt
+
+```text
+Rubric môn học có yêu cầu OData nhưng project chưa dùng bao giờ. Sau khi AI giải thích các mức độ
+áp dụng và đề xuất scope an toàn (dữ liệu tĩnh, không đụng bảng nhạy cảm), người dùng xác nhận và
+yêu cầu thêm tổ chức file gọn hơn (thư mục riêng). Trong lúc verify sống, server bị crash lặp lại
+và xung đột cổng với tiến trình IDE — người dùng dán nguyên log lỗi để AI tự chẩn đoán thay vì mô
+tả lại bằng lời. Sau đó phát hiện thêm 1 bug UI không liên quan (kéo/pan trang Giường bệnh).
+```
+
+#### 5.3. Kết quả AI trả về
+
+```text
+Trước khi code, giải thích rõ đánh đổi giữa "áp dụng nhanh" (endpoint riêng, an toàn, không đụng
+kiến trúc chung) và "áp dụng bình thường" (sửa CrudController<T> gốc, ảnh hưởng cả ~25 controller
+cùng lúc). Khi yêu cầu mở rộng "áp dụng cho tất cả", tự cảnh báo rủi ro lộ PasswordHash/dữ liệu
+tài chính-y tế và dùng AskUserQuestion để chốt phạm vi an toàn trước khi viết code, thay vì làm
+theo nghĩa đen. Viết 6 endpoint OData + tách thư mục riêng theo yêu cầu tiếp theo. Từ log crash
+người dùng dán vào, tự chẩn đoán đúng: PaymentExpiryBackgroundService không bắt
+OperationCanceledException lúc shutdown → host bị coi là crash — fix bằng try/catch. Với bug UI
+kéo/pan, đọc CSS/DOM nhiều vòng nhưng thẳng thắn báo không chắc chắn root cause vì không tái hiện
+được bằng browser thật, chỉ thêm 1 fix phòng vệ (overflow-x:hidden) thay vì khẳng định đã xong.
+```
+
+#### 5.4. Kết quả đã áp dụng vào bài
+
+```text
+Áp dụng sau khi dotnet build sạch 0 Warning/0 Error; verify 6 endpoint OData bằng curl thật qua
+JWT + đọc SQL log xác nhận EF dịch đúng $filter/$orderby/$top xuống SQL Server; xác nhận fix
+background service qua nhiều lần restart không còn crash.
+```
+
+#### 5.5. Phần sinh viên/nhóm đã chỉnh sửa hoặc cải tiến
+
+```text
+- Chốt phạm vi OData qua AskUserQuestion thay vì để AI tự quyết mức độ rủi ro bảo mật.
+- Yêu cầu dừng lại khi thấy AI chưa chắc chắn về root cause bug UI, tách rõ phần "chắc chắn" (đã
+  commit/push) khỏi phần "còn nghi vấn" (fix phòng vệ, chưa xác nhận) thay vì gộp chung một tuyên
+  bố "đã sửa xong".
+- Yêu cầu pull develop giữa chừng để tránh lệch nhánh quá lâu trước khi commit tiếp.
+```
+
+#### 5.6. Đánh giá chất lượng prompt
+
+- [x] Prompt rõ ràng
+- [x] Prompt có đủ bối cảnh
+- [ ] Prompt còn thiếu thông tin
+- [x] Prompt tạo ra kết quả tốt
+- [ ] Prompt tạo ra kết quả chưa phù hợp
+- [ ] Cần hỏi lại AI nhiều lần
+- [x] Cần tự kiểm tra và chỉnh sửa nhiều
+- [ ] Kết quả AI có lỗi hoặc chưa chính xác
+
+#### 5.7. Minh chứng liên quan
+
+| Loại minh chứng | Nội dung |
+|---|---|
+| Link commit | `2ed7c66` trên branch `docs/mediconnect-code-guides` |
+| File liên quan | `Controllers/OData/*.OData.cs`, `IRepository.cs`, `EfRepository.cs`, `PaymentExpiryBackgroundService.cs`, `wwwroot/app.css` |
+| Screenshot | |
+| Kết quả chạy/test | dotnet build 0 Warning/0 Error; 6× curl `/odata` trả 200 đúng kết quả; SQL log xác nhận pushdown |
+| Link tài liệu/báo cáo | |
+| Ghi chú khác | Fix CSS trang Giường bệnh chưa được người dùng xác nhận lại |
+
+#### 5.8. Ghi chú thêm
+
+```text
+Bài học: khi người dùng mở rộng phạm vi 1 yêu cầu kỹ thuật ("áp dụng cho tất cả"), cần đánh giá
+lại rủi ro trước khi làm theo nghĩa đen, đặc biệt nếu phạm vi mới chạm vào những chỗ vừa được
+hardening bảo mật trong phiên gần đây.
 ```
 
 ---

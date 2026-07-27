@@ -2355,6 +2355,90 @@ tới việc sửa entity/migration của người khác.
 
 ---
 
+### Lần sử dụng AI số 28
+
+| Nội dung            | Thông tin                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| Ngày sử dụng        | 27/07/2026                                                                                     |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                                  |
+| Mục đích sử dụng    | Thêm OData scoped cho dữ liệu tĩnh, fix crash `PaymentExpiryBackgroundService`, defensive CSS trang Giường bệnh |
+| Phần việc liên quan | Backend (ASP.NET Core) / Frontend (Blazor CSS)                                                 |
+| Mức độ sử dụng      | Viết code toàn bộ                                                                              |
+
+#### 28.1. Prompt đã sử dụng
+
+```text
+Mình đã áp dụng odata chưa? Có thể áp dụng nhanh ở đâu? Áp dụng bình thường thì sao? Sửa nhanh
+[đi]. Áp dụng cho tất cả. [Sau khi được cảnh báo rủi ro lộ dữ liệu nhạy cảm, chọn] Chỉ áp dụng cho
+dữ liệu tĩnh/công khai. Làm có thư mục odata riêng.
+[Sau đó, khi test bị đứng cổng nhiều lần] ... [dán log crash PaymentExpiryBackgroundService] ...
+UI bị lỗi, khi kéo mất nút sidebar kế bên, ở chức năng giường bệnh. Kéo từ develop về. Dừng lại.
+Commit và push nếu ko lỗi.
+```
+
+#### 28.2. Kết quả AI gợi ý
+
+```text
+Giải thích 3 mức áp dụng OData (không dùng gì / endpoint riêng tối thiểu / sửa tận gốc
+CrudController<T> ảnh hưởng cả ~25 controller) kèm đánh đổi trước khi viết code. Khi được yêu cầu
+"áp dụng cho tất cả", tự nhận ra và cảnh báo trước: áp dụng máy móc sẽ lộ field nhạy cảm
+(UserAccounts.PasswordHash) và mở lại đúng lỗ hổng IDOR vừa đóng trong phiên trước — dùng
+AskUserQuestion để chốt phạm vi thay vì tự quyết. Thêm Query() vào IRepository<T>, 6 endpoint
+GET .../odata (project sang DTO bằng LINQ Select tay, không lộ entity gốc), verify bằng cách chạy
+API sống + curl + JWT thật + đọc SQL log xác nhận EF dịch đúng $filter/$orderby/$top xuống SQL.
+Tách 6 method GetOData() ra Controllers/OData/*.OData.cs (partial class) theo yêu cầu.
+
+Trong lúc test lặp đi lặp lại bị lỗi "address already in use" — tự điều tra bằng lsof/ps thay vì
+đoán, phát hiện gốc rễ là chính AI tự spawn nhiều tiến trình dotnet run/watch nền chồng lên tiến
+trình IDE đã quản lý sẵn; dọn sạch và báo lại thay vì im lặng. Từ log crash người dùng dán vào,
+tự chẩn đoán đúng nguyên nhân: PeriodicTimer ném OperationCanceledException lúc shutdown không
+được bắt, bị BackgroundServiceExceptionBehavior.StopHost coi là crash toàn host — fix bằng
+try/catch. Với báo cáo lỗi UI kéo/pan ở trang Giường bệnh, đọc CSS/DOM tĩnh nhiều vòng nhưng
+không tự tin xác định được root cause chính xác (không có browser thật để tái hiện) — báo trung
+thực đây là fix phòng vệ (overflow-x:hidden), không phải khẳng định đã sửa đúng gốc.
+```
+
+#### 28.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng sau khi dotnet build sạch 0 Warning/0 Error; xác nhận 6 endpoint OData qua curl thật trả
+đúng kết quả $filter/$orderby/$top/$select; xác nhận fix crash background service qua nhiều lần
+restart server không còn log lỗi StopHost.
+```
+
+#### 28.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Yêu cầu tách folder OData/ riêng thay vì để lẫn trong EntityControllers.cs cho gọn.
+- Yêu cầu dừng lại (không tiếp tục đoán fix UI kéo/pan) khi thấy AI chưa chắc chắn root cause,
+  rồi yêu cầu commit/push phần đã xác nhận đúng — tách rõ phần "chắc chắn đúng" khỏi phần "còn
+  nghi vấn" thay vì gộp chung.
+- Yêu cầu pull code mới nhất từ develop giữa chừng để tránh lệch nhánh lâu ngày.
+```
+
+#### 28.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| Link commit       | `2ed7c66` trên branch `docs/mediconnect-code-guides`                                                          |
+| File liên quan    | `Controllers/OData/*.OData.cs`, `IRepository.cs`, `EfRepository.cs`, `Program.cs`, `PaymentExpiryBackgroundService.cs`, `wwwroot/app.css` |
+| Screenshot        |                                                                                                                |
+| Kết quả chạy/test | `dotnet build` 0 Warning/0 Error; 6× `curl .../odata` với JWT thật trả 200 đúng kết quả; SQL log xác nhận EF dịch đúng xuống `SELECT TOP/WHERE/ORDER BY` |
+| Link video demo   |                                                                                                                |
+| Ghi chú khác      | Fix CSS trang Giường bệnh chưa verify bằng browser thật — cần người dùng xác nhận lại |
+
+#### 28.6. Nhận xét cá nhân/nhóm
+
+```text
+Khi được yêu cầu mở rộng phạm vi ("áp dụng cho tất cả"), việc dừng lại cảnh báo rủi ro bảo mật cụ
+thể (thay vì làm ngay theo đúng nghĩa đen của yêu cầu) là đúng — nhất là ngay sau một phiên vừa
+dành nhiều công sức đóng IDOR, mở lại lỗ hổng tương tự qua đường khác sẽ rất đáng tiếc. Với lỗi UI
+không tái hiện được, thừa nhận không chắc chắn thay vì báo "đã sửa xong" là quan trọng — tránh
+đánh lừa người dùng rằng bug đã được xác nhận giải quyết trong khi chỉ mới là fix phòng vệ.
+```
+
+---
+
 ## 10. Cam kết học thuật
 
 Sinh viên/nhóm cam kết rằng:

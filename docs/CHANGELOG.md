@@ -47,6 +47,7 @@ Nguyên tắc ghi changelog:
 | Phase 11 | 26/07/2026 | Park Jea Minh: đóng lỗ hổng phân quyền (IDOR) toàn hệ thống + màn Thu ngân + fix luồng thanh toán Momo/VNPay + xóa hẳn frontend React trùng lặp + gộp/mở rộng seed script nội trú | Completed |
 | Phase 12 | 26/07/2026 | Post-merge E2E test (billing + SmartClinic) trên develop — phát hiện 3 bug, fix 2/3 | Completed |
 | Phase 13 | 26/07/2026 | Fix check-in sai phòng khám khi chọn theo lịch hẹn (Blazor + React + backend) + seed script thiếu InpatientAdmissions | Completed |
+| Phase 14 | 27/07/2026 | Park Jea Minh: OData cho 6 controller dữ liệu tĩnh (scoped, không đụng bảng nhạy cảm) + fix crash `PaymentExpiryBackgroundService` khi shutdown + defensive CSS cho trang Giường bệnh | Completed |
 | Phase 06 |  | Hoàn thiện báo cáo và demo | In Progress |
 
 ---
@@ -1093,6 +1094,83 @@ sqlcmd chạy seed_hospital.sql 3 lần liên tiếp: không lỗi, số dòng �
 
 ---
 
+# [Phase 14] OData cho dữ liệu tĩnh + fix crash background service + defensive CSS
+
+## Ngày thực hiện
+
+```text
+27/07/2026
+```
+
+## Đã hoàn thành
+
+- [x] Thêm OData (`$filter`/`$select`/`$orderby`/`$top`/`$skip`/`$count`) cho 6 controller dữ liệu
+      tĩnh: Drugs, Beds, Clinics, Departments, DrugInteractions, MedicalServices
+- [x] Cố tình **không** áp dụng cho các bảng nhạy cảm (BillingInvoices, Payments, LabResults,
+      PatientProfiles, UserAccounts...) để tránh mở lại lỗ hổng IDOR vừa đóng ở Phase 11
+- [x] Tách các action `GetOData()` ra thư mục riêng `Controllers/OData/` (partial class) theo
+      yêu cầu, không để lẫn vào `EntityControllers.cs`
+- [x] Fix crash thật: `PaymentExpiryBackgroundService` không bắt `OperationCanceledException` khi
+      host tắt, khiến mỗi lần restart bị log/xử lý như 1 crash (do
+      `BackgroundServiceExceptionBehavior.StopHost` mặc định)
+- [x] Thêm `overflow-x: hidden` cho `html, body` — fix phòng vệ cho báo cáo lỗi kéo/pan trên trang
+      Giường bệnh làm lệch layout (chưa xác nhận được root cause chính xác vì không tái hiện được
+      bằng browser thật trong môi trường này)
+- [x] Fast-forward merge `develop` (7 commit: fix WebRTC telemedicine, lịch sử kê đơn + navbar
+      tìm bệnh nhân, fix check-in chọn sai phòng khám) — không xung đột
+
+## Thay đổi chi tiết
+
+| STT | Nội dung thay đổi | File/Module liên quan | Minh chứng |
+|---:|---|---|---|
+| 1 | `IRepository<T>.Query()` — trả `IQueryable<TEntity>` chưa thực thi, dùng riêng cho OData | `IRepository.cs`, `EfRepository.cs` | `dotnet build` 0 Error |
+| 2 | 6 endpoint `GET .../odata` (`[EnableQuery]`), project sang `TReadDto` bằng LINQ `Select` viết tay (không lộ entity gốc, không lộ field nhạy cảm) | `Controllers/OData/BedsController.OData.cs`, `ClinicsController.OData.cs`, `DepartmentsController.OData.cs`, `DrugsController.OData.cs`, `DrugInteractionsController.OData.cs`, `MedicalServicesController.OData.cs` | Test `curl` với `$filter`/`$orderby`/`$top`/`$select` qua JWT thật: 200, đúng dữ liệu |
+| 3 | `AddOData(...)` đăng ký trong `Program.cs`; gói `Microsoft.AspNetCore.OData` 9.5.0 | `Program.cs`, `mediconnect.csproj` | — |
+| 4 | Verify EF dịch `$filter`/`$orderby`/`$top` xuống SQL thật (`SELECT TOP(@p) ... WHERE ... ORDER BY`), không lọc trong RAM | EF Core query log | Log thực tế từ API sống |
+| 5 | Fix `PaymentExpiryBackgroundService.ExecuteAsync` bọc `try/catch (OperationCanceledException)` quanh vòng lặp `PeriodicTimer` — trước đó exception này lúc shutdown làm crash toàn bộ host | `PaymentExpiryBackgroundService.cs` | Restart server nhiều lần không còn log crash `BackgroundServiceExceptionBehavior.StopHost` |
+| 6 | Thêm `overflow-x: hidden` cho `html, body` | `wwwroot/app.css` | `dotnet build` 0 Error; **chưa verify bằng browser thật** |
+
+## AI có hỗ trợ không?
+
+- [x] Có
+- [ ] Không
+
+Nếu có, mô tả AI đã hỗ trợ phần nào:
+
+```text
+Claude Code (claude-sonnet-5) hỏi lại phạm vi trước khi áp dụng OData cho toàn bộ ~23 controller
+(qua AskUserQuestion) sau khi tự nhận ra áp dụng máy móc sẽ lộ PasswordHash và mở lại IDOR vừa
+đóng — người dùng chọn chỉ áp dụng cho dữ liệu tĩnh. Verify OData bằng cách chạy API sống, login
+lấy JWT thật, curl với $filter/$orderby/$top/$select, đọc log SQL để xác nhận EF dịch đúng xuống
+SQL Server chứ không tự tin vào việc đọc code. Trong lúc test, nhiều lần vướng xung đột cổng
+5079/5104 giữa tiến trình tự khởi động và tiến trình dotnet watch do IDE quản lý sẵn — dẫn tới
+phát hiện bug crash thật của PaymentExpiryBackgroundService qua log thực tế (không phải suy đoán).
+Với báo cáo lỗi UI kéo/pan trang Giường bệnh, đọc CSS/DOM tĩnh không xác nhận được root cause
+chắc chắn (không có browser thật để tái hiện) — báo trung thực đây chỉ là fix phòng vệ, chưa chắc
+đúng nguyên nhân gốc, thay vì khẳng định đã sửa xong.
+```
+
+## Commit/Screenshot minh chứng
+
+```text
+Branch: docs/mediconnect-code-guides
+2ed7c66 — feat(api): add scoped OData query endpoints for master-data lists
+dotnet build mediconnect.sln: 0 Warning, 0 Error
+curl trực tiếp 6 endpoint /odata qua JWT thật: đều 200, kết quả đúng theo $filter/$orderby/$top
+```
+
+## Ghi chú
+
+```text
+- Cố tình không áp dụng OData cho BillingInvoices/Payments/LabResults/PatientProfiles/UserAccounts
+  — nếu cần sau này, phải thêm ownership-filter theo role trước khi mở endpoint, không chỉ project
+  DTO như 6 entity tĩnh ở đây.
+- Fix overflow-x: hidden cho trang Giường bệnh là fix phòng vệ, CHƯA xác nhận đúng root cause —
+  cần người báo lỗi test lại và mô tả rõ hơn (2D hay 3D, chuột hay trackpad) nếu vẫn còn lỗi.
+```
+
+---
+
 # 4. Tổng kết thay đổi cuối project
 
 ## 4.1. Các chức năng đã hoàn thành
@@ -1143,6 +1221,7 @@ sqlcmd chạy seed_hospital.sql 3 lần liên tiếp: không lỗi, số dòng �
 | 42 | Xóa hẳn frontend React (`src/mediconnect-web`) — Blazor là frontend duy nhất của dự án | Completed | Đã xoá `src/mediconnect-web/**` | Park Jea Minh |
 | 43 | Fix `Lab.razor` lộ 3 nút thao tác (bắt đầu xử lý/lưu kết quả/upload) cho Doctor/Nurse dù backend chỉ cho role Lab — bấm vào trước đây bị 403 âm thầm | Completed | `Lab.razor` | Park Jea Minh |
 | 44 | Gộp `seed_demo_data.sql` vào `seed_hospital.sql`, fix 2 bug thứ tự xoá dữ liệu (thiếu `DELETE FROM ServiceRatings`, `InpatientAdmissions` xoá sau `OutpatientVisits`), bổ sung đầy đủ dữ liệu demo Nội trú TV3 (F1–F4) + mở rộng volume trải ±3 tuần | Completed | `seed_hospital.sql` | Park Jea Minh |
+| 45 | OData scoped cho 6 controller dữ liệu tĩnh (Drugs/Beds/Clinics/Departments/DrugInteractions/MedicalServices), verify EF dịch xuống SQL thật; fix crash `PaymentExpiryBackgroundService` khi shutdown; defensive CSS trang Giường bệnh | Completed | `Controllers/OData/*`, `PaymentExpiryBackgroundService.cs`, `app.css` | Park Jea Minh |
 
 ---
 
