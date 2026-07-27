@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { medicalRecordApi, clinicDashboardApi, userApi, outpatientApi, staffApi, patientApi } from "../api/services";
+import { medicalRecordApi, clinicDashboardApi, userApi, outpatientApi, staffApi, patientApi, phrApi } from "../api/services";
 import type { ClinicQueue, QueueTicketDetail, Icd10Result, PatientDiagnosisHistory } from "../types";
 import { useAuth } from "../context/AuthContext";
 import EPrescriptionPanel from "./EPrescriptionPanel";
@@ -32,6 +32,53 @@ export default function OutpatientRecordPage() {
   const [topQuery, setTopQuery] = useState<string>("");
   const [savedVisitId, setSavedVisitId] = useState<string | null>(null);
   const [savedPatientName, setSavedPatientName] = useState<string>("");
+  const [patientPrescriptions, setPatientPrescriptions] = useState<any[]>([]);
+  const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
+
+  const loadPatientPrescriptions = async (patientId: string) => {
+    setLoadingPrescriptions(true);
+    try {
+      const { data: history } = await patientApi.getHistory(patientId);
+      const prescriptions = history?.prescriptions || [];
+      if (prescriptions.length === 0) {
+        setPatientPrescriptions([]);
+        return;
+      }
+
+      const [{ data: allItems }, { data: drugs }] = await Promise.all([
+        phrApi.getAllPrescriptionItems(),
+        phrApi.getAllDrugs(),
+      ]);
+
+      const drugDict = new Map(drugs.map((d: any) => [d.id, d]));
+
+      const rxList = prescriptions
+        .sort((a: any, b: any) => new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime())
+        .map((p: any) => ({
+          id: p.id,
+          issuedAt: p.issuedAt,
+          notes: p.notes,
+          items: allItems
+            .filter((i: any) => i.prescriptionId === p.id)
+            .map((i: any) => {
+              const drug = drugDict.get(i.drugId);
+              return {
+                drugName: drug?.name || "Thuốc chưa xác định",
+                unit: drug?.unit || "đơn vị",
+                dose: i.dose || "",
+                frequency: i.frequency || "",
+                durationDays: i.durationDays,
+                quantity: i.quantity,
+              };
+            }),
+        }));
+      setPatientPrescriptions(rxList);
+    } catch {
+      setPatientPrescriptions([]);
+    } finally {
+      setLoadingPrescriptions(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -85,14 +132,48 @@ export default function OutpatientRecordPage() {
   }, [selectedTicket]);
 
   useEffect(() => {
-    if (!selectedTicket?.patientId) { setDiagnosisHistory([]); return; }
+    if (!selectedTicket?.patientId) {
+      setDiagnosisHistory([]);
+      setPatientPrescriptions([]);
+      return;
+    }
     (async () => {
       try {
         const { data } = await medicalRecordApi.getDiagnosisHistory(selectedTicket.patientId!);
         setDiagnosisHistory(data);
       } catch { setDiagnosisHistory([]); }
+      loadPatientPrescriptions(selectedTicket.patientId!);
     })();
   }, [selectedTicket?.patientId]);
+
+  const openEPrescriptionForSelectedPatient = async () => {
+    if (!selectedTicket || !user) return;
+    let patientIdToUse = selectedTicket.patientId || patient?.id;
+    if (!patientIdToUse) {
+      setMessage({ type: "error", text: "Bệnh nhân vãng lai chưa có hồ sơ tài khoản — không thể kê đơn thuốc." });
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    try {
+      const visitId = selectedTicket.appointmentId || selectedTicket.id;
+      const createResp = await outpatientApi.create({
+        patientId: patientIdToUse,
+        doctorId: staffProfileId || user.id,
+        clinicId: clinicId || selectedTicket.clinicId,
+        queueTicketId: selectedTicket.id,
+        visitDate: new Date().toISOString(),
+        status: 0,
+      } as any);
+      const created = createResp?.data ?? createResp;
+      const finalVisitId = created?.id || visitId;
+      setSavedVisitId(finalVisitId);
+      setSavedPatientName(patient?.fullName || selectedTicket?.patientName || "Bệnh nhân");
+    } catch {
+      setMessage({ type: "error", text: "Lỗi khi mở form kê đơn thuốc." });
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
 
   useEffect(() => {
     if (icdQuery.trim().length < 2) { setIcdResults([]); setIcdSearching(false); return; }
@@ -578,6 +659,97 @@ export default function OutpatientRecordPage() {
                       </button>
                     </div>
                   </form>
+
+                  {/* Đơn thuốc đã kê section */}
+                  <div className="mt-8 pt-6 border-t border-slate-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary">medication</span>
+                        Đơn thuốc đã kê
+                        {patientPrescriptions.length > 0 && (
+                          <span className="text-xs font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                            {patientPrescriptions.length}
+                          </span>
+                        )}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={openEPrescriptionForSelectedPatient}
+                        className="flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 border border-primary/30 px-3 py-1.5 rounded-xl transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">add</span>
+                        Kê đơn thuốc mới
+                      </button>
+                    </div>
+
+                    {loadingPrescriptions ? (
+                      <div className="flex items-center justify-center py-6 text-slate-400 text-sm gap-2">
+                        <span className="material-symbols-outlined animate-spin text-primary">progress_activity</span>
+                        <span>Đang tải danh sách đơn thuốc...</span>
+                      </div>
+                    ) : patientPrescriptions.length === 0 ? (
+                      <div className="text-center py-6 border border-dashed border-slate-200 rounded-2xl text-slate-400">
+                        <span className="material-symbols-outlined text-3xl text-slate-300">prescriptions</span>
+                        <p className="text-sm font-semibold mt-1">Chưa có đơn thuốc nào được kê</p>
+                        <p className="text-xs text-slate-400 mt-0.5 mb-3">Bệnh nhân chưa có đơn thuốc nào trong hồ sơ khám này.</p>
+                        <button
+                          type="button"
+                          onClick={openEPrescriptionForSelectedPatient}
+                          className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl shadow-sm hover:bg-primary/95 transition-colors inline-flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-sm">add_circle</span>
+                          Kê đơn thuốc ngay
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {patientPrescriptions.map((rx) => (
+                          <div key={rx.id} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-emerald-600 text-lg">task_alt</span>
+                                <span className="font-bold text-sm text-slate-800">
+                                  Ngày kê: {new Date(rx.issuedAt).toLocaleString("vi-VN")}
+                                </span>
+                              </div>
+                              <span className="text-xs font-bold px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">
+                                {rx.items.length} thuốc
+                              </span>
+                            </div>
+                            {rx.notes && (
+                              <p className="text-xs text-slate-500 mb-2"><strong>Ghi chú:</strong> {rx.notes}</p>
+                            )}
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs text-left text-slate-600">
+                                <thead>
+                                  <tr className="border-b border-slate-200 text-slate-400 font-semibold">
+                                    <th className="py-1.5 w-8">#</th>
+                                    <th className="py-1.5">Thuốc</th>
+                                    <th className="py-1.5">Liều dùng</th>
+                                    <th className="py-1.5">Tần suất</th>
+                                    <th className="py-1.5">Số ngày</th>
+                                    <th className="py-1.5 text-right">Số lượng</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {rx.items.map((item: any, idx: number) => (
+                                    <tr key={idx} className="border-b border-slate-100 last:border-0">
+                                      <td className="py-1.5 text-slate-400">{idx + 1}</td>
+                                      <td className="py-1.5 font-bold text-primary">{item.drugName}</td>
+                                      <td className="py-1.5">{item.dose || "—"}</td>
+                                      <td className="py-1.5">{item.frequency || "—"}</td>
+                                      <td className="py-1.5">{item.durationDays} ngày</td>
+                                      <td className="py-1.5 text-right font-semibold">{item.quantity} {item.unit}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -585,13 +757,18 @@ export default function OutpatientRecordPage() {
         </div>
       </div>
 
-      {/* E-Prescription panel — appears after successful diagnosis save */}
+      {/* E-Prescription panel — appears after successful diagnosis save or manual click */}
       {savedVisitId && staffProfileId && (
         <EPrescriptionPanel
           visitId={savedVisitId}
           doctorId={staffProfileId}
           patientName={savedPatientName}
-          onClose={() => { setSavedVisitId(null); setSavedPatientName(""); }}
+          onClose={() => {
+            const pid = selectedTicket?.patientId || patient?.id;
+            setSavedVisitId(null);
+            setSavedPatientName("");
+            if (pid) loadPatientPrescriptions(pid);
+          }}
         />
       )}
     </div>
