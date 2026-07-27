@@ -40,7 +40,7 @@ public class AppointmentsController : CrudController<Appointment, AppointmentRea
     }
 }
 
-public class BedsController : CrudController<Bed, BedReadDto, BedWriteDto>
+public partial class BedsController : CrudController<Bed, BedReadDto, BedWriteDto>
 {
     private readonly IRepository<Bed> _repository;
 
@@ -332,7 +332,7 @@ public class CareOrdersController : CrudController<CareOrder, CareOrderReadDto, 
     }
 }
 
-public class ClinicsController : CrudController<Clinic, ClinicReadDto, ClinicWriteDto>
+public partial class ClinicsController : CrudController<Clinic, ClinicReadDto, ClinicWriteDto>
 {
     private readonly IRepository<Clinic> _clinicRepository;
     private readonly IRepository<MedicalService> _serviceRepository;
@@ -403,11 +403,14 @@ public class ClinicsController : CrudController<Clinic, ClinicReadDto, ClinicWri
     }
 }
 
-public class DepartmentsController : CrudController<Department, DepartmentReadDto, DepartmentWriteDto>
+public partial class DepartmentsController : CrudController<Department, DepartmentReadDto, DepartmentWriteDto>
 {
-    public DepartmentsController(ICrudService<Department, DepartmentReadDto, DepartmentWriteDto> service)
+    private readonly IRepository<Department> _repository;
+
+    public DepartmentsController(ICrudService<Department, DepartmentReadDto, DepartmentWriteDto> service, IRepository<Department> repository)
         : base(service)
     {
+        _repository = repository;
     }
 
     [HttpPost]
@@ -449,11 +452,14 @@ public class DischargeSummariesController : CrudController<DischargeSummary, Dis
         => base.Delete(id, cancellationToken);
 }
 
-public class DrugsController : CrudController<Drug, DrugReadDto, DrugWriteDto>
+public partial class DrugsController : CrudController<Drug, DrugReadDto, DrugWriteDto>
 {
-    public DrugsController(ICrudService<Drug, DrugReadDto, DrugWriteDto> service)
+    private readonly IRepository<Drug> _repository;
+
+    public DrugsController(ICrudService<Drug, DrugReadDto, DrugWriteDto> service, IRepository<Drug> repository)
         : base(service)
     {
+        _repository = repository;
     }
 
     [HttpPost]
@@ -472,11 +478,14 @@ public class DrugsController : CrudController<Drug, DrugReadDto, DrugWriteDto>
         => base.Delete(id, cancellationToken);
 }
 
-public class DrugInteractionsController : CrudController<DrugInteraction, DrugInteractionReadDto, DrugInteractionWriteDto>
+public partial class DrugInteractionsController : CrudController<DrugInteraction, DrugInteractionReadDto, DrugInteractionWriteDto>
 {
-    public DrugInteractionsController(ICrudService<DrugInteraction, DrugInteractionReadDto, DrugInteractionWriteDto> service)
+    private readonly IRepository<DrugInteraction> _repository;
+
+    public DrugInteractionsController(ICrudService<DrugInteraction, DrugInteractionReadDto, DrugInteractionWriteDto> service, IRepository<DrugInteraction> repository)
         : base(service)
     {
+        _repository = repository;
     }
 
     [HttpPost]
@@ -1145,7 +1154,7 @@ public class LabResultsController : CrudController<LabResult, LabResultReadDto, 
     }
 }
 
-public class MedicalServicesController : CrudController<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto>
+public partial class MedicalServicesController : CrudController<MedicalService, MedicalServiceReadDto, MedicalServiceWriteDto>
 {
     private readonly IRepository<MedicalService> _serviceRepository;
 

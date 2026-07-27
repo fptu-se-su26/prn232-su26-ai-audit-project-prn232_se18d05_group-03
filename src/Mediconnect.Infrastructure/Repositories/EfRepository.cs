@@ -15,6 +15,11 @@ public class EfRepository<TEntity> : IRepository<TEntity> where TEntity : class
         _dbSet = context.Set<TEntity>();
     }
 
+    public IQueryable<TEntity> Query()
+    {
+        return _dbSet.AsNoTracking();
+    }
+
     public async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _dbSet.AsNoTracking().ToListAsync(cancellationToken);

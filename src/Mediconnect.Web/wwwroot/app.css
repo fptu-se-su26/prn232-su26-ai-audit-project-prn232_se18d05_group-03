@@ -82,6 +82,7 @@ html, body {
     background: var(--color-surface);
     color: var(--color-on-surface);
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
 a, .btn-link { color: var(--color-primary); }
