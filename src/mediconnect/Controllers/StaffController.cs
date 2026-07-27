@@ -53,6 +53,7 @@ public class StaffController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<StaffProfileReadDto>> Create(StaffProfileWriteDto dto, CancellationToken cancellationToken)
     {
         var created = await _crudService.CreateAsync(dto, cancellationToken);
@@ -60,6 +61,7 @@ public class StaffController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, StaffProfileWriteDto dto, CancellationToken cancellationToken)
     {
         var updated = await _crudService.UpdateAsync(id, dto, cancellationToken);
@@ -67,6 +69,7 @@ public class StaffController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var deleted = await _crudService.DeleteAsync(id, cancellationToken);
@@ -74,6 +77,7 @@ public class StaffController : ControllerBase
     }
 
     [HttpGet("{id:guid}/schedules")]
+    [Authorize(Roles = "Doctor,Nurse,Lab,Admin")]
     public async Task<ActionResult<IReadOnlyList<StaffScheduleReadDto>>> GetSchedules(
         Guid id,
         CancellationToken cancellationToken)
@@ -84,6 +88,7 @@ public class StaffController : ControllerBase
     }
 
     [HttpPost("{id:guid}/schedules")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ScheduleFlatReadDto>> CreateSchedule(
         Guid id,
         StaffScheduleWriteDto dto,

@@ -202,7 +202,7 @@ else
             await JS.InvokeVoidAsync("telemedicineInterop.stopCall");
             var dest = _isDoctor
                 ? "/clinic-dashboard"
-                : (_activeVisitId != null ? $"/billing?visitId={_activeVisitId}" : "/appointments");
+                : "/appointments";
             await InvokeAsync(() => Nav.NavigateTo(dest));
         });
 
@@ -443,9 +443,7 @@ else
             catch { /* best-effort — local call already ended regardless */ }
         }
 
-        Nav.NavigateTo(_isDoctor
-            ? "/clinic-dashboard"
-            : (_activeVisitId != null ? $"/billing?visitId={_activeVisitId}" : "/appointments"));
+        Nav.NavigateTo(_isDoctor ? "/clinic-dashboard" : "/appointments");
     }
 
     public async ValueTask DisposeAsync()

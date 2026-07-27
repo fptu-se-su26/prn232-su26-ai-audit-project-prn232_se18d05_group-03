@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Mediconnect.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Admin")]
 [Route("api/reports")]
 public class ReportsController : ControllerBase
 {

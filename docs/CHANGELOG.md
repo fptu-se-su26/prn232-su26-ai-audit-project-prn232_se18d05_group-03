@@ -44,8 +44,9 @@ Nguyên tắc ghi changelog:
 | Phase 05 | 10/06/2026 | Testing & Debug | Completed |
 | Phase 07 | 11/06/2026 – 20/06/2026 | Thành viên 4: Dashboard Thống kê & Quản trị Hệ thống | Completed |
 | Phase 10 | 25/07/2026 – 26/07/2026 | DE190123: SmartClinic fixes (dedup visit, allergy, billing redirect, dispose cleanup, stock filter) + walk-in OTP login | Completed |
-| Phase 11 | 26/07/2026 | Post-merge E2E test (billing + SmartClinic) trên develop — phát hiện 3 bug, fix 2/3 | Completed |
-| Phase 12 | 26/07/2026 | Fix check-in sai phòng khám khi chọn theo lịch hẹn (Blazor + React + backend) + seed script thiếu InpatientAdmissions | Completed |
+| Phase 11 | 26/07/2026 | Park Jea Minh: đóng lỗ hổng phân quyền (IDOR) toàn hệ thống + màn Thu ngân + fix luồng thanh toán Momo/VNPay + xóa hẳn frontend React trùng lặp + gộp/mở rộng seed script nội trú | Completed |
+| Phase 12 | 26/07/2026 | Post-merge E2E test (billing + SmartClinic) trên develop — phát hiện 3 bug, fix 2/3 | Completed |
+| Phase 13 | 26/07/2026 | Fix check-in sai phòng khám khi chọn theo lịch hẹn (Blazor + React + backend) + seed script thiếu InpatientAdmissions | Completed |
 | Phase 06 |  | Hoàn thiện báo cáo và demo | In Progress |
 
 ---
@@ -1007,6 +1008,91 @@ Tài liệu mô tả code có sẵn của cả nhóm, không sinh code mới cho
 
 ---
 
+# [Phase 11] Đóng lỗ hổng phân quyền, Thu ngân, thanh toán, dọn kiến trúc & mở rộng seed nội trú
+
+## Ngày thực hiện
+
+```text
+26/07/2026
+```
+
+## Đã hoàn thành
+
+- [x] Audit phân quyền `[Authorize(Roles=...)]` trên ~10+ controller còn thiếu/sai (bắt đầu từ bug
+      Patient thấy được mục "Lịch trực" không thuộc về mình)
+- [x] Đóng 2 lỗ hổng IDOR nghiêm trọng: `BillingInvoicesController` (PUT/DELETE gốc cho Patient tự
+      sửa `Status`/`TotalAmount`), `PatientsController` (xem lịch sử/XN/đơn thuốc bệnh nhân khác)
+- [x] Màn hình Thu ngân (`CashierBilling.razor`, route `/billing/cashier`) — dùng chung role có sẵn
+      (Admin, Doctor, Nurse), không thêm role mới
+- [x] Bỏ hẳn quyền tự tạo phiếu thu của Patient (theo quyết định của nhóm) — chỉ nhân viên/thu ngân tạo
+- [x] Fix luồng thanh toán Momo/VNPay: trang JSON thô sau thanh toán, tab thanh toán bị nhân đôi thành
+      bản sao trang Viện phí, `BillingInvoice.Status` không bao giờ chuyển `Paid`
+- [x] Tự động huỷ hoá đơn `Pending` quá hạn (cấu hình số phút), qua `BackgroundService`
+- [x] Xóa hẳn frontend React (`src/mediconnect-web`) — Blazor là frontend duy nhất
+- [x] Fix `Lab.razor`: ẩn 3 nút thao tác chỉ dành cho role Lab khỏi Doctor/Nurse (đang lộ, bấm vào bị
+      backend từ chối 403)
+- [x] Gộp `seed_demo_data.sql` vào `seed_hospital.sql` thành 1 script duy nhất, fix 2 bug thứ tự xoá
+      dữ liệu (thiếu `DELETE FROM ServiceRatings`; `InpatientAdmissions` xoá sau `OutpatientVisits`
+      dù là bảng con) khiến chạy lại script lần 2 luôn lỗi
+- [x] Bổ sung dữ liệu demo Nội trú & Điều phối lâm sàng (Thành viên 3) đầy đủ 4 feature + mở rộng
+      volume, trải rộng ngày tháng ±3 tuần quanh hiện tại
+
+## Thay đổi chi tiết
+
+| STT | Nội dung thay đổi | File/Module liên quan | Minh chứng |
+|---:|---|---|---|
+| 1 | Audit "ai thực sự gọi endpoint này" (grep `ApiClient.cs` + `services.ts` + trang gọi) trước khi khoá role từng controller: `ClinicsController`, `DepartmentsController`, `DischargeSummariesController`, `DrugsController`, `DrugInteractionsController`, `MedicalServicesController`, `OutpatientVisitsController`, `PrescriptionsController`, `PrescriptionItemsController`, `ServiceRatingsController`, `TelemedicineSessionsController`, `BillingItemsController`, `CdssController`, `OtpController`, `ReportsController`, `ScheduleController`, `SmartQueueController`, `StaffController`, `UsersController`, `ClinicDashboardController`, `ClinicManagementController`, `OutpatientRecordController` | `EntityControllers.cs` và các controller trên | `dotnet build` 0 Error sau mỗi nhóm |
+| 2 | Đóng IDOR: `BillingInvoicesController` override `Create/Update/Delete` với `[Authorize(Roles="Admin,Doctor,Nurse")]` (trước đó base `CrudController` cho phép Patient tự PUT/DELETE hoá đơn của mình, sửa được cả `Status`/`TotalAmount`) | `EntityControllers.cs` | Test: Patient gọi PUT/DELETE trực tiếp bị 401/403 |
+| 3 | Đóng IDOR: `PatientsController` thêm `CanAccessPatientAsync` cho `GetHistory`/`GetLabResults`/`GetPrescriptions`; `GetAll/GetById/Update` giới hạn `Admin,Doctor,Nurse`; `Create` cho phép Patient tự tạo hồ sơ (đúng `UserAccountId`) hoặc staff tạo hộ | `PatientsController.cs` | Test: Patient A không xem được hồ sơ Patient B qua đổi ID trên URL |
+| 4 | Màn Thu ngân: tìm/chọn bệnh nhân, danh sách hoá đơn, tạo hoá đơn (BHYT nhập tay — nhân viên được tin cậy), "Xác nhận thu tiền mặt", nút VNPay/Momo | `CashierBilling.razor` (route `/billing/cashier`, `[Authorize(Roles="Admin,Doctor,Nurse")]`) | — |
+| 5 | Bỏ hẳn nút/modal "Tạo phiếu thu" phía Patient; `BillingInvoicesController.Generate` khoá `Admin,Doctor,Nurse`; `IBillingService`/`BillingService.GenerateInvoiceAsync` bỏ tham số `requestingPatientId` không còn cần; `Telemedicine.razor` sau cuộc gọi điều hướng patient về `/appointments` thay vì `/billing?visitId=` (không còn deep-link tới modal đã xoá) | `EntityControllers.cs`, `IBillingService.cs`, `BillingService.cs`, `Billing.razor`, `Telemedicine.razor` | — |
+| 6 | `PaymentsController.MarkInvoicePaidAsync` gọi từ `Confirm`/`ApplyGatewayResultAsync` khi thanh toán thành công — trước đó invoice không bao giờ chuyển `Paid` dù `Payment.Status=Paid` | `EntityControllers.cs` | Test: thanh toán Momo/VNPay xong, `BillingInvoices.Status` = Paid |
+| 7 | `FrontendSettings` (`Frontend:BaseUrl`) + redirect sau gateway callback thay vì trả JSON thô của API — fix trang đen/JSON sau thanh toán | `PaymentsController` (`RedirectAfterGatewayResultAsync`), `FrontendSettings.cs`, `appsettings.json` | Test: bấm Momo/VNPay xong không còn ra trang JSON |
+| 8 | `PaymentResult.razor` (trang xác nhận nhỏ, tự đóng sau 2.5s) + `paymentFocus.js` (focus-reload: tab gốc tự tải lại khi quay lại) thay cho redirect thẳng vào `/billing` — fix tab thanh toán bị nhân đôi thành bản sao trang Viện phí | `PaymentResult.razor`, `wwwroot/js/paymentFocus.js`, `App.razor`, `Billing.razor` | Test: bấm Momo → 1 tab phụ nhỏ xác nhận rồi tự đóng, tab gốc tự cập nhật, không còn 2 trang Viện phí |
+| 9 | `Payment.CreatedAt`, `PaymentStatus.Cancelled`, `PaymentExpiryBackgroundService` (PeriodicTimer 1 phút, quét `Pending` quá hạn `PaymentExpiry:PendingTimeoutMinutes`) | `Payment.cs`, `Enums.cs`, `PaymentExpiryBackgroundService.cs`, `PaymentExpirySettings.cs`, migration `AddPaymentCreatedAtAndCancelledStatus` | `dotnet ef database update` thành công trên SQL Server sống |
+| 10 | Xóa hẳn `src/mediconnect-web` (frontend React trùng lặp, chưa theo kịp các feature Blazor mới, không còn ai maintain song song 2 frontend) | `src/mediconnect-web/**` (đã xoá) | `git status`: toàn bộ đánh dấu `D` |
+| 11 | `Lab.razor` bọc `<AuthorizeView Roles="Lab,Admin">` quanh 3 nút "Bắt đầu xử lý"/"Lưu kết quả"/"Upload file" — trước đó Doctor/Nurse vẫn thấy và bấm được các nút này dù backend đã khoá `[Authorize(Roles="Lab,Admin")]`, dẫn tới bấm bị 403 | `Lab.razor` | `dotnet build` 0 Error; test: đăng nhập Doctor/Nurse vào `/lab` không còn thấy 3 nút đó |
+| 12 | Gộp `seed_demo_data.sql` vào `seed_hospital.sql` (PHẦN 2, chạy tiếp ngay sau PHẦN 1 cùng 1 lần thực thi); fix thiếu `DELETE FROM ServiceRatings` (chặn xoá `OutpatientVisits`→`Clinics`→`StaffProfiles`→`PatientProfiles`→`UserAccounts`→`Departments` dây chuyền); fix thứ tự xoá `InpatientAdmissions` phải trước `OutpatientVisits` vì tham chiếu `FromOutpatientVisitId` | `seed_hospital.sql`; xoá `seed_demo_data.sql` | Chạy `sqlcmd` 3 lần liên tiếp trên container `sqlserver`: không lỗi, số dòng ổn định (12 Departments, 12 Clinics, 864 Beds...) |
+| 13 | Thêm dữ liệu demo Nội trú (TV3) đủ 4 feature: F1 (2 ca `Active` + 2 ca `Discharged` với `BedAssignment` gắn giường thật), F2 (`VitalSigns`+`CareOrders` đủ loại), F3 (`LabOrders` đủ trạng thái Ordered/InProgress/Completed, có/không kèm file), F4 (`DischargeSummary` + `BillingInvoice` bàn giao Thanh toán, cả trạng thái Pending và Paid) | `seed_hospital.sql` (PHẦN 2, mục 6–9) | Query đếm dòng: `InpatientAdmissions`=4, `LabOrders`=5, `DischargeSummaries`=1→2, `BillingInvoices`=3→4 |
+| 14 | Mở rộng volume + trải ngày tháng: `Appointments` 4→14 (trải 05/07–16/08, ±3 tuần quanh hôm nay), `StaffSchedules` 6→26, `OutpatientVisits` 4→9, dùng luôn 5 bệnh nhân patient4–8 trước đó chưa có dữ liệu gì | `seed_hospital.sql` (mục 9) | `SELECT MIN/MAX(AppointmentTime)` = 2026-07-05 → 2026-08-16 |
+
+## AI có hỗ trợ không?
+
+- [x] Có
+- [ ] Không
+
+Nếu có, mô tả AI đã hỗ trợ phần nào:
+
+```text
+Claude Code (claude-sonnet-5) tự grep "ai thực sự gọi endpoint này" (ApiClient.cs/services.ts +
+trang gọi) trước khi khoá role từng controller để tránh khoá nhầm làm gãy flow hợp lệ — đây là kỷ
+luật được thiết lập sau khi phát hiện chính AI từng suýt khoá nhầm ở vòng trước. Tự phát hiện và
+đóng 2 lỗ hổng IDOR nghiêm trọng (invoice PUT/DELETE gốc, xem hồ sơ bệnh nhân khác) không nằm
+trong yêu cầu ban đầu. Test trực tiếp trên SQL Server sống qua sqlcmd (không chỉ đọc code) để xác
+nhận migration và seed script chạy đúng, tự phát hiện 2 bug thứ tự DELETE trong seed script cũ mà
+trước đó chưa ai nhận ra vì FK cascade lỗi âm thầm không hiện message rõ ràng ở lần chạy đầu.
+```
+
+## Commit/Screenshot minh chứng
+
+```text
+Branch: docs/mediconnect-code-guides
+dotnet build mediconnect.sln: 0 Warning, 0 Error
+sqlcmd chạy seed_hospital.sql 3 lần liên tiếp: không lỗi, số dòng ổn định
+```
+
+## Ghi chú
+
+```text
+- Frontend:BaseUrl trong appsettings.json hiện chỉ trỏ được 1 nơi (Blazor, cổng 5104) — vì React
+  đã bị xóa nên đây không còn là giới hạn thực tế nữa.
+- Vài CrudController<T> subclass khác (Appointments, InpatientAdmissions, LabOrders/LabResults,
+  VitalSigns, CareOrders, QueueTickets) vẫn cho mọi role đã đăng nhập Update/Delete qua endpoint
+  CRUD gốc — đã được flag nhưng cố ý chưa xử lý trong phạm vi lần này, cần theo dõi ở phase sau.
+```
+
+---
+
 # 4. Tổng kết thay đổi cuối project
 
 ## 4.1. Các chức năng đã hoàn thành
@@ -1050,6 +1136,13 @@ Tài liệu mô tả code có sẵn của cả nhóm, không sinh code mới cho
 | 35 | Billing redirect flow hoàn thiện (`?visitId=` auto-select + auto-open modal, $0 invoice Pay button); DisposeAsync cleanup đầy đủ khi đóng tab giữa cuộc gọi tele | Completed | `Billing.razor`, `Telemedicine.razor` | DE190123 |
 | 36 | OTP-based login cho tài khoản walk-in (mật khẩu ngẫu nhiên không ai biết) — đường vào thứ hai bên cạnh đăng nhập mật khẩu có sẵn, không sửa stack đăng nhập gốc | Completed | `OtpController.cs`, `OtpLogin.razor`, `QueueService.cs`, `ClinicDashboard.razor`, `ApiClient.cs` | DE190123 |
 | 37 | End-to-end test SmartClinic: 4 flow (31 bước), 6 edge case, 5 performance check, 3 regression check qua browser thật + verify SQL trực tiếp — 0 blocking bug, 0 regression | Completed | Xem chi tiết [Phase 10] | DE190123 |
+| 38 | Audit phân quyền `[Authorize(Roles=...)]` + đóng IDOR trên ~20 controller (invoice PUT/DELETE gốc cho Patient tự sửa, xem hồ sơ/lịch sử/XN/đơn thuốc bệnh nhân khác qua đổi ID) | Completed | `EntityControllers.cs`, `PatientsController.cs` | Park Jea Minh |
+| 39 | Màn hình Thu ngân (F: cashier) — tìm bệnh nhân, tạo/xem hoá đơn, xác nhận thu tiền mặt, link VNPay/Momo; dùng chung role Admin/Doctor/Nurse có sẵn, không thêm role mới | Completed | `CashierBilling.razor` | Park Jea Minh |
+| 40 | Bỏ hẳn quyền Patient tự tạo phiếu thu (quyết định nhóm) — chỉ nhân viên/thu ngân tạo được `BillingInvoice` | Completed | `EntityControllers.cs`, `Billing.razor` | Park Jea Minh |
+| 41 | Fix luồng thanh toán Momo/VNPay: `BillingInvoice.Status` không bao giờ chuyển Paid, trang JSON thô sau thanh toán, tab thanh toán bị nhân đôi thành bản sao trang Viện phí; thêm tự động huỷ hoá đơn Pending quá hạn | Completed | `PaymentsController`, `PaymentResult.razor`, `paymentFocus.js`, `PaymentExpiryBackgroundService.cs` | Park Jea Minh |
+| 42 | Xóa hẳn frontend React (`src/mediconnect-web`) — Blazor là frontend duy nhất của dự án | Completed | Đã xoá `src/mediconnect-web/**` | Park Jea Minh |
+| 43 | Fix `Lab.razor` lộ 3 nút thao tác (bắt đầu xử lý/lưu kết quả/upload) cho Doctor/Nurse dù backend chỉ cho role Lab — bấm vào trước đây bị 403 âm thầm | Completed | `Lab.razor` | Park Jea Minh |
+| 44 | Gộp `seed_demo_data.sql` vào `seed_hospital.sql`, fix 2 bug thứ tự xoá dữ liệu (thiếu `DELETE FROM ServiceRatings`, `InpatientAdmissions` xoá sau `OutpatientVisits`), bổ sung đầy đủ dữ liệu demo Nội trú TV3 (F1–F4) + mở rộng volume trải ±3 tuần | Completed | `seed_hospital.sql` | Park Jea Minh |
 
 ---
 

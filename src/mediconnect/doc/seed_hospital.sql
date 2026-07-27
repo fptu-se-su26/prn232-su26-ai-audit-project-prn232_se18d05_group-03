@@ -11,12 +11,14 @@ SET NOCOUNT ON;
 --  1. XOÁ DATA CŨ (theo thứ tự FK)
 -- ────────────────────────────────────────────────────────────
 DELETE FROM Payments;
+DELETE FROM ServiceRatings;
 DELETE FROM BillingItems;
 DELETE FROM BillingInvoices;
 DELETE FROM DischargeSummaries;
 DELETE FROM BedAssignments;
 DELETE FROM VitalSigns;
 DELETE FROM CareOrders;
+DELETE FROM InpatientAdmissions;
 DELETE FROM LabResults;
 DELETE FROM PrescriptionItems;
 DELETE FROM Prescriptions;
@@ -25,7 +27,6 @@ DELETE FROM OutpatientVisits;
 DELETE FROM QueueTickets;
 DELETE FROM TelemedicineSessions;
 DELETE FROM Appointments;
-DELETE FROM InpatientAdmissions;
 DELETE FROM StaffSchedules;
 DELETE FROM Beds;
 DELETE FROM Clinics;
@@ -107,14 +108,14 @@ INSERT INTO UserAccounts (Id, FullName, Email, PhoneNumber, Role, IsActive, Pass
 --  Gender: Unknown=0, Male=1, Female=2
 -- ────────────────────────────────────────────────────────────
 INSERT INTO PatientProfiles (Id, UserAccountId, Gender, DateOfBirth, HeightCm, WeightKg, Address, InsuranceNumber) VALUES
-(NEWID(),'B0000001-0000-0000-0000-00000000000C',1,'1985-05-12',172.0,68.0,N'Hà Nội',            'BHYT-0001'),
-(NEWID(),'B0000001-0000-0000-0000-00000000000D',2,'1992-08-20',158.0,50.0,N'TP. Hồ Chí Minh',   'BHYT-0002'),
-(NEWID(),'B0000001-0000-0000-0000-00000000000E',1,'1975-03-15',168.0,72.0,N'Đà Nẵng',           'BHYT-0003'),
-(NEWID(),'B0000001-0000-0000-0000-00000000000F',2,'2000-11-05',155.0,47.0,N'Hải Phòng',         'BHYT-0004'),
-(NEWID(),'B0000001-0000-0000-0000-000000000010',1,'1960-07-28',165.0,75.0,N'Cần Thơ',           'BHYT-0005'),
-(NEWID(),'B0000001-0000-0000-0000-000000000011',2,'1995-02-14',160.0,52.0,N'Huế',               'BHYT-0006'),
-(NEWID(),'B0000001-0000-0000-0000-000000000012',1,'1988-09-30',170.0,70.0,N'Biên Hòa',          'BHYT-0007'),
-(NEWID(),'B0000001-0000-0000-0000-000000000013',2,'1970-04-08',153.0,55.0,N'Nha Trang',         'BHYT-0008');
+(NEWID(),'B0000001-0000-0000-0000-00000000000C',1,'1985-05-12',172.0,68.0,N'Hà Nội',            'BHYT-0000000001'),
+(NEWID(),'B0000001-0000-0000-0000-00000000000D',2,'1992-08-20',158.0,50.0,N'TP. Hồ Chí Minh',   'BHYT-0000000002'),
+(NEWID(),'B0000001-0000-0000-0000-00000000000E',1,'1975-03-15',168.0,72.0,N'Đà Nẵng',           'BHYT-0000000003'),
+(NEWID(),'B0000001-0000-0000-0000-00000000000F',2,'2000-11-05',155.0,47.0,N'Hải Phòng',         'BHYT-0000000004'),
+(NEWID(),'B0000001-0000-0000-0000-000000000010',1,'1960-07-28',165.0,75.0,N'Cần Thơ',           'BHYT-0000000005'),
+(NEWID(),'B0000001-0000-0000-0000-000000000011',2,'1995-02-14',160.0,52.0,N'Huế',               'BHYT-0000000006'),
+(NEWID(),'B0000001-0000-0000-0000-000000000012',1,'1988-09-30',170.0,70.0,N'Biên Hòa',          'BHYT-0000000007'),
+(NEWID(),'B0000001-0000-0000-0000-000000000013',2,'1970-04-08',153.0,55.0,N'Nha Trang',         'BHYT-0000000008');
 
 -- ────────────────────────────────────────────────────────────
 --  6. STAFF PROFILES
@@ -1123,3 +1124,344 @@ GROUP BY d.Name
 ORDER BY d.Name;
 
 SELECT COUNT(*) AS [Tổng giường toàn viện] FROM Beds;
+
+-- ════════════════════════════════════════════════════════════════════════════
+--  PHẦN 2 — DỮ LIỆU DEMO NGHIỆP VỤ
+--  (gộp từ seed_demo_data.sql — chạy tiếp ngay sau PHẦN 1 ở trên trong cùng 1 lần
+--  thực thi. Tham chiếu nhân viên/bệnh nhân/phòng khám/giường theo email/mã/số
+--  phòng nên không phụ thuộc GUID cụ thể của PHẦN 1.)
+--
+--  Kịch bản demo:
+--    - patient@  (Nguyễn Văn An): luồng đủ — khám→đơn thuốc→XN (2 kết quả, có 1
+--      file đính kèm)→hoá đơn ĐÃ thanh toán (BHYT 80%)→đánh giá 5★; đồng thời có
+--      2 ca nội trú đang điều trị (Nội tổng hợp + Cấp cứu) kèm giường/sinh tồn/y lệnh.
+--    - patient2@ (Trần Thị Bích): lịch hẹn sắp tới + vé chờ + telemedicine; ĐỒNG
+--      THỜI có 1 đợt nội trú Tim Mạch đã XUẤT VIỆN — đầy đủ giường (đã trả),
+--      sinh tồn, y lệnh, XN có file kết quả, bệnh án xuất viện (DischargeSummary)
+--      và hoá đơn tổng hợp chi phí đã chuyển sang phân hệ Thanh toán (Pending).
+--    - patient3@ (Lê Minh Châu): khám xong nhưng hoá đơn CHƯA thanh toán (Pending);
+--      có thêm 2 chỉ định cận lâm sàng đang chờ xử lý (Ordered/InProgress) để demo
+--      hàng đợi của bộ phận Xét nghiệm/CĐHA.
+--    - CDSS: Warfarin/Aspirin/Ibuprofen (3 cặp kỵ nhau) + thuốc có ngưỡng liều;
+--      Cephalexin để tồn kho = 0 (test chặn kê khi hết hàng).
+-- ════════════════════════════════════════════════════════════════════════════
+
+SET XACT_ABORT ON;
+
+BEGIN TRAN;
+
+/* ===== Reference IDs (theo email/code, bền vững qua các lần seed) ===== */
+DECLARE @docGen uniqueidentifier = (SELECT sp.Id FROM StaffProfiles sp JOIN UserAccounts u ON sp.UserAccountId=u.Id WHERE u.Email='doctor@mediconnect.local');
+DECLARE @docCard uniqueidentifier = (SELECT sp.Id FROM StaffProfiles sp JOIN UserAccounts u ON sp.UserAccountId=u.Id WHERE u.Email='doctor.card@mediconnect.local');
+DECLARE @docPed uniqueidentifier = (SELECT sp.Id FROM StaffProfiles sp JOIN UserAccounts u ON sp.UserAccountId=u.Id WHERE u.Email='doctor.ped@mediconnect.local');
+DECLARE @docSurg uniqueidentifier = (SELECT sp.Id FROM StaffProfiles sp JOIN UserAccounts u ON sp.UserAccountId=u.Id WHERE u.Email='doctor.surg@mediconnect.local');
+DECLARE @nurse uniqueidentifier = (SELECT sp.Id FROM StaffProfiles sp JOIN UserAccounts u ON sp.UserAccountId=u.Id WHERE u.Email='nurse@mediconnect.local');
+
+DECLARE @pAn uniqueidentifier  = (SELECT pp.Id FROM PatientProfiles pp JOIN UserAccounts u ON pp.UserAccountId=u.Id WHERE u.Email='patient@mediconnect.local');
+DECLARE @pBich uniqueidentifier= (SELECT pp.Id FROM PatientProfiles pp JOIN UserAccounts u ON pp.UserAccountId=u.Id WHERE u.Email='patient2@mediconnect.local');
+DECLARE @pChau uniqueidentifier= (SELECT pp.Id FROM PatientProfiles pp JOIN UserAccounts u ON pp.UserAccountId=u.Id WHERE u.Email='patient3@mediconnect.local');
+
+DECLARE @clNoi  uniqueidentifier = (SELECT Id FROM Clinics WHERE RoomNumber='N-P01');
+DECLARE @clTim  uniqueidentifier = (SELECT Id FROM Clinics WHERE RoomNumber='TM-P01');
+DECLARE @clNhi  uniqueidentifier = (SELECT Id FROM Clinics WHERE RoomNumber='PD-P01');
+
+DECLARE @deptGen uniqueidentifier = (SELECT Id FROM Departments WHERE Code='GEN');
+DECLARE @deptCard uniqueidentifier= (SELECT Id FROM Departments WHERE Code='CARD');
+DECLARE @deptPed uniqueidentifier = (SELECT Id FROM Departments WHERE Code='PED');
+DECLARE @deptER uniqueidentifier  = (SELECT Id FROM Departments WHERE Code='ER');
+
+DECLARE @admER  uniqueidentifier = 'C25D3F3E-4550-4271-BA17-10D0A6E5DF60';
+DECLARE @admGen uniqueidentifier = '04C55BB8-3AB3-43FC-82D0-1AB6BA5D7611';
+
+DECLARE @now datetime2 = SYSUTCDATETIME();
+DECLARE @today date = CAST(@now AS date);
+
+/* ===== 1) MedicalServices (dich vu kham + gia) ===== */
+INSERT INTO MedicalServices (Id,DepartmentId,Name,Code,Price,IsActive) VALUES
+ (NEWID(),@deptGen ,N'Khám Nội tổng quát',N'KB-GEN',150000,1),
+ (NEWID(),@deptCard,N'Khám Tim mạch',N'KB-CARD',250000,1),
+ (NEWID(),@deptPed ,N'Khám Nhi',N'KB-PED',180000,1),
+ (NEWID(),@deptGen ,N'Xét nghiệm công thức máu',N'XN-CBC',120000,1),
+ (NEWID(),@deptCard,N'Điện tâm đồ (ECG)',N'CLS-ECG',200000,1),
+ (NEWID(),@deptGen ,N'Chụp X-quang ngực',N'CLS-XRAY',300000,1);
+
+DECLARE @svcExamGen uniqueidentifier = (SELECT Id FROM MedicalServices WHERE Code='KB-GEN');
+DECLARE @svcExamPed uniqueidentifier = (SELECT Id FROM MedicalServices WHERE Code='KB-PED');
+
+/* ===== 2) Drugs (kho thuoc + gia + nguong lieu) ===== */
+DECLARE @dParacetamol uniqueidentifier=NEWID(), @dAmox uniqueidentifier=NEWID(), @dIbu uniqueidentifier=NEWID(),
+        @dAspirin uniqueidentifier=NEWID(), @dWarfarin uniqueidentifier=NEWID(), @dOme uniqueidentifier=NEWID(),
+        @dMetformin uniqueidentifier=NEWID(), @dAmlodipine uniqueidentifier=NEWID(), @dCephalexin uniqueidentifier=NEWID(),
+        @dLoratadine uniqueidentifier=NEWID();
+INSERT INTO Drugs (Id,Name,Code,Unit,StockQuantity,UnitPrice,IsActive,MaxDailyDose,MaxDosePerKg) VALUES
+ (@dParacetamol,N'Paracetamol 500mg',N'PARA500',N'viên',500,1200,1,4000,60),
+ (@dAmox,       N'Amoxicillin 500mg',N'AMOX500',N'viên',300,2500,1,3000,45),
+ (@dIbu,        N'Ibuprofen 400mg',N'IBU400',N'viên',400,1500,1,3200,40),
+ (@dAspirin,    N'Aspirin 81mg',N'ASP81',N'viên',600,800,1,325,NULL),
+ (@dWarfarin,   N'Warfarin 5mg',N'WAR5',N'viên',150,5000,1,10,NULL),
+ (@dOme,        N'Omeprazole 20mg',N'OME20',N'viên',350,3000,1,40,NULL),
+ (@dMetformin,  N'Metformin 500mg',N'MET500',N'viên',450,1000,1,2000,NULL),
+ (@dAmlodipine, N'Amlodipine 5mg',N'AML5',N'viên',300,1800,1,10,NULL),
+ (@dCephalexin, N'Cephalexin 500mg',N'CEP500',N'viên',0,2800,1,4000,50),
+ (@dLoratadine, N'Loratadine 10mg',N'LOR10',N'viên',250,2000,1,10,NULL);
+
+/* ===== 3) DrugInteractions (cap ky nhau) ===== */
+INSERT INTO DrugInteractions (Id,DrugId,InteractingDrugId,Severity,Description) VALUES
+ (NEWID(),@dWarfarin,@dAspirin,N'Major',N'Tăng nguy cơ chảy máu nghiêm trọng khi dùng chung.'),
+ (NEWID(),@dWarfarin,@dIbu,    N'Major',N'NSAID làm tăng tác dụng chống đông, nguy cơ xuất huyết.'),
+ (NEWID(),@dAspirin, @dIbu,    N'Moderate',N'Ibuprofen làm giảm tác dụng bảo vệ tim mạch của Aspirin.');
+
+/* ===== 4) StaffSchedules (lich truc tuan nay) ===== */
+INSERT INTO StaffSchedules (Id,StaffId,ShiftDate,StartTime,EndTime,ShiftType,WorkRoom) VALUES
+ (NEWID(),@docGen ,@today,'07:00','11:30',0,N'N-P01'),
+ (NEWID(),@docGen ,DATEADD(day,1,@today),'13:00','17:00',1,N'N-P01'),
+ (NEWID(),@docCard,@today,'07:00','11:30',0,N'TM-P01'),
+ (NEWID(),@docPed ,@today,'13:00','17:00',1,N'PD-P01'),
+ (NEWID(),@nurse  ,@today,'07:00','11:30',0,N'Khu Nội'),
+ (NEWID(),@nurse  ,@today,'17:00','21:00',2,N'Khu Nội');
+
+/* ===== 5) BENH NHAN AN: luong kham hoan chinh (dat lich -> kham -> don thuoc -> XN -> hoa don -> danh gia) ===== */
+DECLARE @apptAn uniqueidentifier=NEWID(), @qAn uniqueidentifier=NEWID(), @visitAn uniqueidentifier=NEWID(),
+        @presAn uniqueidentifier=NEWID(), @labAn uniqueidentifier=NEWID(), @invAn uniqueidentifier=NEWID(),
+        @payAn uniqueidentifier=NEWID();
+
+INSERT INTO Appointments (Id,PatientId,DoctorId,ClinicId,AppointmentTime,Status,Reason,Notes) VALUES
+ (@apptAn,@pAn,@docGen,@clNoi,DATEADD(day,-1,@now),3,N'Ho, sốt nhẹ 2 ngày',NULL);
+
+INSERT INTO QueueTickets (Id,ClinicId,AppointmentId,Number,IssuedAt,Status) VALUES
+ (@qAn,@clNoi,@apptAn,1,DATEADD(day,-1,@now),3);
+
+INSERT INTO OutpatientVisits (Id,PatientId,DoctorId,ClinicId,QueueTicketId,VisitDate,ChiefComplaint,DiagnosisCode,DiagnosisDescription,Status,Notes) VALUES
+ (@visitAn,@pAn,@docGen,@clNoi,@qAn,DATEADD(day,-1,@now),N'Ho, sốt nhẹ',N'J06.9',N'Nhiễm khuẩn hô hấp trên cấp',2,N'Sốt 38 độ, họng đỏ. Kê kháng sinh + hạ sốt.');
+
+INSERT INTO Prescriptions (Id,OutpatientVisitId,DoctorId,IssuedAt,Notes) VALUES
+ (@presAn,@visitAn,@docGen,DATEADD(day,-1,@now),N'Uống sau ăn, tái khám nếu sốt cao');
+INSERT INTO PrescriptionItems (Id,PrescriptionId,DrugId,Dose,Frequency,DurationDays,Quantity) VALUES
+ (NEWID(),@presAn,@dParacetamol,N'500mg — Oral',N'3 lần/ngày',5,15),
+ (NEWID(),@presAn,@dAmox,       N'500mg — Oral',N'2 lần/ngày',7,14);
+
+INSERT INTO LabOrders (Id,OutpatientVisitId,OrderedById,TestName,Status,OrderedAt,Notes) VALUES
+ (@labAn,@visitAn,@docGen,N'Công thức máu (CBC)',2,DATEADD(day,-1,@now),NULL);
+INSERT INTO LabResults (Id,LabOrderId,ResultText,ResultFileUrl,ResultedAt) VALUES
+ (NEWID(),@labAn,N'WBC 11.2 (tăng nhẹ), các chỉ số khác bình thường.',NULL,DATEADD(day,-1,@now));
+
+-- XN thu 2 co dinh kem file ket qua (demo Feature "tai file anh/PDF len he thong")
+DECLARE @labAn2 uniqueidentifier=NEWID();
+INSERT INTO LabOrders (Id,OutpatientVisitId,OrderedById,TestName,Status,OrderedAt,Notes) VALUES
+ (@labAn2,@visitAn,@docGen,N'Chụp X-quang ngực',2,DATEADD(day,-1,@now),NULL);
+INSERT INTO LabResults (Id,LabOrderId,ResultText,ResultFileUrl,ResultedAt) VALUES
+ (NEWID(),@labAn2,N'Không phát hiện tổn thương nhu mô phổi cấp.',N'/uploads/lab-results/xray-an-demo.pdf',DATEADD(day,-1,@now));
+
+INSERT INTO BillingInvoices (Id,PatientId,CreatedAt,Status,Subtotal,InsuranceDeduction,TotalAmount,InsuranceNumber) VALUES
+ (@invAn,@pAn,DATEADD(day,-1,@now),2,323100,258480,64620,N'BHYT-0000000001'); -- exam 150k + CBC 120k + thuoc (15*1200+14*2500=53100) = 323100; BHYT 80%
+INSERT INTO BillingItems (Id,BillingInvoiceId,ItemType,Description,Quantity,UnitPrice,Amount) VALUES
+ (NEWID(),@invAn,0,N'Phí khám - Khám Nội tổng quát',1,150000,150000),
+ (NEWID(),@invAn,1,N'Xét nghiệm - Công thức máu (CBC)',1,120000,120000),
+ (NEWID(),@invAn,2,N'Thuốc - Paracetamol 500mg',15,1200,18000),
+ (NEWID(),@invAn,2,N'Thuốc - Amoxicillin 500mg',14,2500,35000);
+INSERT INTO Payments (Id,BillingInvoiceId,Method,Amount,PaidAt,Status,TransactionRef) VALUES
+ (@payAn,@invAn,1,64620,DATEADD(day,-1,@now),1,N'VNP20260725ABC123');
+
+INSERT INTO ServiceRatings (Id,PatientId,DoctorId,OutpatientVisitId,Score,Comment,CreatedAt) VALUES
+ (NEWID(),@pAn,@docGen,@visitAn,5,N'Bác sĩ tận tình, giải thích rõ ràng.',DATEADD(day,-1,@now));
+
+/* ===== 6) BENH NHAN BICH: lich sap toi + hang doi + telemedicine, kem 1 dot noi tru Tim Mach DA XUAT VIEN ===== */
+DECLARE @apptBich uniqueidentifier=NEWID(), @teleBich uniqueidentifier=NEWID();
+INSERT INTO Appointments (Id,PatientId,DoctorId,ClinicId,AppointmentTime,Status,Reason,Notes) VALUES
+ (@apptBich,@pBich,@docCard,@clTim,DATEADD(day,1,@now),1,N'Đau ngực, kiểm tra tim mạch',NULL);
+INSERT INTO QueueTickets (Id,ClinicId,AppointmentId,Number,IssuedAt,Status) VALUES
+ (NEWID(),@clTim,NULL,1,@now,0); -- vang lai dang cho
+DECLARE @apptTele uniqueidentifier=NEWID();
+INSERT INTO Appointments (Id,PatientId,DoctorId,ClinicId,AppointmentTime,Status,Reason,Notes) VALUES
+ (@apptTele,@pBich,@docCard,@clTim,DATEADD(hour,2,@now),1,N'Tư vấn từ xa - tái khám',NULL);
+INSERT INTO TelemedicineSessions (Id,AppointmentId,DoctorId,PatientId,StartedAt,EndedAt,VideoCallUrl,Notes) VALUES
+ (@teleBich,@apptTele,@docCard,@pBich,NULL,NULL,NULL,NULL);
+
+-- Dot nam vien Tim Mach 5 ngay truoc, da xuat vien: visit -> admission -> giuong -> sinh ton -> y lenh -> XN -> xuat vien -> hoa don
+DECLARE @visitBich uniqueidentifier=NEWID(), @admBich uniqueidentifier=NEWID(), @labBich uniqueidentifier=NEWID(),
+        @invBich uniqueidentifier=NEWID();
+
+INSERT INTO OutpatientVisits (Id,PatientId,DoctorId,ClinicId,QueueTicketId,VisitDate,ChiefComplaint,DiagnosisCode,DiagnosisDescription,Status,Notes) VALUES
+ (@visitBich,@pBich,@docCard,@clTim,NULL,DATEADD(day,-6,@now),N'Đau ngực, khó thở',N'I21',N'Nhồi máu cơ tim cấp',2,N'Chuyển nội trú Tim Mạch theo dõi và điều trị.');
+
+INSERT INTO InpatientAdmissions (Id,PatientId,FromOutpatientVisitId,DepartmentId,AdmissionDate,Status) VALUES
+ (@admBich,@pBich,@visitBich,@deptCard,DATEADD(day,-6,@now),1); -- 1 = Discharged
+
+INSERT INTO BedAssignments (Id,AdmissionId,BedId,AssignedAt,ReleasedAt) VALUES
+ (NEWID(),@admBich,(SELECT TOP 1 Id FROM Beds WHERE DepartmentId=@deptCard AND RoomNumber='TM-1A1' AND BedNumber='02'),DATEADD(day,-6,@now),DATEADD(day,-1,@now));
+
+INSERT INTO VitalSigns (Id,AdmissionId,RecordedAt,Pulse,TemperatureC,BloodPressureSystolic,BloodPressureDiastolic,RespiratoryRate,SpO2) VALUES
+ (NEWID(),@admBich,DATEADD(day,-6,@now),110,37.2,150,95,22,93),
+ (NEWID(),@admBich,DATEADD(day,-4,@now),95, 37.0,135,88,20,95),
+ (NEWID(),@admBich,DATEADD(day,-2,@now),80, 36.8,122,80,18,98);
+
+INSERT INTO CareOrders (Id,AdmissionId,OrderedById,OrderType,Description,OrderedAt,IsCompleted,CompletedAt) VALUES
+ (NEWID(),@admBich,@docCard,1,N'Truyền Glucose 5% 500ml',DATEADD(day,-6,@now),1,DATEADD(hour,3,DATEADD(day,-6,@now))),
+ (NEWID(),@admBich,@docCard,3,N'Can thiệp mạch vành cấp cứu',DATEADD(day,-5,@now),1,DATEADD(hour,2,DATEADD(day,-5,@now)));
+
+INSERT INTO LabOrders (Id,OutpatientVisitId,OrderedById,TestName,Status,OrderedAt,Notes) VALUES
+ (@labBich,@visitBich,@docCard,N'Men tim Troponin T',2,DATEADD(day,-6,@now),N'Ưu tiên khẩn cấp');
+INSERT INTO LabResults (Id,LabOrderId,ResultText,ResultFileUrl,ResultedAt) VALUES
+ (NEWID(),@labBich,N'Troponin T 0.8 ng/mL (tăng cao) - phù hợp NMCT cấp.',N'/uploads/lab-results/troponin-bich.pdf',DATEADD(day,-6,@now));
+
+INSERT INTO DischargeSummaries (Id,AdmissionId,DischargeDate,Summary,TotalCost) VALUES
+ (NEWID(),@admBich,DATEADD(day,-1,@now),N'Bệnh nhân ổn định sau can thiệp NMCT cấp, theo dõi 5 ngày tại khoa Tim Mạch. Xuất viện với đơn thuốc duy trì, hẹn tái khám sau 2 tuần.',4200000);
+
+-- Tong hop chi phi luu giuong + XN + thu thuat, gui sang phan he Thanh toan (Pending, cho thu ngan xu ly)
+INSERT INTO BillingInvoices (Id,PatientId,CreatedAt,Status,Subtotal,InsuranceDeduction,TotalAmount,InsuranceNumber) VALUES
+ (@invBich,@pBich,DATEADD(day,-1,@now),1,4200000,3360000,840000,N'BHYT-0000000002');
+INSERT INTO BillingItems (Id,BillingInvoiceId,ItemType,Description,Quantity,UnitPrice,Amount) VALUES
+ (NEWID(),@invBich,3,N'Tiền giường bệnh - Khoa Tim Mạch (5 ngày)',5,300000,1500000),
+ (NEWID(),@invBich,1,N'Xét nghiệm Troponin T',1,250000,250000),
+ (NEWID(),@invBich,4,N'Can thiệp mạch vành cấp cứu',1,2450000,2450000);
+
+/* ===== 7) BENH NHAN CHAU: kham xong nhung hoa don CHUA thanh toan (Pending) + 2 chi dinh CLS dang cho xu ly ===== */
+DECLARE @apptChau uniqueidentifier=NEWID(), @visitChau uniqueidentifier=NEWID(),
+        @presChau uniqueidentifier=NEWID(), @invChau uniqueidentifier=NEWID();
+INSERT INTO Appointments (Id,PatientId,DoctorId,ClinicId,AppointmentTime,Status,Reason,Notes) VALUES
+ (@apptChau,@pChau,@docPed,@clNhi,@now,0,N'Khám sức khỏe định kỳ',NULL);
+INSERT INTO OutpatientVisits (Id,PatientId,DoctorId,ClinicId,QueueTicketId,VisitDate,ChiefComplaint,DiagnosisCode,DiagnosisDescription,Status,Notes) VALUES
+ (@visitChau,@pChau,@docPed,@clNhi,NULL,DATEADD(hour,-3,@now),N'Sổ mũi, hắt hơi',N'J30.9',N'Viêm mũi dị ứng',2,N'Kê thuốc kháng histamin.');
+INSERT INTO Prescriptions (Id,OutpatientVisitId,DoctorId,IssuedAt,Notes) VALUES
+ (@presChau,@visitChau,@docPed,DATEADD(hour,-3,@now),NULL);
+INSERT INTO PrescriptionItems (Id,PrescriptionId,DrugId,Dose,Frequency,DurationDays,Quantity) VALUES
+ (NEWID(),@presChau,@dLoratadine,N'10mg — Oral',N'1 lần/ngày',7,7);
+INSERT INTO BillingInvoices (Id,PatientId,CreatedAt,Status,Subtotal,InsuranceDeduction,TotalAmount,InsuranceNumber) VALUES
+ (@invChau,@pChau,DATEADD(hour,-3,@now),1,194000,155200,38800,N'BHYT-0000000003'); -- exam 180k + thuoc 7*2000=14000
+INSERT INTO BillingItems (Id,BillingInvoiceId,ItemType,Description,Quantity,UnitPrice,Amount) VALUES
+ (NEWID(),@invChau,0,N'Phí khám - Khám Nhi',1,180000,180000),
+ (NEWID(),@invChau,2,N'Thuốc - Loratadine 10mg',7,2000,14000);
+
+-- 2 chi dinh CLS demo hang doi bo phan Xet nghiem/CDHA (chua co ket qua)
+INSERT INTO LabOrders (Id,OutpatientVisitId,OrderedById,TestName,Status,OrderedAt,Notes) VALUES
+ (NEWID(),@visitChau,@docPed,N'Chụp X-quang bụng không chuẩn bị',1,DATEADD(hour,-2,@now),NULL), -- 1 = InProgress, KTV dang xu ly
+ (NEWID(),@visitChau,@docPed,N'Tổng phân tích nước tiểu',0,DATEADD(hour,-1,@now),NULL);          -- 0 = Ordered, moi tiep nhan chi dinh
+
+/* ===== 8) NOI TRU: chuyen benh nhan An vao 2 khoa (Noi, Cap cuu) + giuong + sinh ton + y lenh ===== */
+INSERT INTO InpatientAdmissions (Id,PatientId,FromOutpatientVisitId,DepartmentId,AdmissionDate,Status) VALUES
+ (@admGen,@pAn,@visitAn,@deptGen,DATEADD(hour,-6,@now),0), -- 0 = Active, chuyen tu ngoai tru vao Noi tong hop
+ (@admER ,@pAn,NULL     ,@deptER ,DATEADD(hour,-4,@now),0); -- 0 = Active, nhap vien truc tiep tu Cap cuu
+
+INSERT INTO BedAssignments (Id,AdmissionId,BedId,AssignedAt,ReleasedAt) VALUES
+ (NEWID(),@admGen,(SELECT TOP 1 Id FROM Beds WHERE DepartmentId=@deptGen AND RoomNumber='N-1A1'  AND BedNumber='02'),DATEADD(hour,-6,@now),NULL),
+ (NEWID(),@admER ,(SELECT TOP 1 Id FROM Beds WHERE DepartmentId=@deptER  AND RoomNumber='CC-1A1' AND BedNumber='03'),DATEADD(hour,-4,@now),NULL);
+
+INSERT INTO VitalSigns (Id,AdmissionId,RecordedAt,Pulse,TemperatureC,BloodPressureSystolic,BloodPressureDiastolic,RespiratoryRate,SpO2) VALUES
+ (NEWID(),@admGen,DATEADD(hour,-6,@now),82,37.2,120,80,18,98),
+ (NEWID(),@admGen,DATEADD(hour,-2,@now),88,37.8,125,82,20,97),
+ (NEWID(),@admER ,DATEADD(hour,-4,@now),95,38.5,130,85,22,95);
+INSERT INTO CareOrders (Id,AdmissionId,OrderedById,OrderType,Description,OrderedAt,IsCompleted,CompletedAt) VALUES
+ (NEWID(),@admGen,@docGen,0,N'Paracetamol 500mg uống khi sốt >38.5',DATEADD(hour,-6,@now),1,DATEADD(hour,-2,@now)),
+ (NEWID(),@admGen,@docGen,1,N'Truyền dịch NaCl 0.9% 500ml',DATEADD(hour,-5,@now),0,NULL),
+ (NEWID(),@admGen,@docGen,2,N'Chế độ ăn cháo loãng',DATEADD(hour,-5,@now),0,NULL),
+ (NEWID(),@admER ,@docSurg,3,N'Theo dõi sát dấu hiệu sinh tồn mỗi 2 giờ',DATEADD(hour,-4,@now),0,NULL);
+
+/* ===== 9) MO RONG DU LIEU: rai lich truc/lich hen/1 dot noi tru them qua nhieu tuan
+   truoc va sau hom nay (dung 5 benh nhan con lai patient4..patient8, truoc gio
+   chua co du lieu gi) — de cac man lich/bao cao co du lieu trai dai theo thoi gian ===== */
+DECLARE @deptSurg uniqueidentifier = (SELECT Id FROM Departments WHERE Code='SURG');
+DECLARE @clNgoai  uniqueidentifier = (SELECT Id FROM Clinics WHERE RoomNumber='NG-P01');
+
+DECLARE @pDung    uniqueidentifier = (SELECT pp.Id FROM PatientProfiles pp JOIN UserAccounts u ON pp.UserAccountId=u.Id WHERE u.Email='patient4@mediconnect.local');
+DECLARE @pEm      uniqueidentifier = (SELECT pp.Id FROM PatientProfiles pp JOIN UserAccounts u ON pp.UserAccountId=u.Id WHERE u.Email='patient5@mediconnect.local');
+DECLARE @pPhuong  uniqueidentifier = (SELECT pp.Id FROM PatientProfiles pp JOIN UserAccounts u ON pp.UserAccountId=u.Id WHERE u.Email='patient6@mediconnect.local');
+DECLARE @pGiang   uniqueidentifier = (SELECT pp.Id FROM PatientProfiles pp JOIN UserAccounts u ON pp.UserAccountId=u.Id WHERE u.Email='patient7@mediconnect.local');
+DECLARE @pHa      uniqueidentifier = (SELECT pp.Id FROM PatientProfiles pp JOIN UserAccounts u ON pp.UserAccountId=u.Id WHERE u.Email='patient8@mediconnect.local');
+
+-- 9a) Lich truc: rai them 2 tuan truoc + 2 tuan sau (ngoai "hom nay/ngay mai" da co o muc 4)
+INSERT INTO StaffSchedules (Id,StaffId,ShiftDate,StartTime,EndTime,ShiftType,WorkRoom) VALUES
+ (NEWID(),@docGen ,DATEADD(day,-14,@today),'07:00','11:30',0,N'N-P01'),
+ (NEWID(),@docGen ,DATEADD(day,-7 ,@today),'13:00','17:00',1,N'N-P01'),
+ (NEWID(),@docGen ,DATEADD(day, 7 ,@today),'07:00','11:30',0,N'N-P01'),
+ (NEWID(),@docGen ,DATEADD(day,14 ,@today),'13:00','17:00',1,N'N-P01'),
+ (NEWID(),@docCard,DATEADD(day,-14,@today),'13:00','17:00',1,N'TM-P01'),
+ (NEWID(),@docCard,DATEADD(day,-7 ,@today),'07:00','11:30',0,N'TM-P01'),
+ (NEWID(),@docCard,DATEADD(day, 7 ,@today),'13:00','17:00',1,N'TM-P01'),
+ (NEWID(),@docCard,DATEADD(day,14 ,@today),'07:00','11:30',0,N'TM-P01'),
+ (NEWID(),@docPed ,DATEADD(day,-14,@today),'07:00','11:30',0,N'PD-P01'),
+ (NEWID(),@docPed ,DATEADD(day,-7 ,@today),'13:00','17:00',1,N'PD-P01'),
+ (NEWID(),@docPed ,DATEADD(day, 7 ,@today),'07:00','11:30',0,N'PD-P01'),
+ (NEWID(),@docPed ,DATEADD(day,14 ,@today),'13:00','17:00',1,N'PD-P01'),
+ (NEWID(),@docSurg,DATEADD(day,-14,@today),'13:00','17:00',1,N'NG-P01'),
+ (NEWID(),@docSurg,DATEADD(day,-7 ,@today),'07:00','11:30',0,N'NG-P01'),
+ (NEWID(),@docSurg,DATEADD(day, 7 ,@today),'13:00','17:00',1,N'NG-P01'),
+ (NEWID(),@docSurg,DATEADD(day,14 ,@today),'07:00','11:30',0,N'NG-P01'),
+ (NEWID(),@nurse  ,DATEADD(day,-14,@today),'07:00','11:30',0,N'Khu Nội'),
+ (NEWID(),@nurse  ,DATEADD(day,-7 ,@today),'17:00','21:00',2,N'Khu Nội'),
+ (NEWID(),@nurse  ,DATEADD(day, 7 ,@today),'07:00','11:30',0,N'Khu Nội'),
+ (NEWID(),@nurse  ,DATEADD(day,14 ,@today),'17:00','21:00',2,N'Khu Nội');
+
+-- 9b) Lich hen: rai 10 lich tu -21 ngay den +21 ngay, du trang thai (Requested=0,Confirmed=1,CheckedIn=2,Completed=3,Cancelled=4)
+DECLARE @apptDung1 uniqueidentifier=NEWID(), @apptEm1 uniqueidentifier=NEWID(), @apptPhuong1 uniqueidentifier=NEWID(),
+        @apptGiang1 uniqueidentifier=NEWID(), @apptHa1 uniqueidentifier=NEWID(), @apptDung2 uniqueidentifier=NEWID();
+INSERT INTO Appointments (Id,PatientId,DoctorId,ClinicId,AppointmentTime,Status,Reason,Notes) VALUES
+ (@apptDung1  ,@pDung  ,@docGen ,@clNoi  ,DATEADD(day,-21,@now),3,N'Khám sức khỏe định kỳ',NULL),
+ (@apptEm1    ,@pEm    ,@docCard,@clTim  ,DATEADD(day,-17,@now),3,N'Đau ngực nhẹ, theo dõi',NULL),
+ (@apptPhuong1,@pPhuong,@docSurg,@clNgoai,DATEADD(day,-14,@now),4,N'Đau bụng',N'Bệnh nhân huỷ lịch'),
+ (@apptGiang1 ,@pGiang ,@docGen ,@clNoi  ,DATEADD(day,-10,@now),3,N'Đau đầu, mất ngủ',NULL),
+ (@apptHa1    ,@pHa    ,@docCard,@clTim  ,DATEADD(day,-6 ,@now),3,N'Hồi hộp, đánh trống ngực',NULL),
+ (@apptDung2  ,@pDung  ,@docSurg,@clNgoai,DATEADD(day,-2 ,@now),3,N'Tái khám sau tiểu phẫu',NULL),
+ (NEWID()     ,@pEm    ,@docGen ,@clNoi  ,DATEADD(day, 3 ,@now),1,N'Tái khám định kỳ',NULL),
+ (NEWID()     ,@pPhuong,@docCard,@clTim  ,DATEADD(day, 7 ,@now),0,N'Khám tim mạch theo yêu cầu',NULL),
+ (NEWID()     ,@pGiang ,@docSurg,@clNgoai,DATEADD(day,14 ,@now),1,N'Tái khám hậu phẫu',NULL),
+ (NEWID()     ,@pHa    ,@docGen ,@clNoi  ,DATEADD(day,21 ,@now),0,N'Khám sức khỏe định kỳ',NULL);
+
+-- 9c) 5 lich da Completed o tren duoc chuyen thanh luot kham (QueueTicket + OutpatientVisit) tuong ung
+DECLARE @qDung1 uniqueidentifier=NEWID(), @qEm1 uniqueidentifier=NEWID(), @qGiang1 uniqueidentifier=NEWID(),
+        @qHa1 uniqueidentifier=NEWID(), @qDung2 uniqueidentifier=NEWID();
+INSERT INTO QueueTickets (Id,ClinicId,AppointmentId,Number,IssuedAt,Status) VALUES
+ (@qDung1 ,@clNoi  ,@apptDung1  ,1,DATEADD(day,-21,@now),3),
+ (@qEm1   ,@clTim  ,@apptEm1    ,1,DATEADD(day,-17,@now),3),
+ (@qGiang1,@clNoi  ,@apptGiang1 ,2,DATEADD(day,-10,@now),3),
+ (@qHa1   ,@clTim  ,@apptHa1    ,2,DATEADD(day,-6 ,@now),3),
+ (@qDung2 ,@clNgoai,@apptDung2  ,1,DATEADD(day,-2 ,@now),3);
+
+INSERT INTO OutpatientVisits (Id,PatientId,DoctorId,ClinicId,QueueTicketId,VisitDate,ChiefComplaint,DiagnosisCode,DiagnosisDescription,Status,Notes) VALUES
+ (NEWID(),@pDung  ,@docGen ,@clNoi  ,@qDung1 ,DATEADD(day,-21,@now),N'Khám sức khỏe định kỳ',N'Z00.0',N'Khám tổng quát, kết quả bình thường',2,NULL),
+ (NEWID(),@pEm    ,@docCard,@clTim  ,@qEm1   ,DATEADD(day,-17,@now),N'Đau ngực nhẹ',N'R07.9',N'Đau ngực không đặc hiệu, ECG bình thường',2,NULL),
+ (NEWID(),@pGiang ,@docGen ,@clNoi  ,@qGiang1,DATEADD(day,-10,@now),N'Đau đầu, mất ngủ',N'G47.0',N'Mất ngủ, tư vấn vệ sinh giấc ngủ',2,NULL),
+ (NEWID(),@pHa    ,@docCard,@clTim  ,@qHa1   ,DATEADD(day,-6 ,@now),N'Hồi hộp, đánh trống ngực',N'R00.2',N'Hồi hộp chưa rõ nguyên nhân, theo dõi thêm',2,NULL),
+ (NEWID(),@pDung  ,@docSurg,@clNgoai,@qDung2 ,DATEADD(day,-2 ,@now),N'Tái khám sau tiểu phẫu',N'Z48.0',N'Chăm sóc sau phẫu thuật, vết mổ khô tốt',2,NULL);
+
+-- 9d) 1 dot noi tru them cua Giang (Ngoai khoa) tu ~3-4 tuan truoc, DA XUAT VIEN va DA THANH TOAN
+--     (de co du lieu nam xa hon trong qua khu, khac voi 3 ca hien tai chi trong vong 6 ngay)
+DECLARE @visitGiang0 uniqueidentifier=NEWID(), @admGiang uniqueidentifier=NEWID(), @labGiang uniqueidentifier=NEWID(),
+        @invGiang uniqueidentifier=NEWID(), @payGiang uniqueidentifier=NEWID();
+
+INSERT INTO OutpatientVisits (Id,PatientId,DoctorId,ClinicId,QueueTicketId,VisitDate,ChiefComplaint,DiagnosisCode,DiagnosisDescription,Status,Notes) VALUES
+ (@visitGiang0,@pGiang,@docSurg,@clNgoai,NULL,DATEADD(day,-24,@now),N'Đau bụng dữ dội hố chậu phải',N'K35.8',N'Viêm ruột thừa cấp',2,N'Chỉ định mổ nội soi cấp cứu, chuyển nội trú Ngoại khoa.');
+
+INSERT INTO InpatientAdmissions (Id,PatientId,FromOutpatientVisitId,DepartmentId,AdmissionDate,Status) VALUES
+ (@admGiang,@pGiang,@visitGiang0,@deptSurg,DATEADD(day,-24,@now),1); -- 1 = Discharged
+
+INSERT INTO BedAssignments (Id,AdmissionId,BedId,AssignedAt,ReleasedAt) VALUES
+ (NEWID(),@admGiang,(SELECT TOP 1 Id FROM Beds WHERE DepartmentId=@deptSurg AND RoomNumber='NG-1A1' AND BedNumber='01'),DATEADD(day,-24,@now),DATEADD(day,-20,@now));
+
+INSERT INTO VitalSigns (Id,AdmissionId,RecordedAt,Pulse,TemperatureC,BloodPressureSystolic,BloodPressureDiastolic,RespiratoryRate,SpO2) VALUES
+ (NEWID(),@admGiang,DATEADD(day,-24,@now),98,38.1,128,84,20,96),
+ (NEWID(),@admGiang,DATEADD(day,-22,@now),84,37.3,120,80,18,98),
+ (NEWID(),@admGiang,DATEADD(day,-20,@now),76,36.8,118,78,16,99);
+
+INSERT INTO CareOrders (Id,AdmissionId,OrderedById,OrderType,Description,OrderedAt,IsCompleted,CompletedAt) VALUES
+ (NEWID(),@admGiang,@docSurg,3,N'Mổ nội soi cắt ruột thừa cấp cứu',DATEADD(day,-24,@now),1,DATEADD(hour,4,DATEADD(day,-24,@now))),
+ (NEWID(),@admGiang,@docSurg,0,N'Kháng sinh dự phòng Cefixime sau mổ',DATEADD(day,-23,@now),1,DATEADD(day,-21,@now));
+
+INSERT INTO LabOrders (Id,OutpatientVisitId,OrderedById,TestName,Status,OrderedAt,Notes) VALUES
+ (@labGiang,@visitGiang0,@docSurg,N'Siêu âm ổ bụng',2,DATEADD(day,-24,@now),NULL);
+INSERT INTO LabResults (Id,LabOrderId,ResultText,ResultFileUrl,ResultedAt) VALUES
+ (NEWID(),@labGiang,N'Hình ảnh phù hợp viêm ruột thừa cấp, chưa thấy dịch ổ bụng.',NULL,DATEADD(day,-24,@now));
+
+INSERT INTO DischargeSummaries (Id,AdmissionId,DischargeDate,Summary,TotalCost) VALUES
+ (NEWID(),@admGiang,DATEADD(day,-20,@now),N'Hậu phẫu ổn định, vết mổ khô, đã rút dẫn lưu. Xuất viện với kháng sinh uống 5 ngày, tái khám sau 2 tuần.',6500000);
+
+INSERT INTO BillingInvoices (Id,PatientId,CreatedAt,Status,Subtotal,InsuranceDeduction,TotalAmount,InsuranceNumber) VALUES
+ (@invGiang,@pGiang,DATEADD(day,-20,@now),2,6500000,5200000,1300000,N'BHYT-0000000007'); -- 2 = Paid
+INSERT INTO BillingItems (Id,BillingInvoiceId,ItemType,Description,Quantity,UnitPrice,Amount) VALUES
+ (NEWID(),@invGiang,3,N'Tiền giường bệnh - Khoa Ngoại (4 ngày)',4,300000,1200000),
+ (NEWID(),@invGiang,1,N'Siêu âm ổ bụng',1,300000,300000),
+ (NEWID(),@invGiang,4,N'Mổ nội soi cắt ruột thừa cấp cứu',1,5000000,5000000);
+INSERT INTO Payments (Id,BillingInvoiceId,Method,Amount,PaidAt,Status,TransactionRef) VALUES
+ (@payGiang,@invGiang,0,1300000,DATEADD(day,-19,@now),1,N'CASH-RCPT-0001'); -- 0 = Cash, 1 = Paid
+
+COMMIT;
+PRINT '=== SEED HOAN TAT ===';

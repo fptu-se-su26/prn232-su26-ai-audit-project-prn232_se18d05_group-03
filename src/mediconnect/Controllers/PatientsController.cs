@@ -37,6 +37,7 @@ public class PatientsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
     public async Task<ActionResult<IReadOnlyList<PatientProfileReadDto>>> GetAll(CancellationToken cancellationToken)
     {
         var patients = await _crudService.GetAllAsync(cancellationToken);
@@ -61,14 +62,28 @@ public class PatientsController : ControllerBase
         return Ok(SimpleMapper.Map<PatientProfile, PatientProfileReadDto>(profile));
     }
 
+    /// <summary>
+    /// Mở cho mọi role: bệnh nhân tự tạo hồ sơ của chính mình khi đặt lịch/ghi danh lần đầu
+    /// (UserAccountId phải là chính họ), nhân viên tạo hồ sơ thay bệnh nhân vãng lai.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<PatientProfileReadDto>> Create(PatientProfileWriteDto dto, CancellationToken cancellationToken)
     {
+        if (User.IsInRole("Patient"))
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (dto.UserAccountId != userId)
+            {
+                return Forbid();
+            }
+        }
+
         var created = await _crudService.CreateAsync(dto, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
     public async Task<ActionResult<PatientProfileReadDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
         var profile = await _crudService.GetByIdAsync(id, cancellationToken);
@@ -76,15 +91,22 @@ public class PatientsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
     public async Task<IActionResult> Update(Guid id, PatientProfileWriteDto dto, CancellationToken cancellationToken)
     {
         var updated = await _crudService.UpdateAsync(id, dto, cancellationToken);
         return updated ? NoContent() : NotFound();
     }
 
+    /// <summary>Bệnh nhân chỉ xem được lịch sử của chính mình; nhân viên xem được của bất kỳ ai.</summary>
     [HttpGet("{id:guid}/history")]
     public async Task<ActionResult<PatientHistoryDto>> GetHistory(Guid id, CancellationToken cancellationToken)
     {
+        if (!await CanAccessPatientAsync(id, cancellationToken))
+        {
+            return Forbid();
+        }
+
         var visits = await _visitRepository.ListAsync(v => v.PatientId == id, cancellationToken);
         var visitIds = visits.Select(v => v.Id).ToList();
 
@@ -114,6 +136,11 @@ public class PatientsController : ControllerBase
     [HttpGet("{id:guid}/lab-results")]
     public async Task<ActionResult<IReadOnlyList<LabResultReadDto>>> GetLabResults(Guid id, CancellationToken cancellationToken)
     {
+        if (!await CanAccessPatientAsync(id, cancellationToken))
+        {
+            return Forbid();
+        }
+
         var visits = await _visitRepository.ListAsync(v => v.PatientId == id, cancellationToken);
         var visitIds = visits.Select(v => v.Id).ToList();
 
@@ -133,6 +160,11 @@ public class PatientsController : ControllerBase
     [HttpGet("{id:guid}/prescriptions")]
     public async Task<ActionResult<IReadOnlyList<PrescriptionReadDto>>> GetPrescriptions(Guid id, CancellationToken cancellationToken)
     {
+        if (!await CanAccessPatientAsync(id, cancellationToken))
+        {
+            return Forbid();
+        }
+
         var visits = await _visitRepository.ListAsync(v => v.PatientId == id, cancellationToken);
         var visitIds = visits.Select(v => v.Id).ToList();
 
@@ -142,5 +174,18 @@ public class PatientsController : ControllerBase
 
         var result = prescriptions.Select(SimpleMapper.Map<Prescription, PrescriptionReadDto>).ToList();
         return Ok(result);
+    }
+
+    /// <summary>Staff (Admin/Doctor/Nurse/Lab) may access any patient; a Patient may only access their own record.</summary>
+    private async Task<bool> CanAccessPatientAsync(Guid patientId, CancellationToken cancellationToken)
+    {
+        if (!User.IsInRole("Patient"))
+        {
+            return true;
+        }
+
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var myProfile = await _patientRepository.FirstOrDefaultAsync(p => p.UserAccountId == userId, cancellationToken);
+        return myProfile is not null && myProfile.Id == patientId;
     }
 }

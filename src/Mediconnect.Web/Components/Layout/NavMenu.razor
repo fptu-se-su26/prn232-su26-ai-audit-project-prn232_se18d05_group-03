@@ -16,13 +16,23 @@
                 <NavLink class="app-nav-link" href="discharge" @onclick="Notify">Xuất viện</NavLink>
             </Authorized>
         </AuthorizeView>
-        <NavLink class="app-nav-link" href="schedules" @onclick="Notify">Lịch trực</NavLink>
+        <AuthorizeView Roles="Doctor,Nurse,Lab,Admin" Context="scheduleCtx">
+            <Authorized>
+                <NavLink class="app-nav-link" href="schedules" @onclick="Notify">Lịch trực</NavLink>
+            </Authorized>
+        </AuthorizeView>
 
         <AuthorizeView Roles="Doctor,Nurse" Context="clinicalCtx">
             <Authorized>
                 <NavLink class="app-nav-link" href="clinic-dashboard" @onclick="Notify">Hàng đợi phòng khám</NavLink>
                 <NavLink class="app-nav-link" href="outpatient-record" @onclick="Notify">Hồ sơ ngoại trú</NavLink>
                 <NavLink class="app-nav-link" href="e-prescription" @onclick="Notify">Đơn thuốc điện tử</NavLink>
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Admin,Doctor,Nurse" Context="cashierCtx">
+            <Authorized>
+                <NavLink class="app-nav-link" href="billing/cashier" @onclick="Notify">Thu ngân</NavLink>
             </Authorized>
         </AuthorizeView>
 

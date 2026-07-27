@@ -136,6 +136,7 @@ public class ApiClient
 
     // ---- patients (self-service) ----
     public Task<PatientProfileReadDto?> GetMyPatient() => SendAsync<PatientProfileReadDto>(HttpMethod.Get, "api/patients/me");
+    public Task<List<PatientProfileReadDto>?> GetPatients() => SendAsync<List<PatientProfileReadDto>>(HttpMethod.Get, "api/patients");
     public Task<PatientHistoryDto?> GetPatientHistory(Guid patientId) => SendAsync<PatientHistoryDto>(HttpMethod.Get, $"api/patients/{patientId}/history");
 
     // ---- appointments (patient) ----
@@ -349,6 +350,7 @@ public class ApiClient
     public Task<PaymentReadDto?> CreatePayment(PaymentWriteDto dto) => SendAsync<PaymentReadDto>(HttpMethod.Post, "api/payments", dto);
     public Task<PaymentUrlResultDto?> CreateVnPayUrl(Guid paymentId) => SendAsync<PaymentUrlResultDto>(HttpMethod.Post, $"api/payments/{paymentId}/vnpay-url");
     public Task<PaymentUrlResultDto?> CreateMomoUrl(Guid paymentId) => SendAsync<PaymentUrlResultDto>(HttpMethod.Post, $"api/payments/{paymentId}/momo-url");
+    public Task ConfirmPayment(Guid paymentId) => SendAsync(HttpMethod.Post, $"api/payments/{paymentId}/confirm");
 }
 
 public class CallNextResultDto

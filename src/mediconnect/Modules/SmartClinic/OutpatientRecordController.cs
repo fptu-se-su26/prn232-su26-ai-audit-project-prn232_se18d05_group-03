@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Mediconnect.Modules.SmartClinic;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Doctor,Nurse")]
 [Route("api/medical-records")]
 public class OutpatientRecordController : ControllerBase
 {

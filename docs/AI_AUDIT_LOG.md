@@ -2062,13 +2062,14 @@ trạng thái nửa vời.
 | ------------------- | ---------------------------------------------------------------------------------------------- |
 | Ngày sử dụng        | 26/07/2026                                                                                     |
 | Công cụ AI          | Claude Code (claude-sonnet-5)                                                                  |
-| Mục đích sử dụng    | E2E test billing + SmartClinic sau merge PR #21 (post-merge regression), fix bug phát hiện được |
-| Phần việc liên quan | Frontend (Blazor) / Testing                                                                    |
-| Mức độ sử dụng      | Tự chạy test toàn bộ qua browser thật + viết code fix                                          |
+| Mục đích sử dụng    | Audit phân quyền + đóng lỗ hổng IDOR toàn hệ thống, thêm màn Thu ngân, fix luồng thanh toán Momo/VNPay, bỏ quyền Patient tự tạo phiếu thu |
+| Phần việc liên quan | Backend (ASP.NET Core) / Frontend (Blazor)                                                     |
+| Mức độ sử dụng      | Viết code toàn bộ                                                                              |
 
 #### 25.1. Prompt đã sử dụng
 
 ```text
+<<<<<<< HEAD
 End-to-end billing + SmartClinic integration test trên develop (post-merge). Verify tất cả
 flow billing DE190123 đụng tới hoạt động đúng, và SmartClinic không bị regression sau merge. DB
 verification sau mỗi bước. Không sửa code trong lúc test.
@@ -2096,16 +2097,232 @@ Fix Bug #3: bọc nút "Bắt đầu gọi video" trong `AuthorizeView Roles="Do
 Bug #1: xác nhận BillingInvoice/BillingItem không có field nào để trace ngược "đã invoice
 chưa" — cần thêm cột mới (đụng entity + migration của bạn cùng nhóm) — dừng lại, không tự fix,
 báo cáo làm known limitation.
+=======
+Tại sao Patient thấy được mục "Lịch trực" không thuộc về mình trên nav bar? Sửa luôn cho mình.
+Sau đó: (1) kéo update từ develop, check thay đổi rồi làm tiếp, (2) làm màn thu ngân, (3)
+authorize 10 controller còn thiếu.
+--- (các prompt nối tiếp trong cùng phiên) ---
+Tại sao ấn nút Momo nó bật lại một trang mới, mở QR đúng nhưng bị thành hai trang?
+Đã nhận thanh toán, còn máy thanh toán trước nên set bao nhiêu phút đó thì đổi thành trạng huỷ.
+Patient vẫn có thể tạo phiếu thu — [chọn] Bỏ hẳn, chỉ nhân viên/thu ngân tạo.
+```
+
+#### 25.2. Kết quả AI gợi ý
+
+```text
+Phát hiện nav bar không lọc theo role (mọi mục hiện cho mọi role) → khoanh vùng và sửa. Đối
+chiếu ApiClient.cs/services.ts với từng controller để biết "ai thực sự gọi endpoint này" trước
+khi khoá Role, tránh khoá nhầm làm gãy flow hợp lệ. Phát hiện thêm 2 lỗ hổng IDOR nghiêm trọng
+ngoài phạm vi yêu cầu ban đầu: BillingInvoicesController cho Patient tự PUT/DELETE hoá đơn của
+mình (sửa được Status/TotalAmount trực tiếp), PatientsController cho xem lịch sử/XN/đơn thuốc
+của bệnh nhân khác qua đổi ID trên URL. Xây màn Thu ngân dùng lại role Admin/Doctor/Nurse có
+sẵn thay vì thêm role mới. Chẩn đoán đúng gốc lỗi Momo/VNPay: ReturnUrl trỏ thẳng vào endpoint
+API (ra JSON thô) thay vì frontend; sau khi sửa lần 1 vẫn còn lỗi tab bị nhân đôi thành bản sao
+trang Viện phí — sửa lại bằng trang PaymentResult.razor tối giản tự đóng + cơ chế focus-reload
+JS interop cho tab gốc. Thêm PaymentExpiryBackgroundService tự huỷ hoá đơn Pending quá hạn cấu
+hình được (phút). Theo quyết định của nhóm, bỏ hẳn quyền Patient tự tạo phiếu thu — revert lại
+thiết kế giữ tính năng có hardening đã làm trước đó.
+>>>>>>> origin/develop
 ```
 
 #### 25.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+<<<<<<< HEAD
+Áp dụng fix Bug #2 và Bug #3 sau khi `dotnet build` sạch cả 2 project. Bug #1 chủ động yêu cầu
+AI dừng lại, không áp dụng bất kỳ thay đổi entity/migration nào.
+=======
+Áp dụng toàn bộ sau khi dotnet build sạch 0 Warning/0 Error ở từng nhóm thay đổi; xác nhận qua
+đọc code các role thực tế được phép trước khi khoá, không đoán chừng.
+>>>>>>> origin/develop
+```
+
+#### 25.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+<<<<<<< HEAD
+- Yêu cầu AI query trực tiếp DB (INFORMATION_SCHEMA.COLUMNS) + cat entity file để tự verify lại
+  claim "BillingInvoice không có OutpatientVisitId" trước khi tin — AI lần fix đầu tự bịa thêm
+  giả định cột này có tồn tại theo brief, phải revert và làm lại sau khi verify.
+- Yêu cầu revert file bị fix sai (Telemedicine.razor, ApiClient.cs) về develop rồi làm lại từ
+  đầu, giữ nguyên file đã đúng (ClinicDashboard.razor) — tách rõ phần đúng khỏi phần cần sửa lại
+  thay vì sửa đè lên code đã sai.
+=======
+- Yêu cầu AI grep "ai thực sự gọi endpoint này" trước mỗi lần khoá role, thay vì khoá theo cảm
+  tính — kỷ luật này được giữ xuyên suốt cả phiên sau khi thấy hiệu quả ở nhóm việc đầu.
+- Dùng AskUserQuestion để chốt quyết định Patient có được tự tạo phiếu thu hay không, thay vì
+  AI tự quyết — vì đây là quyết định nghiệp vụ/bảo mật ảnh hưởng thiết kế, không phải chi tiết
+  kỹ thuật thuần túy.
+>>>>>>> origin/develop
+```
+
+#### 25.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+<<<<<<< HEAD
+| Link commit       |                                                                                                              |
+| File liên quan    | `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Web/Services/ApiClient.cs`; `src/Mediconnect.Web/Components/Pages/ClinicDashboard.razor` |
+| Screenshot        |                                                                                                                |
+| Kết quả chạy/test | `dotnet build` cả 2 project sau mỗi fix: 0 Warning/0 Error; verify browser 10 flow + SQL trực tiếp (bao gồm test duplicate INSERT bị chặn: Msg 2601) |
+| Link video demo   |                                                                                                                |
+| Ghi chú khác      | Bug #1 (double billing) cố tình để lại chưa fix — cần xác nhận thêm cột `OutpatientVisitId`/FK trước khi làm tiếp |
+=======
+| Link commit       | Branch `docs/mediconnect-code-guides`                                                                          |
+| File liên quan    | `EntityControllers.cs`, `PatientsController.cs`, `CashierBilling.razor`, `PaymentResult.razor`, `wwwroot/js/paymentFocus.js`, `PaymentExpiryBackgroundService.cs`, `Billing.razor`, `Telemedicine.razor` |
+| Screenshot        |                                                                                                                |
+| Kết quả chạy/test | `dotnet build` cả 2 project: 0 Warning/0 Error; test thủ công qua browser: Momo/VNPay không còn ra JSON/2 tab, invoice chuyển Paid đúng |
+| Link video demo   |                                                                                                                |
+| Ghi chú khác      | Frontend:BaseUrl trong appsettings.json chỉ trỏ được 1 nơi (Blazor) — không còn là giới hạn thực tế sau khi xoá React (xem Lần sử dụng AI số 26) |
+>>>>>>> origin/develop
+
+#### 25.6. Nhận xét cá nhân/nhóm
+
+```text
+<<<<<<< HEAD
+Brief tự chuẩn bị trước dựa trên trí nhớ phiên trước (memory) khẳng định BillingInvoice đã có
+cột OutpatientVisitId — sai hoàn toàn so với entity thật. Bài học: memory/brief chỉ là điểm
+khởi đầu, luôn phải cat file thật + query DB thật trước khi tin, đặc biệt khi brief đó sẽ dẫn
+tới việc sửa entity/migration của người khác.
+=======
+Việc bắt buộc grep "ai gọi endpoint này" trước khi khoá Role đã ngăn được ít nhất 1 lần suýt
+khoá nhầm làm gãy flow hợp lệ trong phiên này. Với các quyết định vừa kỹ thuật vừa ảnh hưởng
+nghiệp vụ (như Patient có được tự tạo phiếu thu không), dừng lại hỏi thay vì để AI tự quyết là
+đúng đắn — hai lần sửa Momo/VNPay cho thấy AI tự quyết một mình không phải lúc nào cũng ra
+phương án đúng ngay lần đầu.
+```
+
+---
+
+### Lần sử dụng AI số 26
+
+| Nội dung            | Thông tin                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| Ngày sử dụng        | 26/07/2026                                                                                     |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                                  |
+| Mục đích sử dụng    | Xóa hẳn frontend React trùng lặp, fix phân quyền `Lab.razor`, gộp + mở rộng seed script Nội trú (Thành viên 3) |
+| Phần việc liên quan | Frontend (Blazor) / Database (seed script)                                                     |
+| Mức độ sử dụng      | Viết code toàn bộ                                                                              |
+
+#### 26.1. Prompt đã sử dụng
+
+```text
+Khi tôi vào trang bác sĩ tất cả cái này đều hiện, trên thực tế có phải vậy không?
+[Sau khi AI báo React chưa làm 4 trang Nội trú] Bỏ folder react luôn đi.
+Bác sĩ bình thường có thực hiện hết 4 chức năng này không hay như nào? [Sau khi AI phát hiện
+Lab.razor lộ nút sai quyền] Hãy sửa đi.
+Sửa lại seed này và thêm data cho các chức năng của dev 3 (nội trú & điều phối lâm sàng).
+Gộp hai file sql seed_demo_data.sql và seed_hospital.sql.
+Cho data nhiều lên tí, cái nào theo ngày thì cho nó tản ra thêm mấy tuần về trước và về sau.
+```
+
+#### 26.2. Kết quả AI gợi ý
+
+```text
+Điều tra và báo cáo: 4 trang Nội trú (BedMap/Vitals/Lab/Discharge) đã có đủ ở Blazor nhưng
+hoàn toàn chưa có ở React (0% UI, dù backend API đã đủ) — dẫn tới đề xuất và (sau khi hỏi lại)
+xoá hẳn src/mediconnect-web. Phát hiện Lab.razor cho Doctor/Nurse thấy và bấm được 3 nút chỉ
+role Lab được phép ở backend (bấm vào bị 403 âm thầm) — bọc lại bằng <AuthorizeView
+Roles="Lab,Admin">. Gộp seed_demo_data.sql vào seed_hospital.sql thành 1 script, test chạy
+thật qua sqlcmd trên container SQL Server sống, tự phát hiện 2 bug thứ tự DELETE có sẵn từ
+trước (thiếu DELETE FROM ServiceRatings; InpatientAdmissions xoá sau OutpatientVisits dù là
+bảng con) khiến script chỉ chạy đúng lần đầu, lần chạy lại thứ 2 luôn lỗi FK dây chuyền. Thêm
+đầy đủ dữ liệu demo Nội trú 4 feature (giường/sinh tồn/y lệnh/xét nghiệm/xuất viện) + mở rộng
+Appointments/StaffSchedules trải ±3 tuần quanh ngày hiện tại dùng 5 bệnh nhân trước đó chưa có
+dữ liệu gì.
+```
+
+#### 26.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng sau khi: dotnet build sạch 0 Warning/0 Error; chạy sqlcmd toàn bộ seed_hospital.sql 3
+lần liên tiếp trên container sqlserver sống không lỗi, số dòng ổn định qua các lần chạy.
+```
+
+#### 26.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Trước khi xoá cả thư mục src/mediconnect-web, yêu cầu AI dùng AskUserQuestion xác nhận rõ
+  phạm vi (có cả thay đổi chưa commit trong đó) — vì đây là hành động khó đảo ngược với thay
+  đổi chưa commit, không phải quyết định AI nên tự quyết.
+- Yêu cầu AI test trực tiếp trên SQL Server sống (không chỉ đọc code) sau khi sửa seed script —
+  chính cách này lộ ra bug thứ tự DELETE mà đọc code thuần không thấy ngay (FK cascade chỉ lỗi
+  khi có dữ liệu tham chiếu thật ở lần chạy thứ 2 trở đi).
+```
+
+#### 26.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| Link commit       | Branch `docs/mediconnect-code-guides`                                                                          |
+| File liên quan    | `Lab.razor`; `seed_hospital.sql` (đã xoá `seed_demo_data.sql`); đã xoá toàn bộ `src/mediconnect-web/**` |
+| Screenshot        |                                                                                                                |
+| Kết quả chạy/test | `dotnet build` 0 Error; `sqlcmd -i seed_hospital.sql` chạy 3 lần liên tiếp không lỗi; đếm dòng ổn định (Departments=12, Beds=864, InpatientAdmissions=4, Appointments=14 trải 05/07–16/08) |
+| Link video demo   |                                                                                                                |
+| Ghi chú khác      | `git status` xác nhận toàn bộ `src/mediconnect-web` đánh dấu `D` (khôi phục được qua git history nếu cần, trừ phần thay đổi chưa commit trong đó) |
+
+#### 26.6. Nhận xét cá nhân/nhóm
+
+```text
+Việc yêu cầu AI chạy thử thật trên SQL Server sống thay vì chỉ tin vào việc đọc code là bước
+bắt buộc với mọi thay đổi script SQL có DELETE/INSERT theo thứ tự FK — bug thứ tự xoá chỉ lộ ra
+khi chạy script lần thứ 2 trên dữ liệu đã có từ lần chạy trước, đọc code tĩnh không phát hiện
+được. Quyết định xoá cả một frontend (dù trùng lặp và lạc hậu hơn) vẫn cần xác nhận rõ ràng
+trước khi làm vì đây là hành động khó đảo ngược với phần việc chưa commit.
+```
+
+---
+
+### Lần sử dụng AI số 27
+
+| Nội dung            | Thông tin                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| Ngày sử dụng        | 26/07/2026                                                                                     |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                                  |
+| Mục đích sử dụng    | E2E test billing + SmartClinic sau merge PR #21 (post-merge regression), fix bug phát hiện được |
+| Phần việc liên quan | Frontend (Blazor) / Testing                                                                    |
+| Mức độ sử dụng      | Tự chạy test toàn bộ qua browser thật + viết code fix                                          |
+
+#### 27.1. Prompt đã sử dụng
+
+```text
+End-to-end billing + SmartClinic integration test trên develop (post-merge). Verify tất cả
+flow billing DE190123 đụng tới hoạt động đúng, và SmartClinic không bị regression sau merge. DB
+verification sau mỗi bước. Không sửa code trong lúc test.
+
+Sau khi có báo cáo: fix Bug #2 (EnsureVisitCreatedAsync sai key match) và Bug #3 (Nurse bị
+redirect /login) trên branch mới tạo từ develop. Bug #1 (double billing) — hỏi trước khi đụng
+entity/migration.
+```
+
+#### 27.2. Kết quả AI trả về
+
+```text
+Test report: 6 billing flow + 4 SmartClinic flow + 3 performance check, tự tạo test data qua SQL
+khi seed thiếu (Appointments=0, không có MedicalService giá 0đ). Phát hiện 3 bug: (1) double
+billing — cùng dịch vụ khám bị tính tiền 2 lần cho 1 visit, (2) Telemedicine
+EnsureVisitCreatedAsync match theo PatientId+DoctorId+ngày, tái sử dụng nhầm visit cũ (đã
+invoice) sang encounter tele mới, (3) Nurse bấm "Bắt đầu gọi video" bị redirect /login thay vì
+thông báo rõ ràng ([Authorize(Roles="Doctor,Patient")] ở Telemedicine.razor không có gate ở
+phía Nurse-facing UI).
+
+Fix Bug #2: bỏ hẳn match theo ngày, thay bằng bridge AppointmentId → QueueTicket → OutpatientVisit
+(OutpatientVisit không có cột AppointmentId); thêm `_prescriptionPanelOpen` tách khỏi
+`_activeVisitId` để đóng/mở panel không còn tạo visit trùng.
+Fix Bug #3: bọc nút "Bắt đầu gọi video" trong `AuthorizeView Roles="Doctor"`.
+Bug #1: xác nhận BillingInvoice/BillingItem không có field nào để trace ngược "đã invoice
+chưa" — cần thêm cột mới (đụng entity + migration của bạn cùng nhóm) — dừng lại, không tự fix,
+báo cáo làm known limitation.
+```
+
+#### 27.3. Phần sinh viên/nhóm đã sử dụng từ AI
 
 ```text
 Áp dụng fix Bug #2 và Bug #3 sau khi `dotnet build` sạch cả 2 project. Bug #1 chủ động yêu cầu
 AI dừng lại, không áp dụng bất kỳ thay đổi entity/migration nào.
 ```
 
-#### 25.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+#### 27.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
 
 ```text
 - Yêu cầu AI query trực tiếp DB (INFORMATION_SCHEMA.COLUMNS) + cat entity file để tự verify lại
@@ -2116,7 +2333,7 @@ AI dừng lại, không áp dụng bất kỳ thay đổi entity/migration nào.
   thay vì sửa đè lên code đã sai.
 ```
 
-#### 25.5. Minh chứng
+#### 27.5. Minh chứng
 
 | Loại minh chứng   | Nội dung                                                                                                   |
 | ----------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -2127,7 +2344,7 @@ AI dừng lại, không áp dụng bất kỳ thay đổi entity/migration nào.
 | Link video demo   |                                                                                                                |
 | Ghi chú khác      | Bug #1 (double billing) cố tình để lại chưa fix — cần xác nhận thêm cột `OutpatientVisitId`/FK trước khi làm tiếp |
 
-#### 25.6. Nhận xét cá nhân/nhóm
+#### 27.6. Nhận xét cá nhân/nhóm
 
 ```text
 Brief tự chuẩn bị trước dựa trên trí nhớ phiên trước (memory) khẳng định BillingInvoice đã có

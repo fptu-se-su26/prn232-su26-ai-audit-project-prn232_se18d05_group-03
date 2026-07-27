@@ -44,6 +44,7 @@ public class OtpController : ControllerBase
     // ── Configuration ────────────────────────────────────────────────────────
 
     [HttpGet("settings")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<OtpSettingDto>> GetSettings(CancellationToken cancellationToken)
     {
         var setting = await GetOrCreateSettingAsync(cancellationToken);
@@ -53,6 +54,7 @@ public class OtpController : ControllerBase
     }
 
     [HttpPut("settings")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<OtpSettingDto>> UpdateSettings(
         OtpSettingWriteDto dto, CancellationToken cancellationToken)
     {
@@ -86,6 +88,7 @@ public class OtpController : ControllerBase
     // ── Issue / Verify ───────────────────────────────────────────────────────
 
     [HttpPost("issue")]
+    [Authorize(Roles = "Admin,Doctor,Nurse")]
     public async Task<ActionResult<OtpCodeDto>> Issue(
         OtpIssueRequestDto request, CancellationToken cancellationToken)
     {
@@ -126,6 +129,7 @@ public class OtpController : ControllerBase
     }
 
     [HttpPost("verify")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<OtpVerifyResponseDto>> Verify(
         OtpVerifyRequestDto request, CancellationToken cancellationToken)
     {
@@ -256,6 +260,7 @@ public class OtpController : ControllerBase
     // ── Monitor / demo log ───────────────────────────────────────────────────
 
     [HttpGet("codes")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IReadOnlyList<OtpCodeDto>>> GetCodes(
         [FromQuery] Guid? userAccountId, CancellationToken cancellationToken)
     {
