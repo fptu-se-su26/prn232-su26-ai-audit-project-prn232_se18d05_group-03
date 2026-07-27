@@ -301,18 +301,30 @@ else
                     }
                     else
                     {
-                        <select class="form-select" @bind="_selectedAppointmentId">
+                        <select class="form-select" value="@_selectedAppointmentId" @onchange="OnAppointmentSelected">
                             <option value="">-- Chọn lịch hẹn bệnh nhân --</option>
                             @foreach (var a in _pendingAppointments)
                             {
                                 <option value="@a.Id">[@a.AppointmentTime.ToLocalTime().ToString("HH:mm")] @PatientNameFor(a.PatientId) - @(string.IsNullOrEmpty(a.Reason) ? "Khám tổng quát" : a.Reason)</option>
                             }
                         </select>
-                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" disabled="@(_selectedAppointmentId == "" || _startingCall)"
-                                @onclick="StartVideoCall">
-                            <span class="material-symbols-outlined align-middle" style="font-size:1rem">videocam</span>
-                            @(_startingCall ? "Đang tạo phiên..." : "Bắt đầu gọi video")
-                        </button>
+                        @* Telemedicine.razor is [Authorize(Roles = "Doctor,Patient")] — showing this to Nurse used to
+                           silently bounce them to /login after creating an orphan TelemedicineSession. Gate it here instead. *@
+                        <AuthorizeView Roles="Doctor" Context="videoCallCtx">
+                            <Authorized>
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-2" disabled="@(_selectedAppointmentId == "" || _startingCall)"
+                                        @onclick="StartVideoCall">
+                                    <span class="material-symbols-outlined align-middle" style="font-size:1rem">videocam</span>
+                                    @(_startingCall ? "Đang tạo phiên..." : "Bắt đầu gọi video")
+                                </button>
+                            </Authorized>
+                            <NotAuthorized>
+                                <button type="button" class="btn btn-outline-secondary btn-sm mt-2" disabled title="Chỉ bác sĩ mới có thể bắt đầu cuộc gọi video.">
+                                    <span class="material-symbols-outlined align-middle" style="font-size:1rem">videocam</span>
+                                    Bắt đầu gọi video
+                                </button>
+                            </NotAuthorized>
+                        </AuthorizeView>
                     }
                 </div>
             }
@@ -482,24 +494,55 @@ else
         _checkInClinicId = _selectedClinicId?.ToString() ?? _summaries.FirstOrDefault()?.ClinicId.ToString() ?? "";
     }
 
+    private void OnAppointmentSelected(ChangeEventArgs e)
+    {
+        _selectedAppointmentId = e.Value?.ToString() ?? "";
+        if (Guid.TryParse(_selectedAppointmentId, out var apptId))
+        {
+            var appt = _pendingAppointments.FirstOrDefault(a => a.Id == apptId);
+            if (appt != null && appt.ClinicId != Guid.Empty)
+            {
+                _checkInClinicId = appt.ClinicId.ToString();
+            }
+        }
+    }
+
     private async Task SelectAppointmentType()
     {
         _checkInType = "appointment";
         await LoadCheckInData();
+        if (Guid.TryParse(_selectedAppointmentId, out var apptId))
+        {
+            var appt = _pendingAppointments.FirstOrDefault(a => a.Id == apptId);
+            if (appt != null && appt.ClinicId != Guid.Empty)
+            {
+                _checkInClinicId = appt.ClinicId.ToString();
+            }
+        }
     }
 
     private async Task SubmitCheckIn()
     {
         _submitted = true;
-        if (_checkInClinicId == "") return;
         if (_checkInType == "appointment" && _selectedAppointmentId == "") return;
         if (_checkInType == "walk-in" && (string.IsNullOrWhiteSpace(_walkInName) || string.IsNullOrWhiteSpace(_walkInEmail))) return;
+
+        var appointmentId = _checkInType == "appointment" ? Guid.Parse(_selectedAppointmentId) : (Guid?)null;
+        if (_checkInType == "appointment" && appointmentId.HasValue)
+        {
+            var appt = _pendingAppointments.FirstOrDefault(a => a.Id == appointmentId.Value);
+            if (appt != null && appt.ClinicId != Guid.Empty)
+            {
+                _checkInClinicId = appt.ClinicId.ToString();
+            }
+        }
+
+        if (_checkInClinicId == "") return;
 
         _submitting = true; _error = null;
         try
         {
             var clinicId = Guid.Parse(_checkInClinicId);
-            var appointmentId = _checkInType == "appointment" ? Guid.Parse(_selectedAppointmentId) : (Guid?)null;
             var patientName = _checkInType == "walk-in" ? _walkInName.Trim() : null;
             var patientEmail = _checkInType == "walk-in" ? _walkInEmail.Trim() : null;
             var patientPhone = _checkInType == "walk-in" && !string.IsNullOrWhiteSpace(_walkInPhone) ? _walkInPhone.Trim() : null;

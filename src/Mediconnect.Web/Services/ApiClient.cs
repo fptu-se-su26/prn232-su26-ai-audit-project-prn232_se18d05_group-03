@@ -310,6 +310,19 @@ public class ApiClient
     public Task<OutpatientVisitReadDto?> CreateOutpatientVisit(OutpatientVisitWriteDto dto) => SendAsync<OutpatientVisitReadDto>(HttpMethod.Post, "api/outpatientvisits", dto);
     public Task<OutpatientVisitReadDto?> GetOutpatientVisit(Guid id) => SendAsync<OutpatientVisitReadDto>(HttpMethod.Get, $"api/outpatientvisits/{id}");
     public Task<List<OutpatientVisitReadDto>?> GetOutpatientVisits() => SendAsync<List<OutpatientVisitReadDto>>(HttpMethod.Get, "api/outpatientvisits");
+    public Task<List<QueueTicketReadDto>?> GetQueueTickets() => SendAsync<List<QueueTicketReadDto>>(HttpMethod.Get, "api/queuetickets");
+
+    // Bridge: AppointmentId -> QueueTicket -> OutpatientVisit. OutpatientVisit has no AppointmentId column.
+    public async Task<OutpatientVisitReadDto?> GetVisitByAppointmentId(Guid appointmentId)
+    {
+        var tickets = await GetQueueTickets();
+        var ticket = tickets?.FirstOrDefault(t => t.AppointmentId.HasValue && t.AppointmentId.Value == appointmentId);
+        if (ticket is null) return null;
+
+        var visits = await GetOutpatientVisits();
+        return visits?.FirstOrDefault(v => v.QueueTicketId == ticket.Id);
+    }
+
     public Task Diagnose(MedicalRecordDtos dto) => SendAsync(HttpMethod.Post, "api/medical-records/diagnose", dto);
     public Task<List<ICD10ResultDto>?> SearchIcd10(string query) => SendAsync<List<ICD10ResultDto>>(HttpMethod.Get, "api/medical-records/icd10/search" + Q(("query", query)));
     public Task<List<PatientDiagnosisHistoryDto>?> GetDiagnosisHistory(Guid patientId) => SendAsync<List<PatientDiagnosisHistoryDto>>(HttpMethod.Get, $"api/medical-records/patients/{patientId}/diagnosis-history");

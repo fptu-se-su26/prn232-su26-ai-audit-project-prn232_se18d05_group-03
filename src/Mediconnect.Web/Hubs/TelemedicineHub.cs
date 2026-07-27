@@ -17,6 +17,7 @@ public class TelemedicineHub : Hub
         var countBefore = room.Count;
         room[Context.ConnectionId] = 0;
         await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+        await Clients.OthersInGroup(roomId).SendAsync("PeerJoined");
         return countBefore;
     }
 

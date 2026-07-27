@@ -2069,6 +2069,35 @@ trạng thái nửa vời.
 #### 25.1. Prompt đã sử dụng
 
 ```text
+<<<<<<< HEAD
+End-to-end billing + SmartClinic integration test trên develop (post-merge). Verify tất cả
+flow billing DE190123 đụng tới hoạt động đúng, và SmartClinic không bị regression sau merge. DB
+verification sau mỗi bước. Không sửa code trong lúc test.
+
+Sau khi có báo cáo: fix Bug #2 (EnsureVisitCreatedAsync sai key match) và Bug #3 (Nurse bị
+redirect /login) trên branch mới tạo từ develop. Bug #1 (double billing) — hỏi trước khi đụng
+entity/migration.
+```
+
+#### 25.2. Kết quả AI trả về
+
+```text
+Test report: 6 billing flow + 4 SmartClinic flow + 3 performance check, tự tạo test data qua SQL
+khi seed thiếu (Appointments=0, không có MedicalService giá 0đ). Phát hiện 3 bug: (1) double
+billing — cùng dịch vụ khám bị tính tiền 2 lần cho 1 visit, (2) Telemedicine
+EnsureVisitCreatedAsync match theo PatientId+DoctorId+ngày, tái sử dụng nhầm visit cũ (đã
+invoice) sang encounter tele mới, (3) Nurse bấm "Bắt đầu gọi video" bị redirect /login thay vì
+thông báo rõ ràng ([Authorize(Roles="Doctor,Patient")] ở Telemedicine.razor không có gate ở
+phía Nurse-facing UI).
+
+Fix Bug #2: bỏ hẳn match theo ngày, thay bằng bridge AppointmentId → QueueTicket → OutpatientVisit
+(OutpatientVisit không có cột AppointmentId); thêm `_prescriptionPanelOpen` tách khỏi
+`_activeVisitId` để đóng/mở panel không còn tạo visit trùng.
+Fix Bug #3: bọc nút "Bắt đầu gọi video" trong `AuthorizeView Roles="Doctor"`.
+Bug #1: xác nhận BillingInvoice/BillingItem không có field nào để trace ngược "đã invoice
+chưa" — cần thêm cột mới (đụng entity + migration của bạn cùng nhóm) — dừng lại, không tự fix,
+báo cáo làm known limitation.
+=======
 Tại sao Patient thấy được mục "Lịch trực" không thuộc về mình trên nav bar? Sửa luôn cho mình.
 Sau đó: (1) kéo update từ develop, check thay đổi rồi làm tiếp, (2) làm màn thu ngân, (3)
 authorize 10 controller còn thiếu.
@@ -2093,39 +2122,69 @@ trang Viện phí — sửa lại bằng trang PaymentResult.razor tối giản 
 JS interop cho tab gốc. Thêm PaymentExpiryBackgroundService tự huỷ hoá đơn Pending quá hạn cấu
 hình được (phút). Theo quyết định của nhóm, bỏ hẳn quyền Patient tự tạo phiếu thu — revert lại
 thiết kế giữ tính năng có hardening đã làm trước đó.
+>>>>>>> origin/develop
 ```
 
 #### 25.3. Phần sinh viên/nhóm đã sử dụng từ AI
 
 ```text
+<<<<<<< HEAD
+Áp dụng fix Bug #2 và Bug #3 sau khi `dotnet build` sạch cả 2 project. Bug #1 chủ động yêu cầu
+AI dừng lại, không áp dụng bất kỳ thay đổi entity/migration nào.
+=======
 Áp dụng toàn bộ sau khi dotnet build sạch 0 Warning/0 Error ở từng nhóm thay đổi; xác nhận qua
 đọc code các role thực tế được phép trước khi khoá, không đoán chừng.
+>>>>>>> origin/develop
 ```
 
 #### 25.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
 
 ```text
+<<<<<<< HEAD
+- Yêu cầu AI query trực tiếp DB (INFORMATION_SCHEMA.COLUMNS) + cat entity file để tự verify lại
+  claim "BillingInvoice không có OutpatientVisitId" trước khi tin — AI lần fix đầu tự bịa thêm
+  giả định cột này có tồn tại theo brief, phải revert và làm lại sau khi verify.
+- Yêu cầu revert file bị fix sai (Telemedicine.razor, ApiClient.cs) về develop rồi làm lại từ
+  đầu, giữ nguyên file đã đúng (ClinicDashboard.razor) — tách rõ phần đúng khỏi phần cần sửa lại
+  thay vì sửa đè lên code đã sai.
+=======
 - Yêu cầu AI grep "ai thực sự gọi endpoint này" trước mỗi lần khoá role, thay vì khoá theo cảm
   tính — kỷ luật này được giữ xuyên suốt cả phiên sau khi thấy hiệu quả ở nhóm việc đầu.
 - Dùng AskUserQuestion để chốt quyết định Patient có được tự tạo phiếu thu hay không, thay vì
   AI tự quyết — vì đây là quyết định nghiệp vụ/bảo mật ảnh hưởng thiết kế, không phải chi tiết
   kỹ thuật thuần túy.
+>>>>>>> origin/develop
 ```
 
 #### 25.5. Minh chứng
 
 | Loại minh chứng   | Nội dung                                                                                                   |
 | ----------------- | ------------------------------------------------------------------------------------------------------------- |
+<<<<<<< HEAD
+| Link commit       |                                                                                                              |
+| File liên quan    | `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Web/Services/ApiClient.cs`; `src/Mediconnect.Web/Components/Pages/ClinicDashboard.razor` |
+| Screenshot        |                                                                                                                |
+| Kết quả chạy/test | `dotnet build` cả 2 project sau mỗi fix: 0 Warning/0 Error; verify browser 10 flow + SQL trực tiếp (bao gồm test duplicate INSERT bị chặn: Msg 2601) |
+| Link video demo   |                                                                                                                |
+| Ghi chú khác      | Bug #1 (double billing) cố tình để lại chưa fix — cần xác nhận thêm cột `OutpatientVisitId`/FK trước khi làm tiếp |
+=======
 | Link commit       | Branch `docs/mediconnect-code-guides`                                                                          |
 | File liên quan    | `EntityControllers.cs`, `PatientsController.cs`, `CashierBilling.razor`, `PaymentResult.razor`, `wwwroot/js/paymentFocus.js`, `PaymentExpiryBackgroundService.cs`, `Billing.razor`, `Telemedicine.razor` |
 | Screenshot        |                                                                                                                |
 | Kết quả chạy/test | `dotnet build` cả 2 project: 0 Warning/0 Error; test thủ công qua browser: Momo/VNPay không còn ra JSON/2 tab, invoice chuyển Paid đúng |
 | Link video demo   |                                                                                                                |
 | Ghi chú khác      | Frontend:BaseUrl trong appsettings.json chỉ trỏ được 1 nơi (Blazor) — không còn là giới hạn thực tế sau khi xoá React (xem Lần sử dụng AI số 26) |
+>>>>>>> origin/develop
 
 #### 25.6. Nhận xét cá nhân/nhóm
 
 ```text
+<<<<<<< HEAD
+Brief tự chuẩn bị trước dựa trên trí nhớ phiên trước (memory) khẳng định BillingInvoice đã có
+cột OutpatientVisitId — sai hoàn toàn so với entity thật. Bài học: memory/brief chỉ là điểm
+khởi đầu, luôn phải cat file thật + query DB thật trước khi tin, đặc biệt khi brief đó sẽ dẫn
+tới việc sửa entity/migration của người khác.
+=======
 Việc bắt buộc grep "ai gọi endpoint này" trước khi khoá Role đã ngăn được ít nhất 1 lần suýt
 khoá nhầm làm gãy flow hợp lệ trong phiên này. Với các quyết định vừa kỹ thuật vừa ảnh hưởng
 nghiệp vụ (như Patient có được tự tạo phiếu thu không), dừng lại hỏi thay vì để AI tự quyết là
@@ -2210,6 +2269,88 @@ bắt buộc với mọi thay đổi script SQL có DELETE/INSERT theo thứ t�
 khi chạy script lần thứ 2 trên dữ liệu đã có từ lần chạy trước, đọc code tĩnh không phát hiện
 được. Quyết định xoá cả một frontend (dù trùng lặp và lạc hậu hơn) vẫn cần xác nhận rõ ràng
 trước khi làm vì đây là hành động khó đảo ngược với phần việc chưa commit.
+```
+
+---
+
+### Lần sử dụng AI số 27
+
+| Nội dung            | Thông tin                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| Ngày sử dụng        | 26/07/2026                                                                                     |
+| Công cụ AI          | Claude Code (claude-sonnet-5)                                                                  |
+| Mục đích sử dụng    | E2E test billing + SmartClinic sau merge PR #21 (post-merge regression), fix bug phát hiện được |
+| Phần việc liên quan | Frontend (Blazor) / Testing                                                                    |
+| Mức độ sử dụng      | Tự chạy test toàn bộ qua browser thật + viết code fix                                          |
+
+#### 27.1. Prompt đã sử dụng
+
+```text
+End-to-end billing + SmartClinic integration test trên develop (post-merge). Verify tất cả
+flow billing DE190123 đụng tới hoạt động đúng, và SmartClinic không bị regression sau merge. DB
+verification sau mỗi bước. Không sửa code trong lúc test.
+
+Sau khi có báo cáo: fix Bug #2 (EnsureVisitCreatedAsync sai key match) và Bug #3 (Nurse bị
+redirect /login) trên branch mới tạo từ develop. Bug #1 (double billing) — hỏi trước khi đụng
+entity/migration.
+```
+
+#### 27.2. Kết quả AI trả về
+
+```text
+Test report: 6 billing flow + 4 SmartClinic flow + 3 performance check, tự tạo test data qua SQL
+khi seed thiếu (Appointments=0, không có MedicalService giá 0đ). Phát hiện 3 bug: (1) double
+billing — cùng dịch vụ khám bị tính tiền 2 lần cho 1 visit, (2) Telemedicine
+EnsureVisitCreatedAsync match theo PatientId+DoctorId+ngày, tái sử dụng nhầm visit cũ (đã
+invoice) sang encounter tele mới, (3) Nurse bấm "Bắt đầu gọi video" bị redirect /login thay vì
+thông báo rõ ràng ([Authorize(Roles="Doctor,Patient")] ở Telemedicine.razor không có gate ở
+phía Nurse-facing UI).
+
+Fix Bug #2: bỏ hẳn match theo ngày, thay bằng bridge AppointmentId → QueueTicket → OutpatientVisit
+(OutpatientVisit không có cột AppointmentId); thêm `_prescriptionPanelOpen` tách khỏi
+`_activeVisitId` để đóng/mở panel không còn tạo visit trùng.
+Fix Bug #3: bọc nút "Bắt đầu gọi video" trong `AuthorizeView Roles="Doctor"`.
+Bug #1: xác nhận BillingInvoice/BillingItem không có field nào để trace ngược "đã invoice
+chưa" — cần thêm cột mới (đụng entity + migration của bạn cùng nhóm) — dừng lại, không tự fix,
+báo cáo làm known limitation.
+```
+
+#### 27.3. Phần sinh viên/nhóm đã sử dụng từ AI
+
+```text
+Áp dụng fix Bug #2 và Bug #3 sau khi `dotnet build` sạch cả 2 project. Bug #1 chủ động yêu cầu
+AI dừng lại, không áp dụng bất kỳ thay đổi entity/migration nào.
+```
+
+#### 27.4. Phần sinh viên/nhóm tự chỉnh sửa hoặc cải tiến
+
+```text
+- Yêu cầu AI query trực tiếp DB (INFORMATION_SCHEMA.COLUMNS) + cat entity file để tự verify lại
+  claim "BillingInvoice không có OutpatientVisitId" trước khi tin — AI lần fix đầu tự bịa thêm
+  giả định cột này có tồn tại theo brief, phải revert và làm lại sau khi verify.
+- Yêu cầu revert file bị fix sai (Telemedicine.razor, ApiClient.cs) về develop rồi làm lại từ
+  đầu, giữ nguyên file đã đúng (ClinicDashboard.razor) — tách rõ phần đúng khỏi phần cần sửa lại
+  thay vì sửa đè lên code đã sai.
+```
+
+#### 27.5. Minh chứng
+
+| Loại minh chứng   | Nội dung                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| Link commit       |                                                                                                              |
+| File liên quan    | `src/Mediconnect.Web/Components/Pages/Telemedicine.razor`; `src/Mediconnect.Web/Services/ApiClient.cs`; `src/Mediconnect.Web/Components/Pages/ClinicDashboard.razor` |
+| Screenshot        |                                                                                                                |
+| Kết quả chạy/test | `dotnet build` cả 2 project sau mỗi fix: 0 Warning/0 Error; verify browser 10 flow + SQL trực tiếp (bao gồm test duplicate INSERT bị chặn: Msg 2601) |
+| Link video demo   |                                                                                                                |
+| Ghi chú khác      | Bug #1 (double billing) cố tình để lại chưa fix — cần xác nhận thêm cột `OutpatientVisitId`/FK trước khi làm tiếp |
+
+#### 27.6. Nhận xét cá nhân/nhóm
+
+```text
+Brief tự chuẩn bị trước dựa trên trí nhớ phiên trước (memory) khẳng định BillingInvoice đã có
+cột OutpatientVisitId — sai hoàn toàn so với entity thật. Bài học: memory/brief chỉ là điểm
+khởi đầu, luôn phải cat file thật + query DB thật trước khi tin, đặc biệt khi brief đó sẽ dẫn
+tới việc sửa entity/migration của người khác.
 ```
 
 ---

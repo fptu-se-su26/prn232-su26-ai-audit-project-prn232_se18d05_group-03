@@ -208,12 +208,99 @@
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2">
+                        <div class="d-flex gap-2 mb-4">
                             <button class="btn btn-primary d-inline-flex align-items-center gap-1" disabled="@_submitting" @onclick="Submit">
                                 <span class="material-symbols-outlined" style="font-size:1.1rem">save</span>
                                 @(_submitting ? "Đang lưu..." : "Lưu hồ sơ")
                             </button>
                             <button class="btn btn-outline-secondary" @onclick="() => _selectedTicket = null">Hủy</button>
+                        </div>
+
+                        <!-- Đơn thuốc đã kê -->
+                        <div class="p-3 rounded-3 mt-4" style="background:var(--color-surface-container-low);border:1px solid var(--border)">
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <h6 class="d-flex align-items-center gap-2 mb-0" style="font-size:1rem;font-weight:700">
+                                    <span class="material-symbols-outlined text-primary" style="font-size:1.2rem">medication</span>
+                                    Đơn thuốc đã kê
+                                    @if (_patientPrescriptions.Count > 0)
+                                    {
+                                        <span class="badge badge-soft-blue ms-1">@_patientPrescriptions.Count</span>
+                                    }
+                                </h6>
+                                <button type="button" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" @onclick="OpenEPrescriptionForSelectedPatient">
+                                    <span class="material-symbols-outlined" style="font-size:.95rem">add</span>
+                                    Kê đơn thuốc mới
+                                </button>
+                            </div>
+
+                            @if (_loadingPrescriptions)
+                            {
+                                <div class="d-flex align-items-center justify-content-center py-3 text-muted gap-2" style="font-size:.82rem">
+                                    <span class="material-symbols-outlined spin" style="font-size:1.2rem;color:var(--color-primary)">progress_activity</span>
+                                    <span>Đang tải danh sách đơn thuốc...</span>
+                                </div>
+                            }
+                            else if (_patientPrescriptions.Count == 0)
+                            {
+                                <div class="text-center text-muted py-3 rounded-3" style="border:1px dashed var(--border)">
+                                    <span class="material-symbols-outlined d-block mb-1" style="font-size:1.8rem;color:var(--color-outline-variant)">prescriptions</span>
+                                    <p class="mb-1 fw-semibold" style="font-size:.82rem">Chưa có đơn thuốc nào được kê</p>
+                                    <p class="mb-2 text-muted" style="font-size:.75rem">Bệnh nhân chưa có đơn thuốc nào trong hồ sơ khám này.</p>
+                                    <button type="button" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" style="font-size:.78rem" @onclick="OpenEPrescriptionForSelectedPatient">
+                                        <span class="material-symbols-outlined" style="font-size:.9rem">add_circle</span>
+                                        Kê đơn thuốc ngay
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-column gap-3">
+                                    @foreach (var rx in _patientPrescriptions)
+                                    {
+                                        <div class="p-3 bg-white rounded-3 shadow-sm" style="border:1px solid var(--border)">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="material-symbols-outlined text-success" style="font-size:1.1rem">task_alt</span>
+                                                    <span class="fw-bold" style="font-size:.85rem">Ngày kê: @rx.IssuedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                                </div>
+                                                <span class="badge badge-soft-green" style="font-size:.72rem">@rx.Items.Count thuốc</span>
+                                            </div>
+                                            @if (!string.IsNullOrWhiteSpace(rx.Notes))
+                                            {
+                                                <p class="text-muted mb-2" style="font-size:.75rem"><strong>Ghi chú:</strong> @rx.Notes</p>
+                                            }
+                                            <div class="table-responsive">
+                                                <table class="table table-sm align-middle mb-0" style="font-size:.78rem">
+                                                    <thead>
+                                                        <tr class="text-muted">
+                                                            <th style="width:32px">#</th>
+                                                            <th>Thuốc</th>
+                                                            <th>Liều dùng</th>
+                                                            <th>Tần suất</th>
+                                                            <th>Số ngày</th>
+                                                            <th class="text-end">Số lượng</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @{ var rxIdx = 1; }
+                                                        @foreach (var item in rx.Items)
+                                                        {
+                                                            <tr>
+                                                                <td class="text-muted">@(rxIdx++)</td>
+                                                                <td class="fw-bold" style="color:var(--color-primary)">@item.DrugName</td>
+                                                                <td>@(string.IsNullOrEmpty(item.Dose) ? "—" : item.Dose)</td>
+                                                                <td>@(string.IsNullOrEmpty(item.Frequency) ? "—" : item.Frequency)</td>
+                                                                <td>@item.DurationDays ngày</td>
+                                                                <td class="text-end fw-semibold">@item.Quantity @item.Unit</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -312,12 +399,14 @@
         _chiefComplaint = ""; _symptoms = ""; _diagnosisCode = ""; _diagnosisDescription = "";
         _icdQuery = ""; _icdResults = new(); _showIcdDropdown = false; _orderedTests = new();
         _diagnosisHistory = new();
+        _patientPrescriptions = new();
         _message = null;
 
         if (ticket.PatientId is { } patientId)
         {
             try { _diagnosisHistory = (await Api.GetDiagnosisHistory(patientId)) ?? new(); }
             catch { _diagnosisHistory = new(); }
+            await LoadPatientPrescriptions(patientId);
         }
     }
 
@@ -468,11 +557,120 @@
         }
     }
 
-    private void CloseEPrescription()
+    private async Task CloseEPrescription()
     {
+        var pid = _savedPatientId ?? _selectedTicket?.PatientId;
         _savedVisitId = null;
         _savedPatientId = null;
         _savedPatientName = "";
+        if (pid is { } patientId)
+        {
+            await LoadPatientPrescriptions(patientId);
+        }
+    }
+
+    private class PrescribedRxVm
+    {
+        public Guid Id { get; set; }
+        public DateTime IssuedAt { get; set; }
+        public string? Notes { get; set; }
+        public List<PrescribedRxItemVm> Items { get; set; } = new();
+    }
+
+    private class PrescribedRxItemVm
+    {
+        public string DrugName { get; set; } = "";
+        public string Unit { get; set; } = "";
+        public string Dose { get; set; } = "";
+        public string Frequency { get; set; } = "";
+        public int DurationDays { get; set; }
+        public int Quantity { get; set; }
+    }
+
+    private List<PrescribedRxVm> _patientPrescriptions = new();
+    private bool _loadingPrescriptions;
+
+    private async Task LoadPatientPrescriptions(Guid patientId)
+    {
+        _loadingPrescriptions = true;
+        try
+        {
+            var history = await Api.GetPatientHistory(patientId);
+            var prescriptions = history?.Prescriptions ?? Array.Empty<PrescriptionReadDto>();
+            if (prescriptions.Count == 0)
+            {
+                _patientPrescriptions = new();
+                return;
+            }
+
+            var allItems = (await Api.GetPrescriptionItems()) ?? new();
+            var drugs = (await Api.GetDrugs()) ?? new();
+            var drugDict = drugs.ToDictionary(d => d.Id, d => d);
+
+            _patientPrescriptions = prescriptions
+                .OrderByDescending(p => p.IssuedAt)
+                .Select(p => new PrescribedRxVm
+                {
+                    Id = p.Id,
+                    IssuedAt = p.IssuedAt,
+                    Notes = p.Notes,
+                    Items = allItems.Where(i => i.PrescriptionId == p.Id).Select(i =>
+                    {
+                        var drug = drugDict.GetValueOrDefault(i.DrugId);
+                        return new PrescribedRxItemVm
+                        {
+                            DrugName = drug?.Name ?? "Thuốc chưa xác định",
+                            Unit = drug?.Unit ?? "đơn vị",
+                            Dose = i.Dose ?? "",
+                            Frequency = i.Frequency ?? "",
+                            DurationDays = i.DurationDays,
+                            Quantity = i.Quantity
+                        };
+                    }).ToList()
+                }).ToList();
+        }
+        catch
+        {
+            _patientPrescriptions = new();
+        }
+        finally
+        {
+            _loadingPrescriptions = false;
+        }
+    }
+
+    private async Task OpenEPrescriptionForSelectedPatient()
+    {
+        if (_selectedTicket is null) return;
+        if (_selectedTicket.PatientId is null)
+        {
+            _message = "Bệnh nhân vãng lai chưa có hồ sơ tài khoản — không thể kê đơn thuốc.";
+            _messageIsError = true;
+            return;
+        }
+
+        var doctorId = _staffProfileId ?? Token.User!.Id;
+        var visitId = _selectedTicket.AppointmentId ?? _selectedTicket.Id;
+
+        var allVisits = await Api.GetOutpatientVisits();
+        var existingVisit = allVisits?.FirstOrDefault(v => v.QueueTicketId == _selectedTicket.Id || v.Id == visitId);
+
+        var visit = existingVisit ?? await Api.CreateOutpatientVisit(new OutpatientVisitWriteDto
+        {
+            PatientId = _selectedTicket.PatientId.Value,
+            DoctorId = doctorId,
+            ClinicId = _selectedTicket.ClinicId,
+            QueueTicketId = _selectedTicket.Id,
+            VisitDate = DateTime.UtcNow,
+            Status = VisitStatus.InProgress,
+        });
+
+        if (visit is not null)
+        {
+            _savedVisitId = visit.Id.ToString();
+            _savedPatientId = _selectedTicket.PatientId;
+            _savedPatientName = _selectedTicket.PatientName ?? "Bệnh nhân";
+        }
     }
 
     private async Task ClearMessageAfterDelay(int ms)

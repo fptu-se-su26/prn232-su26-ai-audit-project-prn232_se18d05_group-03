@@ -45,6 +45,8 @@ Nguyên tắc ghi changelog:
 | Phase 07 | 11/06/2026 – 20/06/2026 | Thành viên 4: Dashboard Thống kê & Quản trị Hệ thống | Completed |
 | Phase 10 | 25/07/2026 – 26/07/2026 | DE190123: SmartClinic fixes (dedup visit, allergy, billing redirect, dispose cleanup, stock filter) + walk-in OTP login | Completed |
 | Phase 11 | 26/07/2026 | Park Jea Minh: đóng lỗ hổng phân quyền (IDOR) toàn hệ thống + màn Thu ngân + fix luồng thanh toán Momo/VNPay + xóa hẳn frontend React trùng lặp + gộp/mở rộng seed script nội trú | Completed |
+| Phase 12 | 26/07/2026 | Post-merge E2E test (billing + SmartClinic) trên develop — phát hiện 3 bug, fix 2/3 | Completed |
+| Phase 13 | 26/07/2026 | Fix check-in sai phòng khám khi chọn theo lịch hẹn (Blazor + React + backend) + seed script thiếu InpatientAdmissions | Completed |
 | Phase 06 |  | Hoàn thiện báo cáo và demo | In Progress |
 
 ---
@@ -750,6 +752,147 @@ Test report: Flow 1 5/5, Flow 2 10/11, Flow 3 7 PASS+2 SKIP, Flow 4 4 PASS+1 fai
   DB-side (STT 8) đóng nốt race concurrent thật.
 - OTP login là đường vào thứ hai, cộng thêm vào cơ chế token/session có sẵn — không sửa
   AuthController.cs, AuthService.cs, IAuthService.cs, Login.razor, TokenState.cs.
+```
+
+---
+
+# [Phase 11] Post-merge E2E test (billing + SmartClinic) trên develop — 3 bug, fix 2/3
+
+## Ngày thực hiện
+
+```text
+26/07/2026
+```
+
+## Đã hoàn thành
+
+- [x] E2E test billing: 6 flow (walk-in invoice, BHYT invoice, $0 invoice, tele billing redirect,
+      tele no-prescription, regression) — verify qua browser thật + SQL trực tiếp
+- [x] E2E test SmartClinic: 4 flow (walk-in check-in, e-prescription, appointment cascade,
+      duplicate visit prevention) — 0 regression sau merge PR #21
+- [x] Fix bug: Telemedicine `EnsureVisitCreatedAsync` reuse nhầm visit khác encounter cùng ngày
+- [x] Fix bug: Nurse bấm "Bắt đầu gọi video" bị redirect `/login` thay vì thông báo rõ ràng
+- [ ] Bug double billing (cùng dịch vụ khám bị tính tiền 2 lần) — **chưa fix**, xem Ghi chú
+
+## Thay đổi chi tiết
+
+| STT | Nội dung thay đổi | File/Module liên quan | Minh chứng |
+|---:|---|---|---|
+| 1 | Bỏ hẳn match theo `PatientId+DoctorId+VisitDate.Date == UtcNow.Date` (nguyên nhân gây reuse nhầm visit cũ, có thể đã invoice, sang encounter tele mới); thay bằng bridge `AppointmentId → QueueTicket.AppointmentId → OutpatientVisit.QueueTicketId` (`OutpatientVisit` không có cột `AppointmentId`) | `Telemedicine.razor` (`EnsureVisitCreatedAsync`), `ApiClient.cs` (`GetQueueTickets`, `GetVisitByAppointmentId`) | Test SQL: bridge trả đúng visit khi có QueueTicket khớp `AppointmentId`; trả `null` (tạo visit mới) khi tele không qua check-in (không có QueueTicket) |
+| 2 | Thêm `_prescriptionPanelOpen` tách khỏi `_activeVisitId` — đóng panel đơn thuốc không còn xoá `_activeVisitId`, tránh tạo visit thứ 2 khi mở lại panel trong cùng cuộc gọi (đồng thời sửa luôn side-effect: redirect billing sau `EndCall` từng bị sai nếu bác sĩ đóng panel trước khi kết thúc gọi) | `Telemedicine.razor` (`ClosePanel`, `OpenPrescription`, markup dòng ~104) | Code review: `_activeVisitId` giờ chỉ được set 1 lần/encounter, không còn bị null giữa chừng |
+| 3 | Nurse bấm "Bắt đầu gọi video" (`Telemedicine.razor` có `[Authorize(Roles="Doctor,Patient")]`) từng bị redirect `/login` sau khi đã tạo xong `TelemedicineSession` mồ côi; bọc nút trong `AuthorizeView Roles="Doctor"`, Nurse thấy nút disabled + tooltip thay vì bị đá ra khỏi trang | `ClinicDashboard.razor` | Test browser: login Nurse, nút "Bắt đầu gọi video" disabled với tooltip "Chỉ bác sĩ mới có thể bắt đầu cuộc gọi video."; login Doctor, nút hoạt động bình thường |
+
+## Kết quả kiểm thử end-to-end
+
+```text
+Billing — B1 Walk-in invoice (4 bước): 4/4 PASS
+Billing — B2 BHYT invoice (2 bước): 2/2 PASS
+Billing — B3 $0 invoice (3 bước): 2 PASS, 1 partial (VNPay redirect ra cổng thanh toán thật,
+  không thể hoàn tất callback trong môi trường test)
+Billing — B4 Tele billing redirect (4 bước): 1 confirmed, 3 partial (không có camera thật) —
+  nhưng phát hiện 2 bug thật qua test này (double billing + visit reuse)
+Billing — B5 Tele no-prescription (1 bước): 1/1 PASS
+Billing — B6 Regression (3 bước): 3/3 PASS
+SmartClinic — S1 Walk-in (3 bước): 3/3 PASS
+SmartClinic — S2 E-Prescription (3 bước): 3/3 PASS
+SmartClinic — S3 Appointment cascade (3 bước): 3/3 PASS
+SmartClinic — S4 Duplicate prevention (2 bước): 2/2 PASS (verify trực tiếp bằng duplicate INSERT
+  bị SQL Server chặn: Msg 2601)
+Performance: 3/3 PASS (Billing load 22ms, ICD-10 search 267ms, Drug list 6ms)
+Tổng: 1 blocking bug tại thời điểm test (double billing), 2 bug khác đã fix trong phase này
+```
+
+## AI có hỗ trợ không?
+
+- [x] Có
+- [ ] Không
+
+Nếu có, mô tả AI đã hỗ trợ phần nào:
+
+```text
+Claude Code (claude-sonnet-5) tự chạy toàn bộ 10 flow test qua browser thật (không mock), tự tạo
+test data qua SQL khi seed thiếu (Appointments=0 ban đầu, không có MedicalService giá 0đ), tự
+phát hiện bug double-billing bằng cách quan sát cùng "Khám Nội Tổng Quát" bị tính tiền 2 lần cho
+cùng 1 visit trong lúc test tele billing, tự trace root cause bug tele-visit-reuse xuống đúng 4
+dòng code (`Telemedicine.razor:292-295`), và tự thử fix sai một lần trước (giả định
+`BillingInvoice` đã có cột `OutpatientVisitId` theo brief nhưng thực tế không có) — tự dừng lại
+đúng lúc, không tự chế cột/migration mới, verify lại bằng query DB thật trước khi báo cáo.
+```
+
+## Commit/Screenshot minh chứng
+
+```text
+Branch: feature/de190123-telemedicine-fixes
+dotnet build (cả 2 project) sau mỗi fix: 0 Warning, 0 Error
+Test report đầy đủ: 6 billing flow + 4 SmartClinic flow + 3 performance check
+```
+
+## Ghi chú
+
+```text
+- Bug double billing (cùng MedicalService bị tính tiền 2 lần cho 1 visit) CHƯA được fix trong
+  phase này. Root cause: `BillingInvoice` không có cột `OutpatientVisitId`, `BillingItem` không
+  có FK về nguồn gốc (MedicalServiceId/DrugId/LabOrderId) — chỉ có `Description` dạng text tự
+  do. Không có cách nào check "đã invoice chưa" mà không thêm cột mới (đụng entity + migration).
+  `BillingInvoice.cs`/`BillingItem.cs` do bạn cùng nhóm (không phải người viết phase này) tạo ra
+  ở Phase 04 — theo nguyên tắc chỉ thêm không sửa khi không tự viết ra, việc thêm cột mới cần
+  được xác nhận trước, chưa tự ý làm.
+- Bug tele-visit-reuse (STT 1) là nguyên nhân khiến bug double-billing lộ ra trong lần test này —
+  fix STT 1 xong thì đường dẫn thường ngày gây trùng bill (khám vãng lai sáng, gọi tele chiều
+  cùng bác sĩ) đã bị chặn, nhưng lỗ hổng gốc ở tầng billing (không có gì ngăn tạo 2 hoá đơn cho
+  cùng 1 visit) vẫn còn tồn tại nếu ai đó chủ động tạo hoá đơn 2 lần.
+```
+
+---
+
+# [Phase 12] Fix check-in sai phòng khám theo lịch hẹn + seed script thiếu InpatientAdmissions
+
+## Ngày thực hiện
+
+```text
+26/07/2026
+```
+
+## Đã hoàn thành
+
+- [x] Check-in theo lịch hẹn (appointment) giờ ưu tiên `ClinicId` thật của appointment thay vì
+      dropdown phòng khám người dùng chọn tay — đồng bộ cả backend (`QueueService`), Blazor
+      (`ClinicDashboard.razor`) và React (`LoginPage.tsx`)
+- [x] Appointment tự chuyển `Status = CheckedIn` ngay khi check-in (trước đây `QueueService`
+      không cập nhật status này)
+- [x] `seed_demo_data.sql`: thêm INSERT `InpatientAdmissions` bị thiếu cho `@admGen`/`@admER`
+      (trước đây `VitalSigns`/`CareOrders` tham chiếu 2 admission này nhưng dòng cha chưa từng
+      được insert) + thêm cờ `-f 65001 -I` vào ví dụ lệnh sqlcmd (UTF-8 + quoted identifiers cho
+      tiếng Việt có dấu)
+
+## Thay đổi chi tiết
+
+| STT | Nội dung thay đổi | File/Module liên quan | Minh chứng |
+|---:|---|---|---|
+| 1 | `CheckInAsync`/`WalkInCheckInAsync`: khi có `AppointmentId`, tra `Appointment.ClinicId` — nếu phòng khám đó đang active thì dùng thay cho `dto.ClinicId`; đồng thời set `appointment.Status = CheckedIn` và lưu | `QueueService.cs` | Code review: guard `appointment.ClinicId != Guid.Empty` + `apptClinic.IsActive` trước khi override, không phá vỡ luồng walk-in (không có AppointmentId thì bỏ qua khối này) |
+| 2 | Đổi `<select>` từ `@bind` sang `@onchange="OnAppointmentSelected"` để đồng bộ `_checkInClinicId` ngay khi chọn lịch hẹn; `SubmitCheckIn()` tự sửa lại `_checkInClinicId` một lần nữa trước khi gửi (fallback), dời check `_checkInClinicId == ""` xuống sau bước tự sửa để không chặn nhầm check-in theo lịch hẹn chưa có dropdown phòng khám nào được chọn tay | `ClinicDashboard.razor` | Code review: logic khớp với `QueueService.cs`, không đổi luồng walk-in |
+| 3 | Mirror cùng fix cho bản React (`handleCheckInSubmit`, dropdown lịch hẹn) — tự set `targetClinicId`/`checkInClinicId` từ appointment đã chọn trước khi validate | `LoginPage.tsx` (`src/mediconnect-web`) | Code review: pattern giống hệt bản Blazor |
+| 4 | Thêm `INSERT INTO InpatientAdmissions` cho `@admGen`/`@admER` trước khối `VitalSigns`/`CareOrders` đang tham chiếu 2 Id này | `seed_demo_data.sql` | Xác nhận thứ tự: biến khai báo dòng 64-65, INSERT admission dòng 183-184, INSERT VitalSigns/CareOrders tham chiếu dòng 187-194 — đúng thứ tự phụ thuộc |
+| 5 | Thêm `-f 65001 -I` vào 2 ví dụ lệnh sqlcmd trong comment đầu file | `seed_demo_data.sql` | — |
+
+## AI có hỗ trợ không?
+
+- [ ] Có
+- [x] Không
+
+```text
+Phase này do sinh viên tự viết trực tiếp, không qua AI sinh code. Claude Code chỉ được yêu cầu
+đọc lại (git diff) để xác nhận logic đúng (guard null/empty, thứ tự phụ thuộc biến trong SQL)
+và ghi log vào CHANGELOG — không tham gia viết code.
+```
+
+## Ghi chú
+
+```text
+Bug gốc: trước fix này, khi lễ tân check-in bệnh nhân theo lịch hẹn có sẵn nhưng dropdown phòng
+khám tiếp nhận đang trỏ phòng khác (giá trị mặc định hoặc chưa đổi tay), hệ thống ghi nhận sai
+phòng khám so với appointment gốc. Fix áp dụng đồng bộ ở cả 2 frontend (Blazor đang dùng chính +
+React cũ) và backend để không lệch hành vi giữa các client.
 ```
 
 ---

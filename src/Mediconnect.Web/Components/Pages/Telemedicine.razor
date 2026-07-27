@@ -101,7 +101,7 @@ else
                         </div>
                     </div>
 
-                    @if (_activeVisitId is not null && _activeDoctorId is not null && _session is not null)
+                    @if (_prescriptionPanelOpen && _activeVisitId is not null && _activeDoctorId is not null && _session is not null)
                     {
                         <EPrescriptionPanel VisitId="@_activeVisitId" DoctorId="@_activeDoctorId.Value" PatientId="@_session.PatientId" OnClose="ClosePanel" />
                     }
@@ -128,6 +128,7 @@ else
 
     private string? _activeVisitId;
     private Guid? _activeDoctorId;
+    private bool _prescriptionPanelOpen;
 
     private string _notes = "";
     private bool _muted, _cameraOff, _savingNotes, _creatingVisit, _loading = true, _isInitiator, _isDoctor, _callEnded;
@@ -184,6 +185,18 @@ else
         _hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/telemedicine")).Build();
         _hub.On<string>("ReceiveSignal", HandleSignal);
         _hub.On<string>("ReceiveIceCandidate", async candidate => await JS.InvokeVoidAsync("telemedicineInterop.addIceCandidate", candidate));
+        _hub.On("PeerJoined", async () =>
+        {
+            if (_isInitiator && _mediaError is null)
+            {
+                try
+                {
+                    var offer = await JS.InvokeAsync<string>("telemedicineInterop.createOffer");
+                    await _hub.SendAsync("SendSignal", RoomId, JsonSerializer.Serialize(new { type = "offer", sdp = offer }));
+                }
+                catch { }
+            }
+        });
         _hub.On("CallEnded", async () =>
         {
             await JS.InvokeVoidAsync("telemedicineInterop.stopCall");
@@ -230,8 +243,12 @@ else
 
         if (_isInitiator)
         {
-            var offer = await JS.InvokeAsync<string>("telemedicineInterop.createOffer");
-            await _hub!.SendAsync("SendSignal", RoomId, JsonSerializer.Serialize(new { type = "offer", sdp = offer }));
+            try
+            {
+                var offer = await JS.InvokeAsync<string>("telemedicineInterop.createOffer");
+                await _hub!.SendAsync("SendSignal", RoomId, JsonSerializer.Serialize(new { type = "offer", sdp = offer }));
+            }
+            catch { }
         }
     }
 
@@ -288,11 +305,10 @@ else
 
         try
         {
-            var allVisits = await Api.GetOutpatientVisits();
-            var existingVisit = allVisits?.FirstOrDefault(v =>
-                v.PatientId == _session.PatientId &&
-                v.DoctorId == _activeDoctorId.Value &&
-                v.VisitDate.Date == DateTime.UtcNow.Date);
+            // Scope to this session's specific appointment via QueueTicket bridge — never match by
+            // same-day PatientId+DoctorId, which used to silently reuse an unrelated (possibly
+            // already-invoiced) visit from earlier the same day.
+            var existingVisit = await Api.GetVisitByAppointmentId(_session.AppointmentId);
             if (existingVisit is not null)
             {
                 _activeVisitId = existingVisit.Id.ToString();
@@ -320,11 +336,13 @@ else
     private async Task OpenPrescription()
     {
         _creatingVisit = true;
-        await EnsureVisitCreatedAsync();
+        if (await EnsureVisitCreatedAsync()) _prescriptionPanelOpen = true;
         _creatingVisit = false;
     }
 
-    private void ClosePanel() => _activeVisitId = null;
+    // Only hides the panel — keeps _activeVisitId cached so reopening it later in the same
+    // call reuses the visit already created for this session instead of creating another one.
+    private void ClosePanel() => _prescriptionPanelOpen = false;
 
     private async Task OnIcdQueryChanged(ChangeEventArgs e)
     {
