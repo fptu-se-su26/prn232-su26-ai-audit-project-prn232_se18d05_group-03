@@ -185,6 +185,18 @@ else
         _hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/telemedicine")).Build();
         _hub.On<string>("ReceiveSignal", HandleSignal);
         _hub.On<string>("ReceiveIceCandidate", async candidate => await JS.InvokeVoidAsync("telemedicineInterop.addIceCandidate", candidate));
+        _hub.On("PeerJoined", async () =>
+        {
+            if (_isInitiator && _mediaError is null)
+            {
+                try
+                {
+                    var offer = await JS.InvokeAsync<string>("telemedicineInterop.createOffer");
+                    await _hub.SendAsync("SendSignal", RoomId, JsonSerializer.Serialize(new { type = "offer", sdp = offer }));
+                }
+                catch { }
+            }
+        });
         _hub.On("CallEnded", async () =>
         {
             await JS.InvokeVoidAsync("telemedicineInterop.stopCall");
@@ -231,8 +243,12 @@ else
 
         if (_isInitiator)
         {
-            var offer = await JS.InvokeAsync<string>("telemedicineInterop.createOffer");
-            await _hub!.SendAsync("SendSignal", RoomId, JsonSerializer.Serialize(new { type = "offer", sdp = offer }));
+            try
+            {
+                var offer = await JS.InvokeAsync<string>("telemedicineInterop.createOffer");
+                await _hub!.SendAsync("SendSignal", RoomId, JsonSerializer.Serialize(new { type = "offer", sdp = offer }));
+            }
+            catch { }
         }
     }
 
